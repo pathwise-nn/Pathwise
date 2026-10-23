@@ -772,6 +772,27 @@ end
 local SOURCE = { vendor = "vendor", farm = "farm" }
 local MAX_MATERIALS = 6
 
+-- Professions: a list of yours, each with its skill and what is next;
+-- click one for its page (Panels.Open("profession")).
+local profKey -- the profession whose page is open
+
+-- One line about where a profession stands, for the list.
+local function professionSummary(prof)
+	local P, E = ns.Professions, ns.Engine
+	local route, st = P.Route(prof), P.Stage(prof)
+	if not route then return "No guide for this profession yet" end
+	if not st then return "Every step of the guide is done" end
+	local bits = {}
+	local step = route.steps[st.step]
+	bits[#bits + 1] = "Now: " .. (step.title or E.GoalText(step[1]) or "the next step")
+	local missing = 0
+	for _, r in ipairs(P.Shopping(prof)) do if r.missing > 0 then missing = missing + 1 end end
+	if missing > 0 then bits[#bits + 1] = ("%d material%s to get"):format(missing, missing == 1 and "" or "s") end
+	local side = E.Side()
+	if side and side.id == route.id then bits[#bits + 1] = "following" end
+	return table.concat(bits, "  ·  ")
+end
+
 function builders.professions()
 	local P, E = ns.Professions, ns.Engine
 	E.Refresh()
@@ -780,62 +801,78 @@ function builders.professions()
 	if #known == 0 then
 		rows[#rows + 1] = { "text", "No professions yet. Visit a profession trainer to learn one: Pathwise follows it from there." }
 		rows[#rows + 1] = { "choice", "Browse the profession guides", nil, function() Panels.Open("routes") end }
+	else
+		rows[#rows + 1] = { "text", "Click a profession for its next craft, materials and guide.", "muted" }
 	end
-	local side = E.Side()
-	for i, k in ipairs(known) do
+	for _, k in ipairs(known) do
 		local prof = k.prof
-		if i > 1 then rows[#rows + 1] = { "divider" } end
-		rows[#rows + 1] = { "title", ("%s   %d / %d"):format(prof.name, k.rank, k.cap) }
+		rows[#rows + 1] = { "choice", ("%s   %d / %d"):format(prof.name, k.rank, k.cap), professionSummary(prof), function()
+			profKey = prof.key
+			Panels.Open("profession")
+		end }
 		rows[#rows + 1] = { "progress", k.cap > 0 and k.rank / k.cap or 0 }
-		local route = P.Route(prof)
-		local st = P.Stage(prof)
-		if not route then
-			rows[#rows + 1] = { "text", "No guide for this profession yet." }
-		elseif not st then
-			rows[#rows + 1] = { "text", "Every step of the guide is done.", "success" }
-		else
-			local step = route.steps[st.step]
-			rows[#rows + 1] = { "text", "Now: " .. (step.title or E.GoalText(step[1]) or "the next step"), "text" }
-			local craft = P.NextCraft(prof)
-			if craft then
-				local bits = { "Best now: " .. (craft.name or "?") }
-				if craft.craftable then bits[#bits + 1] = ("%d from your bags"):format(craft.craftable) end
-				if craft.untilSkill then bits[#bits + 1] = ("until %d"):format(craft.untilSkill) end
-				if craft.difficulty then bits[#bits + 1] = craft.difficulty end
-				if craft.known == false then bits[#bits + 1] = "learn it first" end
-				rows[#rows + 1] = { "text", table.concat(bits, "  ·  "), "text" }
-			end
-			if prof.kind == "craft" and not P.Recipes(prof.line) then
-				rows[#rows + 1] = { "text", ("Open your %s window once so Pathwise can read your recipes."):format(prof.name), "muted" }
-			end
-			local shop = P.Shopping(prof)
-			if #shop > 0 then
-				rows[#rows + 1] = { "heading", "Materials for this rank" }
-				for j, r in ipairs(shop) do
-					if j > MAX_MATERIALS then
-						rows[#rows + 1] = { "text", ("and %d more"):format(#shop - MAX_MATERIALS), "muted" }
-						break
-					end
-					local how = SOURCE[r.src] or "made or found"
-					if r.where then how = how .. ": " .. r.where end
-					local status = r.missing > 0 and ("%d to get"):format(r.missing) or "ready"
-					rows[#rows + 1] = { "text", ("%s   %d / %d  ·  %s  ·  %s"):format(r.name, r.have, r.need, status, how),
-						r.missing > 0 and "text2" or "success" }
-				end
-			end
-			local following = side and side.id == route.id
-			rows[#rows + 1] = { "choice", following and "Following beside your route" or "Follow beside your route",
-				following and "Click to stop" or "Its next step shows in the guide window", function()
-					E.SetSide(following and nil or route.id)
-					Panels.Refresh()
-				end }
+	end
+	rows[#rows + 1] = { "buttons", { { "Profession guides", "default", function() Panels.Open("routes") end }, { "Close", "default", Panels.Close } } }
+	return rows
+end
+
+-- One profession's page: skill, the guide's step, the best craft now, every
+-- material for this rank, following it beside the route; for Enchanting,
+-- disenchanting too.
+function builders.profession()
+	local P, E = ns.Professions, ns.Engine
+	E.Refresh()
+	local prof = profKey and P.BY_KEY[profKey]
+	local k
+	for _, x in ipairs(P.Known()) do if prof and x.prof.key == prof.key then k = x end end
+	if not (prof and k) then return builders.professions() end
+	local rows = { { "heading", "Professions" } }
+	rows[#rows + 1] = { "title", ("%s   %d / %d"):format(prof.name, k.rank, k.cap) }
+	rows[#rows + 1] = { "progress", k.cap > 0 and k.rank / k.cap or 0 }
+	local route = P.Route(prof)
+	local st = P.Stage(prof)
+	if not route then
+		rows[#rows + 1] = { "text", "No guide for this profession yet." }
+	elseif not st then
+		rows[#rows + 1] = { "text", "Every step of the guide is done.", "success" }
+	else
+		local step = route.steps[st.step]
+		rows[#rows + 1] = { "text", "Now: " .. (step.title or E.GoalText(step[1]) or "the next step"), "text" }
+		local craft = P.NextCraft(prof)
+		if craft then
+			local bits = { "Best now: " .. (craft.name or "?") }
+			if craft.craftable then bits[#bits + 1] = ("%d from your bags"):format(craft.craftable) end
+			if craft.untilSkill then bits[#bits + 1] = ("until %d"):format(craft.untilSkill) end
+			if craft.difficulty then bits[#bits + 1] = craft.difficulty end
+			if craft.known == false then bits[#bits + 1] = "learn it first" end
+			rows[#rows + 1] = { "text", table.concat(bits, "  ·  "), "text" }
 		end
+		if prof.kind == "craft" and not P.Recipes(prof.line) then
+			rows[#rows + 1] = { "text", ("Open your %s window once so Pathwise can read your recipes."):format(prof.name), "muted" }
+		end
+		local shop = P.Shopping(prof)
+		if #shop > 0 then
+			rows[#rows + 1] = { "heading", "Materials for this rank" }
+			for _, r in ipairs(shop) do
+				local how = SOURCE[r.src] or "made or found"
+				if r.where then how = how .. ": " .. r.where end
+				local status = r.missing > 0 and ("%d to get"):format(r.missing) or "ready"
+				rows[#rows + 1] = { "text", ("%s   %d / %d  ·  %s  ·  %s"):format(r.name, r.have, r.need, status, how),
+					r.missing > 0 and "text2" or "success" }
+			end
+		end
+		local side = E.Side()
+		local following = side and side.id == route.id
+		rows[#rows + 1] = { "choice", following and "Following beside your route" or "Follow beside your route",
+			following and "Click to stop" or "Its next step shows in the guide window", function()
+				E.SetSide(following and nil or route.id)
+				Panels.Refresh()
+			end }
 	end
 
-	-- Disenchanting, for a character with Enchanting.
-	local enchRank = ns.Compat.SkillRank(333)
-	if enchRank then
-		local list = P.Disenchantable(enchRank)
+	-- Disenchanting and the Tailoring tip, on the Enchanting page.
+	if prof.line == 333 then
+		local list = P.Disenchantable(k.rank)
 		if #list > 0 then
 			rows[#rows + 1] = { "heading", "Disenchanting" }
 			local needs, row = P.EnchantingNeedsDust()
@@ -860,7 +897,7 @@ function builders.professions()
 			rows[#rows + 1] = { "text", ("Disenchant what you craft for points instead of selling it: %s."):format(table.concat(te, ", ")) }
 		end
 	end
-	rows[#rows + 1] = { "buttons", { { "Profession guides", "default", function() Panels.Open("routes") end }, { "Close", "default", Panels.Close } } }
+	rows[#rows + 1] = { "buttons", { { "Back", "default", function() if not Panels.Back() then Panels.Open("professions") end end }, { "Close", "default", Panels.Close } } }
 	return rows
 end
 
@@ -1104,8 +1141,8 @@ ns.On("SHOW_PROFESSIONS", function() Panels.Open("professions") end)
 ns.On("REPORT_STEP", function() Panels.Open("report") end)
 ns.On("SHOW_DUNGEONS", function() Panels.Open("dungeons") end)
 ns.On("SHOW_ABOUT", function() Panels.Open("about") end)
-ns.On("GUIDE_UPDATED", function() if Panels.IsOpen("skip") or Panels.IsOpen("professions") then Panels.Refresh() end end)
-ns.On("PROFESSIONS_CHANGED", function() if Panels.IsOpen("professions") then Panels.Refresh() end end)
+ns.On("GUIDE_UPDATED", function() if Panels.IsOpen("skip") or Panels.IsOpen("professions") or Panels.IsOpen("profession") then Panels.Refresh() end end)
+ns.On("PROFESSIONS_CHANGED", function() if Panels.IsOpen("professions") or Panels.IsOpen("profession") then Panels.Refresh() end end)
 ns.On("SETTING_CHANGED", function(path)
 	if path == "guide.shown" and not ns.Get("guide.shown") then Panels.Close() end
 end)

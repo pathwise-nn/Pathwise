@@ -760,15 +760,29 @@ test("professions dashboard: skill, guide step, best craft, materials, disenchan
 		s.bags[0] = { { itemID = 9001, quality = 2 } }
 	end)
 	SlashCmdList.PATHWISE("prof")
+	-- The list: each profession, its skill and one line; nothing more.
 	local texts = stub.texts()
 	ok(contains(texts, "Tailoring   1 / 75"), table.concat(texts, " | "))
 	ok(contains(texts, "Enchanting   30 / 75"))
-	ok(contains(texts, "Best now: Bolt of Linen Cloth  ·  96 from your bags"))
+	ok(contains(texts, "Now: "), "what is next, in one line")
+	ok(not contains(texts, "MATERIALS FOR THIS RANK"), "materials wait for the profession's page")
+	ok(not contains(texts, "DISENCHANTING"))
+	-- Tailoring's page.
+	ok(stub.clickLabelText("Tailoring   1 / 75"), "click into Tailoring")
+	texts = stub.texts()
+	ok(contains(texts, "Best now: Bolt of Linen Cloth  ·  96 from your bags"), table.concat(texts, " | "))
 	ok(contains(texts, "Open your Tailoring window once"), "asks for the recipe scan")
-	ok(contains(texts, "DISENCHANTING"))
-	ok(contains(texts, "Green Gloves  ·  skill ≈25"))
-	ok(stub.clickLabelText("Follow beside your route"), "follow from the dashboard")
+	ok(not contains(texts, "Enchanting   30 / 75"), "only Tailoring on its page")
+	ok(stub.clickLabelText("Follow beside your route"), "follow from its page")
 	ok(ns.Engine.Side(), "a side guide now")
+	-- Back to the list, then Enchanting's page with disenchanting.
+	ok(_G.PathwisePanel.back.shown, "a Back arrow")
+	_G.PathwisePanel.back.scripts.OnClick(_G.PathwisePanel.back)
+	ok(contains(stub.texts(), "Enchanting   30 / 75"), "back on the list")
+	ok(stub.clickLabelText("Enchanting   30 / 75"))
+	texts = stub.texts()
+	ok(contains(texts, "DISENCHANTING"), table.concat(texts, " | "))
+	ok(contains(texts, "Green Gloves  ·  skill ≈25"))
 end)
 
 test("professions dashboard: no professions yet", function()

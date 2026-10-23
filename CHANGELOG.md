@@ -79,7 +79,8 @@ First version of the independent Pathwise (not yet released).
 - Profession routes from 1 to 300 for all twelve professions, followed
   beside the leveling route: the next profession step shows in the guide
   window when it is on the way (Speed, Balanced or Crafting).
-- Professions dashboard: skill, where the guide stands, the best craft now and
+- Professions: a list of yours with skill and what is next; click one for its
+  page. Professions dashboard: skill, where the guide stands, the best craft now and
   how many the bags make, materials for this rank, disenchanting, and the
   Tailoring + Enchanting tip. Advice only.
 
