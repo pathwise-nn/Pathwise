@@ -1080,6 +1080,38 @@ function builders.settings()
 		{ "slider", "Window size", "ui.scale", 0.5, 1.5, 0.05, pct },
 		{ "slider", "Background opacity", "ui.opacity", 0.4, 1, 0.05, pct },
 		{ "setting", "Compact mode", onOff(ns.Get("guide.compact")), { { ns.Get("guide.compact") and "Turn off" or "Turn on", toggle("guide.compact") } } },
+	}
+	-- Colour: the accent, for Pathwise and (if chosen) the whole suite.
+	local mode = ns.Get("ui.accentMode") or "pathwise"
+	local function pickMode(v) return function() ns.Set("ui.accentMode", v) Panels.Refresh() end end
+	rows[#rows + 1] = { "heading", "Colour" }
+	rows[#rows + 1] = { "setting", "Accent", "", {
+		{ "Pathwise", pickMode("pathwise"), mode == "pathwise" and "accent" or "default" },
+		{ "Class", pickMode("class"), mode == "class" and "accent" or "default" },
+		{ "Custom", pickMode("custom"), mode == "custom" and "accent" or "default" } } }
+	if mode == "custom" then
+		rows[#rows + 1] = { "text", ("Your colour: %s. Type another as #RRGGBB, then Apply."):format(ns.Get("ui.accentColor") or "#66D7FF") }
+		rows[#rows + 1] = { "input", "ui.accentColor", 1 }
+		rows[#rows + 1] = { "buttons", { { "Apply", "accent", function()
+			local text = (Panels.InputText("ui.accentColor") or ""):gsub("%s", "")
+			if not text:match("^#?%x%x%x%x%x%x$") then
+				ns.Print("a colour is six hex digits, like #66D7FF.")
+				return
+			end
+			if text:sub(1, 1) ~= "#" then text = "#" .. text end
+			ns.Set("ui.accentColor", text:upper())
+			Panels.ClearInput("ui.accentColor")
+			Panels.Refresh()
+		end } } }
+	elseif mode == "class" then
+		rows[#rows + 1] = { "text", "Your class colour, on every character its own.", "muted" }
+	end
+	rows[#rows + 1] = { "setting", "Whole suite in this colour", onOff(ns.Get("ui.accentSuite")), { { ns.Get("ui.accentSuite") and "Turn off" or "Turn on", toggle("ui.accentSuite") } } }
+	rows[#rows + 1] = { "text", "On: Pathwise Gear, Bags and the rest use it instead of their own colours.", "muted" }
+	rows[#rows + 1] = { "choice", "Reload now", "Windows already open take the new colour after a reload", function()
+		if ReloadUI then ReloadUI() end
+	end }
+	for _, r in ipairs({
 		{ "heading", "Waypoint arrow" },
 		{ "setting", "Show the arrow", onOff(ns.Get("arrow.shown")), { { ns.Get("arrow.shown") and "Hide" or "Show", toggle("arrow.shown") } } },
 		{ "slider", "Arrow size", "arrow.scale", 0.5, 2, 0.1, pct },
@@ -1121,7 +1153,7 @@ function builders.settings()
 			if a then a:ClearAllPoints() a:SetPoint("TOP", UIParent, "TOP", 0, -140) end
 			Panels.Refresh()
 		end } } },
-	}
+	}) do rows[#rows + 1] = r end
 	-- The other Pathwise addons installed (Pathwise.Suite.RegisterModule).
 	local mods = ns.Suite and ns.Suite.Modules() or {}
 	if #mods > 0 then

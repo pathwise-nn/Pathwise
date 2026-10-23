@@ -744,7 +744,8 @@ function Engine.Pins()
 				if not (log and log[i] and log[i].done) then
 					local p = placeOf(goal)
 					local map = p and p.map
-					local pts, name = map and Q.ObjectiveSpots(q, i, map)
+					local pts, name
+					if map then pts, name = Q.ObjectiveSpots(q, i, map) end
 					for k = 1, pts and #pts or 0, 2 do
 						add({ map = map, x = pts[k], y = pts[k + 1] }, "spot", name, qname(goal))
 					end

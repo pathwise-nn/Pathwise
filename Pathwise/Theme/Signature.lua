@@ -86,8 +86,77 @@ ns.Defaults("ui", {
 })
 
 function T.Color(name)
+	-- "One colour for the whole suite": the suite addons' own colours give
+	-- way to the accent too.
+	if T.MODULES[name] and name ~= "guide" and ns.Get("ui.accentSuite") then return T.COLORS.accent end
 	return T.COLORS[name] or T.MODULES[name] or T.COLORS.text
 end
+
+---------------------------------------------------------------------------
+-- The accent: Pathwise blue, your class colour, or one you pick
+---------------------------------------------------------------------------
+
+ns.Defaults("ui", {
+	accentMode = "pathwise", -- "pathwise" | "class" | "custom"
+	accentColor = "#66D7FF", -- for "custom"
+	accentSuite = false, -- the suite addons use the accent instead of their own colours
+})
+
+T.PATHWISE_ACCENT = hex("#66D7FF")
+
+-- The player's class colour (Blizzard's C_ClassColor, else RAID_CLASS_COLORS).
+function T.ClassColor(classFile)
+	if not classFile then
+		if not UnitClass then return nil end
+		local _, c = UnitClass("player")
+		classFile = ns.Compat and ns.Compat.Readable and ns.Compat.Readable(c) or c
+	end
+	if not classFile then return nil end
+	local c
+	if C_ClassColor and C_ClassColor.GetClassColor then
+		local ok, col = pcall(C_ClassColor.GetClassColor, classFile)
+		if ok and col then c = col end
+	end
+	c = c or (RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile])
+	if not (c and c.r) then return nil end
+	return { c.r, c.g, c.b, 1 }
+end
+
+-- A colour a little lighter, for hover.
+local function lighten(c, by)
+	return { c[1] + (1 - c[1]) * by, c[2] + (1 - c[2]) * by, c[3] + (1 - c[3]) * by, 1 }
+end
+
+-- The accent the settings ask for. -> { r, g, b, 1 }
+function T.WantedAccent()
+	local mode = ns.Get("ui.accentMode")
+	if mode == "class" then return T.ClassColor() or T.PATHWISE_ACCENT end
+	if mode == "custom" then
+		local h = ns.Get("ui.accentColor")
+		if type(h) == "string" and h:match("^#?%x%x%x%x%x%x$") then return hex(h) end
+	end
+	return T.PATHWISE_ACCENT
+end
+
+-- Sets the accent in place, so every colour lookup after this sees it.
+function T.ApplyAccent()
+	local c = T.WantedAccent()
+	local hov = lighten(c, 0.3)
+	for i = 1, 4 do T.COLORS.accent[i] = c[i] T.COLORS.accentHover[i] = hov[i] end
+	T.MODULES.guide[1], T.MODULES.guide[2], T.MODULES.guide[3] = c[1], c[2], c[3]
+	ns.Fire("ACCENT_CHANGED", c)
+	return c
+end
+
+-- "#RRGGBB" of a colour, for the custom colour box.
+function T.ToHex(c)
+	return ("#%02X%02X%02X"):format(math.floor(c[1] * 255 + 0.5), math.floor(c[2] * 255 + 0.5), math.floor(c[3] * 255 + 0.5))
+end
+
+ns.On("LOADED", function() T.ApplyAccent() end)
+ns.On("SETTING_CHANGED", function(path)
+	if path == "ui.accentMode" or path == "ui.accentColor" or path == "ui.accentSuite" then T.ApplyAccent() end
+end)
 
 local function setColor(tex, name, alpha)
 	local c = type(name) == "table" and name or T.Color(name)

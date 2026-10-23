@@ -100,6 +100,9 @@ First version of the independent Pathwise (not yet released).
   (both GPL-3.0; see THIRD_PARTY.md).
 
 ### Suite
+- Accent colour (Settings > Colour): Pathwise blue, your class colour, or one
+  you type; "Whole suite in this colour" puts Gear, Bags and the rest in it
+  too. Pathwise UI, when installed, keeps the same accent.
 - Each suite addon has its own minimap button in its colour (Pathwise Gear:
   gold arrow, Pathwise Bags: green bag), placed apart, draggable, each with
   its own show/hide switch; its settings open beside it.
@@ -107,6 +110,7 @@ First version of the independent Pathwise (not yet released).
   from, or to Pathwise's settings.
 
 ### Fixed
+- Map pins for an objective's monsters had lost the monster's name.
 - Settings, Professions and the other panels drew at the top left of the
   screen with "anchor family connection" errors: the panel's scrolling area
   was anchored to its own contents.

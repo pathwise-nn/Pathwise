@@ -948,3 +948,33 @@ test("sliders: dragging follows the pointer smoothly, step by step, never jumpin
 	eq(c:ValueAt(60), 14)
 	eq(c:ValueAt(-50), 8)
 end)
+
+test("accent: Pathwise blue, your class colour, or one you pick; the suite can follow it", function()
+	local stub, ns = fresh()
+	RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.78, b = 0.92 } }
+	stub.login()
+	local T = ns.Theme
+	near(T.Color("accent")[1], 0x66 / 255, 1e-6, "Pathwise blue by default")
+	ns.Set("ui.accentMode", "class")
+	near(T.Color("accent")[1], 0.25, 1e-6, "a mage's colour")
+	ok(T.Color("accentHover")[1] > 0.25, "hover a little lighter")
+	ns.Set("ui.accentMode", "custom")
+	ns.Set("ui.accentColor", "#FF0000")
+	eq(T.ToHex(T.Color("accent")), "#FF0000")
+	near(T.Color("gear")[1], 0xE8 / 255, 1e-6, "Pathwise Gear keeps its gold")
+	ns.Set("ui.accentSuite", true)
+	eq(T.ToHex(T.Color("gear")), "#FF0000", "the whole suite in your colour")
+	-- In Settings: the three choices and the custom box.
+	ns.Fire("SHOW_SETTINGS")
+	ok(stub.clickLabel("Class"))
+	eq(ns.Get("ui.accentMode"), "class")
+	ok(stub.clickLabel("Custom"))
+	local input
+	for _, f in ipairs(stub.frames) do if rawget(f, "key") == "ui.accentColor" and f.shown then input = f end end
+	ok(input, "a box for your colour")
+	input.box:SetText("7fd98f")
+	input.box.scripts.OnTextChanged(input.box, true)
+	ok(stub.clickLabel("Apply"))
+	eq(ns.Get("ui.accentColor"), "#7FD98F")
+	RAID_CLASS_COLORS = nil
+end)
