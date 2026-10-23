@@ -391,6 +391,98 @@ for id in pairs(itemsUsed) do
 	end
 end
 
+-- Weapons and armour (item class 2 and 4) a player can get while levelling:
+-- the facts Pathwise Gear's "best for my level" list needs to say where an
+-- item comes from. Stats, slot and quality are read from the game client in
+-- game (C_Item), so they are always Forever's own.
+--   gear[id] = { requiredLevel, itemLevel, class, subClass, rewardQuests,
+--                dropNpcs (nil when it drops from many: a world drop), vendors,
+--                worldDrop, dungeon (area id, filled in below) }
+local gear = {}
+local MAX_DROPS = 6
+for id, it in pairs(db.Item) do
+	if type(it) == "table" and it[IK.name] then
+		local class, req = it[IK.class], it[IK.requiredLevel] or 0
+		if (class == 2 or class == 4) and req <= 60 then
+			local quests = ids(it[IK.questRewards])
+			local drops = ids(it[IK.npcDrops])
+			local vendors = ids(it[IK.vendors])
+			if quests or drops or vendors then
+				local world = drops and #drops > MAX_DROPS or nil
+				if world then drops = nil end
+				if quests then while #quests > 3 do table.remove(quests) end end
+				if vendors then while #vendors > 3 do table.remove(vendors) end end
+				for _, n in ipairs(drops or {}) do npcsUsed[n] = true end
+				for _, n in ipairs(vendors or {}) do npcsUsed[n] = true end
+				gear[id] = { req, it[IK.itemLevel] or 0, class, it[IK.subClass] or 0, quests, drops, vendors, world }
+			end
+		end
+	end
+end
+
+-- Crafted weapons and armour (data/recipes.lua, from the Forever client's
+-- tables by tools/data/recipes.js). Kept when QuestieDB's Forever data knows
+-- the item made, which is also the evidence a Season of Discovery recipe is
+-- in Forever. The recipe item that teaches it (QuestieDB's teachesSpell),
+-- with where it drops or is sold, goes in `items`.
+--   gear[id][10] = { skillLine, skill, spell, recipeItem, sod, bindsOnPickup }
+-- The item made is kept when it is a weapon or armour by QuestieDB's facts or,
+-- for items QuestieDB does not know (most Season of Discovery ones), the
+-- client's own tables. Season of Discovery recipes are marked `sod`: the
+-- client has them, some were found in Forever, not all are confirmed.
+local crafted, sodKept = 0, 0
+do
+	local f = io.open("data/recipes.lua", "rb")
+	if f then
+		f:close()
+		local R = dofile("data/recipes.lua")
+		-- One recipe item per spell: one someone sells, else one that drops,
+		-- else the lowest id (QuestieDB says where each comes from).
+		local function rank(x)
+			local t = db.Item[x]
+			if type(t) ~= "table" then return 3 end
+			return (ids(t[IK.vendors]) and 0) or (ids(t[IK.npcDrops]) and 1) or 2
+		end
+		for spell, r in pairs(R.recipes) do
+			local line, skill, made, auto, sod = r[1], r[2], r[3], r[4], r[5]
+			-- The item made: QuestieDB's facts, else the client's own (Item, ItemSparse).
+			local it = db.Item[made]
+			local class = (type(it) == "table" and it[IK.class]) or r[6]
+			local sub = (type(it) == "table" and it[IK.subClass]) or r[7] or 0
+			local req = (type(it) == "table" and it[IK.requiredLevel]) or r[8] or 0
+			local ilvl = (type(it) == "table" and it[IK.itemLevel]) or r[9] or 0
+			if (class == 2 or class == 4) and req <= 60 then
+				local g = gear[made]
+				if not g then
+					g = { req, ilvl, class, sub }
+					gear[made] = g
+				end
+				local recipeItem
+				if not auto then
+					for _, x in ipairs(r[11] or {}) do
+						if not recipeItem or rank(x) < rank(recipeItem) then recipeItem = x end
+					end
+				end
+				if not g[10] or skill < g[10][2] then
+					g[10] = { line, skill, spell, recipeItem, sod or nil, r[10] or nil }
+				end
+				if recipeItem and not items[recipeItem] and type(db.Item[recipeItem]) == "table" then
+					local ri = db.Item[recipeItem]
+					local drops, vendors = ids(ri[IK.npcDrops]), ids(ri[IK.vendors])
+					if drops then while #drops > 8 do table.remove(drops) end for _, n in ipairs(drops) do npcsUsed[n] = true end end
+					if vendors then while #vendors > 4 do table.remove(vendors) end for _, n in ipairs(vendors) do npcsUsed[n] = true end end
+					items[recipeItem] = { ri[IK.name], drops, nil, vendors }
+				end
+				crafted = crafted + 1
+				if sod then sodKept = sodKept + 1 end
+			end
+		end
+		log(("crafted gear: %d recipes from data/recipes.lua (Forever build %s), %d of them Season of Discovery"):format(crafted, R.build, sodKept))
+	else
+		log("no data/recipes.lua: run node tools/data/recipes.js for crafted gear")
+	end
+end
+
 local npcs = {}
 for id in pairs(npcsUsed) do
 	local n = db.Npc[id]
@@ -450,6 +542,7 @@ end
 --              mark a few as unverified on Forever, kept in `unverified`.
 
 local dungeons = {}
+local dungeonOfArea = {}
 do
 	local holder = { private = {} }
 	local function load(faction)
@@ -529,6 +622,7 @@ do
 			lo, hi, from = pct(qlevels, 0.1), pct(qlevels, 0.9), "quests"
 		end
 		if lo and #g.entrances > 0 then
+			for area in pairs(g.areas) do dungeonOfArea[area] = g.id end
 			table.sort(g.entrances, function(a, b)
 				if (a[4] and 1 or 0) ~= (b[4] and 1 or 0) then return not a[4] end
 				if a[1] ~= b[1] then return a[1] < b[1] end
@@ -542,6 +636,17 @@ do
 				unverified = all or nil,
 			}
 		end
+	end
+end
+
+-- A gear drop whose monsters stand inside a dungeon names that dungeon.
+for _, g in pairs(gear) do
+	for _, n in ipairs(g[6] or {}) do
+		local npc = db.Npc[n]
+		for area in pairs(type(npc) == "table" and type(npc[NK.spawns]) == "table" and npc[NK.spawns] or {}) do
+			if dungeonOfArea[area] and dungeons[dungeonOfArea[area]] then g[9] = dungeonOfArea[area] break end
+		end
+		if g[9] then break end
 	end
 end
 
@@ -605,7 +710,7 @@ f:write("--                   breadcrumbFor, nextInChain, objectiveText }\n")
 f:write("--     objectives = { { kind (m npc, o object, i item, k kill credit), id, text, creditNpcs }, ... }\n")
 f:write("--   npcs[id]    = { name, minLevel, maxLevel, friendly (\"A\", \"H\", \"AH\" or nil), spawns }\n")
 f:write("--   objects[id] = { name, spawns }      spawns = { [uiMap] = { x, y, x, y, ... } }\n")
-f:write("--   items[id]   = { name, dropNpcs, dropObjects }\n")
+f:write("--   items[id]   = { name, dropNpcs, dropObjects, vendors }\n")
 f:write("--   zones[uiMap] = { alliance = { low, high, quests }, horde = { ... } } (quest levels, 10th-90th percentile)\n\n")
 f:write("local _, ns = ...\nlocal D = {}\nns.Data = D\n")
 f:write(("D.SOURCE = %q\n"):format("QuestieDB Forever " .. commit))
@@ -623,6 +728,9 @@ section("quests", quests)
 section("npcs", npcs)
 section("objects", objects)
 section("items", items)
+f:write("-- gear[id] = { requiredLevel, itemLevel, class, subClass, rewardQuests, dropNpcs, vendors, worldDrop, dungeon,\n")
+f:write("--   craft = { skillLine, skill, spell, recipeItem, sod, bindsOnPickup } }\n")
+section("gear", gear)
 f:write("-- dungeons[areaId] = { name, levels = { low, high }, levelsFrom = \"monsters\" | \"quests\", quests = { ids }, raid,\n")
 f:write("--   entrances = { { uiMap, x, y, unverified }, ... } (verified first), monsters, unverified (every entrance) }\n")
 f:write("D.dungeons = {\n")
@@ -642,4 +750,4 @@ f:write("}\n")
 f:close()
 
 local function count(t) local n = 0 for _ in pairs(t) do n = n + 1 end return n end
-log(("wrote %s: %d quests, %d npcs, %d objects, %d items, %d zones, %d dungeons and raids"):format(OUT, count(quests), count(npcs), count(objects), count(items), count(zones), count(dungeons)))
+log(("wrote %s: %d quests, %d npcs, %d objects, %d items, %d gear, %d zones, %d dungeons and raids"):format(OUT, count(quests), count(npcs), count(objects), count(items), count(gear), count(zones), count(dungeons)))

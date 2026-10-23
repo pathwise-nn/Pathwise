@@ -182,7 +182,16 @@ C_Item = {
 	end,
 	GetItemNameByID = function(id) local i = stub.itemInfo[id] return i and i[1] end,
 	GetItemStats = function(x) local id = idOf(x) return id and stub.itemStats[id] end,
+	-- Loading: an item is cached when stub.itemInfo has it and stub.uncached does not.
+	IsItemDataCachedByID = function(id) return stub.itemInfo[id] ~= nil and not stub.uncached[id] end,
+	RequestLoadItemDataByID = function(id) stub.requested[id] = true end,
 }
+stub.uncached, stub.requested = {}, {}
+-- Alerts and sounds: what was shown in the middle of the screen, and played.
+stub.notices, stub.sounds = {}, {}
+RaidWarningUtil = { AddMessage = function(text) stub.notices[#stub.notices + 1] = text end }
+SOUNDKIT = { RAID_WARNING = 8959 }
+function PlaySound(id) stub.sounds[#stub.sounds + 1] = id end
 function GetInventoryItemLink(_, slot) local id = stub.equipped[slot] return id and ("item:" .. id) or nil end
 C_Container = {
 	GetContainerNumSlots = function(bag) return stub.bags[bag] and 16 or 0 end,

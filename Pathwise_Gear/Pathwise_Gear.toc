@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Title: Pathwise Gear
-## Notes: Upgrades for your spec, stat priority and the best quest reward. Part of Pathwise.
+## Notes: Upgrades for your spec, stat priority, the best gear for your level and the best quest reward. Part of Pathwise.
 ## Author: leight_nn & florp
 ## Version: 0.1.0-dev
 ## Dependencies: Pathwise
@@ -9,5 +9,6 @@
 
 Weights.lua
 Gear.lua
+Best.lua
 Hooks.lua
 Panel.lua

@@ -101,6 +101,166 @@ test("gear: Haste and Expertise on an item are read and scored", function()
 	eq(st.expertise, 2)
 end)
 
+-- Best for my level: test items given a source in Pathwise's gear data
+-- (a world drop), as tools/data/build.lua writes them.
+local function withGear(stub)
+	local G = Pathwise.Suite.Data.gear
+	G[102] = { 13, 18, 4, 1, nil, nil, nil, true }
+	G[108] = { 13, 18, 4, 1, nil, nil, nil, true }
+	G[107] = { 30, 25, 4, 1, nil, nil, nil, true }
+	G[103] = { 13, 18, 4, 4, nil, nil, nil, true }
+	G[104] = { 14, 20, 2, 15, nil, nil, nil, true }
+end
+
+test("gear best: the best per slot for my level, and where it comes from", function()
+	local stub, ns, g = gear()
+	withGear(stub)
+	local B = g.Best
+	B.Clear()
+	local list = B.List()
+	local head
+	for _, e in ipairs(list) do if e.slot == 1 then head = e end end
+	ok(head, "a head piece")
+	eq(head.id, 102, "Glyphed Hood beats Silk Cowl, plate is left out, Hood of Ages needs 30")
+	eq(B.SourceText(head.source), "World drop (random monsters)")
+	ok(head.pct and head.pct > 0, "better than the worn hood")
+	for _, e in ipairs(list) do ok(e.id ~= 103, "no plate for a mage") end
+	-- Looking 10 levels ahead (the panel offers up to +5; ListFor takes any).
+	local ahead = B.ListFor(30)
+	for _, e in ipairs(ahead) do if e.slot == 1 then eq(e.id, 107, "at 30 the Hood of Ages") end end
+	-- Is it the best? For my level, for the level it needs, or not at all.
+	eq(B.IsBest(102), 20)
+	eq(select(2, B.IsBest(102)), "Head")
+	eq(B.IsBest(108), nil, "Silk Cowl is not")
+	eq(B.IsBest(107), 30, "the best at the level it needs")
+	eq(B.IsBest(103), nil, "plate: never for a mage")
+end)
+
+test("gear best: items the game has not loaded are asked for", function()
+	local stub, ns, g = gear()
+	withGear(stub)
+	stub.uncached[108] = true
+	g.Best.Clear()
+	local _, pending = g.Best.List()
+	ok(pending >= 1, "one still loading")
+	ok(stub.requested[108], "asked the game for it")
+end)
+
+test("gear best: picking one up is announced on screen, with a sound and in chat", function()
+	local stub, ns, g = gear(function(s) s.bags[0] = { { itemID = 101 } } end)
+	withGear(stub)
+	g.Best.Clear()
+	g.Best.CheckBags() -- the first look only counts
+	eq(#stub.notices, 0)
+	stub.bags[0][2] = { itemID = 108 }
+	stub.fire("BAG_UPDATE_DELAYED")
+	eq(#stub.notices, 0, "Silk Cowl is not the best: no alert")
+	stub.bags[0][3] = { itemID = 102 }
+	stub.fire("BAG_UPDATE_DELAYED")
+	eq(stub.notices[1], "Best in slot for your level: Glyphed Hood (Head)")
+	eq(stub.sounds[1], 8959)
+	ok(lastPrint(stub):find("best in slot for your level"), lastPrint(stub))
+	stub.bags[0][4] = { itemID = 107 }
+	stub.fire("BAG_UPDATE_DELAYED")
+	eq(stub.notices[2], "Best in slot for level 30: Hood of Ages (Head)", "and up: the level it needs")
+	ns.Set("gear.bisAlert", false)
+	stub.bags[0][5] = { itemID = 104 }
+	stub.fire("BAG_UPDATE_DELAYED")
+	eq(#stub.notices, 2, "switched off")
+end)
+
+test("gear best: a star in the bags and a line on the tooltip", function()
+	local stub, ns, g = gear(function(s) s.bags[0] = { { itemID = 102 }, { itemID = 108 } } end)
+	withGear(stub)
+	g.Best.Clear()
+	local b1, b2 = stub.bagButton(1), stub.bagButton(2)
+	ContainerFrameCombinedBags:UpdateItems()
+	local function star(b)
+		for _, f in ipairs(stub.frames) do
+			if f.parent == b and rawget(f, "texture") and f.texture:find("glyph%-best") then return f end
+		end
+	end
+	ok(star(b1) and star(b1).shown, "a star on the Glyphed Hood")
+	ok(not star(b2) or not star(b2).shown, "none on the Silk Cowl")
+	local lines = stub.showTooltip("item:102")
+	ok(lines[1][2]:find("^Best in slot · %+"), lines[1][2])
+	lines = stub.showTooltip("item:107")
+	eq(lines[1][2], "Best in slot for level 30")
+end)
+
+-- Crafted: a cloth helm Tailoring makes at 110 (spell 990001, taught by
+-- recipe item 990002, sold by a vendor of the data), better than any other.
+local function withCraft(stub, opts)
+	opts = opts or {}
+	local D = Pathwise.Suite.Data
+	stub.itemInfo[990000] = { "Tailored Cap", 2, 20, 50, 4, 1, "INVTYPE_HEAD", opts.req or 15 }
+	stub.itemStats[990000] = { ITEM_MOD_INTELLECT_SHORT = 10 }
+	local vendor
+	for id, n in pairs(D.npcs) do if n[5] and not n[4] then vendor = id break end end
+	D.items[990002] = { "Pattern: Tailored Cap", nil, nil, { vendor } }
+	D.gear[990000] = { opts.req or 15, 20, 4, 1, nil, nil, nil, nil, nil, { 197, 110, 990001, 990002, opts.sod, opts.bop } }
+	return vendor
+end
+
+test("gear best: crafted gear, by anyone or by me, with its recipe", function()
+	local stub, ns, g = gear()
+	withGear(stub)
+	local vendor = withCraft(stub)
+	local B = g.Best
+	B.Clear()
+	local function head() for _, e in ipairs(B.List()) do if e.slot == 1 then return e end end end
+	eq(head().id, 990000, "the crafted cap is the best head")
+	eq(head().source.kind, "craft")
+	ok(B.SourceText(head().source):find("^Crafted: Tailoring 110 %(Auction House"), B.SourceText(head().source))
+	eq(B.Chase(head()), false, "nowhere to point when you are not the crafter")
+	-- With Tailoring: my craft, its recipe from the vendor, and the arrow there.
+	stub.skills[197] = { 90, 150 }
+	B.Clear()
+	local text = B.SourceText(head().source)
+	ok(text:find("^Craft it at Tailoring 110 %(you have 90%)"), text)
+	ok(text:find("Pattern: Tailored Cap from "), text)
+	ok(B.Chase(head()), "the arrow goes to the pattern's vendor")
+	-- Mine only, without the profession: gone.
+	stub.skills[197] = nil
+	ns.Set("gear.bisCrafted", "mine")
+	B.Clear()
+	ok(head().id ~= 990000, "not mine: left out")
+	ns.Set("gear.bisCrafted", "off")
+	stub.skills[197] = { 120, 150 }
+	B.Clear()
+	ok(head().id ~= 990000, "crafted gear off")
+end)
+
+test("gear best: bind on pickup crafts are only yours; Season of Discovery recipes can be hidden", function()
+	local stub, ns, g = gear()
+	withGear(stub)
+	withCraft(stub, { bop = true, sod = true })
+	local B = g.Best
+	local function head() B.Clear() for _, e in ipairs(B.List()) do if e.slot == 1 then return e end end end
+	ok(head().id ~= 990000, "binds on pickup: no one can sell it to you")
+	stub.skills[197] = { 120, 150 }
+	eq(head().id, 990000, "but you can make it")
+	ok(B.SourceText(head().source):find("Season of Discovery recipe: found in Forever, not confirmed"), B.SourceText(head().source))
+	ns.Set("gear.bisSod", false)
+	ok(head().id ~= 990000, "Season of Discovery recipes hidden")
+end)
+
+test("gear best panel: slot by slot, and the options", function()
+	local stub, ns, g = gear()
+	withGear(stub)
+	g.Best.Clear()
+	ns.Fire("SHOW_SETTINGS")
+	stub.clickLabelText("Pathwise Gear")
+	ok(stub.clickLabelText("Best gear for my level"), "open it from the Gear panel")
+	local texts = stub.texts()
+	ok(contains(texts, "Head:  Glyphed Hood"), table.concat(texts, " | "))
+	ok(contains(texts, "World drop"), "where it comes from")
+	ok(contains(texts, "Alert when I pick one up"))
+	ok(contains(texts, "Crafted gear") and contains(texts, "Season of Discovery recipes"))
+	ok(stub.clickLabel("+3"))
+	eq(ns.Get("gear.bisAhead"), 3)
+end)
+
 test("gear: an item better than what is worn is an upgrade, by how much and where", function()
 	local stub, ns, g = gear()
 	local G = g.Gear

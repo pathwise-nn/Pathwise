@@ -31,6 +31,22 @@ First version of the independent Pathwise (not yet released).
   counts for ranged, Haste and Expertise (their names on items are not yet
   checked in game).
 - Optional custom weights you paste in ("Intellect=1.2, Stamina=0.5").
+- Best gear for my level: slot by slot, the best item this character can
+  get by now (or a few levels ahead), where it comes from (quest, dungeon
+  and boss, monster, vendor, world drop) and whether you have it. Click a
+  slot: the arrow leads to the quest giver, dungeon entrance, monster or
+  vendor. Worked out in game from the item stats the game gives and
+  QuestieDB's Forever data; no BiS site's lists are used.
+- Crafted gear in the list (1,576 weapons and armour from Forever's recipes):
+  "Craft it: Tailoring 110", the recipe and where it is sold or drops (the
+  arrow leads there), or "Crafted: ... (Auction House or a crafter)" for
+  someone else's craft. Bind-on-pickup crafts count only for their crafter.
+  Choose all crafts, only your professions', or none. Season of Discovery
+  recipes Forever's files hold (99 make gear) are shown, marked "found in
+  Forever, not confirmed", and can be hidden.
+- Picking up a best-in-slot item for your level, or for the higher level it
+  needs, is announced on screen with a sound and a chat line; such items
+  get a gold star in the bags and a "Best in slot" tooltip line.
 - Knows what each class can wear and wield, two-handers against both hands,
   rings and trinkets against the weaker one.
 

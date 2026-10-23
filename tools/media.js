@@ -244,6 +244,20 @@ T['glyph-upgrade'] = () => {
 	return c;
 };
 
+// Gear: best for your level (a five-pointed star).
+T['glyph-best'] = () => {
+	const c = canvas(32);
+	const pts = [];
+	for (let k = 0; k < 10; k++) {
+		const a = -Math.PI / 2 + (k * Math.PI) / 5;
+		const r = k % 2 === 0 ? 13 : 5.5;
+		pts.push([16 + r * Math.cos(a), 17 + r * Math.sin(a)]);
+	}
+	paint(c, polygon(pts), 1);
+	paint(c, stroke(pts, 1.4, true), 0.35, 0.9);
+	return c;
+};
+
 // Professions: a hammer.
 T['glyph-prof'] = () => {
 	const c = canvas(32);

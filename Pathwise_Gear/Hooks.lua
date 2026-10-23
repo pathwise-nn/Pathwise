@@ -35,6 +35,13 @@ function H.TooltipLine(link)
 	if pick and pick.link == link then
 		return left, "Best reward for you", T.Color("gear")
 	end
+	local id = tonumber(tostring(link):match("item:(%d+)"))
+	local at = S.Get("gear.bisAlert") ~= false and ns.Best and id and ns.Best.IsBest(id)
+	if at then
+		local right = at > Gear.Client.Level() and ("Best in slot for level %d"):format(at) or "Best in slot for your level"
+		if up and pct then right = ("Best in slot · +%.1f%%"):format(pct) .. (slot and (" · " .. slot) or "") end
+		return left, right, T.Color("gear")
+	end
 	if up then
 		local right = pct and ("+%.1f%% upgrade"):format(pct) or "Upgrade (empty slot)"
 		if slot then right = right .. " · " .. slot end
@@ -108,13 +115,33 @@ local function bagLink(button)
 	return f and S.Compat.Readable(f(bag, button:GetID())) or nil
 end
 
+-- Best in slot for your level (or the level it needs): a gold star.
+local stars = setmetatable({}, { __mode = "k" })
+local function starFor(button)
+	local t = stars[button]
+	if not t then
+		t = button:CreateTexture(nil, "OVERLAY", nil, 4)
+		t:SetTexture(T.MEDIA .. "glyph-best")
+		t:SetSize(16, 16)
+		t:SetPoint("TOPRIGHT", button, "TOPRIGHT", -1, -1)
+		local r, g, b = gold()
+		t:SetVertexColor(r, g, b)
+		stars[button] = t
+	end
+	return t
+end
+
 function H.MarkFrame(frame)
 	if not (frame and frame.EnumerateValidItems) then return end
 	local on = S.Get("gear.bags")
+	local bis = on and S.Get("gear.bisAlert") ~= false
 	for _, button in frame:EnumerateValidItems() do
 		local link = on and bagLink(button)
 		local up = link and Gear.IsUpgrade(link)
 		if up then arrowFor(button):Show() elseif arrows[button] then arrows[button]:Hide() end
+		local id = bis and link and tonumber(tostring(link):match("item:(%d+)"))
+		local best = id and ns.Best and ns.Best.IsBest(id)
+		if best then starFor(button):Show() elseif stars[button] then stars[button]:Hide() end
 	end
 end
 
@@ -193,4 +220,4 @@ S.On("READY", function()
 end)
 S.RegisterEvent("BAG_UPDATE_DELAYED", function() H.InstallBags() end)
 S.On("GEAR_UPDATED", function() H.RedrawBags() end)
-S.On("SETTING_CHANGED", function(path) if path == "gear.bags" or path == "gear.minUpgrade" or path == "gear.scale" or path == "gear.spec" then H.RedrawBags() end end)
+S.On("SETTING_CHANGED", function(path) if path == "gear.bags" or path == "gear.bisAlert" or path == "gear.bisRaids" or path == "gear.minUpgrade" or path == "gear.scale" or path == "gear.spec" then H.RedrawBags() end end)

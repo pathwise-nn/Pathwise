@@ -124,6 +124,9 @@ function P.Build()
 		end }
 	end
 
+	rows[#rows + 1] = { "heading", "Best for my level" }
+	rows[#rows + 1] = { "choice", "Best gear for my level", "Slot by slot: what to chase and where it comes from", function() S.Open("gearbest") end }
+
 	-- Upgrades waiting in the bags.
 	local ups = P.BagUpgrades(8)
 	rows[#rows + 1] = { "heading", ("Upgrades in your bags (%d)"):format(#ups) }
@@ -142,6 +145,68 @@ function P.Build()
 end
 
 S.Panel("gear", P.Build)
+
+-- Best for my level: one row per slot, the best item this character can get
+-- by now, where from, and whether they have it. Click a row: the arrow.
+function P.BuildBest()
+	local Best = ns.Best
+	local list, pending = Best.List()
+	local _, name = Gear.Weights()
+	local level = Gear.Client.Level()
+	local ahead = S.Get("gear.bisAhead") or 0
+	local rows = { { "heading", "Best for my level" } }
+	rows[#rows + 1] = { "text", ("Level %d%s  ·  %s weights"):format(level, ahead > 0 and (" (and the next %d)"):format(ahead) or "", tostring(name)), "gear" }
+	local missing = 0
+	for _, e in ipairs(list) do if not e.have then missing = missing + 1 end end
+	rows[#rows + 1] = { "text", missing == 0 and #list > 0 and "You have the best of everything Pathwise knows for your level."
+		or ("%d of %d slots to chase. Click one: the arrow leads to it."):format(missing, #list) }
+	if pending > 0 then
+		rows[#rows + 1] = { "text", ("Loading %d items from the game..."):format(pending), "muted" }
+	end
+	for _, e in ipairs(list) do
+		local status
+		if e.wearing then status = "Wearing it"
+		elseif e.have then status = "In your bags"
+		elseif e.pct then status = ("%+.0f%% on what you wear"):format(e.pct)
+		else status = "Empty slot" end
+		local sub = Best.SourceText(e.source) .. "  ·  " .. status
+		if e.minLevel and e.minLevel > level then sub = sub .. ("  ·  from level %d"):format(e.minLevel) end
+		rows[#rows + 1] = { "choice", ("%s:  %s%s"):format(e.slotName, tostring(e.name), e.have and "  (have)" or ""), sub, function()
+			if Best.Chase(e) then
+				S.Print(("Pathwise Gear: the arrow leads to %s for %s."):format(Best.SourceText(e.source), tostring(e.name)))
+			else
+				S.Print(("Pathwise Gear: %s comes from %s; Pathwise has no place to point at."):format(tostring(e.name), Best.SourceText(e.source)))
+			end
+		end }
+	end
+	if #list == 0 and pending == 0 then rows[#rows + 1] = { "text", "No gear found for your level yet." } end
+	rows[#rows + 1] = { "heading", "Options" }
+	local function pickAhead(n) return function() S.Set("gear.bisAhead", n) S.Refresh() end end
+	rows[#rows + 1] = { "setting", "Look ahead", ahead == 0 and "My level" or ("+" .. ahead), {
+		{ "Now", pickAhead(0), ahead == 0 and "accent" or "default" },
+		{ "+3", pickAhead(3), ahead == 3 and "accent" or "default" },
+		{ "+5", pickAhead(5), ahead == 5 and "accent" or "default" } } }
+	rows[#rows + 1] = { "setting", "Alert when I pick one up", S.Get("gear.bisAlert") and "On" or "Off", {
+		{ S.Get("gear.bisAlert") and "Turn off" or "Turn on", function() S.Set("gear.bisAlert", not S.Get("gear.bisAlert")) S.Refresh() end } } }
+	rows[#rows + 1] = { "text", "On screen, with a sound and a chat line, and a gold star in your bags: for your level and for the level an item needs.", "muted" }
+	local crafted = S.Get("gear.bisCrafted") or "all"
+	local function pickCrafted(v) return function() S.Set("gear.bisCrafted", v) S.Refresh() end end
+	rows[#rows + 1] = { "setting", "Crafted gear", ({ all = "Anyone's", mine = "Mine only", off = "Hidden" })[crafted] or crafted, {
+		{ "All", pickCrafted("all"), crafted == "all" and "accent" or "default" },
+		{ "Mine", pickCrafted("mine"), crafted == "mine" and "accent" or "default" },
+		{ "Off", pickCrafted("off"), crafted == "off" and "accent" or "default" } } }
+	rows[#rows + 1] = { "text", "All: crafts you could buy from the Auction House or a crafter, and your own. Mine: only what your professions make.", "muted" }
+	rows[#rows + 1] = { "setting", "Season of Discovery recipes", S.Get("gear.bisSod") and "Shown" or "Hidden", {
+		{ S.Get("gear.bisSod") and "Hide" or "Show", function() S.Set("gear.bisSod", not S.Get("gear.bisSod")) S.Refresh() end } } }
+	rows[#rows + 1] = { "text", "They are in Forever's game files and some were found in Forever; not all are confirmed.", "muted" }
+	rows[#rows + 1] = { "setting", "Raid gear", S.Get("gear.bisRaids") and "Shown" or "Hidden", {
+		{ S.Get("gear.bisRaids") and "Hide" or "Show", function() S.Set("gear.bisRaids", not S.Get("gear.bisRaids")) S.Refresh() end } } }
+	rows[#rows + 1] = { "text", "Worked out in game from Pathwise's weights and the item's stats as the game gives them. Where items come from: QuestieDB's Forever data; recipes: Forever's game files.", "muted" }
+	rows[#rows + 1] = { "buttons", { { "Pathwise Gear", "default", function() S.Open("gear") end }, { "Close", "default", S.Close } } }
+	return rows
+end
+S.Panel("gearbest", P.BuildBest)
+S.On("GEAR_BEST_UPDATED", function() if S.IsOpen("gearbest") then S.Refresh() end end)
 S.RegisterModule({
 	key = "gear", name = "Pathwise Gear", accent = "gear",
 	about = "Upgrades, stat priority, best quest rewards",
