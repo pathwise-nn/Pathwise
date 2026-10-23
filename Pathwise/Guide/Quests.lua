@@ -229,6 +229,28 @@ function Q.ObjectivePlace(id, i, from)
 	return p
 end
 
+-- Every spot of objective `i` (1-based) on `map`: { x, y, x, y, ... } and the
+-- name, for pins (up to 12 per map; the data keeps no more).
+function Q.ObjectiveSpots(id, i, map)
+	local q = D.quests[id]
+	local o = q and q[OBJECTIVES] and q[OBJECTIVES][i]
+	if not o then return nil end
+	local kind, oid = o[1], o[2]
+	local entity, name
+	if kind == "m" then entity = D.npcs[oid] and { D.npcs[oid][5], D.npcs[oid][1] }
+	elseif kind == "k" and o[4] then entity = D.npcs[o[4][1]] and { D.npcs[o[4][1]][5], o[3] or D.npcs[o[4][1]][1] }
+	elseif kind == "o" then entity = D.objects[oid] and { D.objects[oid][2], D.objects[oid][1] }
+	elseif kind == "i" then
+		local it = D.items[oid]
+		local n = it and it[2] and D.npcs[it[2][1]]
+		local ob = it and it[3] and D.objects[it[3][1]]
+		if n then entity = { n[5], n[1] } elseif ob then entity = { ob[2], ob[1] } end
+		name = it and it[1]
+	end
+	if not (entity and type(entity[1]) == "table" and entity[1][map]) then return nil end
+	return entity[1][map], name and (entity[2] .. " (" .. name .. ")") or entity[2]
+end
+
 function Q.ObjectiveCount(id)
 	local q = D.quests[id]
 	return q and q[OBJECTIVES] and #q[OBJECTIVES] or 0

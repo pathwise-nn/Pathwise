@@ -221,6 +221,21 @@ T['glyph-zones'] = () => {
 	paint(c, stroke([[20, 9], [20, 26]], 2));
 	return c;
 };
+// Dungeons: a gate (an arch with a doorway).
+T['glyph-dungeon'] = () => {
+	const c = canvas(32);
+	const arch = [[7, 27], [7, 14]];
+	for (let k = 0; k <= 12; k++) {
+		const a = Math.PI - (k * Math.PI) / 12;
+		arch.push([16 + 9 * Math.cos(a), 14 - 9 * Math.sin(a)]);
+	}
+	arch.push([25, 27]);
+	paint(c, stroke(arch, 2.4));
+	paint(c, stroke([[4, 27], [28, 27]], 2.4));
+	paint(c, stroke([[16, 27], [16, 18]], 2));
+	return c;
+};
+
 // Professions: a hammer.
 T['glyph-prof'] = () => {
 	const c = canvas(32);
