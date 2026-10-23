@@ -12,6 +12,8 @@
     "media": "node tools/media.js",
     "data": "lua5.1 tools/data/build.lua",
     "routes": "lua5.1 tools/port/polestar.lua ../pathwise/addon/Pathwise_Guides/Guides.lua Pathwise/Routes",
-    "link": "node tools/link.js"
+    "link": "node tools/link.js",
+    "pack": "node tools/pack.js",
+    "set-version": "node tools/version.js"
   }
 }
