@@ -335,6 +335,7 @@ end)
 test("a profession route followed beside the leveling route: card, Go, skill and recipes", function()
 	local stub, ns = fixture()
 	local E = ns.Engine
+	ns.Set("professions.detour", "craft") -- the trainer is across the zone: show it anyway
 	ok(E.SetSide("forever/professions/tailoring"), "side guide")
 	local card = ns.Guide.View().detour
 	ok(card, "the detour card")
@@ -356,6 +357,64 @@ test("a profession route followed beside the leveling route: card, Go, skill and
 	ok(E.SideStep() > step, "apprentice trained and thread bought: next profession step")
 	ns.Fire("DETOUR_SKIP")
 	eq(ns.Guide.View().detour, nil, "skipped: the card hides until the next profession step")
+end)
+
+test("detour modes: the profession card shows when the step is on the way, by mode", function()
+	local stub, ns = fixture()
+	local E = ns.Engine
+	E.SetSide("forever/professions/tailoring")
+	-- Deathknell to Brill's tailoring trainer is far: Balanced hides the card.
+	eq(ns.Guide.View().detour, nil, "balanced: too far")
+	stub.moveTo(1420, 52.0, 55.0) -- next to Bowen Brisboise
+	E.Update()
+	local card = ns.Guide.View().detour
+	ok(card, "balanced: near, shown")
+	ok(card.sub:find("yd"), "with the distance: " .. card.sub)
+	ns.Set("professions.detour", "speed")
+	E.Update()
+	ok(ns.Guide.View().detour, "speed: right on the way, shown")
+	stub.moveTo(1420, 45.0, 55.0)
+	E.Update()
+	eq(ns.Guide.View().detour, nil, "speed: a few hundred yards off, hidden")
+	ns.Set("professions.detour", "craft")
+	E.Update()
+	ok(ns.Guide.View().detour, "crafting: always")
+end)
+
+test("report this step: a copyable report with the route, step, log and position", function()
+	local stub, ns = fixture()
+	stub.accept(363)
+	ns.Fire("REPORT_STEP")
+	local text = ns.Engine.ReportText()
+	ok(text:find("Route: Deathknell %(test%) %(test/deathknell%)"), text)
+	ok(text:find("turnin 363 Rude Awakening"), "the step's goals")
+	ok(text:find("%[log: on quest"), "quest log state")
+	ok(text:find("Position: map 1420"), "position")
+	ok(text:find("Character: Scourge MAGE, level 2, Horde"), "character")
+	ok(_G.PathwisePanel.shown, "the report panel")
+	ok(contains(stub.texts(), "Report this step") or contains(stub.texts(), "REPORT THIS STEP"))
+end)
+
+test("about panel: name, tagline, creators, signature, credits", function()
+	local stub, ns = login()
+	SlashCmdList.PATHWISE("about")
+	local texts = stub.texts()
+	ok(contains(texts, "Every quest. Every craft. Every level."))
+	ok(contains(texts, "Created by leight_nn & florp"))
+	ok(contains(texts, "_nn"))
+	ok(contains(texts, "Polestar"), "credits Polestar")
+	ok(contains(texts, "QuestieDB"), "credits QuestieDB")
+end)
+
+test("more guides: reputation, mounts and pets are listed, folded until opened", function()
+	local stub, ns = login()
+	local cats = {}
+	for _, r in ipairs(ns.Engine.Routes()) do cats[r.category] = (cats[r.category] or 0) + 1 end
+	ok((cats.Reputation or 0) > 10, "reputation routes")
+	ok((cats.Collectibles or 0) > 40, "mount and pet routes")
+	ns.Fire("SHOW_ROUTES")
+	ok(stub.clickLabelText("Show mount guides"), "open mounts")
+	ok(contains(stub.texts(), "Hide mount guides"))
 end)
 
 ---------------------------------------------------------------------------

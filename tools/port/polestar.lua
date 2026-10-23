@@ -279,16 +279,20 @@ local function writeFile(name, list, what)
 	io.stderr:write(("wrote %s: %d routes, %d steps\n"):format(path, #list, steps))
 end
 
-local leveling, class, professions = {}, {}, {}
+local leveling, class, professions, other = {}, {}, {}, {}
 for _, id in ipairs(order) do
 	local g = guides[id]
 	if g.category == "Leveling" then leveling[#leveling + 1] = convertGuide(g)
 	elseif g.category == "Class" then class[#class + 1] = convertGuide(g)
-	elseif g.category == "Professions" then professions[#professions + 1] = convertGuide(g) end
+	elseif g.category == "Professions" then professions[#professions + 1] = convertGuide(g)
+	elseif g.category == "Reputation" or g.category == "Collectibles" or g.category == "Exploration" or g.category == "Miscellaneous" then
+		other[#other + 1] = convertGuide(g)
+	end
 end
 
 writeFile("Leveling.lua", leveling, "every leveling route, 1-60, both factions")
 writeFile("Class.lua", class, "class quest routes")
 writeFile("Professions.lua", professions, "profession routes, 1-300")
+writeFile("Other.lua", other, "reputation, mount and pet, exploration and miscellaneous routes")
 io.stderr:write(("goals %d, notes %d, quests not in Pathwise's data %d, unresolved names %d\n"):format(
 	stats.goals, stats.notes, stats.missingQuests, unresolved))

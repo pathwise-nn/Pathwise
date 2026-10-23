@@ -248,11 +248,13 @@ test("guide window toggles with /pw and remembers it", function()
 	eq(_G.PathwiseGuide.shown, true)
 end)
 
-test("buttons for features not built yet say so", function()
+test("no button prints 'not built yet' any more", function()
 	local stub, ns = fresh()
 	stub.login()
-	ns.Fire("REPORT_STEP")
-	ok(lastPrint(stub):find("not built yet"), lastPrint(stub))
+	for _, msg in ipairs({ "REPORT_STEP", "DETOUR_GO", "DETOUR_SKIP", "GUIDE_SKIP", "SHOW_ZONES", "SHOW_SETTINGS", "SHOW_ABOUT", "SHOW_PROFESSIONS" }) do
+		ns.Fire(msg)
+		for _, m in ipairs(stub.printed) do ok(not m:find("not built yet"), msg .. ": " .. m) end
+	end
 end)
 
 test("opacity setting re-tints the window ground", function()

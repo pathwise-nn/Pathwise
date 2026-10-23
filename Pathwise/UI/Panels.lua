@@ -11,6 +11,8 @@
 --   { "setting", label, valueText, { { label, onClick }, ... } }
 --   { "slider", label, settingPath, min, max, step, format(v) -> text }
 --   { "progress", fraction }                thin progress line (a profession's skill)
+--   { "copy", text, lines }                 selectable text to copy (Ctrl+C)
+--   { "icon", size }                        the Pathwise compass mark
 --   { "divider" }
 --   { "buttons", { { label, kind, onClick }, ... } }   right-aligned footer
 
@@ -21,7 +23,8 @@ ns.Panels = Panels
 
 local WIDTH, PAD = 300, 16
 local panel, openKind
-local pool = { heading = {}, title = {}, text = {}, choice = {}, setting = {}, divider = {}, buttons = {}, slider = {}, progress = {} }
+local scroll, host -- the rows live on `host`, scrolled inside the panel when taller than the screen
+local pool = { heading = {}, title = {}, text = {}, choice = {}, setting = {}, divider = {}, buttons = {}, slider = {}, progress = {}, copy = {}, icon = {} }
 local used
 
 local function build()
@@ -34,8 +37,22 @@ local function build()
 	T.TrackGround(panel)
 	-- The panel takes the window size when it opens, not while a slider in it
 	-- is being dragged (it would move under the pointer).
+	scroll = CreateFrame("ScrollFrame", nil, panel)
+	scroll:SetPoint("TOPLEFT", host, "TOPLEFT", 0, -1)
+	scroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 1)
+	host = CreateFrame("Frame", nil, scroll)
+	host:SetWidth(WIDTH)
+	host:SetHeight(1)
+	scroll:SetScrollChild(host)
+	scroll:EnableMouseWheel(true)
+	scroll:SetScript("OnMouseWheel", function(self, delta)
+		local maxScroll = math.max(0, (host:GetHeight() or 0) - (self:GetHeight() or 0))
+		local v = math.max(0, math.min(maxScroll, (self:GetVerticalScroll() or 0) - delta * 40))
+		self:SetVerticalScroll(v)
+	end)
 	panel.close = T.IconButton(panel, "close", "Close", function() Panels.Close() end)
 	panel.close:SetPoint("TOPRIGHT", -6, -6)
+	panel.close:SetFrameLevel((scroll:GetFrameLevel() or 1) + 5)
 	panel:Hide()
 end
 
@@ -58,24 +75,24 @@ end
 local makers = {}
 
 function makers.heading()
-	local fs = T.Text(panel, "label", "text2")
+	local fs = T.Text(host, "label", "text2")
 	return fs
 end
 
 function makers.title()
-	return T.Text(panel, "quest", "text")
+	return T.Text(host, "quest", "text")
 end
 
 function makers.text()
-	return T.Text(panel, "meta", "text2")
+	return T.Text(host, "meta", "text2")
 end
 
 function makers.divider()
-	return T.Divider(panel)
+	return T.Divider(host)
 end
 
 function makers.choice()
-	local b = CreateFrame("Button", nil, panel)
+	local b = CreateFrame("Button", nil, host)
 	local hover = b:CreateTexture(nil, "BACKGROUND")
 	hover:SetAllPoints()
 	T.SetColor(hover, "hover")
@@ -92,7 +109,7 @@ function makers.choice()
 end
 
 function makers.setting()
-	local f = CreateFrame("Frame", nil, panel)
+	local f = CreateFrame("Frame", nil, host)
 	f:SetHeight(30)
 	f.label = T.Text(f, "body", "text")
 	f.label:SetPoint("LEFT")
@@ -108,7 +125,7 @@ end
 -- kept on the row by path; the box is shared and told which setting it edits.
 local BOX_W = 46
 function makers.slider()
-	local f = CreateFrame("Frame", nil, panel)
+	local f = CreateFrame("Frame", nil, host)
 	f:SetHeight(48)
 	f.label = T.Text(f, "body", "text")
 	f.label:SetPoint("TOPLEFT")
@@ -123,15 +140,42 @@ function makers.slider()
 end
 
 function makers.progress()
-	local f = CreateFrame("Frame", nil, panel)
+	local f = CreateFrame("Frame", nil, host)
 	f:SetHeight(T.PROGRESS_H)
 	f.line = T.ProgressLine(f)
 	f.line.track:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
 	return f
 end
 
+-- Text to copy: a read-only, multi-line box. Clicking selects it all; the
+-- player presses Ctrl+C. Typing is undone at once (the text stays as built).
+function makers.copy()
+	local f = CreateFrame("Frame", nil, host)
+	T.Panel(f, "bg2")
+	local e = CreateFrame("EditBox", nil, f)
+	e:SetMultiLine(true)
+	e:SetAutoFocus(false)
+	e:SetPoint("TOPLEFT", 8, -6)
+	e:SetPoint("BOTTOMRIGHT", -8, 6)
+	if not e:SetFont(T.FONTS.regular, 11, "") then e:SetFont("Fonts\\FRIZQT__.TTF", 11, "") end
+	local c = T.Color("text2")
+	e:SetTextColor(c[1], c[2], c[3])
+	e:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+	e:SetScript("OnMouseUp", function(self) self:SetFocus() self:HighlightText() end)
+	e:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+	e:SetScript("OnTextChanged", function(self, user)
+		if user and f.text and self:GetText() ~= f.text then self:SetText(f.text) self:HighlightText() end
+	end)
+	f.box = e
+	return f
+end
+
+function makers.icon()
+	return T.Icon(host, 40)
+end
+
 function makers.buttons()
-	local f = CreateFrame("Frame", nil, panel)
+	local f = CreateFrame("Frame", nil, host)
 	f:SetHeight(28)
 	f.buttons = {}
 	return f
@@ -162,7 +206,7 @@ local function render(rows)
 	local y = PAD
 	local function place(w, h, gap, inset)
 		w:ClearAllPoints()
-		w:SetPoint("TOPLEFT", panel, "TOPLEFT", PAD + (inset or 0), -(y + (gap or 0)))
+		w:SetPoint("TOPLEFT", host, "TOPLEFT", PAD + (inset or 0), -(y + (gap or 0)))
 		w:SetWidth(inner - (inset or 0) * 2)
 		y = y + (gap or 0) + h
 	end
@@ -188,8 +232,8 @@ local function render(rows)
 		elseif kind == "divider" then
 			local d = take("divider", makers.divider)
 			d:ClearAllPoints()
-			d:SetPoint("TOPLEFT", panel, "TOPLEFT", PAD, -(y + 12))
-			d:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -PAD, -(y + 12))
+			d:SetPoint("TOPLEFT", host, "TOPLEFT", PAD, -(y + 12))
+			d:SetPoint("TOPRIGHT", host, "TOPRIGHT", -PAD, -(y + 12))
 			y = y + 13
 		elseif kind == "choice" then
 			local b = take("choice", makers.choice)
@@ -201,7 +245,7 @@ local function render(rows)
 			b:SetHeight(h)
 			b:SetScript("OnClick", function() r[4]() end)
 			b:ClearAllPoints()
-			b:SetPoint("TOPLEFT", panel, "TOPLEFT", PAD - 8, -(y + 4))
+			b:SetPoint("TOPLEFT", host, "TOPLEFT", PAD - 8, -(y + 4))
 			y = y + 4 + h
 		elseif kind == "setting" then
 			local f = take("setting", makers.setting)
@@ -220,6 +264,18 @@ local function render(rows)
 			if anchor then f.value:SetPoint("RIGHT", anchor, "LEFT", -8, 0) else f.value:SetPoint("RIGHT") end
 			f.value:SetText(r[3] or "")
 			place(f, 30, 6)
+		elseif kind == "copy" then
+			local f = take("copy", makers.copy)
+			f.text = r[2]
+			f.box:SetText(r[2])
+			f.box:SetWidth(inner - 16)
+			place(f, 12 + (r[3] or 6) * 14, 6)
+		elseif kind == "icon" then
+			local ic = take("icon", makers.icon)
+			ic:SetSize(r[2] or 40, r[2] or 40)
+			ic:ClearAllPoints()
+			ic:SetPoint("TOPLEFT", host, "TOPLEFT", PAD, -y)
+			y = y + (r[2] or 40) + 4
 		elseif kind == "progress" then
 			local f = take("progress", makers.progress)
 			f.line.track:SetWidth(inner) -- set, not anchored: the fill reads it at once
@@ -271,7 +327,13 @@ local function render(rows)
 			place(f, 28, 16)
 		end
 	end
-	panel:SetHeight(y + PAD)
+	-- Taller than 80% of the screen: the panel stops there and scrolls.
+	local full = y + PAD
+	host:SetHeight(full)
+	local screen = (UIParent.GetHeight and UIParent:GetHeight() or 0) * 0.8 / (panel:GetScale() or 1)
+	if screen < 200 then screen = full end
+	panel:SetHeight(math.min(full, screen))
+	panel.scrolls = full > screen
 end
 
 -- Beside the guide window, on whichever side has room.
@@ -299,6 +361,7 @@ function Panels.Open(kind)
 	if not rows then return end
 	openKind = kind
 	panel:SetScale(ns.Get("ui.scale") or 1)
+	scroll:SetVerticalScroll(0)
 	render(rows)
 	anchor()
 	panel:Show()
@@ -400,6 +463,7 @@ end
 ---------------------------------------------------------------------------
 
 local showAll = { leveling = false, professions = false }
+Panels.showAll = showAll
 
 -- A profession route's skill line: its first train or skill goal's.
 local function lineOf(route)
@@ -471,6 +535,35 @@ function builders.routes()
 		showAll.professions = not showAll.professions
 		Panels.Refresh()
 	end }
+	-- More guides, folded until opened: reputation, mounts, pets, exploration, the rest.
+	local function section(key, title, list)
+		if #list == 0 then return end
+		local open = showAll[key]
+		rows[#rows + 1] = { "choice", ("%s %s (%d)"):format(open and "Hide" or "Show", title, #list), nil, function()
+			showAll[key] = not showAll[key]
+			Panels.Refresh()
+		end }
+		if not open then return end
+		for _, r in ipairs(list) do
+			local mine = current and current.id == r.id
+			rows[#rows + 1] = { "choice", r.title, mine and "Your route" or (r.levels and p.level < r.levels[1] and ("From level " .. r.levels[1])) or nil, function()
+				E.SetRoute(r.id)
+				ns.Print("route: " .. r.title)
+				Panels.Refresh()
+			end }
+		end
+	end
+	local mounts, pets = {}, {}
+	for _, r in ipairs(E.RoutesFor(p, "Collectibles")) do
+		if r.id:find("/pets/") then pets[#pets + 1] = r else mounts[#mounts + 1] = r end
+	end
+	rows[#rows + 1] = { "heading", "More guides" }
+	section("reputation", "reputation guides", E.RoutesFor(p, "Reputation"))
+	section("mounts", "mount guides", mounts)
+	section("pets", "pet guides", pets)
+	section("exploration", "exploration guides", E.RoutesFor(p, "Exploration"))
+	section("misc", "other guides", E.RoutesFor(p, "Miscellaneous"))
+
 	rows[#rows + 1] = { "text", "Routes adapted from Polestar (GPL-3.0); quest data from QuestieDB.", "muted" }
 	rows[#rows + 1] = { "buttons", { { "Close", "default", Panels.Close } } }
 	return rows
@@ -579,6 +672,49 @@ function builders.professions()
 end
 
 ---------------------------------------------------------------------------
+-- Report this step, and About
+---------------------------------------------------------------------------
+
+local DISCORD = "https://discord.gg/hSDjBrG8EK"
+
+function builders.report()
+	local text = ns.Engine.ReportText()
+	local n = 1
+	for _ in text:gmatch("\n") do n = n + 1 end
+	return {
+		{ "heading", "Report this step" },
+		{ "text", "Click the box, press Ctrl+C, and paste it into Pathwise's Discord with a line on what went wrong. Nothing is sent from the game." },
+		{ "copy", text, math.min(16, n + 1) },
+		{ "heading", "Pathwise's Discord" },
+		{ "copy", DISCORD, 1 },
+		{ "buttons", { { "Close", "default", Panels.Close } } },
+	}
+end
+
+function builders.about()
+	local Q = ns.Quests
+	return {
+		{ "icon", 40 },
+		{ "title", "Pathwise" },
+		{ "text", "Every quest. Every craft. Every level.", "accent" },
+		{ "text", ("Version %s"):format(ns.VERSION) },
+		{ "text", "Created by leight_nn & florp", "text" },
+		{ "text", "_nn", "muted" },
+		{ "divider" },
+		{ "heading", "Thanks" },
+		{ "text", "Routes adapted from Polestar by the Polestar authors (GPL-3.0)." },
+		{ "text", "Quest data from QuestieDB by the Questie team and contributors." },
+		{ "text", "Typeface: Inter by Rasmus Andersson (SIL Open Font License)." },
+		{ "text", ("Data: %s"):format(tostring(Q.Data.SOURCE)), "muted" },
+		{ "heading", "Licence" },
+		{ "text", "Free and open source under the GNU General Public License, version 3." },
+		{ "heading", "Discord" },
+		{ "copy", DISCORD, 1 },
+		{ "buttons", { { "Close", "default", Panels.Close } } },
+	}
+end
+
+---------------------------------------------------------------------------
 -- Settings
 ---------------------------------------------------------------------------
 
@@ -608,6 +744,19 @@ function builders.settings()
 		{ "heading", "Route" },
 		{ "setting", route and route.title or "No route", "", { { "Routes", function() Panels.Open("routes") end }, { "Zones", function() Panels.Open("zones") end } } },
 		{ "setting", "Side guide", E.Side() and E.Side().title or "None", E.Side() and { { "Stop", function() E.SetSide(nil) Panels.Refresh() end } } or {} },
+		{ "heading", "Profession detours" },
+		{ "setting", "Mode", "", (function()
+			local mode = ns.Get("professions.detour")
+			local function pick(value) return function() ns.Set("professions.detour", value) E.Update() Panels.Refresh() end end
+			return {
+				{ "Speed", pick("speed"), mode == "speed" and "accent" or "default" },
+				{ "Balanced", pick("balanced"), mode == "balanced" and "accent" or "default" },
+				{ "Crafting", pick("craft"), mode == "craft" and "accent" or "default" },
+			}
+		end)() },
+		{ "text", ({ speed = "Only when a profession step is right on your way (about 150 yd).",
+			balanced = "When a profession step is near (about 600 yd).",
+			craft = "Always: professions come first." })[ns.Get("professions.detour")] or "", "muted" },
 		{ "setting", "Skipped quests", tostring(skippedN), skippedN > 0 and { { "Bring back", function()
 			for _, q in ipairs(E.Skipped()) do E.State().skipped[q] = nil end
 			E.Update()
@@ -622,7 +771,7 @@ function builders.settings()
 			if a then a:ClearAllPoints() a:SetPoint("TOP", UIParent, "TOP", 0, -140) end
 			Panels.Refresh()
 		end } } },
-		{ "text", ("Pathwise %s  ·  Every quest. Every craft. Every level.\nCreated by leight_nn & florp   _nn"):format(ns.VERSION), "muted" },
+		{ "choice", "About Pathwise", ("Version %s  ·  created by leight_nn & florp   _nn"):format(ns.VERSION), function() Panels.Open("about") end },
 	}
 end
 
@@ -631,6 +780,8 @@ ns.On("SHOW_ZONES", function() Panels.Open("zones") end)
 ns.On("SHOW_SETTINGS", function() Panels.Open("settings") end)
 ns.On("SHOW_ROUTES", function() Panels.Open("routes") end)
 ns.On("SHOW_PROFESSIONS", function() Panels.Open("professions") end)
+ns.On("REPORT_STEP", function() Panels.Open("report") end)
+ns.On("SHOW_ABOUT", function() Panels.Open("about") end)
 ns.On("GUIDE_UPDATED", function() if Panels.IsOpen("skip") or Panels.IsOpen("professions") then Panels.Refresh() end end)
 ns.On("PROFESSIONS_CHANGED", function() if Panels.IsOpen("professions") then Panels.Refresh() end end)
 ns.On("SETTING_CHANGED", function(path)

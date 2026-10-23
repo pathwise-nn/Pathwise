@@ -219,6 +219,7 @@ function stub.texts()
 	return out
 end
 
+function GetBuildInfo() return "1.60.1", "70532", "Oct 2026", 16001 end
 function GetPlayerFacing() return stub.player.facing end
 function IsInInstance() return stub.player.instance end
 function UnitOnTaxi() return stub.player.taxi end

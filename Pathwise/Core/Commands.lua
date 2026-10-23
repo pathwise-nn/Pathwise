@@ -133,7 +133,9 @@ end, "preview the guide window with a sample step")
 
 ns.Command("about", function()
 	ns.Print(("Pathwise %s  ·  Every quest. Every craft. Every level.  ·  created by leight_nn & florp  _nn"):format(ns.VERSION))
+	ns.Fire("SHOW_ABOUT")
 end, "version and credits")
+ns.Command("report", function() ns.Fire("REPORT_STEP") end, "a report of this step to paste into Discord")
 
 ns.Command("settings", function() ns.Fire("SHOW_SETTINGS") end, "open the settings panel")
 ns.Command("zones", function() ns.Fire("SHOW_ZONES") end, "zones for your level (and switching routes)")
@@ -160,12 +162,5 @@ ns.Command("route", function(args)
 	for _, x in ipairs(E.Routes()) do ns.Print("  " .. x.id .. "  " .. x.title) end
 end, "show or choose the route: /pw route <id or title>")
 
--- Buttons whose features are not built yet say so instead of doing nothing.
-local function later(what)
-	return function() ns.Print(what .. " is not built yet.") end
-end
 ns.On("GUIDE_BACK", function() ns.Engine.Back() end)
 ns.On("GUIDE_NEXT", function() ns.Engine.Next() end)
-ns.On("REPORT_STEP", later("Reporting a step"))
-ns.On("DETOUR_GO", later("Profession detours"))
-ns.On("DETOUR_SKIP", later("Profession detours"))
