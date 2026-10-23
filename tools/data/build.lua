@@ -392,7 +392,7 @@ for id in pairs(itemsUsed) do
 end
 
 -- Weapons and armour (item class 2 and 4) a player can get while levelling:
--- the facts Pathwise Gear's "best for my level" list needs to say where an
+-- the facts Pathwise Gear's "Best in Slot (Level)" list needs to say where an
 -- item comes from. Stats, slot and quality are read from the game client in
 -- game (C_Item), so they are always Forever's own.
 --   gear[id] = { requiredLevel, itemLevel, class, subClass, rewardQuests,

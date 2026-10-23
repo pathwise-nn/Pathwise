@@ -31,7 +31,7 @@ First version of the independent Pathwise (not yet released).
   counts for ranged, Haste and Expertise (their names on items are not yet
   checked in game).
 - Optional custom weights you paste in ("Intellect=1.2, Stamina=0.5").
-- Best gear for my level: slot by slot, the best item this character can
+- Best in Slot (Level): slot by slot, the best item this character can
   get by now (or a few levels ahead), where it comes from (quest, dungeon
   and boss, monster, vendor, world drop) and whether you have it. Click a
   slot: the arrow leads to the quest giver, dungeon entrance, monster or

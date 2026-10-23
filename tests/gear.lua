@@ -101,7 +101,7 @@ test("gear: Haste and Expertise on an item are read and scored", function()
 	eq(st.expertise, 2)
 end)
 
--- Best for my level: test items given a source in Pathwise's gear data
+-- Best in Slot (Level): test items given a source in Pathwise's gear data
 -- (a world drop), as tools/data/build.lua writes them.
 local function withGear(stub)
 	local G = Pathwise.Suite.Data.gear
@@ -251,7 +251,8 @@ test("gear best panel: slot by slot, and the options", function()
 	g.Best.Clear()
 	ns.Fire("SHOW_SETTINGS")
 	stub.clickLabelText("Pathwise Gear")
-	ok(stub.clickLabelText("Best gear for my level"), "open it from the Gear panel")
+	ok(stub.clickLabelText("Best in Slot (Level)"), "open it from the Gear panel")
+	ok(contains(stub.texts(), "BEST IN SLOT (LEVEL)"), "its heading")
 	local texts = stub.texts()
 	ok(contains(texts, "Head:  Glyphed Hood"), table.concat(texts, " | "))
 	ok(contains(texts, "World drop"), "where it comes from")

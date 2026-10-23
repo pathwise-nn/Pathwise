@@ -23,7 +23,7 @@ explains how the numbers were set).
 | [Warcraft Tavern: WoW Forever stats guide](https://www.warcrafttavern.com/forever/guides/stats/) | Forever's stat rules (attack power, crit, Spirit for healers, Haste) |
 | [Wowhead: WoW Forever class guides](https://www.wowhead.com/forever/guides/classes) | Read as a cross-check; they list gear rather than stat orders |
 
-Pathwise Gear's "best for my level" list is worked out in game: which items
+Pathwise Gear's "Best in Slot (Level)" list is worked out in game: which items
 exist and where they come from is QuestieDB's Forever data (above), their
 stats are what the game client reports. ForeverChanges' BiS lists (its terms
 forbid copying its compiled data) and Foresight's data (all rights reserved

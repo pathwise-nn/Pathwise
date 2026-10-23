@@ -1,4 +1,4 @@
--- Pathwise Gear: the best gear for my level, slot by slot, and where to get
+-- Pathwise Gear's Best in Slot (Level): the best gear for my level, slot by slot, and where to get
 -- it, so a player can chase what they are missing.
 --
 --   Best.List() -> { { slot, name, id, link, score, pct, have, source, place }, ... }, pending

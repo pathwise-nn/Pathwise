@@ -124,8 +124,8 @@ function P.Build()
 		end }
 	end
 
-	rows[#rows + 1] = { "heading", "Best for my level" }
-	rows[#rows + 1] = { "choice", "Best gear for my level", "Slot by slot: what to chase and where it comes from", function() S.Open("gearbest") end }
+	rows[#rows + 1] = { "heading", "Best in Slot (Level)" }
+	rows[#rows + 1] = { "choice", "Best in Slot (Level)", "Slot by slot: what to chase for your level and where it comes from", function() S.Open("gearbest") end }
 
 	-- Upgrades waiting in the bags.
 	local ups = P.BagUpgrades(8)
@@ -146,7 +146,7 @@ end
 
 S.Panel("gear", P.Build)
 
--- Best for my level: one row per slot, the best item this character can get
+-- Best in Slot (Level): one row per slot, the best item this character can get
 -- by now, where from, and whether they have it. Click a row: the arrow.
 function P.BuildBest()
 	local Best = ns.Best
@@ -154,7 +154,7 @@ function P.BuildBest()
 	local _, name = Gear.Weights()
 	local level = Gear.Client.Level()
 	local ahead = S.Get("gear.bisAhead") or 0
-	local rows = { { "heading", "Best for my level" } }
+	local rows = { { "heading", "Best in Slot (Level)" } }
 	rows[#rows + 1] = { "text", ("Level %d%s  ·  %s weights"):format(level, ahead > 0 and (" (and the next %d)"):format(ahead) or "", tostring(name)), "gear" }
 	local missing = 0
 	for _, e in ipairs(list) do if not e.have then missing = missing + 1 end end
