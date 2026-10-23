@@ -7,14 +7,24 @@
 | Blizzard's Forever UI source ([Gethe/wow-ui-source](https://github.com/Gethe/wow-ui-source), `forever` branch) | Checking which client APIs exist on Forever | © Blizzard Entertainment | Read while developing; nothing copied |
 | [Polestar](https://github.com/fitzforge/polestar), Copyright (c) 2026 The Polestar authors | Its leveling routes (1-60, both factions, every starting race), class quest routes and profession routes, adapted into Pathwise's route format by `tools/port/polestar.lua` (what changes is listed in that file). Also a reference for how Forever behaves (secret values, map and world positions, facing, skills); Pathwise's addon code is its own | GPL-3.0 | `Pathwise/Routes/Leveling.lua`, `Class.lua`, `Professions.lua` (generated; each file names its source) |
 
-## Works with, nothing copied
+## References, nothing copied
 
-| What | How Pathwise uses it |
+Pathwise Gear's weights are its own numbers. The order of stats for each spec
+follows these guides, and the stat rules follow Warcraft Tavern's. Only the
+facts (which stat comes before which, and how many points give what) are
+used. None of their text is in Pathwise (`Pathwise_Gear/Weights.lua`
+explains how the numbers were set).
+
+| Reference | Used for |
 |---|---|
-| [Pawn](https://github.com/vgermods/pawn) by Travis Spomer (CC BY-NC-ND 3.0) | Pathwise Gear calls Pawn's public functions (`PawnGetItemData`, `PawnIsItemAnUpgrade`) at run time when the player has Pawn installed, and reads Pawn's scale-string format so players can paste their own weights. No Pawn code or scale data is in Pathwise: its licence allows no derivatives |
+| [Icy Veins: WoW Forever class guides](https://www.icy-veins.com/wow-forever/all-class-guides) | Each spec's stat priority at level 30; their Classic Era guides for level 60 |
+| [Mobalytics: WoW Forever class guides](https://mobalytics.gg/wow-forever/classes) | Each spec's levelling stat priority, and Forever's talent changes that move it |
+| [Warcraft Tavern: WoW Forever stats guide](https://www.warcrafttavern.com/forever/guides/stats/) | Forever's stat rules (attack power, crit, Spirit for healers, Haste) |
+| [Wowhead: WoW Forever class guides](https://www.wowhead.com/forever/guides/classes) | Read as a cross-check; they list gear rather than stat orders |
 
-Pathwise Gear's default weights are its own, worked out from Classic's
-stat rules (`Pathwise_Gear/Weights.lua` explains how).
+Pathwise Gear needs no other addon. Its custom-weights box also reads the
+`( Pawn: v1: ... )` text format that guide sites share, without Pawn
+installed; no Pawn code is in Pathwise.
 
 Everything else in this repository (code, textures drawn by `tools/media.js`,
 documents) is Pathwise's own, under GPL-3.0 (see `LICENSE`).

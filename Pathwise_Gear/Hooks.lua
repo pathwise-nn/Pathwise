@@ -29,13 +29,9 @@ local pick -- { link, pct, quest } of the reward panel open now
 -- The line for an item: left, right, and the right colour, or nil.
 function H.TooltipLine(link)
 	if not (S.Get("gear.tooltip") and link) then return nil end
-	local up, pct, slot, by = Gear.IsUpgrade(link)
-	local left
-	if by == "pawn" then left = "Pathwise Gear · Pawn"
-	else
-		local _, name = Gear.Weights()
-		left = "Pathwise Gear · " .. tostring(name)
-	end
+	local up, pct, slot = Gear.IsUpgrade(link)
+	local _, name = Gear.Weights()
+	local left = "Pathwise Gear · " .. tostring(name)
 	if pick and pick.link == link then
 		return left, "Best reward for you", T.Color("gear")
 	end
@@ -44,14 +40,12 @@ function H.TooltipLine(link)
 		if slot then right = right .. " · " .. slot end
 		return left, right, T.Color("success")
 	end
-	if by == "pathwise" then
-		local r = Gear.Compare(link)
-		if r and not r.usable then
-			return left, ({ armor = "You can't wear this armour", weapon = "You can't use this weapon", shield = "You can't use shields" })[r.reason] or "Not for you", T.Color("muted")
-		end
-		if r and r.reason == "level" then return left, ("From level %d"):format(r.minLevel or 0), T.Color("muted") end
-		if r and r.pct and r.delta < 0 then return left, ("%.1f%% worse"):format(-r.pct), T.Color("muted") end
+	local r = Gear.Compare(link)
+	if r and not r.usable then
+		return left, ({ armor = "You can't wear this armour", weapon = "You can't use this weapon", shield = "You can't use shields" })[r.reason] or "Not for you", T.Color("muted")
 	end
+	if r and r.reason == "level" then return left, ("From level %d"):format(r.minLevel or 0), T.Color("muted") end
+	if r and r.pct and r.delta < 0 then return left, ("%.1f%% worse"):format(-r.pct), T.Color("muted") end
 	return nil
 end
 
@@ -199,4 +193,4 @@ S.On("READY", function()
 end)
 S.RegisterEvent("BAG_UPDATE_DELAYED", function() H.InstallBags() end)
 S.On("GEAR_UPDATED", function() H.RedrawBags() end)
-S.On("SETTING_CHANGED", function(path) if path == "gear.bags" or path == "gear.minUpgrade" or path == "gear.source" then H.RedrawBags() end end)
+S.On("SETTING_CHANGED", function(path) if path == "gear.bags" or path == "gear.minUpgrade" or path == "gear.scale" or path == "gear.spec" then H.RedrawBags() end end)

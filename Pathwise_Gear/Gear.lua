@@ -5,13 +5,10 @@
 --   Gear.IsUpgrade(link) -> bool, pct, slot  wearable now and at least gear.minUpgrade % better
 --   Gear.Spec() -> key, label, how ("auto" | "chosen")
 --   Gear.Weights() -> weights, name, source ("pathwise" | "imported")
---   Gear.Source() -> "pawn" | "pathwise"     who scores items now
---   Gear.ImportScale(text) -> scale | nil, err   a Pawn scale string
+--   Gear.ImportScale(text) -> scale | nil, err   custom weights, pasted
 --
 -- Stats: the client's own (C_Item.GetItemStats), so Forever's numbers.
--- With Pawn installed and gear.source "auto" or "pawn", Pawn's own upgrade
--- verdicts are used instead (PawnGetItemData + PawnIsItemAnUpgrade, Pawn's
--- public functions; nothing of Pawn is copied into Pathwise).
+-- Pathwise Gear scores everything itself; it needs no other addon.
 
 local ADDON, ns = ...
 local S = Pathwise.Suite
@@ -21,7 +18,6 @@ ns.Gear = Gear
 Pathwise.Gear = Gear
 
 S.Defaults("gear", {
-	source = "auto", -- "auto" (Pawn when installed), "pawn", "pathwise"
 	minUpgrade = 0.01, -- the smallest gain that counts as an upgrade (0.01 = 1%)
 	tooltip = true, bags = true, rewards = true,
 	spec = nil, -- per class: { MAGE = "frost", ... } when chosen
@@ -104,6 +100,11 @@ local STATS = {
 	ITEM_MOD_DEFENSE_SKILL_RATING_SHORT = "defense", ITEM_MOD_DODGE_RATING_SHORT = "dodge",
 	ITEM_MOD_PARRY_RATING_SHORT = "parry", ITEM_MOD_BLOCK_RATING_SHORT = "block",
 	ITEM_MOD_BLOCK_VALUE_SHORT = "blockValue",
+	-- UNVERIFIED on Forever: the names later WoW clients use for Haste and
+	-- Expertise. Forever has both stats, but no beta item with them has been
+	-- checked yet (/dump C_Item.GetItemStats(link) on one would settle it).
+	-- A name the client never sends simply never matches.
+	ITEM_MOD_HASTE_RATING_SHORT = "haste", ITEM_MOD_EXPERTISE_RATING_SHORT = "expertise",
 }
 Gear.STATS = STATS
 
@@ -183,27 +184,36 @@ function Gear.Weights()
 	return W.For(class, key) or {}, label or "?", "pathwise"
 end
 
--- Pawn's stat names in its scale strings (the format Pawn exports and
--- imports) -> Pathwise's keys. Names not listed are ignored and reported.
-local PAWN_STATS = {
+-- Stat names a player may paste (plain names, and the names the common
+-- "( Pawn: v1: ... )" strings use) -> Pathwise's keys. Names not listed are
+-- ignored and reported.
+local STAT_NAMES = {
 	strength = { "str" }, agility = { "agi" }, stamina = { "sta" }, intellect = { "int" }, spirit = { "spi" },
 	armor = { "armor" }, ap = { "ap" }, rap = { "rap" }, spelldamage = { "sp" }, spellpower = { "sp" },
 	healing = { "heal" }, mp5 = { "mp5" }, hp5 = { "hp5" }, critrating = { "crit" }, hitrating = { "hit" },
 	spellcritrating = { "spellCrit" }, spellhitrating = { "spellHit" }, defenserating = { "defense" },
 	dodgerating = { "dodge" }, parryrating = { "parry" }, blockrating = { "block" }, blockvalue = { "blockValue" },
+	hasterating = { "haste" }, expertiserating = { "expertise" },
+	-- Plain names for typing weights by hand.
+	str = { "str" }, agi = { "agi" }, sta = { "sta" }, int = { "int" }, spi = { "spi" },
+	attackpower = { "ap" }, rangedattackpower = { "rap" }, crit = { "crit" }, hit = { "hit" },
+	spellcrit = { "spellCrit" }, spellhit = { "spellHit" }, haste = { "haste" }, expertise = { "expertise" },
+	defense = { "defense" }, dodge = { "dodge" }, parry = { "parry" }, block = { "block" }, weapondps = { "dps" },
 	dps = { "dps", "rdps" }, meleedps = { "dps" }, rangeddps = { "rdps" },
 	firespelldamage = { "spFire" }, frostspelldamage = { "spFrost" }, shadowspelldamage = { "spShadow" },
 	arcanespelldamage = { "spArcane" }, naturespelldamage = { "spNature" }, holyspelldamage = { "spHoly" },
 }
 
--- Reads "( Pawn: v1: "Name": Class=Mage, Strength=1.5, ... )".
+-- Reads custom weights: a plain list ("Intellect=1.2, Stamina=0.5"),
+-- optionally named ("My frost": Intellect=1.2, ...), or the common
+-- "( Pawn: v1: "Name": Class=Mage, Strength=1.5, ... )" string many guide
+-- sites share. Only the text is read; no other addon is used.
 -- -> { name, class, weights, ignored = { names } } or nil, reason.
-function Gear.ParsePawn(text)
-	if type(text) ~= "string" or text == "" then return nil, "empty" end
-	local body = text:match("[Pp]awn%s*:%s*v1%s*:(.*)")
-	if not body then return nil, "This is not a Pawn scale string (it starts with \"( Pawn: v1:\")." end
-	body = body:gsub("%)%s*$", "")
-	local name = body:match('^%s*"([^"]*)"%s*:') or "Imported scale"
+function Gear.ParseScale(text)
+	if type(text) ~= "string" or text:match("^%s*$") then return nil, "Paste some weights first." end
+	local body = text:match("[Pp]awn%s*:%s*v1%s*:(.*)") or text
+	body = body:gsub("^%s*%(", ""):gsub("%)%s*$", "")
+	local name = body:match('^%s*"([^"]*)"%s*:') or "Custom weights"
 	body = body:gsub('^%s*"[^"]*"%s*:', "")
 	local weights, ignored, class = {}, {}, nil
 	for key, value in body:gmatch("([%w_]+)%s*=%s*([^,%)]+)") do
@@ -212,7 +222,7 @@ function Gear.ParsePawn(text)
 			class = value:gsub("%s", ""):upper()
 		elseif lower ~= "spec" then
 			local n = tonumber((value:gsub("%s", "")))
-			local to = PAWN_STATS[lower]
+			local to = STAT_NAMES[lower]
 			if n and to then
 				for _, k in ipairs(to) do weights[k] = n end
 			elseif n then
@@ -220,13 +230,13 @@ function Gear.ParsePawn(text)
 			end
 		end
 	end
-	if not next(weights) then return nil, "No stats Pathwise knows were found in it." end
+	if not next(weights) then return nil, "No stats Pathwise knows were found in it (write them like Intellect=1.2, Stamina=0.5)." end
 	if class == "DEATHKNIGHT" or class == "DEMONHUNTER" or class == "MONK" or class == "EVOKER" then class = nil end
 	return { name = name, class = class, weights = weights, ignored = ignored }
 end
 
 function Gear.ImportScale(text)
-	local scale, err = Gear.ParsePawn(text)
+	local scale, err = Gear.ParseScale(text)
 	if not scale then return nil, err end
 	scale.class = scale.class or Client.Class()
 	local list = {}
@@ -334,48 +344,12 @@ function Gear.Compare(link)
 end
 
 ---------------------------------------------------------------------------
--- Pawn, when installed
----------------------------------------------------------------------------
-
-function Gear.PawnLoaded()
-	return type(PawnGetItemData) == "function" and type(PawnIsItemAnUpgrade) == "function"
-end
-
-function Gear.Source()
-	local want = S.Get("gear.source")
-	if want == "pathwise" then return "pathwise" end
-	if Gear.PawnLoaded() then return "pawn" end
-	return "pathwise"
-end
-
--- Pawn's verdict: the best percent upgrade over its visible scales, and the
--- scale's name. nil when Pawn says nothing.
-function Gear.PawnUpgrade(link)
-	if not Gear.PawnLoaded() then return nil end
-	local ok, item = pcall(PawnGetItemData, link)
-	if not (ok and item) then return nil end
-	local ok2, info = pcall(PawnIsItemAnUpgrade, item)
-	if not (ok2 and type(info) == "table" and info[1]) then return nil end
-	local best
-	for _, u in ipairs(info) do
-		if type(u.PercentUpgrade) == "number" and (not best or u.PercentUpgrade > best.PercentUpgrade) then best = u end
-	end
-	if not best then return nil end
-	return best.PercentUpgrade * 100, best.LocalizedScaleName or best.ScaleName
-end
-
----------------------------------------------------------------------------
 -- The verdict
 ---------------------------------------------------------------------------
 
--- -> isUpgrade, pct (nil when it fills an empty slot), slot name, by ("pawn" | "pathwise")
+-- -> isUpgrade, pct (nil when it fills an empty slot), slot name, "pathwise"
 function Gear.IsUpgrade(link)
 	if not link then return false end
-	if Gear.Source() == "pawn" then
-		local pct, scale = Gear.PawnUpgrade(link)
-		if pct and pct >= (S.Get("gear.minUpgrade") or 0) * 100 then return true, pct, scale, "pawn" end
-		return false, nil, nil, "pawn"
-	end
 	local r = Gear.Compare(link)
 	if not r or not r.usable or r.reason == "level" or r.equipped then return false, nil, nil, "pathwise" end
 	local slotName = Gear.SLOT_NAMES[r.slot]

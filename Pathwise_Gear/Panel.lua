@@ -1,6 +1,6 @@
 -- The Pathwise Gear panel (Settings > Pathwise suite > Pathwise Gear, or the
 -- minimap button's Settings): who scores items, the spec and its stat
--- priority, Pawn scale strings, the upgrades in your bags, and the options.
+-- priority, custom weights, the upgrades in your bags, and the options.
 
 local ADDON, ns = ...
 local S, Gear, W = Pathwise.Suite, ns.Gear, ns.Weights
@@ -11,6 +11,7 @@ local NAMES = {
 	str = "Strength", agi = "Agility", sta = "Stamina", int = "Intellect", spi = "Spirit", armor = "Armour",
 	ap = "Attack power", rap = "Ranged attack power", sp = "Spell damage", heal = "Healing", mp5 = "Mana per 5 sec",
 	crit = "Crit %", hit = "Hit %", spellCrit = "Spell crit %", spellHit = "Spell hit %", defense = "Defense",
+	haste = "Haste %", expertise = "Expertise",
 	dodge = "Dodge %", parry = "Parry %", block = "Block %", blockValue = "Block value", dps = "Weapon DPS",
 	rdps = "Ranged DPS", health = "Health", mana = "Mana", hp5 = "Health per 5 sec",
 	spFire = "Fire damage", spFrost = "Frost damage", spShadow = "Shadow damage", spArcane = "Arcane damage",
@@ -23,8 +24,11 @@ P.NAMES = NAMES
 -- apart). -> "Intellect › Spell damage › ...", "Hit %, Crit %"
 function P.Priority(weights)
 	local base, pct = {}, {}
-	local PCT = { crit = true, hit = true, spellCrit = true, spellHit = true, dodge = true, parry = true, block = true, dps = true, rdps = true }
+	local PCT = { crit = true, hit = true, spellCrit = true, spellHit = true, dodge = true, parry = true, block = true,
+		dps = true, rdps = true, haste = true, expertise = true }
 	local SKIP = { health = true, mana = true, armor = true, blockValue = true, spFire = true, spFrost = true, spShadow = true, spArcane = true, spNature = true, spHoly = true }
+	-- A caster's plain crit copies its spell crit: list it once.
+	if weights and weights.spellCrit and weights.crit == weights.spellCrit then SKIP.spellCrit = true end
 	for k, v in pairs(weights or {}) do
 		if NAMES[k] and v > 0 and not SKIP[k] then
 			if PCT[k] then pct[#pct + 1] = { k, v } else base[#base + 1] = { k, v } end
@@ -65,23 +69,9 @@ local function toggle(path) return function() S.Set(path, not S.Get(path)) S.Ref
 
 function P.Build()
 	local rows = { { "heading", "Pathwise Gear" } }
-	local source = Gear.Source()
 	local weights, name, from = Gear.Weights()
-	if source == "pawn" then
-		rows[#rows + 1] = { "text", "Scoring with Pawn: its scales decide what is an upgrade.", "gear" }
-	else
-		rows[#rows + 1] = { "text", from == "imported" and ("Scoring with your Pawn scale \"%s\"."):format(name)
-			or ("Scoring with Pathwise's %s weights."):format(name), "gear" }
-	end
-	local want = S.Get("gear.source")
-	local function pick(v) return function() S.Set("gear.source", v) Gear.Clear() S.Refresh() end end
-	local choices = { { "Automatic", pick("auto"), want == "auto" and "accent" or "default" } }
-	if Gear.PawnLoaded() then choices[#choices + 1] = { "Pawn", pick("pawn"), want == "pawn" and "accent" or "default" } end
-	choices[#choices + 1] = { "Pathwise", pick("pathwise"), want == "pathwise" and "accent" or "default" }
-	rows[#rows + 1] = { "setting", "Scores from", "", choices }
-	if not Gear.PawnLoaded() then
-		rows[#rows + 1] = { "text", "Have Pawn installed? Automatic uses it.", "muted" }
-	end
+	rows[#rows + 1] = { "text", from == "imported" and ("Scoring with your custom weights \"%s\"."):format(name)
+		or ("Scoring with Pathwise's %s weights."):format(name), "gear" }
 
 	-- Spec and stat priority (Pathwise's weights).
 	local class = Gear.Client.Class()
@@ -107,11 +97,13 @@ function P.Build()
 	rows[#rows + 1] = { "heading", "Stat priority" }
 	rows[#rows + 1] = { "text", main ~= "" and main or "No stats", "text" }
 	if pct ~= "" then rows[#rows + 1] = { "text", "Per 1%: " .. pct } end
-	rows[#rows + 1] = { "text", "Pathwise's own weights from Classic's stat rules, not yet checked on Forever.", "muted" }
+	local spec = from ~= "imported" and W.Spec(class, key)
+	if spec and spec.note then rows[#rows + 1] = { "text", "The class guides agree: " .. spec.note .. ".", "muted" } end
+	rows[#rows + 1] = { "text", "Pathwise's own weights, ordered as the Icy Veins and Mobalytics Forever guides advise. Not yet checked in game.", "muted" }
 
-	-- Pawn scale strings.
-	rows[#rows + 1] = { "heading", "Your own weights (Pawn scale string)" }
-	rows[#rows + 1] = { "text", "Paste a scale string from Pawn or a guide site, then Import." }
+	-- Custom weights, pasted.
+	rows[#rows + 1] = { "heading", "Custom weights (optional)" }
+	rows[#rows + 1] = { "text", "Paste your own, like Intellect=1.2, Stamina=0.5 (a guide site's scale string works too), then Import." }
 	rows[#rows + 1] = { "input", "gear.import", 3 }
 	rows[#rows + 1] = { "buttons", { { "Import", "accent", function()
 		local scale, err = Gear.ImportScale(S.InputText("gear.import"))
@@ -152,7 +144,7 @@ end
 S.Panel("gear", P.Build)
 S.RegisterModule({
 	key = "gear", name = "Pathwise Gear", accent = "gear",
-	about = "Upgrades, stat priority, Pawn scales, best quest rewards",
+	about = "Upgrades, stat priority, best quest rewards",
 	open = function() S.Open("gear") end,
 })
 S.On("GEAR_UPDATED", function() end)

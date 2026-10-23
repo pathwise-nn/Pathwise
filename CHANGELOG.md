@@ -23,9 +23,14 @@ First version of the independent Pathwise (not yet released).
 ### Pathwise Gear (new addon, part of the Pathwise suite)
 - Upgrade advice in gold: a line on item tooltips ("+12.4% upgrade · Head"),
   an arrow on bag items that are upgrades, and the best quest reward.
-- Scores with Pawn when it is installed, else with Pathwise's own weights per
-  class and spec (from your talents, or chosen), or with a Pawn scale string
-  you paste in. Shows each spec's stat priority.
+- Scores on its own, needing no other addon: Pathwise's weights for all 27
+  specs, ordered as the Icy Veins and Mobalytics Forever guides advise and
+  spaced by Forever's stat rules (Warcraft Tavern). Picks the spec from your
+  talents, or you choose. Shows each spec's stat priority.
+- Forever's stats: shared crit for casters and melee, attack power that
+  counts for ranged, Haste and Expertise (their names on items are not yet
+  checked in game).
+- Optional custom weights you paste in ("Intellect=1.2, Stamina=0.5").
 - Knows what each class can wear and wield, two-handers against both hands,
   rings and trinkets against the weaker one.
 

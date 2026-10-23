@@ -57,6 +57,50 @@ test("gear: Pathwise's weights for every class and spec, scaled so the best stat
 	ok(frost.spFrost == frost.sp, "frost damage counts like spell damage")
 end)
 
+test("gear: each spec's weights keep the order the Forever class guides give", function()
+	local _, _, g = gear()
+	local F = g.Weights.For
+	local function above(class, spec, a, b) local w = F(class, spec); ok((w[a] or 0) > (w[b] or 0), ("%s %s: %s over %s"):format(class, spec, a, b)) end
+	-- Melee: weapon damage first, then Hit, then Crit.
+	for _, cs in ipairs({ { "WARRIOR", "arms" }, { "WARRIOR", "fury" }, { "ROGUE", "combat" }, { "PALADIN", "retribution" }, { "SHAMAN", "enhancement" } }) do
+		above(cs[1], cs[2], "hit", "crit")
+		ok(F(cs[1], cs[2]).expertise, cs[2] .. " values Expertise")
+	end
+	above("ROGUE", "assassination", "agi", "str")
+	above("WARRIOR", "arms", "str", "agi")
+	-- Forever's changes the guides point out.
+	above("DRUID", "feral", "str", "agi")
+	above("HUNTER", "survival", "dps", "rdps")
+	above("HUNTER", "marksmanship", "int", "spi")
+	ok(F("HUNTER", "marksmanship").int > F("HUNTER", "beastmastery").int, "Careful Aim: Marksmanship values Intellect most")
+	above("SHAMAN", "enhancement", "int", "agi")
+	above("PALADIN", "retribution", "int", "agi")
+	above("PALADIN", "protection", "sp", "int")
+	above("WARLOCK", "affliction", "spi", "int")
+	above("WARLOCK", "destruction", "haste", "spi")
+	above("MAGE", "arcane", "spi", "int")
+	above("PRIEST", "holy", "spi", "int")
+	above("PRIEST", "shadow", "sp", "int")
+	above("DRUID", "balance", "int", "spi")
+	-- Forever's stat rules: one crit for spells and melee; gear's attack power counts for ranged.
+	for _, cs in ipairs({ { "MAGE", "frost" }, { "PRIEST", "shadow" }, { "WARLOCK", "affliction" }, { "SHAMAN", "restoration" } }) do
+		local w = F(cs[1], cs[2])
+		ok(w.crit and w.crit == w.spellCrit, cs[2] .. ": plain crit counts like spell crit")
+	end
+	local bm = F("HUNTER", "beastmastery")
+	eq(bm.ap, bm.rap, "a Hunter values attack power like ranged attack power")
+end)
+
+test("gear: Haste and Expertise on an item are read and scored", function()
+	local _, _, g = gear(function(s)
+		s.itemInfo[109] = { "Swift Band", 2, 20, 30, 4, 0, "INVTYPE_FINGER", 15 }
+		s.itemStats[109] = { ITEM_MOD_HASTE_RATING_SHORT = 1, ITEM_MOD_EXPERTISE_RATING_SHORT = 2 }
+	end)
+	local st = g.Gear.Stats("item:109")
+	eq(st.haste, 1)
+	eq(st.expertise, 2)
+end)
+
 test("gear: an item better than what is worn is an upgrade, by how much and where", function()
 	local stub, ns, g = gear()
 	local G = g.Gear
@@ -97,19 +141,26 @@ test("gear: an empty slot is filled; a two-hander is weighed against both hands"
 	near(r.old, 2 * G.Score("item:104"), 1e-9, "and against both hands when both are full")
 end)
 
-test("gear: a Pawn scale string is read, imported and used", function()
+test("gear: custom weights are read, imported and used", function()
 	local stub, ns, g = gear()
 	local G = g.Gear
-	local s, err = G.ParsePawn('( Pawn: v1: "Frost levelling": Class=Mage, Spec=3, Intellect=1.25, SpellDamage=1, CritRating=10, HasteRating=3 )')
+	local p = G.ParseScale("Intellect=1.5, Stamina=0.5, Haste=4")
+	ok(p, "a plain list")
+	near(p.weights.int, 1.5, 1e-9)
+	near(p.weights.haste, 4, 1e-9)
+	eq(p.name, "Custom weights")
+	eq(G.ParseScale('"Tank": Stamina=1, Defense=2').name, "Tank")
+	local s, err = G.ParseScale('( Pawn: v1: "Frost levelling": Class=Mage, Spec=3, Intellect=1.25, SpellDamage=1, CritRating=10, HasteRating=3, FireResistance=1 )')
 	ok(s, err)
 	eq(s.name, "Frost levelling")
 	eq(s.class, "MAGE")
 	near(s.weights.int, 1.25, 1e-9)
 	near(s.weights.sp, 1, 1e-9)
 	near(s.weights.crit, 10, 1e-9)
-	eq(s.ignored[1], "HasteRating", "a stat Classic has not is left out and named")
-	local _, bad = G.ParsePawn("hello")
-	ok(bad:find("not a Pawn scale"), bad)
+	near(s.weights.haste, 3, 1e-9, "Haste, a Forever stat, is read")
+	eq(s.ignored[1], "FireResistance", "a stat Pathwise does not score is left out and named")
+	local _, bad = G.ParseScale("hello")
+	ok(bad:find("No stats Pathwise knows"), bad)
 	ok(G.ImportScale('( Pawn: v1: "Int only": Class=Mage, Intellect=2 )'))
 	local w, name, from = G.Weights()
 	eq(from, "imported")
@@ -119,25 +170,18 @@ test("gear: a Pawn scale string is read, imported and used", function()
 	eq(select(3, G.Weights()), "pathwise", "back to Pathwise's weights")
 end)
 
-test("gear: with Pawn installed, Pawn's own verdict is used", function()
+test("gear: scores on its own, even with another gear addon loaded", function()
+	local called = false
 	local stub, ns, g = gear(function()
-		function PawnGetItemData(link) return { link = link } end
-		function PawnIsItemAnUpgrade(item)
-			if item.link == "item:108" then return { { ScaleName = "x", LocalizedScaleName = "Frost (Pawn)", PercentUpgrade = 0.25 } } end
-			return nil
-		end
+		function PawnGetItemData() called = true end
+		function PawnIsItemAnUpgrade() called = true end
 	end)
 	local G = g.Gear
-	eq(G.Source(), "pawn")
-	local up, pct, scale, by = G.IsUpgrade("item:108")
+	local up, pct, slot, by = G.IsUpgrade("item:102")
 	ok(up)
-	near(pct, 25, 1e-9)
-	eq(scale, "Frost (Pawn)")
-	eq(by, "pawn")
-	eq((G.IsUpgrade("item:102")), false, "Pawn says nothing about this one")
-	ns.Set("gear.source", "pathwise")
-	eq(G.Source(), "pathwise", "the player can choose Pathwise's weights")
-	eq((G.IsUpgrade("item:102")), true)
+	eq(by, "pathwise")
+	ok(not called, "no other addon is asked")
+	ok(not G.Source and not G.PawnUpgrade, "no bridge left")
 	PawnGetItemData, PawnIsItemAnUpgrade = nil, nil
 end)
 
@@ -192,12 +236,14 @@ test("gear panel: in Settings, with spec, stat priority, Pawn import and bag upg
 	ok(contains(texts, "Scoring with Pathwise's Frost weights"), table.concat(texts, " | "))
 	ok(contains(texts, "STAT PRIORITY"))
 	ok(contains(texts, "Intellect") and contains(texts, "Spell damage"))
+	ok(contains(texts, "The class guides agree: Hit, Spell power (Frost)"), "the spec's guide order")
 	ok(contains(texts, "Glyphed Hood"), "an upgrade in the bags")
 	-- Paste a scale and import it.
 	local input
 	for _, f in ipairs(stub.frames) do if rawget(f, "key") == "gear.import" and f.shown then input = f end end
 	ok(input, "the paste box")
-	input.box:SetText('( Pawn: v1: "Pasted": Class=Mage, Intellect=1 )')
+	ok(not contains(texts, "Pawn"), "the panel never mentions another addon")
+	input.box:SetText('"Pasted": Intellect=1')
 	input.box.scripts.OnTextChanged(input.box, true)
 	ok(stub.clickLabel("Import"))
 	ok(lastPrint(stub):find('imported "Pasted"'), lastPrint(stub))
