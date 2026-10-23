@@ -1,5 +1,5 @@
 'use strict';
-// Links the Pathwise addon folders (Pathwise, Pathwise_Gear) into the game's
+// Links the Pathwise addon folders (Pathwise, Pathwise_Gear, Pathwise_Bags) into the game's
 // AddOns folder, so a /reload in game picks up code changes. The folder comes
 // from $WOW_FOREVER_ADDONS or --dest <dir>. An existing link is replaced; a
 // real folder of that name is never touched (move it away yourself first).
@@ -8,7 +8,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const ADDONS = ['Pathwise', 'Pathwise_Gear'];
+const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags'];
 
 const args = process.argv.slice(2);
 const i = args.indexOf('--dest');

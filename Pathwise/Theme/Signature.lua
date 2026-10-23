@@ -295,12 +295,51 @@ function T.Slider(parent, width, min, max, step, onChange)
 		p = p < 0 and 0 or (p > 1 and 1 or p)
 		if p <= 0 then fill:Hide() else fill:Show() fill:SetWidth(width * p) end
 	end
+	local last -- the last value onChange was told, so a drag only reports real changes
+	local function snap(v)
+		v = min + math.floor((v - min) / step + 0.5) * step
+		v = math.floor(v * 100 + 0.5) / 100
+		return v < min and min or (v > max and max or v)
+	end
 	s:SetScript("OnValueChanged", function(self, v)
-		v = math.floor(math.floor(v / step + 0.5) * step * 100 + 0.5) / 100
+		v = snap(v)
 		paintFill(v)
-		if self.pwQuiet then return end
+		if self.pwQuiet then last = v return end
+		if v == last then return end
+		last = v
 		if onChange then onChange(v) end
 	end)
+	-- Dragging: the value follows the pointer along the bar, every frame,
+	-- worked out from where the bar really is on screen. Smooth whatever
+	-- the window's size, and it never jumps to an end.
+	function s:ValueAt(cursorX)
+		local left, w, scale = self:GetLeft(), self:GetWidth(), self:GetEffectiveScale()
+		if not (left and w and w > 0 and scale and scale > 0) then return nil end
+		local p = (cursorX / scale - left) / w
+		p = p < 0 and 0 or (p > 1 and 1 or p)
+		return snap(min + p * (max - min))
+	end
+	local function follow(self)
+		local x = GetCursorPosition and GetCursorPosition()
+		local v = x and self:ValueAt(x)
+		if v and v ~= self:GetValue() then self:SetValue(v) end
+	end
+	s:SetScript("OnMouseDown", function(self, button)
+		if button and button ~= "LeftButton" then return end
+		self.pwDragging = true
+		-- Whoever holds the slider (a panel) can hold still while it moves.
+		if self.pwOnDragStart then self.pwOnDragStart(self) end
+		follow(self)
+		self:SetScript("OnUpdate", follow)
+	end)
+	local function stop(self)
+		if not self.pwDragging then return end
+		self.pwDragging = false
+		self:SetScript("OnUpdate", nil)
+		if self.pwOnDragStop then self.pwOnDragStop(self) end
+	end
+	s:SetScript("OnMouseUp", stop)
+	s:SetScript("OnHide", stop)
 	s:SetScript("OnMouseWheel", function(self, delta)
 		self:SetValue(math.max(min, math.min(max, (self:GetValue() or min) + delta * step)))
 	end)

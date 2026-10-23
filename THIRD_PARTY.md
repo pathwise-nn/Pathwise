@@ -29,6 +29,11 @@ stats are what the game client reports. ForeverChanges' BiS lists (its terms
 forbid copying its compiled data) and Foresight's data (all rights reserved
 since 15 October 2026) were looked at and are not used.
 
+Pathwise Bags is its own code. Features were compared with
+[Bagnon](https://github.com/Jaliborc/Bagnon) (its code is All Rights Reserved)
+and Baganator by plusmouse (its main source is not public); nothing of either
+is used. Its item buttons are the game's own (`ContainerFrameItemButtonTemplate`).
+
 Pathwise Gear needs no other addon. Its custom-weights box also reads the
 `( Pawn: v1: ... )` text format that guide sites share, without Pawn
 installed; no Pawn code is in Pathwise.

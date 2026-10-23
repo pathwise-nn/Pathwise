@@ -865,3 +865,72 @@ test("skip panel lists the step's quest and nearby alternatives", function()
 	ok(contains(texts, "Skip just this quest"))
 	ok(contains(texts, "INSTEAD, NEARBY"))
 end)
+
+test("events: every event Pathwise listens for exists on Forever; an unknown one is skipped, not an error", function()
+	local stub, ns = fresh()
+	ok(next(stub.knownEvents), "the Forever event list is loaded")
+	eq(ns.RegisterEvent("LEARNED_SPELL_IN_TAB", function() end), false, "a Classic-only name is skipped")
+	eq(ns.RegisterEvent("LEARNED_SPELL_IN_SKILL_LINE", function() end), true)
+	ok(ns.UnknownEvents()["LEARNED_SPELL_IN_TAB"])
+	for name in pairs(ns.UnknownEvents()) do
+		ok(name == "LEARNED_SPELL_IN_TAB", "Pathwise itself asked for an event Forever lacks: " .. name)
+	end
+end)
+
+test("side panel: its scrolling area hangs off the panel, and count sliders show plain numbers", function()
+	local stub, ns = fresh()
+	stub.login()
+	ns.Fire("SHOW_SETTINGS")
+	local panel = _G.PathwisePanel
+	ok(panel, "the panel")
+	local scroll
+	for _, f in ipairs(stub.frames) do if f.kind == "ScrollFrame" and f.parent == panel then scroll = f end end
+	ok(scroll, "its scroll frame")
+	for _, pt in ipairs(scroll.points) do
+		ok(pt[2] == panel, ("anchored to the panel, not %s"):format(tostring(pt[2])))
+	end
+	-- A count slider: no % sign, the setting's own number in the box.
+	ns.Suite.Panel("countTest", function() return { { "slider", "Columns", "bags.columns", 8, 20, 1, nil, "count" } } end)
+	ns.Set("bags.columns", 12)
+	ns.Suite.Open("countTest")
+	local row
+	for _, f in ipairs(stub.frames) do if type(rawget(f, "sliders")) == "table" and f.sliders["bags.columns"] and f.shown then row = f end end
+	ok(row, "the slider row")
+	eq(row.box.text, "12")
+	eq(row.pct.text, "")
+	stub.type("bags.columns", "15")
+	eq(ns.Get("bags.columns"), 15)
+end)
+
+test("sliders: dragging follows the pointer smoothly, step by step, never jumping to an end", function()
+	local stub, ns = fresh()
+	stub.login()
+	local T = ns.Theme
+	local seen = {}
+	local s = T.Slider(UIParent, 200, 0.5, 1.5, 0.05, function(v) seen[#seen + 1] = v end)
+	-- The bar: 200 px wide from x = 100, at scale 1.
+	s.GetLeft = function() return 100 end
+	s.GetWidth = function() return 200 end
+	s.GetEffectiveScale = function() return 1 end
+	s:SetQuietly(1)
+	stub.cursor[1] = 150 -- a quarter along
+	s.scripts.OnMouseDown(s, "LeftButton")
+	eq(s:GetValue(), 0.75)
+	ok(s.scripts.OnUpdate, "following the pointer while held")
+	for x = 150, 250, 5 do stub.cursor[1] = x s.scripts.OnUpdate(s) end
+	eq(s:GetValue(), 1.25, "three quarters along")
+	for i = 2, #seen do
+		ok(math.abs(seen[i] - seen[i - 1]) <= 0.05 + 1e-9, ("one step at a time: %s then %s"):format(seen[i - 1], seen[i]))
+		ok(seen[i] ~= seen[i - 1], "only real changes are reported")
+	end
+	stub.cursor[1] = 9999
+	s.scripts.OnUpdate(s)
+	eq(s:GetValue(), 1.5, "past the end: the end, no further")
+	s.scripts.OnMouseUp(s)
+	ok(not s.scripts.OnUpdate, "let go: stops following")
+	-- A count slider (the bag window's columns): whole numbers.
+	local c = T.Slider(UIParent, 120, 8, 20, 1, function() end)
+	c.GetLeft, c.GetWidth, c.GetEffectiveScale = function() return 0 end, function() return 120 end, function() return 1 end
+	eq(c:ValueAt(60), 14)
+	eq(c:ValueAt(-50), 8)
+end)

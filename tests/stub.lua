@@ -49,7 +49,25 @@ function Widget:SetRotation(r) self.rotation = r end
 function Widget:SetColorTexture(r, g, b, a) self.color = { r, g, b, a } end
 function Widget:SetVertexColor(r, g, b, a) self.vertex = { r, g, b, a } end
 function Widget:SetTextColor(r, g, b, a) self.textColor = { r, g, b, a } end
-function Widget:RegisterEvent(e) stub.events[e] = stub.events[e] or {} table.insert(stub.events[e], self) end
+-- Events: like the client, an event Forever does not have is an error
+-- (tests/fixtures/forever-events.txt, from Blizzard's Forever API docs).
+local knownEvents = {}
+do
+	local here = debug.getinfo(1, "S").source:match("^@(.*)[/\\]") or "tests"
+	local f = io.open(here .. "/fixtures/forever-events.txt", "r")
+	if f then
+		for line in f:lines() do if not line:match("^#") and line ~= "" then knownEvents[line] = true end end
+		f:close()
+	end
+end
+stub.knownEvents = knownEvents
+function Widget:RegisterEvent(e)
+	if next(knownEvents) and not knownEvents[e] then
+		error(("Frame:RegisterEvent(): Attempt to register unknown event %q"):format(tostring(e)), 2)
+	end
+	stub.events[e] = stub.events[e] or {}
+	table.insert(stub.events[e], self)
+end
 function Widget:SetScale(s) self.scale = s end
 function Widget:SetShadowOffset(x, y) self.shadow = { x, y } end
 -- Sliders: SetValue clamps and fires OnValueChanged, as the client does.
@@ -200,7 +218,43 @@ C_Container = {
 		local i = stub.bags[bag] and stub.bags[bag][slot]
 		return i and ("item:" .. i.itemID) or nil
 	end,
+	-- Free slots of a general bag (family 0).
+	GetContainerNumFreeSlots = function(bag)
+		if not stub.bags[bag] then return 0, 0 end
+		local n = 0
+		for slot = 1, 16 do if not stub.bags[bag][slot] then n = n + 1 end end
+		return n, 0
+	end,
+	-- With a vendor open (stub.merchant), using an item sells it: the slot
+	-- empties and its price (itemInfo's sell) goes to stub.money.
+	UseContainerItem = function(bag, slot)
+		local i = stub.bags[bag] and stub.bags[bag][slot]
+		if not i then return end
+		stub.used[#stub.used + 1] = { bag, slot, i.itemID }
+		if stub.merchant then
+			local info = stub.itemInfo[i.itemID]
+			stub.money = stub.money + (info and info[4] or 0) * (i.stackCount or 1)
+			stub.bags[bag][slot] = nil
+		end
+	end,
+	SortBags = function() stub.sorted = (stub.sorted or 0) + 1 end,
 }
+stub.used, stub.money, stub.merchant, stub.combat = {}, 0, false, false
+function GetMoney() return stub.money end
+function InCombatLockdown() return stub.combat end
+MerchantFrame = new("Frame", "MerchantFrame")
+UISpecialFrames = {}
+-- The game's bag functions, for hooksecurefunc to follow.
+stub.bagsOpened = 0
+-- Like Forever's ContainerFrame.lua: the bag key's toggle opens the bags
+-- through OpenAllBags when none of the game's own bags is open (and they
+-- never are while Pathwise Bags shows its window).
+function OpenAllBags() stub.bagsOpened = stub.bagsOpened + 1 end
+function ToggleAllBags() OpenAllBags() end
+function CloseAllBags() end
+function OpenBackpack() end
+function CloseBackpack() end
+function ToggleBackpack() OpenBackpack() end
 
 -- Tooltips: TooltipDataProcessor keeps the post-calls; GameTooltip shows stub.tooltipLink.
 stub.postCalls, stub.tooltipLines = {}, {}
@@ -212,6 +266,7 @@ function stub.showTooltip(link)
 	return stub.tooltipLines
 end
 function hooksecurefunc(t, name, fn)
+	if type(t) == "string" then t, name, fn = _G, t, name end
 	local orig = t[name]
 	t[name] = function(...) local r = orig(...) fn(...) return r end
 end

@@ -34,16 +34,25 @@ end
 local eventFrame = CreateFrame("Frame")
 local gameListeners = {}
 
--- ns.RegisterEvent(event, fn): fn(event, ...) on every firing.
+-- ns.RegisterEvent(event, fn): fn(event, ...) on every firing. An event the
+-- client does not have (names differ between WoW versions) is skipped, never
+-- an error. -> true when the event exists
+local unknownEvents = {}
 function ns.RegisterEvent(event, fn)
+	if unknownEvents[event] then return false end
 	local list = gameListeners[event]
 	if not list then
+		if not pcall(eventFrame.RegisterEvent, eventFrame, event) then
+			unknownEvents[event] = true
+			return false
+		end
 		list = {}
 		gameListeners[event] = list
-		eventFrame:RegisterEvent(event)
 	end
 	list[#list + 1] = fn
+	return true
 end
+function ns.UnknownEvents() return unknownEvents end
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)
 	local list = gameListeners[event]

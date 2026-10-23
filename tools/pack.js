@@ -24,7 +24,7 @@ function version() {
 }
 
 // The addon folders shipped together: Pathwise and the suite's addons.
-const ADDONS = ['Pathwise', 'Pathwise_Gear'];
+const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags'];
 
 // Every file of each addon folder, sorted, skipping dotfiles; then the
 // licence files from the repository root, in each folder.

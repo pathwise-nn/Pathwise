@@ -1,0 +1,15 @@
+## Interface: 16001
+## Title: Pathwise Bags
+## Notes: One bag window in the Pathwise look, keep and sell markers, junk selling and bag space help. Part of Pathwise.
+## Author: leight_nn & florp
+## Version: 0.1.0-dev
+## Dependencies: Pathwise
+## OptionalDeps: Pathwise_Gear
+## IconTexture: Interface\AddOns\Pathwise\Media\icon
+## X-License: GPL-3.0-only
+
+Items.lua
+Sell.lua
+Space.lua
+Window.lua
+Panel.lua

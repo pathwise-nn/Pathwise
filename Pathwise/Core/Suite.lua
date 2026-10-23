@@ -6,11 +6,13 @@
 --   S.On(message, fn) / S.Fire(message, ...) / S.RegisterEvent(event, fn)
 --   S.Print(...), S.Error(where, err), S.CharState(), S.Compat, S.VERSION
 --   S.Panel(kind, builder)     a side panel of rows (UI/Panels.lua's row kinds)
---   S.Open(kind) / S.Refresh() / S.Close()
+--   S.Open(kind) / S.Refresh() / S.Close() / S.Back() / S.CanGoBack()
+--   S.CloseButtons(extra) -> the bottom row: Back (when there is one), extra, Close
 --   S.RegisterModule({ key, name, accent, about, open = fn })
 --       lists the addon in Settings > Pathwise suite; open() shows its panel.
 --   S.Modules() -> { module, ... }
 --   S.Data, S.Quests, S.Dungeons, S.SetWaypoint: see below
+--   S.MinimapButton(def)       the addon's own minimap button
 
 local ADDON, ns = ...
 local S = {}
@@ -40,6 +42,25 @@ function S.Open(kind) ns.Panels.Open(kind) end
 function S.Refresh() ns.Panels.Refresh() end
 function S.Close() ns.Panels.Close() end
 function S.IsOpen(kind) return ns.Panels.IsOpen(kind) end
+function S.Back() return ns.Panels.Back() end
+function S.CanGoBack() return ns.Panels.CanGoBack() end
+-- The bottom row of a suite panel: Back (when it came from another panel) and Close.
+function S.CloseButtons(extra)
+	local list = {}
+	if ns.Panels.CanGoBack() then list[#list + 1] = { "Back", "default", function() ns.Panels.Back() end } end
+	for _, b in ipairs(extra or {}) do list[#list + 1] = b end
+	list[#list + 1] = { "Close", "default", S.Close }
+	return { "buttons", list }
+end
+-- A minimap button of the suite addon's own (UI/MinimapButton.lua, MB.Make):
+-- call it at READY. def = { key, name, shownPath, anglePath, accent, glyph, lines,
+-- onClick(which), panels = { kinds } } -- those panels open beside the button.
+function S.MinimapButton(def)
+	if not (ns.MinimapButton and Minimap) then return nil end
+	local b = ns.MinimapButton.Make(def)
+	for _, kind in ipairs(def.panels or {}) do ns.Panels.SetHome(kind, function() return b end) end
+	return b
+end
 function S.InputText(key) return ns.Panels.InputText(key) end
 function S.ClearInput(key) ns.Panels.ClearInput(key) end
 

@@ -205,6 +205,7 @@ T.thumb = () => {
 
 // Glyphs, 32 px drawn for a 16 px button.
 T['glyph-close'] = () => { const c = canvas(32); paint(c, stroke([[10, 10], [22, 22]], 2.4)); paint(c, stroke([[22, 10], [10, 22]], 2.4)); return c; };
+T['glyph-back'] = () => { const c = canvas(32); paint(c, stroke([[19, 9], [12, 16], [19, 23]], 2.4)); return c; };
 T['glyph-collapse'] = () => { const c = canvas(32); paint(c, stroke([[9, 19], [16, 12], [23, 19]], 2.4)); return c; };
 T['glyph-expand'] = () => { const c = canvas(32); paint(c, stroke([[9, 13], [16, 20], [23, 13]], 2.4)); return c; };
 T['glyph-flag'] = () => {
@@ -272,6 +273,55 @@ T['glyph-settings'] = () => {
 		const a = (k * Math.PI) / 4;
 		paint(c, stroke([[16 + Math.cos(a) * 8.5, 16 + Math.sin(a) * 8.5], [16 + Math.cos(a) * 12, 16 + Math.sin(a) * 12]], 2.6));
 	}
+	return c;
+};
+
+// Bags: a coin (can be sold), a quest mark, a lock (kept), sort lines, search.
+T['glyph-coin'] = () => {
+	const c = canvas(32);
+	paint(c, ring(16, 16, 10, 2.6));
+	paint(c, stroke([[16, 10], [16, 22]], 2.2));
+	return c;
+};
+T['glyph-quest'] = () => {
+	const c = canvas(32);
+	paint(c, stroke([[16, 5], [16, 19]], 4));
+	paint(c, ring(16, 26, 1.6, 3.2));
+	return c;
+};
+T['glyph-lock'] = () => {
+	const c = canvas(32);
+	paint(c, polygon([[8, 15], [24, 15], [24, 28], [8, 28]]), 1);
+	const arch = [];
+	for (let k = 0; k <= 12; k++) {
+		const a = Math.PI - (k * Math.PI) / 12;
+		arch.push([16 + 6 * Math.cos(a), 15 - 7 * Math.sin(a)]);
+	}
+	paint(c, stroke(arch, 2.4));
+	return c;
+};
+T['glyph-sort'] = () => {
+	const c = canvas(32);
+	paint(c, stroke([[7, 10], [25, 10]], 2.4));
+	paint(c, stroke([[7, 16], [20, 16]], 2.4));
+	paint(c, stroke([[7, 22], [14, 22]], 2.4));
+	return c;
+};
+T['glyph-bag'] = () => {
+	const c = canvas(32);
+	paint(c, polygon([[7, 12], [25, 12], [27, 28], [5, 28]]), 1);
+	const arch = [];
+	for (let k = 0; k <= 12; k++) {
+		const a = Math.PI - (k * Math.PI) / 12;
+		arch.push([16 + 5 * Math.cos(a), 12 - 6 * Math.sin(a)]);
+	}
+	paint(c, stroke(arch, 2.2));
+	return c;
+};
+T['glyph-search'] = () => {
+	const c = canvas(32);
+	paint(c, ring(14, 14, 7, 2.4));
+	paint(c, stroke([[19, 19], [26, 26]], 2.8));
 	return c;
 };
 

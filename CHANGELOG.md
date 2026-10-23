@@ -50,6 +50,22 @@ First version of the independent Pathwise (not yet released).
 - Knows what each class can wear and wield, two-handers against both hands,
   rings and trinkets against the weaker one.
 
+### Pathwise Bags (new addon, part of the Pathwise suite)
+- One bag window in the Pathwise look (green), opened by your bag key: items
+  grouped by what they are to you (Quest, Upgrades, Equipment, Consumables,
+  Professions, Other, Junk) or as one grid; search by name, quest, upgrade or
+  junk; the game's sort; free slots and money. Uses the game's own item
+  buttons, so using, selling and dragging work as usual. Can be turned off.
+- Markers on items: needed for a quest (in your log or later), material for
+  your profession route, Pathwise Gear upgrade or best in slot, kept by you,
+  can be sold.
+- Selling junk: a "Sell junk" button on the vendor window with the count and
+  gold (or sell on its own): greys and items you mark; optionally bound gear
+  you can't use or is worse. Never what you keep, quest items you need,
+  profession materials, upgrades.
+- Bag space: a warning when bags are nearly full, with what to let go first.
+- Mark items: keep (never sold) or junk, from the bag window.
+
 ### Maps and dungeons
 - World map pins for the step shown (the arrow's target, the other goals,
   and where an objective's monsters are) and minimap pins that follow zoom,
@@ -81,6 +97,28 @@ First version of the independent Pathwise (not yet released).
 ### Data and credits
 - Quest facts from QuestieDB's Forever data; routes adapted from Polestar
   (both GPL-3.0; see THIRD_PARTY.md).
+
+### Suite
+- Each suite addon has its own minimap button in its colour (Pathwise Gear:
+  gold arrow, Pathwise Bags: green bag), placed apart, draggable, each with
+  its own show/hide switch; its settings open beside it.
+- Back in the side panel: from a suite addon's settings to where you came
+  from, or to Pathwise's settings.
+
+### Fixed
+- Settings, Professions and the other panels drew at the top left of the
+  screen with "anchor family connection" errors: the panel's scrolling area
+  was anchored to its own contents.
+- Sliders swung between their ends while dragged ("Window size" moved the
+  panel under the pointer): the panel now holds still while a slider is
+  dragged, and the value follows the pointer step by step.
+- Count sliders (bag window width, free slots) showed "1200 %".
+- Setting labels ran under their buttons; they now wrap.
+- The bag key opened the Pathwise bag window and closed it at once.
+- An error at login on Forever: Pathwise listened for a Classic event name
+  (LEARNED_SPELL_IN_TAB); it uses Forever's (LEARNED_SPELL_IN_SKILL_LINE)
+  and skips any event the client does not have. Tests now reject events
+  Forever lacks.
 
 ### Not verified in game yet
 - Reading recipes from the profession window, and the Enchanting skill needed

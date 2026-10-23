@@ -18,6 +18,7 @@ local S, Gear, W = Pathwise.Suite, ns.Gear, ns.Weights
 local Client = Gear.Client
 local Best = {}
 ns.Best = Best
+Pathwise.GearBest = Best -- for the suite's other addons (Pathwise Bags)
 local readable = S.Compat.Readable
 
 S.Defaults("gear", {

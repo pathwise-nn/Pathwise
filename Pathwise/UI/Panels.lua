@@ -9,7 +9,8 @@
 --   { "text", text [, color] }              wrapped secondary text
 --   { "choice", text, sub, onClick }        a full-width clickable row
 --   { "setting", label, valueText, { { label, onClick }, ... } }
---   { "slider", label, settingPath, min, max, step, format(v) -> text }
+--   { "slider", label, settingPath, min, max, step, format(v) -> text, unit }
+--       unit "count": whole numbers (columns, slots); else a fraction shown as %
 --   { "progress", fraction }                thin progress line (a profession's skill)
 --   { "copy", text, lines }                 selectable text to copy (Ctrl+C)
 --   { "icon", size }                        the Pathwise compass mark
@@ -41,7 +42,7 @@ local function build()
 	-- The panel takes the window size when it opens, not while a slider in it
 	-- is being dragged (it would move under the pointer).
 	scroll = CreateFrame("ScrollFrame", nil, panel)
-	scroll:SetPoint("TOPLEFT", host, "TOPLEFT", 0, -1)
+	scroll:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, -1)
 	scroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 1)
 	host = CreateFrame("Frame", nil, scroll)
 	host:SetWidth(WIDTH)
@@ -56,6 +57,11 @@ local function build()
 	panel.close = T.IconButton(panel, "close", "Close", function() Panels.Close() end)
 	panel.close:SetPoint("TOPRIGHT", -6, -6)
 	panel.close:SetFrameLevel((scroll:GetFrameLevel() or 1) + 5)
+	-- Back: to the panel this one was opened from (Settings > a suite addon).
+	panel.back = T.IconButton(panel, "back", "Back", function() Panels.Back() end)
+	panel.back:SetPoint("RIGHT", panel.close, "LEFT", -2, 0)
+	panel.back:SetFrameLevel((scroll:GetFrameLevel() or 1) + 5)
+	panel.back:Hide()
 	panel:Hide()
 end
 
@@ -116,7 +122,7 @@ function makers.setting()
 	f:SetHeight(30)
 	f.label = T.Text(f, "body", "text")
 	f.label:SetPoint("LEFT")
-	f.label:SetWordWrap(false)
+	f.label:SetWordWrap(true)
 	f.value = T.Text(f, "meta", "text2")
 	f.value:SetJustifyH("RIGHT")
 	f.buttons = {}
@@ -308,10 +314,26 @@ local function render(rows)
 				if anchor then b:SetPoint("RIGHT", anchor, "LEFT", -4, 0) else b:SetPoint("RIGHT", f, "RIGHT", 0, 0) end
 				anchor = b
 			end
+			-- The state words ("On", "By kind") only when the buttons do not
+			-- already show it: a highlighted choice says it for them.
+			local choice = false
+			for _, c in ipairs(ctrls) do if c[3] == "accent" then choice = true end end
+			local valueText = choice and "" or (r[3] or "")
 			f.value:ClearAllPoints()
 			if anchor then f.value:SetPoint("RIGHT", anchor, "LEFT", -8, 0) else f.value:SetPoint("RIGHT") end
-			f.value:SetText(r[3] or "")
-			place(f, 30, 6)
+			f.value:SetText(valueText)
+			-- The label takes what is left of the row, and wraps rather than
+			-- running under the value and the buttons.
+			local used = 0
+			for j = 1, #ctrls do local b = f.buttons[j] if b and b:IsShown() then used = used + (b:GetWidth() or 0) + 4 end end
+			if valueText ~= "" then used = used + (f.value:GetStringWidth() or 0) + 8 end
+			local room = inner - used - 6
+			f.label:ClearAllPoints()
+			f.label:SetPoint("LEFT")
+			f.label:SetWidth(math.max(60, room))
+			local h = math.max(30, (f.label:GetStringHeight() or 14) + 12)
+			f:SetHeight(h)
+			place(f, h, 6)
 		elseif kind == "copy" then
 			local f = take("copy", makers.copy)
 			f.text = r[2]
@@ -347,28 +369,35 @@ local function render(rows)
 		elseif kind == "slider" then
 			local f = take("slider", makers.slider)
 			local label, path, lo, hi, stepBy, format = r[2], r[3], r[4], r[5], r[6], r[7]
+			local count = r[8] == "count"
+			local mul = count and 1 or 100
 			f.label:SetText(label)
+			f.pct:SetText(count and "" or "%")
 			for _, s in pairs(f.sliders) do s:Hide() end
 			local s = f.sliders[path]
-			local function percent(v) return math.floor(v * 100 + 0.5) end
+			local function percent(v) return math.floor(v * mul + 0.5) end
 			if not s then
 				s = T.Slider(f, inner - BOX_W - 24, lo, hi, stepBy, function(v)
 					ns.Set(path, v)
 					f.box:SetNumber(percent(v))
 				end)
 				s:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -22)
+				s.pwOnDragStart = function() Panels.Pin() end
+				s.pwOnDragStop = function() Panels.Unpin() end
 				f.sliders[path] = s
 			end
 			s:Show()
 			-- Typed: any whole percentage in range (not only the slider's steps);
 			-- outside the range it is held to the nearest end, and the box says so.
 			f.onBox = function(n)
-				local v = n and math.max(lo, math.min(hi, n / 100)) or (ns.Get(path) or lo)
+				if count and n then n = math.floor(n + 0.5) end
+				local v = n and math.max(lo, math.min(hi, n / mul)) or (ns.Get(path) or lo)
 				ns.Set(path, v)
 				s:SetQuietly(v)
 				f.box:SetNumber(percent(v))
-				if n and n / 100 ~= v then
-					ns.Print(("%s: %d-%d%%, so %d%%."):format(label, percent(lo), percent(hi), percent(v)))
+				if n and n / mul ~= v then
+					local u = count and "" or "%"
+					ns.Print(("%s: %d-%d%s, so %d%s."):format(label, percent(lo), percent(hi), u, percent(v), u))
 				end
 			end
 			local v = ns.Get(path) or lo
@@ -399,30 +428,102 @@ local function render(rows)
 	panel.scrolls = full > screen
 end
 
--- Beside the guide window, on whichever side has room.
+-- While a slider in the panel is dragged, the panel holds still where it
+-- is on screen: "Window size" resizes the guide window, and a panel pinned
+-- beside it would slide under the pointer and the slider would swing from
+-- end to end. Let go and it goes back beside the guide.
+local pinned = false
+function Panels.Pin()
+	if not panel or pinned then return end
+	local left, top = panel:GetLeft(), panel:GetTop()
+	if not (left and top) then return end
+	pinned = true
+	panel:ClearAllPoints()
+	panel:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
+end
+function Panels.IsPinned() return pinned end
+
+-- A suite addon's panels open by its own minimap button (Panels.SetHome).
+local homes = {} -- kind -> function returning the frame to open beside
+function Panels.SetHome(kind, frameFn)
+	if type(kind) == "string" then homes[kind] = frameFn end
+end
+
+-- Beside `home` (a minimap button), on the side of the screen with room:
+-- left of it on the right half, right of it on the left half; hanging down
+-- from it in the top half, standing up from it in the bottom half. Placed
+-- by screen position, not attached to the button. -> true when placed
+function Panels.PlaceBy(home)
+	local cx, cy = home:GetCenter()
+	local hs, ps = home:GetEffectiveScale(), panel:GetEffectiveScale()
+	local us = UIParent:GetEffectiveScale()
+	if not (cx and cy and hs and ps and ps > 0) then return false end
+	local x, y = cx * hs / ps, cy * hs / ps
+	local w = (UIParent:GetWidth() or 0) * us / ps
+	local h = (UIParent:GetHeight() or 0) * us / ps
+	local ph = panel:GetHeight() or 0
+	local left = (x > w / 2) and (x - 24 - WIDTH) or (x + 24)
+	local top
+	if y > h / 2 then top = math.min(h - 8, y + 16) else top = math.max(ph + 8, y - 16 + ph) end
+	panel:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
+	return true
+end
+
+-- By its minimap button (a suite addon's panel), else beside the guide
+-- window on whichever side has room.
 local function anchor()
+	panel:ClearAllPoints()
+	local home = openKind and homes[openKind] and homes[openKind]()
+	if home and home.IsShown and home:IsShown() and Panels.PlaceBy(home) then return end
 	panel:ClearAllPoints()
 	local g = _G.PathwiseGuide
 	if g and g:IsShown() then
 		local left = g.GetLeft and g:GetLeft()
+		local ok
 		if left and left > WIDTH + 20 then
-			panel:SetPoint("TOPRIGHT", g, "TOPLEFT", -8, 0)
+			ok = pcall(panel.SetPoint, panel, "TOPRIGHT", g, "TOPLEFT", -8, 0)
 		else
-			panel:SetPoint("TOPLEFT", g, "TOPRIGHT", 8, 0)
+			ok = pcall(panel.SetPoint, panel, "TOPLEFT", g, "TOPRIGHT", 8, 0)
 		end
-	else
-		panel:SetPoint("CENTER", UIParent, "CENTER", 0, 80)
+		if ok then return end
+		panel:ClearAllPoints()
 	end
+	panel:SetPoint("CENTER", UIParent, "CENTER", 0, 80)
+end
+
+function Panels.Unpin()
+	if not pinned then return end
+	pinned = false
+	if panel and panel:IsShown() then anchor() end
 end
 
 local builders = {}
 
+-- Where the open panel came from: a list of kinds, the last one first back.
+local history = {}
+local goingBack = false
+
 function Panels.Open(kind)
 	if not panel then build() end
 	if openKind == kind and panel:IsShown() then return Panels.Close() end
-	local rows = builders[kind] and builders[kind]()
-	if not rows then return end
-	openKind = kind
+	if not builders[kind] then return end
+	local before = #history
+	if goingBack then
+		-- Panels.Back pops history itself.
+	elseif panel:IsShown() and openKind and openKind ~= kind then
+		history[#history + 1] = openKind
+	else
+		history = {}
+	end
+	local was = openKind
+	openKind = kind -- the builder asks S.CanGoBack(), which looks at this
+	local rows = builders[kind]()
+	if not rows then
+		openKind = was
+		while #history > before do table.remove(history) end
+		return
+	end
+	panel.back:SetShown(Panels.CanGoBack())
 	panel:SetScale(ns.Get("ui.scale") or 1)
 	scroll:SetVerticalScroll(0)
 	render(rows)
@@ -431,18 +532,42 @@ function Panels.Open(kind)
 end
 
 -- Another Pathwise addon's panel (Pathwise.Suite.Panel).
+-- The suite addons' panels: Back always leads somewhere from them (at least
+-- to Pathwise's settings, where the suite is listed).
+local suiteKinds = {}
 function Panels.Register(kind, builder)
-	if type(kind) == "string" and type(builder) == "function" then builders[kind] = builder end
+	if type(kind) == "string" and type(builder) == "function" then
+		builders[kind] = builder
+		suiteKinds[kind] = true
+	end
 end
 
 function Panels.Refresh()
-	if panel and panel:IsShown() and openKind and builders[openKind] then render(builders[openKind]()) end
+	if panel and panel:IsShown() and openKind and builders[openKind] then
+		render(builders[openKind]())
+		if not pinned then anchor() end
+	end
 end
 
 function Panels.Close()
 	if panel then panel:Hide() end
 	openKind = nil
+	history = {}
 end
+
+-- Back to the panel this one was opened from. -> true when there was one
+function Panels.Back()
+	local prev = table.remove(history)
+	if not prev and openKind and suiteKinds[openKind] then prev = "settings" end
+	if not prev then return false end
+	goingBack = true
+	openKind = nil
+	local ok, err = pcall(Panels.Open, prev)
+	goingBack = false
+	if not ok then ns.Error("Back", err) end
+	return true
+end
+function Panels.CanGoBack() return #history > 0 or (openKind ~= nil and suiteKinds[openKind] == true) end
 
 function Panels.IsOpen(kind) return panel ~= nil and panel:IsShown() and openKind == kind end
 

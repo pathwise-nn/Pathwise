@@ -139,12 +139,27 @@ function P.Build()
 	rows[#rows + 1] = { "setting", "Line on item tooltips", onOff(S.Get("gear.tooltip")), { { S.Get("gear.tooltip") and "Hide" or "Show", toggle("gear.tooltip") } } }
 	rows[#rows + 1] = { "setting", "Arrow on bag upgrades", onOff(S.Get("gear.bags")), { { S.Get("gear.bags") and "Hide" or "Show", toggle("gear.bags") } } }
 	rows[#rows + 1] = { "setting", "Best quest reward", onOff(S.Get("gear.rewards")), { { S.Get("gear.rewards") and "Hide" or "Show", toggle("gear.rewards") } } }
+	rows[#rows + 1] = { "setting", "Minimap button", onOff(S.Get("gear.minimap")), { { S.Get("gear.minimap") and "Hide" or "Show", toggle("gear.minimap") } } }
 	rows[#rows + 1] = { "slider", "Smallest upgrade shown", "gear.minUpgrade", 0, 0.1, 0.01, function(v) return ("%d%%"):format(v * 100) end }
-	rows[#rows + 1] = { "buttons", { { "Close", "default", S.Close } } }
+	rows[#rows + 1] = S.CloseButtons()
 	return rows
 end
 
 S.Panel("gear", P.Build)
+
+-- Its own minimap button, in gold: click for Pathwise Gear, right-click for
+-- Best in Slot (Level).
+S.Defaults("gear", { minimap = true, minimapAngle = 195 })
+S.On("READY", function()
+	S.MinimapButton({
+		key = "Gear", name = "Pathwise Gear", shownPath = "gear.minimap", anglePath = "gear.minimapAngle",
+		accent = "gear", glyph = "upgrade", panels = { "gear", "gearbest" },
+		lines = { "Click: Pathwise Gear", "Right-click: Best in Slot (Level)" },
+		onClick = function(which)
+			if which == "RightButton" then S.Open("gearbest") else S.Open("gear") end
+		end,
+	})
+end)
 
 -- Best in Slot (Level): one row per slot, the best item this character can get
 -- by now, where from, and whether they have it. Click a row: the arrow.
@@ -202,7 +217,7 @@ function P.BuildBest()
 	rows[#rows + 1] = { "setting", "Raid gear", S.Get("gear.bisRaids") and "Shown" or "Hidden", {
 		{ S.Get("gear.bisRaids") and "Hide" or "Show", function() S.Set("gear.bisRaids", not S.Get("gear.bisRaids")) S.Refresh() end } } }
 	rows[#rows + 1] = { "text", "Worked out in game from Pathwise's weights and the item's stats as the game gives them. Where items come from: QuestieDB's Forever data; recipes: Forever's game files.", "muted" }
-	rows[#rows + 1] = { "buttons", { { "Pathwise Gear", "default", function() S.Open("gear") end }, { "Close", "default", S.Close } } }
+	rows[#rows + 1] = S.CanGoBack() and S.CloseButtons() or S.CloseButtons({ { "Pathwise Gear", "default", function() S.Open("gear") end } })
 	return rows
 end
 S.Panel("gearbest", P.BuildBest)
