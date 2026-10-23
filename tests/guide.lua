@@ -359,6 +359,117 @@ test("a profession route followed beside the leveling route: card, Go, skill and
 end)
 
 ---------------------------------------------------------------------------
+-- Professions dashboard
+---------------------------------------------------------------------------
+
+-- An Undead Mage with Tailoring 1/75 (trained, thread bought) and Enchanting.
+local function tailor(setup)
+	return login(function(s)
+		s.skills[197] = { 1, 75 }
+		s.skills[333] = { 30, 75 }
+		s.items[2320] = 96 -- Coarse Thread
+		s.items[2589] = 46 -- Linen Cloth
+		if setup then setup(s) end
+	end)
+end
+
+test("professions: the character's professions and where their guides stand", function()
+	local stub, ns = tailor()
+	local P = ns.Professions
+	local known = P.Known()
+	eq(#known, 2)
+	eq(known[2].prof.name, "Tailoring")
+	eq(known[2].rank, 1)
+	local st = P.Stage(P.BY_KEY.tailoring)
+	ok(st and st.rankMax == 75, "the Apprentice rank of the guide")
+	eq(st.route.steps[st.step].title, "Linen Cloth", "trained and thread bought: on to the cloth")
+end)
+
+test("professions: the shopping list for this rank, from the guide, with what is owned", function()
+	local stub, ns = tailor()
+	local shop = ns.Professions.Shopping(ns.Professions.BY_KEY.tailoring)
+	local linen
+	for _, r in ipairs(shop) do if r.item == 2589 then linen = r end end
+	ok(linen, "Linen Cloth on the list")
+	eq(linen.need, 192)
+	eq(linen.have, 46)
+	eq(linen.missing, 146)
+	eq(linen.src, "farm")
+	ok(shop[1].missing > 0, "missing materials first")
+end)
+
+test("professions: the best craft now and how many the bags make", function()
+	local stub, ns = tailor(function(s) s.items[2589] = 192 end)
+	local craft = ns.Professions.NextCraft(ns.Professions.BY_KEY.tailoring)
+	eq(craft.name, "Bolt of Linen Cloth")
+	eq(craft.craftable, 96, "192 linen, 2 a bolt")
+end)
+
+test("professions: the profession window's recipes are read and kept (difficulty colour)", function()
+	local stub, ns = tailor(function(s) s.items[2589] = 192 end)
+	stub.tradeSkill = { professionID = 197, recipes = { [2963] = { name = "Bolt of Linen Cloth", learned = true, relativeDifficulty = 0 } } }
+	stub.fire("TRADE_SKILL_SHOW")
+	local P = ns.Professions
+	ok(P.Recipes(197) and P.Recipes(197)[2963], "kept")
+	eq(P.NextCraft(P.BY_KEY.tailoring).difficulty, "orange")
+	ok(PathwiseCharSettings.professions.recipes[197][2963].learned, "saved per character")
+end)
+
+test("professions: disenchantable gear in the bags, with the skill it asks (marked unverified)", function()
+	local stub, ns = tailor(function(s)
+		s.itemInfo[9001] = { "Green Gloves", 2, 22, 120, 4 }
+		s.itemInfo[9002] = { "Blue Sword", 3, 48, 900, 2 }
+		s.itemInfo[9003] = { "Grey Cup", 0, 10, 5, 4 }
+		s.bags[0] = { { itemID = 9001, quality = 2 }, { itemID = 9002, quality = 3 }, { itemID = 9003, quality = 0 } }
+	end)
+	local list = ns.Professions.Disenchantable(30)
+	eq(#list, 2, "the grey cup is not")
+	eq(list[1].name, "Blue Sword", "highest level first")
+	eq(list[1].skill, 150)
+	eq(list[1].canNow, false)
+	eq(list[2].skill, 25)
+	eq(list[2].canNow, true)
+	eq(ns.Professions.DE_SKILL_VERIFIED, false)
+end)
+
+test("professions: Tailoring + Enchanting names the green Tailoring crafts to disenchant", function()
+	local stub, ns = tailor(function(s)
+		s.items[2589] = 192
+		s.itemInfo[10045] = { "Simple Linen Pants", 1, 7, 10, 4 }
+		s.itemInfo[2996] = { "Bolt of Linen Cloth", 1, 5, 2, 7 }
+	end)
+	local P = ns.Professions
+	eq(#P.TailorEnchant(), 0, "white items: nothing to disenchant")
+	stub.itemInfo[10045][2] = 2
+	local names = P.TailorEnchant()
+	eq(names[1], "Simple Linen Pants")
+end)
+
+test("professions dashboard: skill, guide step, best craft, materials, disenchanting", function()
+	local stub, ns = tailor(function(s)
+		s.items[2589] = 192
+		s.itemInfo[9001] = { "Green Gloves", 2, 22, 120, 4 }
+		s.bags[0] = { { itemID = 9001, quality = 2 } }
+	end)
+	SlashCmdList.PATHWISE("prof")
+	local texts = stub.texts()
+	ok(contains(texts, "Tailoring   1 / 75"), table.concat(texts, " | "))
+	ok(contains(texts, "Enchanting   30 / 75"))
+	ok(contains(texts, "Best now: Bolt of Linen Cloth  ·  96 from your bags"))
+	ok(contains(texts, "Open your Tailoring window once"), "asks for the recipe scan")
+	ok(contains(texts, "DISENCHANTING"))
+	ok(contains(texts, "Green Gloves  ·  skill ≈25"))
+	ok(stub.clickLabelText("Follow beside your route"), "follow from the dashboard")
+	ok(ns.Engine.Side(), "a side guide now")
+end)
+
+test("professions dashboard: no professions yet", function()
+	local stub, ns = login()
+	ns.Fire("SHOW_PROFESSIONS")
+	ok(contains(stub.texts(), "No professions yet"))
+end)
+
+---------------------------------------------------------------------------
 -- Panels
 ---------------------------------------------------------------------------
 

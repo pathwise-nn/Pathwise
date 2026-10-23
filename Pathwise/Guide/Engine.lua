@@ -354,6 +354,18 @@ local function compute()
 	if sideLive ~= before then s.aimSide, s.sideHidden = nil, nil end
 end
 
+-- For other modules (the profession dashboard): any route's first open step,
+-- and a goal's status, read now.
+function Engine.FirstOpen(route)
+	player = player or Q.Player()
+	return firstOpen(route)
+end
+function Engine.GoalStatus(route, s, g, goal)
+	player = player or Q.Player()
+	return goalStatus(route, s, g, goal)
+end
+function Engine.Refresh() player = Q.Player() end
+
 function Engine.LiveStep() return live end
 function Engine.CurrentStep() return current end
 function Engine.Extra() return extra end

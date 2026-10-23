@@ -117,7 +117,32 @@ function UnitFactionGroup() return stub.player.faction end
 
 -- Bags, hearthstone and professions.
 stub.items, stub.bind, stub.skills, stub.spells = {}, "Deathknell", {}, {}
-C_Item = { GetItemCount = function(id) return stub.items[id] or 0 end }
+-- Item facts: stub.itemInfo[id] = { name, quality, ilvl, sell, classID }.
+-- Bags: stub.bags[bag][slot] = { itemID, quality }.
+stub.itemInfo, stub.bags = {}, {}
+C_Item = {
+	GetItemCount = function(id) return stub.items[id] or 0 end,
+	GetItemInfo = function(id)
+		local i = stub.itemInfo[id]
+		if not i then return nil end
+		return i[1], "|Hitem:" .. id .. "|h", i[2], i[3], 1, "", "", 1, "", 0, i[4], i[5]
+	end,
+	GetItemNameByID = function(id) local i = stub.itemInfo[id] return i and i[1] end,
+}
+C_Container = {
+	GetContainerNumSlots = function(bag) return stub.bags[bag] and 16 or 0 end,
+	GetContainerItemInfo = function(bag, slot) return stub.bags[bag] and stub.bags[bag][slot] end,
+}
+-- The profession window: stub.tradeSkill = { professionID, recipes = { [id] = { name, learned, relativeDifficulty } } }
+C_TradeSkillUI = {
+	GetBaseProfessionInfo = function() return stub.tradeSkill and { professionID = stub.tradeSkill.professionID } end,
+	GetAllRecipeIDs = function()
+		local ids = {}
+		for id in pairs(stub.tradeSkill and stub.tradeSkill.recipes or {}) do ids[#ids + 1] = id end
+		return ids
+	end,
+	GetRecipeInfo = function(id) return stub.tradeSkill and stub.tradeSkill.recipes[id] end,
+}
 function GetBindLocation() return stub.bind end
 C_SkillInfo = { GetSkillLineInfoByID = function(line)
 	local s = stub.skills[line]

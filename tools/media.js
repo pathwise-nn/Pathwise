@@ -221,6 +221,13 @@ T['glyph-zones'] = () => {
 	paint(c, stroke([[20, 9], [20, 26]], 2));
 	return c;
 };
+// Professions: a hammer.
+T['glyph-prof'] = () => {
+	const c = canvas(32);
+	paint(c, stroke([[9, 25], [19, 15]], 2.6));
+	paint(c, polygon([[15, 8], [23, 16], [26, 13], [18, 5]]), 1);
+	return c;
+};
 T['glyph-settings'] = () => {
 	const c = canvas(32);
 	paint(c, ring(16, 16, 5, 2.4));

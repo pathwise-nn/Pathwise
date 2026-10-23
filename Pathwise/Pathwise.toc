@@ -21,4 +21,5 @@ UI\Panels.lua
 Routes\Leveling.lua
 Routes\Class.lua
 Routes\Professions.lua
+Professions\Professions.lua
 Core\Commands.lua

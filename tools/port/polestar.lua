@@ -159,7 +159,11 @@ local function convertGoal(goal, g, seenComplete)
 	end
 	if t == "level" then return with({ "level", goal.level }) end
 	if t == "buy" or (t == "collect" and goal.item) then
-		return with({ "have", goal.item, goal.count or 1, name = goal.itemName, at = at(goal), from = candidates(goal, g) })
+		-- src: where the item comes from, for the shopping list (bought from a
+		-- vendor, farmed from mobs, or made/disenchanted by another profession).
+		local src = t == "buy" and "vendor" or (goal.candidates and "farm") or (goal.fromKind == "item" and "made") or nil
+		return with({ "have", goal.item, goal.count or 1, name = goal.itemName, at = at(goal), from = candidates(goal, g), src = src,
+			hint = goal.note and text(goal.note, g) or nil })
 	end
 	if t == "skill" and goal.skillLine then
 		return with({ "skill", goal.skillLine, goal.level, name = goal.skill })
@@ -168,8 +172,13 @@ local function convertGoal(goal, g, seenComplete)
 		return with({ "learn", goal.spell, name = goal.spellName, at = at(goal), from = candidates(goal, g) })
 	end
 	if t == "craft" and goal.spell then
+		local reagents
+		for _, r in ipairs(goal.reagents or {}) do
+			reagents = reagents or {}
+			reagents[#reagents + 1] = { r.item, r.count or 1, r.itemName }
+		end
 		return with({ "craft", goal.spell, name = goal.spellName, skillLine = goal.skillLine, untilSkill = goal.untilSkill,
-			item = goal.item, count = goal.count })
+			item = goal.item, count = goal.count, reagents = reagents })
 	end
 	if t == "train" and goal.rankMax and goal.skillLine then
 		return with({ "train", goal.skillLine, goal.rankMax, name = goal.skill, from = candidates(goal, g) })

@@ -10,6 +10,7 @@
 --   { "choice", text, sub, onClick }        a full-width clickable row
 --   { "setting", label, valueText, { { label, onClick }, ... } }
 --   { "slider", label, settingPath, min, max, step, format(v) -> text }
+--   { "progress", fraction }                thin progress line (a profession's skill)
 --   { "divider" }
 --   { "buttons", { { label, kind, onClick }, ... } }   right-aligned footer
 
@@ -20,7 +21,7 @@ ns.Panels = Panels
 
 local WIDTH, PAD = 300, 16
 local panel, openKind
-local pool = { heading = {}, title = {}, text = {}, choice = {}, setting = {}, divider = {}, buttons = {}, slider = {} }
+local pool = { heading = {}, title = {}, text = {}, choice = {}, setting = {}, divider = {}, buttons = {}, slider = {}, progress = {} }
 local used
 
 local function build()
@@ -121,6 +122,14 @@ function makers.slider()
 	return f
 end
 
+function makers.progress()
+	local f = CreateFrame("Frame", nil, panel)
+	f:SetHeight(T.PROGRESS_H)
+	f.line = T.ProgressLine(f)
+	f.line.track:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
+	return f
+end
+
 function makers.buttons()
 	local f = CreateFrame("Frame", nil, panel)
 	f:SetHeight(28)
@@ -211,6 +220,11 @@ local function render(rows)
 			if anchor then f.value:SetPoint("RIGHT", anchor, "LEFT", -8, 0) else f.value:SetPoint("RIGHT") end
 			f.value:SetText(r[3] or "")
 			place(f, 30, 6)
+		elseif kind == "progress" then
+			local f = take("progress", makers.progress)
+			f.line.track:SetWidth(inner) -- set, not anchored: the fill reads it at once
+			f.line:SetProgress(r[2])
+			place(f, T.PROGRESS_H, 6)
 		elseif kind == "slider" then
 			local f = take("slider", makers.slider)
 			local label, path, lo, hi, stepBy, format = r[2], r[3], r[4], r[5], r[6], r[7]
@@ -463,6 +477,108 @@ function builders.routes()
 end
 
 ---------------------------------------------------------------------------
+-- Professions dashboard: per profession its skill, where the guide stands,
+-- the best craft now and the materials for this rank; then disenchanting and
+-- the Tailoring + Enchanting tip. Advice only: Pathwise never crafts, buys,
+-- sells or disenchants.
+---------------------------------------------------------------------------
+
+local SOURCE = { vendor = "vendor", farm = "farm" }
+local MAX_MATERIALS = 6
+
+function builders.professions()
+	local P, E = ns.Professions, ns.Engine
+	E.Refresh()
+	local rows = { { "heading", "Professions" } }
+	local known = P.Known()
+	if #known == 0 then
+		rows[#rows + 1] = { "text", "No professions yet. Visit a profession trainer to learn one: Pathwise follows it from there." }
+		rows[#rows + 1] = { "choice", "Browse the profession guides", nil, function() Panels.Open("routes") end }
+	end
+	local side = E.Side()
+	for i, k in ipairs(known) do
+		local prof = k.prof
+		if i > 1 then rows[#rows + 1] = { "divider" } end
+		rows[#rows + 1] = { "title", ("%s   %d / %d"):format(prof.name, k.rank, k.cap) }
+		rows[#rows + 1] = { "progress", k.cap > 0 and k.rank / k.cap or 0 }
+		local route = P.Route(prof)
+		local st = P.Stage(prof)
+		if not route then
+			rows[#rows + 1] = { "text", "No guide for this profession yet." }
+		elseif not st then
+			rows[#rows + 1] = { "text", "Every step of the guide is done.", "success" }
+		else
+			local step = route.steps[st.step]
+			rows[#rows + 1] = { "text", "Now: " .. (step.title or E.GoalText(step[1]) or "the next step"), "text" }
+			local craft = P.NextCraft(prof)
+			if craft then
+				local bits = { "Best now: " .. (craft.name or "?") }
+				if craft.craftable then bits[#bits + 1] = ("%d from your bags"):format(craft.craftable) end
+				if craft.untilSkill then bits[#bits + 1] = ("until %d"):format(craft.untilSkill) end
+				if craft.difficulty then bits[#bits + 1] = craft.difficulty end
+				if craft.known == false then bits[#bits + 1] = "learn it first" end
+				rows[#rows + 1] = { "text", table.concat(bits, "  ·  "), "text" }
+			end
+			if prof.kind == "craft" and not P.Recipes(prof.line) then
+				rows[#rows + 1] = { "text", ("Open your %s window once so Pathwise can read your recipes."):format(prof.name), "muted" }
+			end
+			local shop = P.Shopping(prof)
+			if #shop > 0 then
+				rows[#rows + 1] = { "heading", "Materials for this rank" }
+				for j, r in ipairs(shop) do
+					if j > MAX_MATERIALS then
+						rows[#rows + 1] = { "text", ("and %d more"):format(#shop - MAX_MATERIALS), "muted" }
+						break
+					end
+					local how = SOURCE[r.src] or "made or found"
+					if r.where then how = how .. ": " .. r.where end
+					local status = r.missing > 0 and ("%d to get"):format(r.missing) or "ready"
+					rows[#rows + 1] = { "text", ("%s   %d / %d  ·  %s  ·  %s"):format(r.name, r.have, r.need, status, how),
+						r.missing > 0 and "text2" or "success" }
+				end
+			end
+			local following = side and side.id == route.id
+			rows[#rows + 1] = { "choice", following and "Following beside your route" or "Follow beside your route",
+				following and "Click to stop" or "Its next step shows in the guide window", function()
+					E.SetSide(following and nil or route.id)
+					Panels.Refresh()
+				end }
+		end
+	end
+
+	-- Disenchanting, for a character with Enchanting.
+	local enchRank = ns.Compat.SkillRank(333)
+	if enchRank then
+		local list = P.Disenchantable(enchRank)
+		if #list > 0 then
+			rows[#rows + 1] = { "heading", "Disenchanting" }
+			local needs, row = P.EnchantingNeedsDust()
+			if needs then
+				rows[#rows + 1] = { "text", ("Your Enchanting rank still needs %s: these are worth disenchanting."):format(row.name), "accent" }
+			else
+				rows[#rows + 1] = { "text", "Nothing in your Enchanting rank needs these now: compare the vendor price with what they fetch." }
+			end
+			for j, it in ipairs(list) do
+				if j > 6 then break end
+				local skill = it.skill and ((P.DE_SKILL_VERIFIED and "" or "≈") .. it.skill) or "?"
+				rows[#rows + 1] = { "text", ("%s  ·  skill %s  ·  item level %d"):format(it.name, skill, it.ilvl or 0),
+					it.canNow and "text" or "muted" }
+			end
+			if not P.DE_SKILL_VERIFIED then
+				rows[#rows + 1] = { "text", "Skill needed is the Classic table, not yet checked on Forever: your tooltip has the last word.", "muted" }
+			end
+		end
+		local te = P.TailorEnchant()
+		if te and #te > 0 then
+			rows[#rows + 1] = { "heading", "Tailoring + Enchanting" }
+			rows[#rows + 1] = { "text", ("Disenchant what you craft for points instead of selling it: %s."):format(table.concat(te, ", ")) }
+		end
+	end
+	rows[#rows + 1] = { "buttons", { { "Profession guides", "default", function() Panels.Open("routes") end }, { "Close", "default", Panels.Close } } }
+	return rows
+end
+
+---------------------------------------------------------------------------
 -- Settings
 ---------------------------------------------------------------------------
 
@@ -514,7 +630,9 @@ ns.On("GUIDE_SKIP", function() Panels.Open("skip") end)
 ns.On("SHOW_ZONES", function() Panels.Open("zones") end)
 ns.On("SHOW_SETTINGS", function() Panels.Open("settings") end)
 ns.On("SHOW_ROUTES", function() Panels.Open("routes") end)
-ns.On("GUIDE_UPDATED", function() if Panels.IsOpen("skip") then Panels.Refresh() end end)
+ns.On("SHOW_PROFESSIONS", function() Panels.Open("professions") end)
+ns.On("GUIDE_UPDATED", function() if Panels.IsOpen("skip") or Panels.IsOpen("professions") then Panels.Refresh() end end)
+ns.On("PROFESSIONS_CHANGED", function() if Panels.IsOpen("professions") then Panels.Refresh() end end)
 ns.On("SETTING_CHANGED", function(path)
 	if path == "guide.shown" and not ns.Get("guide.shown") then Panels.Close() end
 end)

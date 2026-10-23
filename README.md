@@ -7,7 +7,9 @@ Forever. Created by leight_nn & florp. `_nn`
 
 > Early development. What works today: leveling routes from 1 to 60 for
 > every starting race on both sides, class quest routes, profession routes
-> (1-300) followed beside your leveling route, the guide engine following your
+> (1-300) followed beside your leveling route, a professions dashboard
+> (materials for this rank, best craft now, disenchanting, Tailoring +
+> Enchanting; `/pw prof`), the guide engine following your
 > quest log, skipping quests with nearby alternatives, zones for your level, a
 > settings panel, the Pathwise Signature interface and the waypoint arrow.
 > Routes are adapted from Polestar (GPL-3.0); quest data comes from
