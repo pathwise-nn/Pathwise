@@ -14,6 +14,7 @@
 --   { "copy", text, lines }                 selectable text to copy (Ctrl+C)
 --   { "icon", size }                        the Pathwise compass mark
 --   { "coords", onSet(x, y), onClear }      X and Y boxes with Set and Clear
+--   { "input", key, lines }                 a box to type or paste into; Panels.InputText(key)
 --   { "divider" }
 --   { "buttons", { { label, kind, onClick }, ... } }   right-aligned footer
 
@@ -25,7 +26,8 @@ ns.Panels = Panels
 local WIDTH, PAD = 300, 16
 local panel, openKind
 local scroll, host -- the rows live on `host`, scrolled inside the panel when taller than the screen
-local pool = { heading = {}, title = {}, text = {}, choice = {}, setting = {}, divider = {}, buttons = {}, slider = {}, progress = {}, copy = {}, icon = {}, coords = {} }
+local pool = { heading = {}, title = {}, text = {}, choice = {}, setting = {}, divider = {}, buttons = {}, slider = {}, progress = {}, copy = {}, icon = {}, coords = {}, input = {} }
+local inputs = {} -- key -> the text typed into that input row
 local used
 
 local function build()
@@ -194,6 +196,28 @@ function makers.coords()
 	return f
 end
 
+-- A box to type or paste into (several lines); what it holds is kept by key.
+function makers.input()
+	local f = CreateFrame("Frame", nil, host)
+	T.Panel(f, "bg2")
+	local e = CreateFrame("EditBox", nil, f)
+	e:SetMultiLine(true)
+	e:SetAutoFocus(false)
+	e:SetPoint("TOPLEFT", 8, -6)
+	e:SetPoint("BOTTOMRIGHT", -8, 6)
+	if not e:SetFont(T.FONTS.regular, 11, "") then e:SetFont("Fonts\\FRIZQT__.TTF", 11, "") end
+	local c = T.Color("text")
+	e:SetTextColor(c[1], c[2], c[3])
+	e:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+	e:SetScript("OnTextChanged", function(self) if f.key then inputs[f.key] = self:GetText() end end)
+	e:SetScript("OnMouseUp", function(self) self:SetFocus() end)
+	f.box = e
+	return f
+end
+
+function Panels.InputText(key) return inputs[key] end
+function Panels.ClearInput(key) inputs[key] = nil end
+
 function makers.icon()
 	return T.Icon(host, 40)
 end
@@ -294,6 +318,12 @@ local function render(rows)
 			f.box:SetText(r[2])
 			f.box:SetWidth(inner - 16)
 			place(f, 12 + (r[3] or 6) * 14, 6)
+		elseif kind == "input" then
+			local f = take("input", makers.input)
+			f.key = r[2]
+			f.box:SetText(inputs[r[2]] or "")
+			f.box:SetWidth(inner - 16)
+			place(f, 12 + (r[3] or 3) * 14, 6)
 		elseif kind == "coords" then
 			local f = take("coords", makers.coords)
 			local function read(box)
@@ -398,6 +428,11 @@ function Panels.Open(kind)
 	render(rows)
 	anchor()
 	panel:Show()
+end
+
+-- Another Pathwise addon's panel (Pathwise.Suite.Panel).
+function Panels.Register(kind, builder)
+	if type(kind) == "string" and type(builder) == "function" then builders[kind] = builder end
 end
 
 function Panels.Refresh()
@@ -877,7 +912,7 @@ function builders.settings()
 	local E = ns.Engine
 	local route = E.Route()
 	local skippedN = #E.Skipped()
-	return {
+	local rows = {
 		{ "heading", "Settings" },
 		{ "heading", "Guide window" },
 		{ "slider", "Window size", "ui.scale", 0.5, 1.5, 0.05, pct },
@@ -924,9 +959,16 @@ function builders.settings()
 			if a then a:ClearAllPoints() a:SetPoint("TOP", UIParent, "TOP", 0, -140) end
 			Panels.Refresh()
 		end } } },
-		{ "choice", "Waypoint & tools", "Set a waypoint by coordinates; what the arrow sees", function() Panels.Open("tools") end },
-		{ "choice", "About Pathwise", ("Version %s  ·  created by leight_nn & florp   _nn"):format(ns.VERSION), function() Panels.Open("about") end },
 	}
+	-- The other Pathwise addons installed (Pathwise.Suite.RegisterModule).
+	local mods = ns.Suite and ns.Suite.Modules() or {}
+	if #mods > 0 then
+		rows[#rows + 1] = { "heading", "Pathwise suite" }
+		for _, m in ipairs(mods) do rows[#rows + 1] = { "choice", m.name, m.about, function() m.open() end } end
+	end
+	rows[#rows + 1] = { "choice", "Waypoint & tools", "Set a waypoint by coordinates; what the arrow sees", function() Panels.Open("tools") end }
+	rows[#rows + 1] = { "choice", "About Pathwise", ("Version %s  ·  created by leight_nn & florp   _nn"):format(ns.VERSION), function() Panels.Open("about") end }
+	return rows
 end
 
 ns.On("GUIDE_SKIP", function() Panels.Open("skip") end)

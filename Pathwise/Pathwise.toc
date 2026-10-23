@@ -27,3 +27,4 @@ Routes\Professions.lua
 Routes\Other.lua
 Professions\Professions.lua
 Core\Commands.lua
+Core\Suite.lua

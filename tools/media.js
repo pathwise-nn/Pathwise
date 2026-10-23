@@ -236,6 +236,14 @@ T['glyph-dungeon'] = () => {
 	return c;
 };
 
+// Gear: the upgrade arrow (a bold chevron up with a stem).
+T['glyph-upgrade'] = () => {
+	const c = canvas(32);
+	paint(c, polygon([[16, 4], [27, 16], [21, 16], [21, 28], [11, 28], [11, 16], [5, 16]]), 1);
+	paint(c, stroke([[16, 4], [27, 16], [21, 16], [21, 28], [11, 28], [11, 16], [5, 16]], 1.6, true), 0.35, 0.9);
+	return c;
+};
+
 // Professions: a hammer.
 T['glyph-prof'] = () => {
 	const c = canvas(32);

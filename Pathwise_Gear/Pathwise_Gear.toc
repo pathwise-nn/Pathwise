@@ -1,0 +1,13 @@
+## Interface: 16001
+## Title: Pathwise Gear
+## Notes: Upgrades for your spec, stat priority, Pawn scales and the best quest reward. Part of Pathwise.
+## Author: leight_nn & florp
+## Version: 0.1.0-dev
+## Dependencies: Pathwise
+## IconTexture: Interface\AddOns\Pathwise\Media\icon
+## X-License: GPL-3.0-only
+
+Weights.lua
+Gear.lua
+Hooks.lua
+Panel.lua

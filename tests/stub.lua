@@ -111,6 +111,29 @@ function IsIndoors() return false end
 stub.cvars = {}
 function GetCVar(name) return stub.cvars[name] end
 GameTooltip = new("GameTooltip", "GameTooltip")
+function GameTooltip:GetItem() return "Item", stub.tooltipLink end
+function GameTooltip:AddDoubleLine(l, r) stub.tooltipLines[#stub.tooltipLines + 1] = { l, r } end
+function GameTooltip:IsForbidden() return false end
+
+-- The combined backpack: item buttons for bag 0's slots.
+ContainerFrameCombinedBags = new("Frame", "ContainerFrameCombinedBags")
+stub.bagButtons = {}
+function ContainerFrameCombinedBags:UpdateItems() end
+function ContainerFrameCombinedBags:EnumerateValidItems()
+	local i = 0
+	return function()
+		i = i + 1
+		local b = stub.bagButtons[i]
+		if b then return i, b end
+	end
+end
+function stub.bagButton(slot)
+	local b = new("Button", nil, ContainerFrameCombinedBags)
+	b.GetBagID = function() return 0 end
+	b.GetID = function() return slot end
+	stub.bagButtons[#stub.bagButtons + 1] = b
+	return b
+end
 DEFAULT_CHAT_FRAME = { AddMessage = function(_, m) stub.printed[#stub.printed + 1] = m end }
 SlashCmdList = {}
 C_AddOns = { GetAddOnMetadata = function(_, f) if f == "Version" then return "0.1.0-test" end end }
@@ -143,22 +166,51 @@ function UnitFactionGroup() return stub.player.faction end
 
 -- Bags, hearthstone and professions.
 stub.items, stub.bind, stub.skills, stub.spells = {}, "Deathknell", {}, {}
--- Item facts: stub.itemInfo[id] = { name, quality, ilvl, sell, classID }.
--- Bags: stub.bags[bag][slot] = { itemID, quality }.
-stub.itemInfo, stub.bags = {}, {}
+-- Item facts: stub.itemInfo[id] = { name, quality, ilvl, sell, classID, subclassID, equipLoc, minLevel }.
+-- Item stats: stub.itemStats[id] = { ITEM_MOD_INTELLECT_SHORT = 5, ... }.
+-- Bags: stub.bags[bag][slot] = { itemID, quality }. Equipped: stub.equipped[slot] = id.
+-- Links are "item:<id>" (any string holding item:<id> works).
+stub.itemInfo, stub.bags, stub.itemStats, stub.equipped = {}, {}, {}, {}
+local function idOf(x) return type(x) == "number" and x or tonumber(tostring(x):match("item:(%d+)")) end
 C_Item = {
 	GetItemCount = function(id) return stub.items[id] or 0 end,
-	GetItemInfo = function(id)
-		local i = stub.itemInfo[id]
+	GetItemInfo = function(x)
+		local id = idOf(x)
+		local i = id and stub.itemInfo[id]
 		if not i then return nil end
-		return i[1], "|Hitem:" .. id .. "|h", i[2], i[3], 1, "", "", 1, "", 0, i[4], i[5]
+		return i[1], "item:" .. id, i[2], i[3], i[8] or 1, "", "", 1, i[7] or "", 0, i[4], i[5], i[6]
 	end,
 	GetItemNameByID = function(id) local i = stub.itemInfo[id] return i and i[1] end,
+	GetItemStats = function(x) local id = idOf(x) return id and stub.itemStats[id] end,
 }
+function GetInventoryItemLink(_, slot) local id = stub.equipped[slot] return id and ("item:" .. id) or nil end
 C_Container = {
 	GetContainerNumSlots = function(bag) return stub.bags[bag] and 16 or 0 end,
 	GetContainerItemInfo = function(bag, slot) return stub.bags[bag] and stub.bags[bag][slot] end,
+	GetContainerItemLink = function(bag, slot)
+		local i = stub.bags[bag] and stub.bags[bag][slot]
+		return i and ("item:" .. i.itemID) or nil
+	end,
 }
+
+-- Tooltips: TooltipDataProcessor keeps the post-calls; GameTooltip shows stub.tooltipLink.
+stub.postCalls, stub.tooltipLines = {}, {}
+Enum = { TooltipDataType = { Item = 0 } }
+TooltipDataProcessor = { AddTooltipPostCall = function(kind, fn) stub.postCalls[#stub.postCalls + 1] = fn end }
+function stub.showTooltip(link)
+	stub.tooltipLink, stub.tooltipLines = link, {}
+	for _, fn in ipairs(stub.postCalls) do fn(GameTooltip) end
+	return stub.tooltipLines
+end
+function hooksecurefunc(t, name, fn)
+	local orig = t[name]
+	t[name] = function(...) local r = orig(...) fn(...) return r end
+end
+
+-- Quest rewards: stub.choices = { ids }.
+stub.choices = {}
+function GetNumQuestChoices() return #stub.choices end
+function GetQuestItemLink(kind, i) return kind == "choice" and stub.choices[i] and ("item:" .. stub.choices[i]) or nil end
 -- The profession window: stub.tradeSkill = { professionID, recipes = { [id] = { name, learned, relativeDifficulty } } }
 C_TradeSkillUI = {
 	GetBaseProfessionInfo = function() return stub.tradeSkill and { professionID = stub.tradeSkill.professionID } end,
@@ -281,6 +333,18 @@ function stub.load(root)
 		chunk("Pathwise", ns)
 	end
 	stub.ns, stub.files = ns, files
+	return ns
+end
+
+-- Loads another Pathwise addon (Pathwise_Gear, ...) from its own TOC, after Pathwise.
+function stub.loadAddon(root, name)
+	local ns = {}
+	local toc = assert(io.open(root .. "/" .. name .. "/" .. name .. ".toc")):read("*a")
+	for line in toc:gmatch("[^\r\n]+") do
+		if not line:match("^##") and line:match("%.lua$") then
+			assert(loadfile(root .. "/" .. name .. "/" .. line:gsub("\\", "/")))(name, ns)
+		end
+	end
 	return ns
 end
 

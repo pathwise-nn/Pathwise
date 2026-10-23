@@ -23,20 +23,27 @@ function version() {
 	return m[1];
 }
 
-// Every file of the addon folder, sorted, skipping dotfiles; then the
-// licence files from the repository root.
+// The addon folders shipped together: Pathwise and the suite's addons.
+const ADDONS = ['Pathwise', 'Pathwise_Gear'];
+
+// Every file of each addon folder, sorted, skipping dotfiles; then the
+// licence files from the repository root, in each folder.
 function entries() {
 	const out = [];
-	(function walk(dir, rel) {
-		for (const name of fs.readdirSync(dir).sort()) {
-			if (name.startsWith('.')) continue;
-			const full = path.join(dir, name);
-			const r = rel ? `${rel}/${name}` : name;
-			if (fs.statSync(full).isDirectory()) walk(full, r);
-			else out.push({ name: `Pathwise/${r}`, file: full });
-		}
-	})(ADDON, '');
-	for (const name of ['LICENSE', 'THIRD_PARTY.md']) out.push({ name: `Pathwise/${name}`, file: path.join(ROOT, name) });
+	for (const addon of ADDONS) {
+		const dir0 = path.join(ROOT, addon);
+		if (!fs.existsSync(dir0)) continue;
+		(function walk(dir, rel) {
+			for (const name of fs.readdirSync(dir).sort()) {
+				if (name.startsWith('.')) continue;
+				const full = path.join(dir, name);
+				const r = rel ? `${rel}/${name}` : name;
+				if (fs.statSync(full).isDirectory()) walk(full, r);
+				else out.push({ name: `${addon}/${r}`, file: full });
+			}
+		})(dir0, '');
+		for (const name of ['LICENSE', 'THIRD_PARTY.md']) out.push({ name: `${addon}/${name}`, file: path.join(ROOT, name) });
+	}
 	return out;
 }
 

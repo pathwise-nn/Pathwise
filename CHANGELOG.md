@@ -20,6 +20,15 @@ First version of the independent Pathwise (not yet released).
 - Zones for your level, and a Routes panel with leveling, class quest,
   reputation, mount, pet and exploration guides.
 
+### Pathwise Gear (new addon, part of the Pathwise suite)
+- Upgrade advice in gold: a line on item tooltips ("+12.4% upgrade · Head"),
+  an arrow on bag items that are upgrades, and the best quest reward.
+- Scores with Pawn when it is installed, else with Pathwise's own weights per
+  class and spec (from your talents, or chosen), or with a Pawn scale string
+  you paste in. Shows each spec's stat priority.
+- Knows what each class can wear and wield, two-handers against both hands,
+  rings and trinkets against the weaker one.
+
 ### Maps and dungeons
 - World map pins for the step shown (the arrow's target, the other goals,
   and where an objective's monsters are) and minimap pins that follow zoom,
