@@ -13,6 +13,7 @@
 --   { "progress", fraction }                thin progress line (a profession's skill)
 --   { "copy", text, lines }                 selectable text to copy (Ctrl+C)
 --   { "icon", size }                        the Pathwise compass mark
+--   { "coords", onSet(x, y), onClear }      X and Y boxes with Set and Clear
 --   { "divider" }
 --   { "buttons", { { label, kind, onClick }, ... } }   right-aligned footer
 
@@ -24,7 +25,7 @@ ns.Panels = Panels
 local WIDTH, PAD = 300, 16
 local panel, openKind
 local scroll, host -- the rows live on `host`, scrolled inside the panel when taller than the screen
-local pool = { heading = {}, title = {}, text = {}, choice = {}, setting = {}, divider = {}, buttons = {}, slider = {}, progress = {}, copy = {}, icon = {} }
+local pool = { heading = {}, title = {}, text = {}, choice = {}, setting = {}, divider = {}, buttons = {}, slider = {}, progress = {}, copy = {}, icon = {}, coords = {} }
 local used
 
 local function build()
@@ -170,6 +171,29 @@ function makers.copy()
 	return f
 end
 
+-- X and Y boxes with Set and Clear, for a waypoint on the map the player is on.
+function makers.coords()
+	local f = CreateFrame("Frame", nil, host)
+	f:SetHeight(26)
+	f.xl = T.Text(f, "meta", "text2")
+	f.xl:SetPoint("LEFT", f, "LEFT", 0, 0)
+	f.xl:SetText("X")
+	f.x = T.NumberBox(f, 52, function() end)
+	f.x:SetPoint("LEFT", f.xl, "RIGHT", 6, 0)
+	f.yl = T.Text(f, "meta", "text2")
+	f.yl:SetPoint("LEFT", f.x, "RIGHT", 10, 0)
+	f.yl:SetText("Y")
+	f.y = T.NumberBox(f, 52, function() end)
+	f.y:SetPoint("LEFT", f.yl, "RIGHT", 6, 0)
+	f.clear = T.Button(f, "Clear", "default")
+	f.clear:SetPoint("RIGHT", f, "RIGHT", 0, 0)
+	f.clear:SetHeight(24)
+	f.set = T.Button(f, "Set", "accent")
+	f.set:SetPoint("RIGHT", f.clear, "LEFT", -6, 0)
+	f.set:SetHeight(24)
+	return f
+end
+
 function makers.icon()
 	return T.Icon(host, 40)
 end
@@ -270,6 +294,15 @@ local function render(rows)
 			f.box:SetText(r[2])
 			f.box:SetWidth(inner - 16)
 			place(f, 12 + (r[3] or 6) * 14, 6)
+		elseif kind == "coords" then
+			local f = take("coords", makers.coords)
+			local function read(box)
+				local t = (box:GetText() or ""):gsub("%s", ""):gsub(",", ".")
+				return t:match("^%d+%.?%d*$") and tonumber(t) or nil
+			end
+			f.set:SetScript("OnClick", function() r[2](read(f.x), read(f.y)) end)
+			f.clear:SetScript("OnClick", function() r[3]() end)
+			place(f, 26, 8)
 		elseif kind == "icon" then
 			local ic = take("icon", makers.icon)
 			ic:SetSize(r[2] or 40, r[2] or 40)
@@ -749,6 +782,42 @@ function builders.dungeon()
 end
 
 ---------------------------------------------------------------------------
+-- Waypoint & tools: a waypoint by coordinates, where you are, debug text
+---------------------------------------------------------------------------
+
+function builders.tools()
+	local C, Nav = ns.Compat, ns.Nav
+	local map, x, y = C.PlayerMapPosition()
+	local t = Nav.Target()
+	return {
+		{ "heading", "Waypoint & tools" },
+		{ "text", map and ("You are at %.1f, %.1f  ·  %s"):format(x, y, C.MapName(map) or ("map " .. map)) or "No map position here (inside an instance?).", "text" },
+		{ "heading", "Set a waypoint on this map" },
+		{ "coords", function(wx, wy)
+			if not (wx and wy) or wx > 100 or wy > 100 then
+				ns.Print("type two numbers from 0 to 100, like 45.2 and 61.8.")
+				return
+			end
+			local here = C.PlayerMapPosition()
+			if not here then
+				ns.Print("no map position here (inside an instance?).")
+				return
+			end
+			Nav.SetTarget(here, wx, wy, ("%.1f, %.1f"):format(wx, wy))
+			Panels.Refresh()
+		end, function()
+			Nav.Clear()
+			Panels.Refresh()
+		end },
+		{ "text", t and ("The arrow leads to %s."):format(t.title or "a waypoint") or "No waypoint set.", "muted" },
+		{ "heading", "For bug reports" },
+		{ "text", "What the arrow sees. Click, Ctrl+C, and paste it with a report." },
+		{ "copy", Nav.DebugText(), 6 },
+		{ "buttons", { { "Report this step", "default", function() Panels.Open("report") end }, { "Close", "default", Panels.Close } } },
+	}
+end
+
+---------------------------------------------------------------------------
 -- Report this step, and About
 ---------------------------------------------------------------------------
 
@@ -818,6 +887,9 @@ function builders.settings()
 		{ "setting", "Show the arrow", onOff(ns.Get("arrow.shown")), { { ns.Get("arrow.shown") and "Hide" or "Show", toggle("arrow.shown") } } },
 		{ "slider", "Arrow size", "arrow.scale", 0.5, 2, 0.1, pct },
 		{ "text", "Shift-drag the arrow to move it.", "muted" },
+		{ "setting", "Minimap button", onOff(ns.Get("minimap.shown")), { { ns.Get("minimap.shown") and "Hide" or "Show", toggle("minimap.shown") } } },
+		{ "text", ns.Get("minimap.shown") and "Click it to show the guide, right-click for settings, drag to move it."
+			or "Without it, open Pathwise with a key: Game Menu > Key Bindings > Pathwise.", "muted" },
 		{ "heading", "Map pins" },
 		{ "setting", "On the world map", onOff(ns.Get("pins.map")), { { ns.Get("pins.map") and "Hide" or "Show", toggle("pins.map") } } },
 		{ "setting", "On the minimap", onOff(ns.Get("pins.minimap")), { { ns.Get("pins.minimap") and "Hide" or "Show", toggle("pins.minimap") } } },
@@ -852,6 +924,7 @@ function builders.settings()
 			if a then a:ClearAllPoints() a:SetPoint("TOP", UIParent, "TOP", 0, -140) end
 			Panels.Refresh()
 		end } } },
+		{ "choice", "Waypoint & tools", "Set a waypoint by coordinates; what the arrow sees", function() Panels.Open("tools") end },
 		{ "choice", "About Pathwise", ("Version %s  ·  created by leight_nn & florp   _nn"):format(ns.VERSION), function() Panels.Open("about") end },
 	}
 end

@@ -103,6 +103,10 @@ stub.canvas = canvas
 Minimap = new("Frame", "Minimap")
 Minimap.w, Minimap.h = 140, 140
 function Minimap:GetZoom() return 0 end
+function Minimap:GetCenter() return 1000, 600 end
+function Minimap:GetEffectiveScale() return 1 end
+stub.cursor = { 1000, 600 }
+function GetCursorPosition() return stub.cursor[1], stub.cursor[2] end
 function IsIndoors() return false end
 stub.cvars = {}
 function GetCVar(name) return stub.cvars[name] end

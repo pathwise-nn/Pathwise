@@ -32,10 +32,12 @@ Forever.
 A dark, quiet interface with icy-blue highlights, a compact mode, window size
 and opacity sliders, and a movable arrow.
 
-## Commands
+## No commands needed
 
-`/pw` guide · `/pw prof` professions · `/pw routes` · `/pw zones` ·
-`/pw settings` · `/pw report` · `/pw help`
+Everything is in Pathwise's own menus: the minimap button (click for the
+guide, right-click for settings), the buttons along the guide window, and the
+Settings panel. Set keys for the guide, professions, dungeons and settings in
+Game Menu > Key Bindings > Pathwise. (Commands still work: `/pw help`.)
 
 ## Credits
 

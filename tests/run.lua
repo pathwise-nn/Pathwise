@@ -198,7 +198,9 @@ test("/pw where and /pw debug print positions", function()
 	ok(lastPrint(stub):find("50.0, 50.0 on Tirisfal Glades"), lastPrint(stub))
 	SlashCmdList.PATHWISE("way 50 40")
 	SlashCmdList.PATHWISE("debug")
-	ok(lastPrint(stub):find("state travel, distance 200.0 yd"), lastPrint(stub))
+	local found = false
+	for _, m in ipairs(stub.printed) do if m:find("state travel, distance 200.0 yd") then found = true end end
+	ok(found, "the distance line")
 end)
 
 test("/pw way sets a waypoint on the current map; bad input explains", function()

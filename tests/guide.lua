@@ -580,6 +580,93 @@ test("dungeons panel and page; entrance pins on the world map", function()
 end)
 
 ---------------------------------------------------------------------------
+-- Everything without commands: minimap button, key bindings, tools
+---------------------------------------------------------------------------
+
+test("minimap button: click shows and hides the guide, right-click opens Settings", function()
+	local stub, ns = login()
+	local b = _G.PathwiseMinimapButton
+	ok(b and b.shown, "the button is on the minimap")
+	eq(b.parent, Minimap)
+	b.scripts.OnClick(b, "LeftButton")
+	eq(ns.Get("guide.shown"), false, "hidden")
+	b.scripts.OnClick(b, "LeftButton")
+	eq(ns.Get("guide.shown"), true, "shown again")
+	b.scripts.OnClick(b, "RightButton")
+	ok(contains(stub.texts(), "SETTINGS"), "settings open")
+	ns.Set("minimap.shown", false)
+	eq(b.shown, false, "hidden from Settings")
+end)
+
+test("minimap button: placed on the edge, dragged around it, remembered", function()
+	local stub, ns = login()
+	local MB = ns.MinimapButton
+	local x, y = MB.Offset(0, 140)
+	near(x, 76, 1e-9) near(y, 0, 1e-9)
+	x, y = MB.Offset(90, 140)
+	near(x, 0, 1e-9) near(y, 76, 1e-9)
+	eq(MB.AngleFrom(0, 0, 0, -10), 270)
+	local b = _G.PathwiseMinimapButton
+	stub.cursor = { 1000, 700 } -- straight above the minimap's centre
+	b.scripts.OnDragStart(b)
+	stub.advance(0.05)
+	b.scripts.OnDragStop(b)
+	eq(ns.Get("minimap.angle"), 90)
+	eq(PathwiseSettings.minimap.angle, 90, "saved")
+end)
+
+test("key bindings: listed under Pathwise, each one works", function()
+	local stub, ns = login()
+	eq(BINDING_HEADER_PATHWISE, "Pathwise")
+	local xml = assert(io.open("Pathwise/Bindings.xml")):read("*a")
+	for _, name in ipairs({ "TOGGLE", "COMPACT", "PROFESSIONS", "DUNGEONS", "SETTINGS", "REPORT" }) do
+		ok(xml:find('name="PATHWISE_' .. name .. '"', 1, true), name .. " in Bindings.xml")
+		ok(_G["BINDING_NAME_PATHWISE_" .. name], name .. " has a name in the menu")
+	end
+	Pathwise.Binding("toggle")
+	eq(ns.Get("guide.shown"), false)
+	Pathwise.Binding("dungeons")
+	ok(_G.PathwisePanel.shown, "dungeons open")
+end)
+
+test("waypoint & tools: a waypoint by coordinates, cleared, and the debug text", function()
+	local stub, ns = login()
+	ns.Panels.Open("tools")
+	ok(contains(stub.texts(), "You are at 30.2, 71.6  ·  Tirisfal Glades"), table.concat(stub.texts(), " | "))
+	local row
+	for _, f in ipairs(stub.frames) do if rawget(f, "set") and rawget(f, "x") and f.shown then row = f end end
+	ok(row, "the X and Y row")
+	row.x:SetText("45.2")
+	row.y:SetText("61,8") -- a comma works too
+	row.set.scripts.OnClick(row.set)
+	local t = ns.Nav.Target()
+	eq(t.map, 1420)
+	near(t.x, 45.2, 1e-9)
+	near(t.y, 61.8, 1e-9)
+	row.x:SetText("abc")
+	row.set.scripts.OnClick(row.set)
+	ok(lastPrint(stub):find("two numbers"), "explains")
+	near(ns.Nav.Target().x, 45.2, 1e-9, "unchanged")
+	row.clear.scripts.OnClick(row.clear)
+	eq(ns.Nav.Target(), nil)
+	ok(ns.Nav.DebugText():find("player map 1420"), "debug text")
+end)
+
+test("closing the guide says how to bring it back, once", function()
+	local stub, ns = login()
+	local n = #stub.printed
+	for _, f in ipairs(stub.frames) do
+		if rawget(f, "pwIcon") and f.parent and f.parent.parent == _G.PathwiseGuide and rawget(f.pwIcon, "texture") and f.pwIcon.texture:find("glyph%-close$") then
+			f.scripts.OnClick(f)
+			break
+		end
+	end
+	eq(ns.Get("guide.shown"), false)
+	ok(lastPrint(stub):find("minimap button"), lastPrint(stub))
+	eq(#stub.printed, n + 1, "one hint")
+end)
+
+---------------------------------------------------------------------------
 -- Professions dashboard
 ---------------------------------------------------------------------------
 

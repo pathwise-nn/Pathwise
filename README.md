@@ -9,7 +9,7 @@ Forever. Created by leight_nn & florp. `_nn`
 > every starting race on both sides, class quest routes, profession routes
 > (1-300) followed beside your leveling route, a professions dashboard
 > (materials for this rank, best craft now, disenchanting, Tailoring +
-> Enchanting; `/pw prof`), the guide engine following your
+> Enchanting), dungeons for your level, map and minimap pins, the guide engine following your
 > quest log, skipping quests with nearby alternatives, zones for your level, a
 > settings panel, the Pathwise Signature interface and the waypoint arrow.
 > Routes are adapted from Polestar (GPL-3.0); quest data comes from
@@ -20,16 +20,19 @@ Forever. Created by leight_nn & florp. `_nn`
 1. Set where your game's AddOns folder is (once), then reopen PowerShell:
    `setx WOW_FOREVER_ADDONS "G:\World of Warcraft\_classic_beta_\Interface\AddOns"`
 2. Link the addon into the game: `npm run link`
-3. In game, everything is in the guide window: the gear opens Settings, the
-   map button opens Zones for your level, Skip offers alternatives. The same
-   things as commands:
-   - `/pw` shows or hides the guide window
-   - `/pw settings`, `/pw zones`, `/pw skip`, `/pw route`
-   - `/pw demo` previews it with a sample step
-   - `/pw compact` switches full and compact mode
-   - `/pw way 45 62 Inn` points the arrow at a spot on your current map (Shift-drag to move the arrow)
-   - `/pw opacity 80` sets the window background opacity
-   - `/pw help` lists everything
+3. In game, everything is in Pathwise's menus; no commands needed:
+   - **Minimap button**: click to show or hide the guide, right-click for
+     Settings, drag to move it.
+   - **Guide window header**: Dungeons (gate), Professions (hammer), Zones
+     (map), Settings (gear), compact mode, close.
+   - **Footer**: Back, Skip (with quests nearby instead), Report this step
+     (flag), Next.
+   - **Settings**: window size and opacity, the arrow, map pins, the minimap
+     button, routes and the side guide, profession detours, Waypoint & tools,
+     About.
+   - **Key bindings**: Game Menu > Key Bindings > Pathwise.
+
+   Commands still work for those who like them (`/pw help` lists them).
 
 ## Develop
 

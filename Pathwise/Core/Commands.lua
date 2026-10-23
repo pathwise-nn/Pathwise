@@ -46,21 +46,9 @@ end, "your coordinates on this map")
 
 -- What the arrow sees, to tell a position problem from a display one.
 ns.Command("debug", function()
-	local C = ns.Compat
-	local function n(v) return v and ("%.1f"):format(v) or "nil" end
-	local map, x, y = C.PlayerMapPosition()
-	ns.Print(("player map %s at %s, %s"):format(tostring(map), n(x), n(y)))
-	local inst, north, west = C.PlayerWorldPosition()
-	ns.Print(("player world inst %s north %s west %s, facing %s"):format(tostring(inst), n(north), n(west), n(C.PlayerFacing())))
-	local t = Nav.Target()
-	if not t then
-		ns.Print("no waypoint set.")
-		return
-	end
-	ns.Print(("target map %s at %s, %s -> world inst %s north %s west %s"):format(tostring(t.map), n(t.x), n(t.y), tostring(t.inst), n(t.north), n(t.west)))
-	local state, dist, rot = Nav.Sample()
-	ns.Print(("state %s, distance %s yd, rotation %s"):format(tostring(state), n(dist), n(rot)))
-end, "what the arrow sees (for bug reports)")
+	for line in Nav.DebugText():gmatch("[^\n]+") do ns.Print(line) end
+end, "what the arrow sees (also in Settings > Waypoint & tools)")
+ns.Command("tools", function() ns.Panels.Open("tools") end, "Waypoint & tools")
 
 ns.Command("compact", function()
 	Guide.SetCompact(not ns.Get("guide.compact"))

@@ -37,6 +37,12 @@ First version of the independent Pathwise (not yet released).
   how many the bags make, materials for this rank, disenchanting, and the
   Tailoring + Enchanting tip. Advice only.
 
+### No commands needed
+- A minimap button (guide, settings; drag to move), key bindings in the
+  game's Key Bindings menu, and a Waypoint & tools panel (a waypoint by
+  coordinates, where you are, what the arrow sees). Every command's job is in
+  the menus; the commands still work.
+
 ### Interface
 - The Pathwise Signature look: guide window with full and compact modes,
   waypoint arrow, settings panel with sliders and exact values, window size

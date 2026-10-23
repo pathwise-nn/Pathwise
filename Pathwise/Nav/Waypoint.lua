@@ -74,5 +74,26 @@ function Nav.Sample()
 	return "travel", dist, rotation
 end
 
+-- What the arrow sees, as text for bug reports (Waypoint & tools, /pw debug).
+function Nav.DebugText()
+	local C = ns.Compat
+	local function n(v) return v and ("%.1f"):format(v) or "nil" end
+	local lines = {}
+	local map, x, y = C.PlayerMapPosition()
+	lines[#lines + 1] = ("player map %s (%s) at %s, %s"):format(tostring(map), tostring(map and C.MapName(map)), n(x), n(y))
+	local inst, north, west = C.PlayerWorldPosition()
+	lines[#lines + 1] = ("player world inst %s north %s west %s, facing %s"):format(tostring(inst), n(north), n(west), n(C.PlayerFacing()))
+	local t = target
+	if t then
+		lines[#lines + 1] = ("target %s: map %s at %s, %s -> world inst %s north %s west %s"):format(tostring(t.title), tostring(t.map), n(t.x), n(t.y), tostring(t.inst), n(t.north), n(t.west))
+		local state, dist, rot = Nav.Sample()
+		lines[#lines + 1] = ("state %s, distance %s yd, rotation %s"):format(tostring(state), n(dist), n(rot))
+	else
+		lines[#lines + 1] = "no waypoint set"
+	end
+	lines[#lines + 1] = ("instance %s, taxi %s"):format(tostring(C.InInstance()), tostring(C.OnTaxi()))
+	return table.concat(lines, "\n")
+end
+
 Pathwise.SetWaypoint = function(map, x, y, title) return Nav.SetTarget(map, x, y, title) end
 Pathwise.ClearWaypoint = function() Nav.Clear() end

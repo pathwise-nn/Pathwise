@@ -20,6 +20,7 @@ Guide\Dungeons.lua
 Nav\Pins.lua
 UI\GuideWindow.lua
 UI\Panels.lua
+UI\MinimapButton.lua
 Routes\Leveling.lua
 Routes\Class.lua
 Routes\Professions.lua

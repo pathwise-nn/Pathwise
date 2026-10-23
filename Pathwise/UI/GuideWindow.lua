@@ -89,7 +89,14 @@ local function build()
 	W.name:SetText("Pathwise")
 	W.name:SetWordWrap(false)
 
-	W.close = T.IconButton(head, "close", "Close", function() ns.Set("guide.shown", false) end)
+	W.close = T.IconButton(head, "close", "Close", function()
+		ns.Set("guide.shown", false)
+		if not W.hinted then
+			W.hinted = true
+			ns.Print(ns.Get("minimap.shown") and "the guide is hidden: click Pathwise's minimap button to bring it back."
+				or "the guide is hidden: bring it back with your key (Key Bindings > Pathwise), or show the minimap button in Settings.")
+		end
+	end)
 	W.close:SetPoint("RIGHT", -6, 0)
 	W.mode = T.IconButton(head, "collapse", "Compact mode", function() Guide.SetCompact(not ns.Get("guide.compact")) end)
 	W.mode:SetPoint("RIGHT", W.close, "LEFT", -2, 0)
