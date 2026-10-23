@@ -82,8 +82,30 @@ function stub.slider(path)
 	end
 end
 
+function Widget:SetParent(p) self.parent = p end
+function Widget:GetParent() return self.parent end
+
 function CreateFrame(kind, name, parent) return new(kind, name, parent) end
 UIParent = new("Frame", "UIParent")
+
+-- The world map: shown on stub.mapShown, a 1000 x 666 canvas at stub.mapScale.
+stub.mapShown, stub.mapScale = nil, 1
+WorldMapFrame = new("Frame", "WorldMapFrame")
+local canvas = new("Frame", nil, WorldMapFrame)
+canvas.w, canvas.h = 1000, 666
+function WorldMapFrame:GetMapID() return stub.mapShown end
+function WorldMapFrame:GetCanvas() return canvas end
+function WorldMapFrame:GetCanvasScale() return stub.mapScale end
+function WorldMapFrame:IsShown() return stub.mapShown ~= nil end
+stub.canvas = canvas
+
+-- The minimap: 140 px wide, zoom 0, outdoors, not rotating unless stub.cvars says.
+Minimap = new("Frame", "Minimap")
+Minimap.w, Minimap.h = 140, 140
+function Minimap:GetZoom() return 0 end
+function IsIndoors() return false end
+stub.cvars = {}
+function GetCVar(name) return stub.cvars[name] end
 GameTooltip = new("GameTooltip", "GameTooltip")
 DEFAULT_CHAT_FRAME = { AddMessage = function(_, m) stub.printed[#stub.printed + 1] = m end }
 SlashCmdList = {}

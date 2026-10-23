@@ -418,6 +418,168 @@ test("more guides: reputation, mounts and pets are listed, folded until opened",
 end)
 
 ---------------------------------------------------------------------------
+-- Map and minimap pins
+---------------------------------------------------------------------------
+
+-- The pin frames shown under a parent, with their points.
+local function shownPins(stub, parent)
+	local out = {}
+	for _, f in ipairs(stub.frames) do
+		if f.parent == parent and f.shown and rawget(f, "pin") then out[#out + 1] = f end
+	end
+	return out
+end
+
+test("pins: the step's places, the arrow's first, and the spots of open objectives", function()
+	local stub, ns = fixture()
+	stub.accept(363) stub.turnin(363)
+	stub.accept(364, { { text = "Mindless Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false },
+		{ text = "Wretched Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false } })
+	stub.accept(376, {})
+	local pins = ns.Engine.Pins()
+	eq(pins[1].kind, "lead")
+	local spots = 0
+	for _, p in ipairs(pins) do
+		eq(p.map, 1420)
+		if p.kind == "spot" then spots = spots + 1 end
+	end
+	ok(spots >= 6, "zombie spots: " .. spots)
+end)
+
+test("world map pins: drawn on the map shown, the same size at any zoom, read-only", function()
+	local stub, ns = fixture()
+	stub.mapShown = 1420
+	stub.advance(0.05)
+	local layer = ns.Pins.world.layer
+	ok(layer, "a layer of Pathwise's under the canvas")
+	eq(layer.parent, stub.canvas)
+	local pins = shownPins(stub, layer)
+	ok(#pins >= 1, "a pin for Undertaker Mordo")
+	local lead
+	for _, f in ipairs(pins) do if f.pin.kind == "lead" then lead = f end end
+	eq(lead.pin.title, "Undertaker Mordo")
+	local pt = lead.points[1]
+	eq(pt[2], layer)
+	near(pt[4], 1000 * 30.22 / 100, 0.01, "x on the canvas")
+	near(pt[5], -666 * 71.65 / 100, 0.01, "y on the canvas")
+	stub.mapScale = 2
+	stub.advance(0.05)
+	near(lead.scale, 0.5, 1e-9, "zoomed in: the pin keeps its size on screen")
+	near(lead.points[1][4], 1000 * 30.22 / 100 * 2, 0.01, "and its place")
+	stub.mapShown = 1411 -- Durotar: nothing of this step there
+	stub.advance(0.05)
+	eq(#shownPins(stub, layer), 0)
+	ns.Set("pins.map", false)
+	stub.mapShown = 1420
+	stub.advance(0.05)
+	eq(#shownPins(stub, layer), 0, "switched off in Settings")
+end)
+
+test("minimap: projection by zoom, rotation and the rim", function()
+	local _, ns = fresh()
+	local P = ns.Pins
+	-- 100 yd north, outdoor zoom 0 (466.67 yd across), 66 px from the centre to the rim.
+	local x, y, out = P.Project(100, 0, nil, 466.67 / 2, 66, false, false)
+	near(x, 0, 1e-9)
+	near(y, 100 * 66 / 233.335, 1e-3)
+	eq(out, false)
+	-- 100 yd west on a non-rotating minimap: to the left.
+	x = P.Project(0, 100, nil, 233.335, 66, false, false)
+	ok(x < 0, "west is left")
+	-- Facing west on a rotating minimap: north turns to the right.
+	x, y = P.Project(100, 0, math.pi / 2, 233.335, 66, true, false)
+	ok(x > 0 and math.abs(y) < 1e-6, ("north is to the right: %.2f, %.2f"):format(x, y))
+	-- Beyond the rim: held to it.
+	x, y, out = P.Project(1000, 0, nil, 233.335, 66, false, false)
+	eq(out, true)
+	near(y, 66, 1e-9)
+end)
+
+test("minimap pins: the step's places near the player; the arrow's target held to the rim", function()
+	local stub, ns = fixture()
+	local pins = shownPins(stub, Minimap)
+	ok(#pins >= 1, "Undertaker Mordo on the minimap")
+	stub.moveTo(1420, 60, 50) -- far away in Brill
+	stub.advance(0.2)
+	local lead
+	for _, f in ipairs(shownPins(stub, Minimap)) do if f.pin.kind == "lead" then lead = f end end
+	ok(lead, "the arrow's target stays, on the rim")
+	local pt = lead.points[1]
+	near(math.sqrt(pt[4] ^ 2 + pt[5] ^ 2), 66, 0.01, "on the rim")
+	ns.Set("pins.minimap", false)
+	eq(#shownPins(stub, Minimap), 0, "switched off")
+end)
+
+---------------------------------------------------------------------------
+-- Dungeons
+---------------------------------------------------------------------------
+
+test("dungeons: by level, from the data, Forever's own included", function()
+	local _, ns = fresh()
+	local Dg = ns.Dungeons
+	local names = {}
+	for _, d in ipairs(Dg.ForLevel(18)) do names[d.name] = d end
+	ok(names["The Deadmines"] and names["Wailing Caverns"], "Deadmines and Wailing Caverns at 18")
+	ok(not names["Molten Core"], "no raid at 18")
+	local all = {}
+	for _, d in ipairs(Dg.All()) do all[d.name] = d end
+	ok(all["Ruins of Lordaeron"] and all["The Hall of Thanes"], "Forever's instances")
+	ok(all["Molten Core"].raid, "Molten Core is a raid")
+	ok(not all["Zul'Farrak"].raid, "Zul'Farrak is not")
+	ok(not all["Alterac Valley"] and not all["Warsong Gulch"] and not all["Deeprun Tram"], "no battlegrounds, no tram")
+	eq(#all["Dire Maul"].quests > 10, true, "Dire Maul's wings as one, with its quests")
+end)
+
+test("dungeon quests: this side's, with what stands for each", function()
+	local stub, ns = login(function(s) s.player.level = 18 end)
+	local Dg = ns.Dungeons
+	local wc = Dg.Quests(718)
+	ok(#wc > 0, "Wailing Caverns quests for a Horde character")
+	local seen = {}
+	for _, q in ipairs(wc) do seen[q.status] = true end
+	ok(seen.now or seen.pre or seen.level, "statuses")
+	-- Taking one shows it in the log.
+	local first = wc[1].quest
+	stub.accept(first)
+	local again
+	for _, q in ipairs(Dg.Quests(718)) do if q.quest == first then again = q end end
+	ok(again and (again.status == "log" or again.status == "ready"), again and again.status)
+	-- The Deadmines' quests are given in Westfall and Stormwind: Alliance only.
+	local hordeCount = #Dg.Quests(1581)
+	local _, ns2 = login(function(s) s.player.level = 18 s.player.raceID, s.player.race, s.player.faction = 1, "Human", "Alliance" end)
+	ok(#ns2.Dungeons.Quests(1581) > hordeCount, "more Deadmines quests for the Alliance")
+end)
+
+test("dungeon entrance: the nearest, and the arrow to it", function()
+	local stub, ns = login()
+	stub.moveTo(1427, 30, 80) -- Searing Gorge
+	local e = ns.Dungeons.Entrance(1584)
+	eq(e.map, 1427, "Blackrock Depths from the Searing Gorge side")
+	ok(ns.Dungeons.GuideTo(1584))
+	eq(ns.Nav.Target().title, "Blackrock Depths")
+end)
+
+test("dungeons panel and page; entrance pins on the world map", function()
+	local stub, ns = login(function(s) s.player.level = 19 end)
+	SlashCmdList.PATHWISE("dungeons")
+	local texts = stub.texts()
+	ok(contains(texts, "Wailing Caverns   18-21"), table.concat(texts, " | "))
+	ok(stub.clickLabelText("Wailing Caverns"), "open its page")
+	texts = stub.texts()
+	ok(contains(texts, "Go to the entrance"))
+	ok(contains(texts, "QUESTS"))
+	ok(stub.clickLabelText("Go to the entrance"))
+	eq(ns.Nav.Target().title, "Wailing Caverns")
+	stub.mapShown = 1413 -- The Barrens
+	stub.advance(0.05)
+	local found
+	for _, f in ipairs(stub.frames) do
+		if f.parent == ns.Pins.world.layer and f.shown and rawget(f, "pin") and f.pin.kind == "dungeon" then found = f.pin end
+	end
+	ok(found and found.title == "Wailing Caverns", "an entrance pin on the Barrens map")
+end)
+
+---------------------------------------------------------------------------
 -- Professions dashboard
 ---------------------------------------------------------------------------
 

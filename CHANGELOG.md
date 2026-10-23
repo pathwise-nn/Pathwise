@@ -20,6 +20,15 @@ First version of the independent Pathwise (not yet released).
 - Zones for your level, and a Routes panel with leveling, class quest,
   reputation, mount, pet and exploration guides.
 
+### Maps and dungeons
+- World map pins for the step shown (the arrow's target, the other goals,
+  and where an objective's monsters are) and minimap pins that follow zoom,
+  indoor scale and a rotating minimap; the arrow's target stays on the rim.
+  Pathwise only reads the map, so it never taints it.
+- Dungeons and raids for your level (29, Forever's own included): levels
+  from the monsters inside, their quests with what stands for each, and the
+  nearest entrance with an arrow to it; entrance pins on the world map.
+
 ### Professions
 - Profession routes from 1 to 300 for all twelve professions, followed
   beside the leveling route: the next profession step shows in the guide

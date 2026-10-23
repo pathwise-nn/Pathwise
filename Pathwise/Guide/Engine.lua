@@ -654,6 +654,7 @@ function Engine.Update()
 	if ns.Guide and ns.Guide.SetView then ns.Guide.SetView(Engine.View()) end
 	updateWaypoint()
 	ns.Fire("GUIDE_UPDATED")
+	ns.Fire("PINS_CHANGED")
 end
 
 -- Events come in bursts: one update a moment after the last.
@@ -706,6 +707,53 @@ ns.On("READY", function()
 	end
 	Engine.Update()
 end)
+
+---------------------------------------------------------------------------
+-- Pins: the places of the step shown, for the world map and the minimap.
+--   { map, x, y, kind = "lead" | "goal" | "spot", title, sub }
+-- lead: where the arrow points; goal: the step's other open goals; spot: the
+-- places an open objective's monsters or objects are (from the data).
+---------------------------------------------------------------------------
+
+function Engine.Pins()
+	local out = {}
+	local route = Engine.Route()
+	local lead = leadGoal()
+	local seen = {}
+	local function add(p, kind, title, sub)
+		if not (p and p.map and p.x and p.y) then return end
+		local key = ("%d:%.1f:%.1f"):format(p.map, p.x, p.y)
+		if seen[key] then return end
+		seen[key] = true
+		out[#out + 1] = { map = p.map, x = p.x, y = p.y, kind = kind, title = title or p.name, sub = sub }
+	end
+	if lead then add(placeOf(lead), "lead", nil, goalText(lead)) end
+	local goals = {}
+	if extra then goals[1] = { extra.verb, extra.quest }
+	elseif route and current then
+		for g, goal in ipairs(route.steps[current]) do
+			if goalStatus(route, current, g, goal) == "open" then goals[#goals + 1] = goal end
+		end
+	end
+	for _, goal in ipairs(goals) do
+		if goal ~= lead then add(placeOf(goal), "goal", nil, goalText(goal)) end
+		if goal[1] == "complete" then
+			local q = goal[2]
+			local log = Q.Objectives(q)
+			for i = 1, Q.ObjectiveCount(q) do
+				if not (log and log[i] and log[i].done) then
+					local p = placeOf(goal)
+					local map = p and p.map
+					local pts, name = map and Q.ObjectiveSpots(q, i, map)
+					for k = 1, pts and #pts or 0, 2 do
+						add({ map = map, x = pts[k], y = pts[k + 1] }, "spot", name, qname(goal))
+					end
+				end
+			end
+		end
+	end
+	return out
+end
 
 ---------------------------------------------------------------------------
 -- A report of the step shown, for "Report this step": plain text the player

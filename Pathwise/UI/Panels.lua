@@ -672,6 +672,83 @@ function builders.professions()
 end
 
 ---------------------------------------------------------------------------
+-- Dungeons for your level, and one dungeon's page
+---------------------------------------------------------------------------
+
+local dungeonId -- the dungeon whose page is open
+local showAllDungeons = false
+
+local STATUS = {
+	now = "Take it now", log = "In your quest log", ready = "Ready to hand in",
+	level = "From level %d", pre = "Needs another quest first", done = "Done",
+}
+
+function builders.dungeons()
+	local Dg, Q = ns.Dungeons, ns.Quests
+	local p = Q.Player()
+	local list = showAllDungeons and Dg.All() or Dg.ForLevel(p.level or 1)
+	local rows = { { "heading", showAllDungeons and "Every dungeon and raid" or ("Dungeons for level %d"):format(p.level or 1) } }
+	if #list == 0 then rows[#rows + 1] = { "text", "None for your level yet: the first dungeons start in the low teens." } end
+	for _, d in ipairs(list) do
+		local open = 0
+		for _, q in ipairs(Dg.Quests(d.id)) do if q.status == "now" or q.status == "log" or q.status == "ready" then open = open + 1 end end
+		local e = Dg.Entrance(d.id)
+		local where = e and ns.Compat.MapName(e.map) or nil
+		local bits = {}
+		if d.raid then bits[#bits + 1] = "Raid" end
+		if where then bits[#bits + 1] = where end
+		if open > 0 then bits[#bits + 1] = ("%d quest%s for you"):format(open, open == 1 and "" or "s") end
+		rows[#rows + 1] = { "choice", ("%s   %d-%d"):format(d.name, d.low, d.high), #bits > 0 and table.concat(bits, "  ·  ") or nil, function()
+			dungeonId = d.id
+			Panels.Open("dungeon")
+		end }
+	end
+	rows[#rows + 1] = { "choice", showAllDungeons and "Show dungeons for my level" or "Show every dungeon and raid", nil, function()
+		showAllDungeons = not showAllDungeons
+		Panels.Refresh()
+	end }
+	rows[#rows + 1] = { "text", "Levels are those of the monsters inside, from QuestieDB's data: an estimate.", "muted" }
+	rows[#rows + 1] = { "buttons", { { "Close", "default", Panels.Close } } }
+	return rows
+end
+
+function builders.dungeon()
+	local Dg = ns.Dungeons
+	local d = dungeonId and Dg.Get(dungeonId)
+	if not d then return builders.dungeons() end
+	local rows = {
+		{ "heading", d.raid and "Raid" or "Dungeon" },
+		{ "title", d.name },
+		{ "text", ("Levels %d-%d%s"):format(d.low, d.high, d.levelsFrom == "quests" and " (from its quests)" or "") },
+	}
+	local e = Dg.Entrance(d.id)
+	if e then
+		local zone = ns.Compat.MapName(e.map) or ("map " .. e.map)
+		rows[#rows + 1] = { "choice", "Go to the entrance", ("%s  ·  %.1f, %.1f%s"):format(zone, e.x, e.y,
+			e.unverified and "  ·  not yet checked on Forever" or ""), function()
+			Dg.GuideTo(d.id)
+			ns.Print(("the arrow leads to %s."):format(d.name))
+		end }
+	end
+	local quests = Dg.Quests(d.id)
+	rows[#rows + 1] = { "heading", ("Quests (%d)"):format(#quests) }
+	if #quests == 0 then rows[#rows + 1] = { "text", "No quests for your character here." } end
+	for _, q in ipairs(quests) do
+		local status = q.status == "level" and STATUS.level:format(q.minLevel) or STATUS[q.status]
+		local giver = q.giver and q.giver.name
+		local sub = ("Level %d  ·  %s%s"):format(q.level, status, giver and q.status ~= "done" and ("  ·  " .. giver) or "")
+		rows[#rows + 1] = { "choice", q.name, sub, function()
+			if q.giver and q.status ~= "done" then
+				ns.Nav.SetTarget(q.giver.map, q.giver.x, q.giver.y, q.giver.name)
+				ns.Print(("the arrow leads to %s for %s."):format(q.giver.name, q.name))
+			end
+		end }
+	end
+	rows[#rows + 1] = { "buttons", { { "All dungeons", "default", function() Panels.Open("dungeons") end }, { "Close", "default", Panels.Close } } }
+	return rows
+end
+
+---------------------------------------------------------------------------
 -- Report this step, and About
 ---------------------------------------------------------------------------
 
@@ -741,6 +818,10 @@ function builders.settings()
 		{ "setting", "Show the arrow", onOff(ns.Get("arrow.shown")), { { ns.Get("arrow.shown") and "Hide" or "Show", toggle("arrow.shown") } } },
 		{ "slider", "Arrow size", "arrow.scale", 0.5, 2, 0.1, pct },
 		{ "text", "Shift-drag the arrow to move it.", "muted" },
+		{ "heading", "Map pins" },
+		{ "setting", "On the world map", onOff(ns.Get("pins.map")), { { ns.Get("pins.map") and "Hide" or "Show", toggle("pins.map") } } },
+		{ "setting", "On the minimap", onOff(ns.Get("pins.minimap")), { { ns.Get("pins.minimap") and "Hide" or "Show", toggle("pins.minimap") } } },
+		{ "setting", "Dungeon entrances", onOff(ns.Get("pins.dungeons")), { { ns.Get("pins.dungeons") and "Hide" or "Show", toggle("pins.dungeons") } } },
 		{ "heading", "Route" },
 		{ "setting", route and route.title or "No route", "", { { "Routes", function() Panels.Open("routes") end }, { "Zones", function() Panels.Open("zones") end } } },
 		{ "setting", "Side guide", E.Side() and E.Side().title or "None", E.Side() and { { "Stop", function() E.SetSide(nil) Panels.Refresh() end } } or {} },
@@ -781,6 +862,7 @@ ns.On("SHOW_SETTINGS", function() Panels.Open("settings") end)
 ns.On("SHOW_ROUTES", function() Panels.Open("routes") end)
 ns.On("SHOW_PROFESSIONS", function() Panels.Open("professions") end)
 ns.On("REPORT_STEP", function() Panels.Open("report") end)
+ns.On("SHOW_DUNGEONS", function() Panels.Open("dungeons") end)
 ns.On("SHOW_ABOUT", function() Panels.Open("about") end)
 ns.On("GUIDE_UPDATED", function() if Panels.IsOpen("skip") or Panels.IsOpen("professions") then Panels.Refresh() end end)
 ns.On("PROFESSIONS_CHANGED", function() if Panels.IsOpen("professions") then Panels.Refresh() end end)

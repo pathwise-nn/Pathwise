@@ -439,6 +439,113 @@ for map, z in pairs(byZone) do
 end
 
 ---------------------------------------------------------------------------
+-- Dungeons and raids (support/Forever/Zones/dungeons.lua)
+---------------------------------------------------------------------------
+-- Kept: entries with hostile monsters in the Forever data (that leaves out
+-- later expansions' instances, battlegrounds and city areas). Per instance:
+--   levels: the 10th to 90th percentile of its hostile monsters' levels
+--   quests: quests the data files under the instance (zoneOrSort)
+--   raid:   a monster above level 62 inside (raid bosses are 63)
+--   entrances: { { uiMap, x, y }, ... } as QuestieDB places them; its notes
+--              mark a few as unverified on Forever, kept in `unverified`.
+
+local dungeons = {}
+do
+	local holder = { private = {} }
+	local function load(faction)
+		modules.ZoneDB.private = {}
+		run("support/Forever/Zones/dungeons.lua", env({ QuestieLoader = Loader, UnitFactionGroup = function() return faction end }))
+		return modules.ZoneDB.private.dungeons or {}
+	end
+	local list = load("Horde")
+	local source = readFile("support/Forever/Zones/dungeons.lua")
+	-- Instances that share a name are one instance (Dire Maul's wings): their
+	-- areas, entrances and quests together, under the lowest area id.
+	local byName = {}
+	for areaId, d in pairs(list) do
+		local g = byName[d[1]]
+		if not g then
+			g = { id = areaId, name = d[1], areas = {}, entrances = {}, unverified = false }
+			byName[d[1]] = g
+		end
+		if areaId < g.id then g.id = areaId end
+		g.areas[areaId] = true
+		for _, alt in ipairs(d[2] or {}) do g.areas[alt] = true end
+		-- QuestieDB's own note on the line: "unverified" placement on Forever,
+		-- kept on each entrance it is about (the 4th value).
+		local line = source:match("%[" .. areaId .. "%] = %b{}[^\n]*")
+		local unverified = (line and line:lower():find("unverified")) and true or nil
+		for _, e in ipairs(d[4] or {}) do
+			local map = mapOf(e[1])
+			if map and e[2] and e[3] then
+				local dup = false
+				for _, x in ipairs(g.entrances) do if x[1] == map and math.abs(x[2] - e[2]) < 0.5 and math.abs(x[3] - e[3]) < 0.5 then dup = true end end
+				if not dup then g.entrances[#g.entrances + 1] = { map, round2(e[2]), round2(e[3]), unverified } end
+			end
+		end
+	end
+	local function pct(l, p) return l[math.max(1, math.min(#l, math.floor(#l * p + 0.5)))] end
+	for _, g in pairs(byName) do
+		local levels, hostile, bosses, friendlyA, friendlyH = {}, 0, 0, 0, 0
+		for _, n in pairs(db.Npc) do
+			if type(n) == "table" and type(n[NK.spawns]) == "table" then
+				local inside = false
+				for area in pairs(n[NK.spawns]) do if g.areas[area] then inside = true break end end
+				if inside then
+					local f = n[NK.friendlyToFaction]
+					if f == "A" then friendlyA = friendlyA + 1
+					elseif f == "H" then friendlyH = friendlyH + 1
+					elseif f == "AH" then friendlyA, friendlyH = friendlyA + 1, friendlyH + 1
+					else
+						hostile = hostile + 1
+						local lo, hi = n[NK.minLevel] or 0, n[NK.maxLevel] or 0
+						if hi >= 63 then bosses = bosses + 1 end
+						if lo > 0 and hi <= 62 then levels[#levels + 1] = lo levels[#levels + 1] = hi end
+					end
+				end
+			end
+		end
+		local qs, qlevels = {}, {}
+		for qid, q in pairs(db.Quest) do
+			if type(q) == "table" and g.areas[q[QK.zoneOrSort]] and type(q[QK.name]) == "string" then
+				qs[#qs + 1] = qid
+				if (q[QK.questLevel] or 0) > 0 then qlevels[#qlevels + 1] = q[QK.questLevel] end
+			end
+		end
+		table.sort(qs)
+		-- A dungeon is mostly hostile monsters; a battleground (Alterac Valley)
+		-- is mostly each side's own people. The instances Forever added (area
+		-- ids from 16000, QuestieDB docs/forever-data.md) have quests in the
+		-- data but no monster spawns yet: their levels come from their quests.
+		-- Other instances without monsters (the Deeprun Tram, Warsong Gulch)
+		-- are left out.
+		local friendly = math.max(friendlyA, friendlyH)
+		local lo, hi, from
+		if hostile >= 8 and #levels >= 4 and friendly < hostile then
+			table.sort(levels)
+			lo, hi, from = pct(levels, 0.1), pct(levels, 0.9), "monsters"
+		elseif g.id >= 16000 and #qlevels >= 2 then
+			table.sort(qlevels)
+			lo, hi, from = pct(qlevels, 0.1), pct(qlevels, 0.9), "quests"
+		end
+		if lo and #g.entrances > 0 then
+			table.sort(g.entrances, function(a, b)
+				if (a[4] and 1 or 0) ~= (b[4] and 1 or 0) then return not a[4] end
+				if a[1] ~= b[1] then return a[1] < b[1] end
+				return a[2] < b[2]
+			end)
+			local all = true
+			for _, e in ipairs(g.entrances) do if not e[4] then all = false end end
+			dungeons[g.id] = {
+				name = g.name, levels = { lo, hi }, levelsFrom = from, quests = #qs > 0 and qs or nil,
+				raid = bosses >= 3 or nil, entrances = g.entrances, monsters = hostile,
+				unverified = all or nil,
+			}
+		end
+	end
+end
+
+---------------------------------------------------------------------------
 -- Writing
 ---------------------------------------------------------------------------
 
@@ -516,6 +623,15 @@ section("quests", quests)
 section("npcs", npcs)
 section("objects", objects)
 section("items", items)
+f:write("-- dungeons[areaId] = { name, levels = { low, high }, levelsFrom = \"monsters\" | \"quests\", quests = { ids }, raid,\n")
+f:write("--   entrances = { { uiMap, x, y, unverified }, ... } (verified first), monsters, unverified (every entrance) }\n")
+f:write("D.dungeons = {\n")
+for _, id in ipairs(sortedIds(dungeons)) do
+	local out = {}
+	ser(dungeons[id], out)
+	f:write("[", ("%d"):format(id), "]=", table.concat(out), ",\n")
+end
+f:write("}\n")
 f:write("D.zones = {\n")
 for _, map in ipairs(sortedIds(zones)) do
 	local out = {}
@@ -526,4 +642,4 @@ f:write("}\n")
 f:close()
 
 local function count(t) local n = 0 for _ in pairs(t) do n = n + 1 end return n end
-log(("wrote %s: %d quests, %d npcs, %d objects, %d items, %d zones"):format(OUT, count(quests), count(npcs), count(objects), count(items), count(zones)))
+log(("wrote %s: %d quests, %d npcs, %d objects, %d items, %d zones, %d dungeons and raids"):format(OUT, count(quests), count(npcs), count(objects), count(items), count(zones), count(dungeons)))

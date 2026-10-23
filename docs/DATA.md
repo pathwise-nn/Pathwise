@@ -39,6 +39,17 @@ build tables (no file, OS or network access).
   given there (10th to 90th percentile, repeatable and event quests left
   out). These are estimates, and the Zones panel says so.
 
+## Dungeons and raids
+
+From `support/Forever/Zones/dungeons.lua`: names, areas and entrances.
+Instances with the same name are merged (Dire Maul's wings). Kept are
+those with mostly hostile monsters in the data (leaving out later
+expansions' instances, battlegrounds and city areas), plus Forever's own
+instances (area ids from 16000), whose levels come from their quests.
+Levels are the 10th to 90th percentile of the monsters' levels; a raid has
+three or more monsters above level 62. Entrances QuestieDB marks as
+unverified on Forever keep that mark, and the guide says so.
+
 ## Known gaps
 
 - **Dynamic Corrections are not applied** (`LoadFactionFixes`,

@@ -16,6 +16,8 @@ Nav\Waypoint.lua
 Nav\Arrow.lua
 Guide\Quests.lua
 Guide\Engine.lua
+Guide\Dungeons.lua
+Nav\Pins.lua
 UI\GuideWindow.lua
 UI\Panels.lua
 Routes\Leveling.lua
