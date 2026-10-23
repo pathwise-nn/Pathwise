@@ -5,11 +5,13 @@
 A free, open-source leveling and profession companion for World of Warcraft:
 Forever. Created by leight_nn & florp. `_nn`
 
-> Early development. What works today: the guide engine following your
-> quest log, the first route (Tirisfal Glades, Undead, levels 1-10; a first
-> draft), skipping quests with nearby alternatives, zones for your level, a
+> Early development. What works today: leveling routes from 1 to 60 for
+> every starting race on both sides, class quest routes, profession routes
+> (1-300) followed beside your leveling route, the guide engine following your
+> quest log, skipping quests with nearby alternatives, zones for your level, a
 > settings panel, the Pathwise Signature interface and the waypoint arrow.
-> Quest data: QuestieDB (see `docs/DATA.md`). Profession planning comes next.
+> Routes are adapted from Polestar (GPL-3.0); quest data comes from
+> QuestieDB (see `docs/DATA.md` and `THIRD_PARTY.md`).
 
 ## Try it
 

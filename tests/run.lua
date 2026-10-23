@@ -218,7 +218,8 @@ end)
 
 test("guide window: empty state, sample step, compact mode keeps the view", function()
 	local stub, ns = fresh()
-	stub.player.raceID, stub.player.faction = 1, "Alliance" -- no route yet: the empty state
+	-- A character no route is for (every playable race has one now): the empty state.
+	stub.player.raceID, stub.player.race, stub.player.faction = 99, "Nobody", "Neutral"
 	stub.login()
 	local f = _G.PathwiseGuide
 	ok(f and f.shown, "guide window shown at login")

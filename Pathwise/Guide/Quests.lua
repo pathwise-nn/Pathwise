@@ -49,11 +49,12 @@ function Q.Special(id) local q = D.quests[id] return q and q[SPECIAL] end
 function Q.Player()
 	local R = ns.Compat.Readable
 	local _, class = UnitClass("player")
-	local _, _, raceID = UnitRace("player")
+	local _, raceFile, raceID = UnitRace("player")
 	return {
 		level = R(UnitLevel("player")) or 1,
 		class = R(class),
 		raceID = R(raceID),
+		race = R(raceFile),
 		faction = R(UnitFactionGroup and UnitFactionGroup("player")),
 	}
 end

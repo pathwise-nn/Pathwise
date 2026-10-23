@@ -115,7 +115,18 @@ function UnitRace() return "Undead", stub.player.race, stub.player.raceID end
 function UnitClass() return "Mage", stub.player.class, 8 end
 function UnitFactionGroup() return stub.player.faction end
 
--- The quest log: log[id] = { objectives = { {text, numFulfilled, numRequired, finished}, ... }, ready }
+-- Bags, hearthstone and professions.
+stub.items, stub.bind, stub.skills, stub.spells = {}, "Deathknell", {}, {}
+C_Item = { GetItemCount = function(id) return stub.items[id] or 0 end }
+function GetBindLocation() return stub.bind end
+C_SkillInfo = { GetSkillLineInfoByID = function(line)
+	local s = stub.skills[line]
+	if not s then return { rank = 0, maxRank = 0 } end
+	return { rank = s[1], maxRank = s[2] }
+end }
+C_SpellBook = { IsSpellKnown = function(id) return stub.spells[id] == true end }
+
+-- The quest log: log[id] ={ objectives = { {text, numFulfilled, numRequired, finished}, ... }, ready }
 stub.log, stub.done = {}, {}
 C_QuestLog = {
 	IsOnQuest = function(id) return stub.log[id] ~= nil end,
@@ -153,6 +164,18 @@ function stub.clickLabel(label)
 	for _, f in ipairs(stub.frames) do
 		local t = rawget(f, "pwText")
 		if t and t.text == label and f.shown and (not f.parent or f.parent.shown ~= false) then
+			f.scripts.OnClick(f)
+			return true
+		end
+	end
+	return false
+end
+
+-- Clicks the shown panel row (a "choice") whose text starts with `text`.
+function stub.clickLabelText(text)
+	for _, f in ipairs(stub.frames) do
+		local t = rawget(f, "text")
+		if f.kind == "Button" and type(t) == "table" and f.shown and t.text and t.text:sub(1, #text) == text then
 			f.scripts.OnClick(f)
 			return true
 		end

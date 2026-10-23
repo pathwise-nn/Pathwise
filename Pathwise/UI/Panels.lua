@@ -376,6 +376,88 @@ function builders.zones()
 		end }
 	end
 	rows[#rows + 1] = { "text", "Level ranges are estimated from the quests in each zone (QuestieDB data).", "muted" }
+	rows[#rows + 1] = { "buttons", { { "All routes", "default", function() Panels.Open("routes") end }, { "Close", "default", Panels.Close } } }
+	return rows
+end
+
+---------------------------------------------------------------------------
+-- Routes: leveling routes near the character's level, class quests, and
+-- profession guides to follow beside them
+---------------------------------------------------------------------------
+
+local showAll = { leveling = false, professions = false }
+
+-- A profession route's skill line: its first train or skill goal's.
+local function lineOf(route)
+	for _, step in ipairs(route.steps) do
+		for _, g in ipairs(step) do
+			if g[1] == "train" or g[1] == "skill" then return g[2] end
+		end
+	end
+end
+
+function builders.routes()
+	local E, Q = ns.Engine, ns.Quests
+	local p = Q.Player()
+	local current, side = E.Route(), E.Side()
+	local rows = { { "heading", "Routes" } }
+
+	rows[#rows + 1] = { "heading", "Leveling" }
+	local shown = 0
+	for _, r in ipairs(E.RoutesFor(p, "Leveling")) do
+		local near = p.level >= r.levels[1] - 4 and p.level <= r.levels[2] + 2
+		if showAll.leveling or near or (current and current.id == r.id) then
+			shown = shown + 1
+			local mine = current and current.id == r.id
+			rows[#rows + 1] = { "choice", ("%s   %d-%d"):format(r.title, r.levels[1], r.levels[2]),
+				mine and "Your route" or nil, function()
+					E.SetRoute(r.id)
+					ns.Print("route: " .. r.title)
+					Panels.Refresh()
+				end }
+		end
+	end
+	if shown == 0 then rows[#rows + 1] = { "text", "No leveling route near your level." } end
+	rows[#rows + 1] = { "choice", showAll.leveling and "Show routes near my level" or "Show every leveling route", nil, function()
+		showAll.leveling = not showAll.leveling
+		Panels.Refresh()
+	end }
+
+	local class = E.RoutesFor(p, "Class")
+	if #class > 0 then
+		rows[#rows + 1] = { "heading", "Class quests" }
+		for _, r in ipairs(class) do
+			local mine = current and current.id == r.id
+			rows[#rows + 1] = { "choice", ("%s   %d-%d"):format(r.title, r.levels[1], r.levels[2]),
+				mine and "Your route" or (p.level < r.levels[1] and ("From level " .. r.levels[1])) or nil, function()
+					E.SetRoute(r.id)
+					ns.Print("route: " .. r.title)
+					Panels.Refresh()
+				end }
+		end
+	end
+
+	rows[#rows + 1] = { "heading", "Professions, beside your route" }
+	local listed = 0
+	for _, r in ipairs(E.RoutesFor(p, "Professions")) do
+		local line = lineOf(r)
+		local have = line and ns.Compat.SkillRank(line)
+		local mine = side and side.id == r.id
+		if showAll.professions or have or mine then
+			listed = listed + 1
+			rows[#rows + 1] = { "choice", r.title, mine and "Following  ·  click to stop" or (have and ("Skill " .. have)) or nil, function()
+				E.SetSide(mine and nil or r.id)
+				ns.Print(mine and "stopped following " .. r.title .. "." or ("following " .. r.title .. " beside your route."))
+				Panels.Refresh()
+			end }
+		end
+	end
+	if listed == 0 then rows[#rows + 1] = { "text", "You have no professions yet." } end
+	rows[#rows + 1] = { "choice", showAll.professions and "Show my professions only" or "Show every profession", nil, function()
+		showAll.professions = not showAll.professions
+		Panels.Refresh()
+	end }
+	rows[#rows + 1] = { "text", "Routes adapted from Polestar (GPL-3.0); quest data from QuestieDB.", "muted" }
 	rows[#rows + 1] = { "buttons", { { "Close", "default", Panels.Close } } }
 	return rows
 end
@@ -408,7 +490,8 @@ function builders.settings()
 		{ "slider", "Arrow size", "arrow.scale", 0.5, 2, 0.1, pct },
 		{ "text", "Shift-drag the arrow to move it.", "muted" },
 		{ "heading", "Route" },
-		{ "setting", route and route.title or "No route", "", { { "Zones", function() Panels.Open("zones") end } } },
+		{ "setting", route and route.title or "No route", "", { { "Routes", function() Panels.Open("routes") end }, { "Zones", function() Panels.Open("zones") end } } },
+		{ "setting", "Side guide", E.Side() and E.Side().title or "None", E.Side() and { { "Stop", function() E.SetSide(nil) Panels.Refresh() end } } or {} },
 		{ "setting", "Skipped quests", tostring(skippedN), skippedN > 0 and { { "Bring back", function()
 			for _, q in ipairs(E.Skipped()) do E.State().skipped[q] = nil end
 			E.Update()
@@ -430,6 +513,7 @@ end
 ns.On("GUIDE_SKIP", function() Panels.Open("skip") end)
 ns.On("SHOW_ZONES", function() Panels.Open("zones") end)
 ns.On("SHOW_SETTINGS", function() Panels.Open("settings") end)
+ns.On("SHOW_ROUTES", function() Panels.Open("routes") end)
 ns.On("GUIDE_UPDATED", function() if Panels.IsOpen("skip") then Panels.Refresh() end end)
 ns.On("SETTING_CHANGED", function(path)
 	if path == "guide.shown" and not ns.Get("guide.shown") then Panels.Close() end

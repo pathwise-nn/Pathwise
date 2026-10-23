@@ -137,6 +137,7 @@ end, "version and credits")
 
 ns.Command("settings", function() ns.Fire("SHOW_SETTINGS") end, "open the settings panel")
 ns.Command("zones", function() ns.Fire("SHOW_ZONES") end, "zones for your level (and switching routes)")
+ns.Command("routes", function() ns.Fire("SHOW_ROUTES") end, "every route for you: leveling, class quests, professions")
 ns.Command("skip", function() ns.Fire("GUIDE_SKIP") end, "skip the current quest, or pick one nearby instead")
 
 ns.Command("route", function(args)

@@ -30,7 +30,7 @@ ns.Defaults("guide", {
 })
 
 local PAD = T.SPACE.l
-local MAX_OBJECTIVES = 6
+local MAX_OBJECTIVES = 10
 
 local W = {} -- widgets
 local view -- what the window shows
@@ -209,7 +209,26 @@ local function height(fs)
 	return fs:IsShown() and max(0, fs:GetStringHeight() or 0) or 0
 end
 
-local function dot(row, done)
+local function dot(row, done, info, optional)
+	if info then
+		-- An instruction (hearth, fly, train): a small muted dot, no tick.
+		row.dot:SetTexture(T.MEDIA .. "dot-done")
+		local c = T.Color("muted")
+		row.dot:SetVertexColor(c[1], c[2], c[3])
+		row.dot:SetSize(6, 6)
+		T.TextColor(row.text, "text2")
+		T.TextColor(row.count, "text2")
+		return
+	end
+	row.dot:SetSize(10, 10)
+	if optional and not done then
+		row.dot:SetTexture(T.MEDIA .. "dot-open")
+		local c = T.Color("muted")
+		row.dot:SetVertexColor(c[1], c[2], c[3])
+		T.TextColor(row.text, "text2")
+		T.TextColor(row.count, "muted")
+		return
+	end
 	if done then
 		row.dot:SetTexture(T.MEDIA .. "dot-done")
 		local c = T.Color("success")
@@ -282,9 +301,9 @@ local function layoutFull()
 			row:ClearAllPoints()
 			row:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -(i == 1 and 12 or 6))
 			row:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
-			row.text:SetText(o.text or "")
+			row.text:SetText((o.optional and not o.done) and ((o.text or "") .. "  (optional)") or (o.text or ""))
 			row.count:SetText(o.need and ("%d / %d"):format(o.have or 0, o.need) or "")
-			dot(row, o.done)
+			dot(row, o.done, o.info, o.optional)
 			y = y + 18 + (i == 1 and 12 or 6)
 			anchor = row
 		else
@@ -312,6 +331,7 @@ local function layoutFull()
 		card.go:SetPoint("RIGHT", card.skip, "LEFT", -4, 0)
 		card.go:SetHeight(24)
 		card.go:SetWidth(48)
+		card.go.pwText:SetText(d.aimed and "Stop" or "Go")
 		card.label:SetText((d.label or "Optional"):upper())
 		card.text:SetText(d.text or "")
 		card.sub:SetText(d.sub or "")

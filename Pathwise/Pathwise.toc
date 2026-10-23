@@ -18,5 +18,7 @@ Guide\Quests.lua
 Guide\Engine.lua
 UI\GuideWindow.lua
 UI\Panels.lua
-Routes\Tirisfal.lua
+Routes\Leveling.lua
+Routes\Class.lua
+Routes\Professions.lua
 Core\Commands.lua
