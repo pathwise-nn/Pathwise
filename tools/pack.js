@@ -1,10 +1,12 @@
 'use strict';
-// Builds the release zip: dist/Pathwise-<version>.zip holding the Pathwise/
-// folder as players install it, with LICENSE and THIRD_PARTY.md inside it
-// (the GPL asks that the licence travels with every copy). Nothing is uploaded.
+// Builds the release zips, one per CurseForge project: dist/<Addon>-<version>.zip
+// for Pathwise, Pathwise_Gear and Pathwise_Bags, each holding its addon folder
+// as players install it, with LICENSE and THIRD_PARTY.md inside it (the GPL
+// asks that the licence travels with every copy). Nothing is uploaded.
 //
-//   node tools/pack.js            build the zip
-//   node tools/pack.js --list     print what would go in, build nothing
+//   node tools/pack.js                  build all three zips
+//   node tools/pack.js Pathwise_Gear    build only the zips named
+//   node tools/pack.js --list           print what would go in, build nothing
 //
 // No dependencies: Node's zlib deflates, and the zip is written by hand
 // (local headers, central directory, end record; no zip64, files < 4 GB).
@@ -23,14 +25,16 @@ function version() {
 	return m[1];
 }
 
-// The addon folders shipped together: Pathwise and the suite's addons.
+// The addons, each its own CurseForge project and zip. Gear and Bags need
+// Pathwise installed (## Dependencies in their TOCs).
 const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags'];
 
-// Every file of each addon folder, sorted, skipping dotfiles; then the
-// licence files from the repository root, in each folder.
-function entries() {
+// Every file of the addon folders asked for (all by default), sorted,
+// skipping dotfiles; then the licence files from the repository root, in
+// each folder.
+function entries(addons = ADDONS) {
 	const out = [];
-	for (const addon of ADDONS) {
+	for (const addon of addons) {
 		const dir0 = path.join(ROOT, addon);
 		if (!fs.existsSync(dir0)) continue;
 		(function walk(dir, rel) {
@@ -118,18 +122,28 @@ function zip(list) {
 
 function main() {
 	const v = version();
-	const list = entries();
-	if (process.argv.includes('--list')) {
-		for (const e of list) console.log(e.name);
-		console.log(`${list.length} files, version ${v}`);
-		return;
+	const asked = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+	for (const a of asked) {
+		if (!ADDONS.includes(a)) {
+			console.error(`unknown addon ${a}: one of ${ADDONS.join(', ')}`);
+			process.exit(2);
+		}
 	}
-	const out = path.join(ROOT, 'dist', `Pathwise-${v}.zip`);
-	fs.mkdirSync(path.dirname(out), { recursive: true });
-	const buf = zip(list);
-	fs.writeFileSync(out, buf);
-	console.log(`wrote ${path.relative(ROOT, out)}: ${list.length} files, ${(buf.length / 1024).toFixed(0)} KB`);
+	const list = process.argv.includes('--list');
+	for (const addon of asked.length ? asked : ADDONS) {
+		const files = entries([addon]);
+		if (list) {
+			for (const e of files) console.log(e.name);
+			console.log(`${addon}: ${files.length} files, version ${v}`);
+			continue;
+		}
+		const out = path.join(ROOT, 'dist', `${addon}-${v}.zip`);
+		fs.mkdirSync(path.dirname(out), { recursive: true });
+		const buf = zip(files);
+		fs.writeFileSync(out, buf);
+		console.log(`wrote ${path.relative(ROOT, out)}: ${files.length} files, ${(buf.length / 1024).toFixed(0)} KB`);
+	}
 }
 
 if (require.main === module) main();
-module.exports = { version, entries, zip, crc32 };
+module.exports = { ADDONS, version, entries, zip, crc32 };
