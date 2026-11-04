@@ -247,3 +247,8 @@ ns.On("SETTING_CHANGED", function(path)
 	if type(path) == "string" and (path:find("^money%.") or path == "*") then Money.Layout() end
 end)
 ns.On("ACCENT_CHANGED", function() if frame and shownMoney then paintText(A.Get(frame, "money") or shownMoney) end end)
+-- /pwui forget Name: drop a deleted character from the money totals.
+ns.Commands.forget = function(name)
+	if name == "" then ns.Print("forget whom? /pwui forget Name") return end
+	if Money.Forget(name) then ns.Print(name .. " forgotten.") else ns.Print("no character called " .. name .. " here.") end
+end

@@ -51,7 +51,7 @@ function U.Build()
 	for _, d in ipairs(U.DEFS) do
 		local want = on and ns.Get("units." .. d.key)
 		-- Healing frames show your party already: Pathwise's party frames step aside.
-		if d.key == "party" and ns.Get("heal.enabled") and ns.Get("heal.hideParty") then want = false end
+		if d.key == "party" and U.HealHidesParty() then want = false end
 		local f = U.frames[d.unit]
 		if want and not f then f = U.Make(d) end
 		if f then
@@ -156,7 +156,7 @@ function U.Hidden() return hidden end
 ns.On("READY", function() U.Build() end)
 ns.On("SETTING_CHANGED", function(path)
 	if type(path) ~= "string" then return end
-	if (path:find("^units%.") and not path:find("Point$")) or path == "heal.enabled" or path == "heal.hideParty" then
+	if path:find("^units%.") and not path:find("Point$") then
 		U.Build()
 		U.UpdateAll()
 		for _, f in pairs(U.frames) do if f.auras then U.PlaceAuras(f) end end
@@ -165,3 +165,11 @@ ns.On("SETTING_CHANGED", function(path)
 	end
 end)
 ns.On("ACCENT_CHANGED", function() U.UpdateAll() end)
+
+-- Pathwise Heal (a separate addon), when installed and showing your party,
+-- may ask these party frames to step aside; it says when that changes.
+function U.HealHidesParty()
+	local H = _G.PathwiseHeal
+	return type(H) == "table" and H.Heal and H.Heal.HidesUIParty and H.Heal.HidesUIParty() or false
+end
+ns.On("HEAL_CHANGED", function() U.Build() U.UpdateAll() end)

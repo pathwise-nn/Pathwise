@@ -1,12 +1,14 @@
--- Pathwise UI's minimap button: a dark disc with a thin ring and the
--- Pathwise mark in your accent. Click: the options; drag: around the rim.
+-- A Pathwise addon's minimap button (ns.ID: Pathwise UI, Pathwise Heal): a
+-- dark disc with a thin ring and the Pathwise mark in your accent. Click:
+-- the options; drag: around the rim.
+-- Shared file (see Core.lua): edit it here, then run npm run kit.
 
 local ADDON, ns = ...
 local T = ns.Theme
 local M = {}
 ns.Minimap = M
 
-ns.Defaults("minimap", { shown = true, angle = 135 })
+ns.Defaults("minimap", { shown = true, angle = ns.ID.minimapAngle or 135 })
 
 local button
 
@@ -17,13 +19,13 @@ function M.Offset(angle, width)
 end
 
 local function place()
-	local x, y = M.Offset(ns.Get("minimap.angle") or 135, Minimap:GetWidth())
+	local x, y = M.Offset(ns.Get("minimap.angle") or ns.ID.minimapAngle or 135, Minimap:GetWidth())
 	button:ClearAllPoints()
 	button:SetPoint("CENTER", Minimap, "CENTER", x, y)
 end
 
 local function build()
-	button = CreateFrame("Button", "PathwiseUIMinimapButton", nil)
+	button = CreateFrame("Button", ns.ID.global .. "MinimapButton", nil)
 	button:SetParent(Minimap)
 	button:SetSize(32, 32)
 	button:SetFrameStrata("MEDIUM")
@@ -60,7 +62,7 @@ local function build()
 		ns.Anim.Hover(self, true, look)
 		if GameTooltip then
 			GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-			GameTooltip:SetText("Pathwise UI", 1, 1, 1)
+			GameTooltip:SetText(ns.ID.name, 1, 1, 1)
 			GameTooltip:AddLine("Click: options", 0.6, 0.69, 0.75)
 			GameTooltip:AddLine("Drag: move this button", 0.6, 0.69, 0.75)
 			GameTooltip:Show()

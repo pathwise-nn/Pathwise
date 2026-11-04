@@ -1,4 +1,4 @@
--- Pathwise UI healing frames: your party or raid as a grid of bars built for
+-- Pathwise Heal: your party or raid as a grid of bars built for
 -- healing, off until you turn them on (a healer is asked once). Click a frame
 -- to cast on that person (Healing/Clicks.lua); see their health, heals on the
 -- way, debuffs you can cleanse, your HoTs, who has aggro and who is out of
@@ -36,7 +36,7 @@ ns.Defaults("heal", {
 	aggro = true,
 	mana = true,
 	hideGame = true, -- the game's own party and raid frames
-	hideParty = true, -- Pathwise UI's party unit frames while these are on
+	hideParty = true, -- Pathwise UI's party unit frames while these are on (when it is installed)
 	point = nil,
 })
 H.DEFAULT_POINT = { "TOPLEFT", "TOPLEFT", 30, -200 }
@@ -489,14 +489,14 @@ local anchor, header
 
 local function build()
 	if anchor then return anchor end
-	anchor = CreateFrame("Frame", "PathwiseUI_Heal", nil)
+	anchor = CreateFrame("Frame", "PathwiseHeal_Frames", nil)
 	anchor:SetParent(UIParent)
 	anchor:SetMovable(true)
 	anchor:SetClampedToScreen(true)
 	anchor:SetSize(84, 40)
-	header = CreateFrame("Frame", "PathwiseUI_HealHeader", anchor, "SecureGroupHeaderTemplate")
+	header = CreateFrame("Frame", "PathwiseHeal_Header", anchor, "SecureGroupHeaderTemplate")
 	header:SetPoint("TOPLEFT", anchor, "TOPLEFT")
-	header:SetAttribute("template", "PathwiseUI_HealButtonTemplate")
+	header:SetAttribute("template", "PathwiseHeal_ButtonTemplate")
 	return anchor
 end
 function H.Anchor() return anchor end
@@ -584,7 +584,7 @@ function H.Ask()
 	if prompt then prompt:Show() return prompt end
 	local _, class = call(UnitClass, "player")
 	local name = (readable(class) or "healer"):lower():gsub("^%l", string.upper)
-	prompt = CreateFrame("Frame", "PathwiseUI_HealPrompt", nil)
+	prompt = CreateFrame("Frame", "PathwiseHeal_Prompt", nil)
 	prompt:SetParent(UIParent)
 	prompt:SetFrameStrata("DIALOG")
 	prompt:SetSize(380, 132)
@@ -598,7 +598,7 @@ function H.Ask()
 	body:SetPoint("TOPLEFT", 16, -42)
 	body:SetWidth(348)
 	body:SetWordWrap(true)
-	body:SetText(("You're playing a %s. Turn on Pathwise healing frames? Click a party or raid member to heal them, and see heals on the way and debuffs you can cleanse. You can change this any time in /pwui > Healing."):format(name))
+	body:SetText(("You're playing a %s. Turn on Pathwise healing frames? Click a party or raid member to heal them, and see heals on the way and debuffs you can cleanse. You can change this any time: type /pwheal."):format(name))
 	local yes = T.Button(prompt, "Turn on", "accent", function()
 		ns.CharData("heal").asked = true
 		ns.Set("heal.enabled", true)
@@ -637,8 +637,17 @@ ns.On("READY", function()
 	if ns.Get("heal.enabled") then H.Layout() end
 	if not ns.Get("heal.enabled") and H.IsHealerClass() and not ns.CharData("heal").asked then H.Ask() end
 end)
+-- Pathwise UI, when installed, hides its own party frames while these show
+-- them (heal.hideParty): it asks H.HidesUIParty, and hears when it changes.
+function H.HidesUIParty() return ns.Get("heal.enabled") and ns.Get("heal.hideParty") and true or false end
+local function tellUI()
+	local UI = _G.PathwiseUI
+	if type(UI) == "table" and UI.Fire then UI.Fire("HEAL_CHANGED") end
+end
+
 ns.On("SETTING_CHANGED", function(path)
 	if type(path) ~= "string" then return end
+	if path == "heal.enabled" or path == "heal.hideParty" or path == "*" then tellUI() end
 	if path:find("^heal%.") or path == "*" then
 		if path == "heal.dispel" then for _, b in ipairs(buttons) do H.AttachGameAuras(b) end end
 		if anchor or ns.Get("heal.enabled") then H.Layout() end

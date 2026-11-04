@@ -1,6 +1,10 @@
--- Pathwise UI: settings, messages and game events. Works on its own; when
--- Pathwise is installed too it shares the accent color and is listed in
--- Pathwise's suite.
+-- Settings, messages and game events for a Pathwise addon (Pathwise UI,
+-- Pathwise Heal: this file is shared; who it serves is ns.ID, from the
+-- addon's Identity.lua). Works on its own; with Pathwise installed too it
+-- shares the accent color and is listed in Pathwise's suite.
+--
+-- Shared file: PathwiseUI/ holds the original; tools/kit.js copies it into
+-- Pathwise_Heal/Kit/. Edit it here, then run npm run kit.
 --
 --   ns.Get(path) / ns.Set(path, value) / ns.Defaults(section, table)
 --       settings, "section.key"; per character or for every character
@@ -12,8 +16,9 @@
 -- Messages: LOADED (settings readable), READY (logged in), SETTING_CHANGED(path, value).
 
 local ADDON, ns = ...
-_G.PathwiseUI = ns
-ns.NAME = "Pathwise UI"
+local ID = assert(ns.ID, "Identity.lua must load first")
+_G[ID.global] = ns
+ns.NAME = ID.name
 ns.VERSION = (C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata(ADDON, "Version")) or "dev"
 
 -- Forever can hand addons "secret" values; they are unusable, so nil.
@@ -49,7 +54,7 @@ end
 function ns.Print(...)
 	local parts = {}
 	for i = 1, select("#", ...) do parts[#parts + 1] = tostring((select(i, ...))) end
-	local text = "|cff66D7FFPathwise UI|r  " .. table.concat(parts, " ")
+	local text = "|cff66D7FF" .. ID.name .. "|r  " .. table.concat(parts, " ")
 	if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage(text) end
 end
 
@@ -97,14 +102,16 @@ local function split(path)
 end
 
 local function account()
-	if type(PathwiseUISettings) ~= "table" or PathwiseUISettings.schema ~= SCHEMA then
-		PathwiseUISettings = { schema = SCHEMA }
+	local a = _G[ID.saved]
+	if type(a) ~= "table" or a.schema ~= SCHEMA then
+		a = { schema = SCHEMA }
+		_G[ID.saved] = a
 	end
-	return PathwiseUISettings
+	return a
 end
 local function character()
-	if type(PathwiseUICharSettings) ~= "table" then PathwiseUICharSettings = {} end
-	return PathwiseUICharSettings
+	if type(_G[ID.charSaved]) ~= "table" then _G[ID.charSaved] = {} end
+	return _G[ID.charSaved]
 end
 
 -- Where settings live: every character's (shared) or this character's own.
@@ -197,16 +204,27 @@ ns.RegisterEvent("PLAYER_LOGIN", function() ns.Fire("READY") end)
 -- Is Pathwise (the guide) installed? Its suite API, or nil.
 function ns.Suite() return _G.Pathwise and _G.Pathwise.Suite or nil end
 
-SLASH_PATHWISEUI1 = "/pwui"
-SLASH_PATHWISEUI2 = "/pathwiseui"
--- /pwui: the options; /pwui move: move mode; /pwui forget Name: drop a
--- deleted character from the money totals.
-SlashCmdList.PATHWISEUI = function(msg)
+-- The other Pathwise addons built on these shared files (they keep one
+-- accent between them), in the order whose accent wins at login.
+ns.PEERS = { "PathwiseUI", "PathwiseHeal" }
+function ns.Peers()
+	local out = {}
+	for _, g in ipairs(ns.PEERS) do
+		local p = _G[g]
+		if g ~= ID.global and type(p) == "table" and p.Get then out[#out + 1] = p end
+	end
+	return out
+end
+
+-- Slash commands: "move" for move mode, any in ns.Commands (word -> fn(rest)),
+-- else the options.
+ns.Commands = {}
+for i, cmd in ipairs(ID.slash) do _G["SLASH_" .. ID.slashKey .. i] = cmd end
+SlashCmdList[ID.slashKey] = function(msg)
 	msg = tostring(msg or ""):gsub("^%s+", ""):gsub("%s+$", "")
 	local cmd, rest = msg:match("^(%S*)%s*(.-)$")
 	cmd = (cmd or ""):lower()
 	if cmd == "move" then ns.Fire("MOVE_ALL")
-	elseif cmd == "forget" and rest ~= "" then
-		if ns.Money and ns.Money.Forget(rest) then ns.Print(rest .. " forgotten.") else ns.Print("no character called " .. rest .. " here.") end
+	elseif ns.Commands[cmd] then ns.Commands[cmd](rest or "")
 	else ns.Fire("SHOW_CONFIG") end
 end

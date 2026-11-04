@@ -4,6 +4,7 @@
 -- When Pathwise is installed too, the two keep one accent: a change in either
 -- is copied to the other.
 
+-- Shared file (see Core.lua): edit it here, then run npm run kit.
 local ADDON, ns = ...
 local T = {}
 ns.Theme = T
@@ -342,9 +343,41 @@ local function fromPathwise(path)
 	syncing = false
 end
 
+-- One accent with the other Pathwise addons built on these files (Pathwise
+-- UI, Pathwise Heal; ns.Peers). Same setting names, so a value is simply
+-- copied; copying stops when the two agree, so nothing loops.
+local ACCENT = { "look.accentMode", "look.accentColor" }
+local function toPeers()
+	if not ns.Get("look.sharePathwise") then return end
+	for _, P in ipairs(ns.Peers()) do
+		if P.Get("look.sharePathwise") then
+			for _, k in ipairs(ACCENT) do
+				if P.Get(k) ~= ns.Get(k) then P.Set(k, ns.Get(k)) end
+			end
+		end
+	end
+end
+-- At login: take the accent of a peer listed before this addon (Pathwise UI's
+-- wins), so two addons never start in two colors.
+local function fromEarlierPeer()
+	if not ns.Get("look.sharePathwise") then return end
+	for _, g in ipairs(ns.PEERS) do
+		if g == ns.ID.global then return end
+		local P = _G[g]
+		if type(P) == "table" and P.Get and P.Get("look.sharePathwise") then
+			for _, k in ipairs(ACCENT) do
+				if P.Get(k) ~= ns.Get(k) then ns.Set(k, P.Get(k)) end
+			end
+			return
+		end
+	end
+end
+T.SyncPeers = toPeers
+
 ns.On("LOADED", function() T.ApplyColors() end)
 ns.On("READY", function()
 	T.ApplyColors()
+	fromEarlierPeer()
 	local S = ns.Suite()
 	if S then
 		toPathwise()
@@ -355,6 +388,7 @@ ns.On("SETTING_CHANGED", function(path)
 	if path == "look.accentMode" or path == "look.accentColor" then
 		T.ApplyAccent()
 		toPathwise()
+		toPeers()
 	elseif path == "look.scheme" or path == "look.colors" or path == "look.trim" or path == "*" or path == "look.*" or path == "profile.shared" then
 		T.ApplyColors()
 	elseif path == "look.sharePathwise" then

@@ -1,10 +1,10 @@
 'use strict';
 // Builds the release zips, one per CurseForge project: dist/<Addon>-<version>.zip
-// for Pathwise, Pathwise_Gear, Pathwise_Bags and PathwiseUI, each holding its addon folder
+// for Pathwise, Pathwise_Gear, Pathwise_Bags, PathwiseUI and Pathwise_Heal, each holding its addon folder
 // as players install it, with LICENSE and THIRD_PARTY.md inside it (the GPL
 // asks that the licence travels with every copy). Nothing is uploaded.
 //
-//   node tools/pack.js                  build all four zips
+//   node tools/pack.js                  build all five zips
 //   node tools/pack.js Pathwise_Gear    build only the zips named
 //   node tools/pack.js --list           print what would go in, build nothing
 //
@@ -26,9 +26,9 @@ function version() {
 }
 
 // The addons, each its own CurseForge project and zip. Gear and Bags need
-// Pathwise installed (## Dependencies in their TOCs); Pathwise UI works on
-// its own (## OptionalDeps: Pathwise).
-const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI'];
+// Pathwise installed (## Dependencies in their TOCs); Pathwise UI and
+// Pathwise Heal work on their own (## OptionalDeps).
+const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI', 'Pathwise_Heal'];
 
 // Every file of the addon folders asked for (all by default), sorted,
 // skipping dotfiles; then the licence files from the repository root, in
@@ -122,6 +122,13 @@ function zip(list) {
 }
 
 function main() {
+	// Pathwise Heal carries copies of Pathwise UI's shared files: never ship stale ones.
+	const kit = require('./kit');
+	const stale = kit.plan().filter(([, to, want]) => !fs.existsSync(to) || !fs.readFileSync(to).equals(want));
+	if (stale.length) {
+		console.error(`Pathwise_Heal has ${stale.length} stale copied file(s): run npm run kit first`);
+		process.exit(1);
+	}
 	const v = version();
 	const asked = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 	for (const a of asked) {

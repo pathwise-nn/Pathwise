@@ -45,7 +45,7 @@ local LUA_FILES = package.config:sub(1, 1) == "\\" and 'dir /s /b "Pathwise\\*.l
 	or 'find Pathwise -name "*.lua"'
 
 -- The suite's addons, released together: one version and one game version for all.
-test("Pathwise, Pathwise Gear, Pathwise Bags and Pathwise UI share their version and interface", function()
+test("Pathwise, Pathwise Gear, Pathwise Bags, Pathwise UI and Pathwise Heal share their version and interface", function()
 	local function field(addon, name)
 		local f = assert(io.open(addon .. "/" .. addon .. ".toc"))
 		local text = f:read("*a")
@@ -54,7 +54,7 @@ test("Pathwise, Pathwise Gear, Pathwise Bags and Pathwise UI share their version
 	end
 	local version, interface = field("Pathwise", "Version"), field("Pathwise", "Interface")
 	ok(version and interface, "Pathwise.toc has a version and an interface")
-	for _, addon in ipairs({ "Pathwise_Gear", "Pathwise_Bags", "PathwiseUI" }) do
+	for _, addon in ipairs({ "Pathwise_Gear", "Pathwise_Bags", "PathwiseUI", "Pathwise_Heal" }) do
 		eq(field(addon, "Version"), version, addon .. " version")
 		eq(field(addon, "Interface"), interface, addon .. " interface")
 	end

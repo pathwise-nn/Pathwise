@@ -6,6 +6,27 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Heal: click-to-heal frames as their own addon
+- The healing frames (click-casting, a preset for every healing spec, heals
+  on the way, cleanses, HoTs, aggro, range) move out of Pathwise UI into
+  Pathwise Heal (`Pathwise_Heal/`), its own download. It works on its own:
+  players who don't want Pathwise UI don't need it. Options: `/pwheal` or
+  its minimap button; settings in PathwiseHealSettings.
+- With Pathwise UI installed too: one accent between them (set from either;
+  Pathwise UI's wins at login), and Pathwise UI's party frames step aside
+  while Pathwise Heal shows your party (Pathwise Heal > Healing > "Hide
+  Pathwise UI's party frames"). Pathwise UI's Healing page points to it.
+- Pathwise UI's core, theme, motion, widgets, move mode, options window and
+  minimap button are now shared: told who they serve by each addon's
+  `Identity.lua` (name, global, saved variables, slash command, frame
+  names), so both addons run side by side. `tools/kit.js` (`npm run kit`)
+  copies them and the media into `Pathwise_Heal/`; the tests and
+  `tools/pack.js` refuse stale copies. The options window is split into the
+  shared `Options.lua` and each addon's `Pages.lua`.
+- Tests: `tests/heal/` (`npm run test:heal`): the healing tests, Pathwise Heal
+  alone, the copies matching, and both addons together (no clashes, one
+  accent, party frames stepping aside).
+
 ### Pathwise UI joins this repository (new addon, its own CurseForge project)
 - Pathwise UI (unit frames, action bars, healing frames, tooltips, fonts and
   the game's windows in the Pathwise look) moves here from its own

@@ -17,14 +17,15 @@ Forever. Created by leight_nn & florp. `_nn`
 
 ## The Pathwise addons
 
-This repository holds four addons, each its own download:
+This repository holds five addons, each its own download:
 
 | Addon | Folder | What it is |
 |---|---|---|
 | Pathwise | `Pathwise/` | The leveling and profession guide |
 | Pathwise Gear | `Pathwise_Gear/` | Upgrade advice; needs Pathwise |
 | Pathwise Bags | `Pathwise_Bags/` | One bag window that knows what you need; needs Pathwise |
-| Pathwise UI | `PathwiseUI/` | Unit frames, action bars, healing frames with click-casting for every healing spec, tooltips; works on its own ([docs/UI.md](docs/UI.md)) |
+| Pathwise UI | `PathwiseUI/` | Unit frames, action bars, tooltips, fonts, the game's windows; works on its own ([docs/UI.md](docs/UI.md)) |
+| Pathwise Heal | `Pathwise_Heal/` | Click-to-heal party and raid frames with a preset for every healing spec; works on its own ([docs/HEAL.md](docs/HEAL.md)) |
 
 ## Try it
 
@@ -50,7 +51,10 @@ This repository holds four addons, each its own download:
 Needs Lua 5.1 (`lua5.1`) and Node 24 or newer.
 
 - `npm test` runs the tests (a stub of the game client; nothing here proves
-  in-game behaviour): Pathwise's (`tests/`) and Pathwise UI's (`tests/ui/`)
+  in-game behaviour): Pathwise's (`tests/`), Pathwise UI's (`tests/ui/`) and
+  Pathwise Heal's (`tests/heal/`)
+- `npm run kit` copies Pathwise UI's shared files into Pathwise Heal
+  (`docs/HEAL.md`)
 - `npm run media` redraws the textures in `Pathwise/Media/`;
   `npm run media:ui` those in `PathwiseUI/Media/`
 - `node tools/pack.js` builds one release zip per addon in `dist/`

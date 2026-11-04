@@ -2,7 +2,7 @@
 
 **Your whole interface, in your color.**
 
-Unit frames, action bars, healing frames, tooltips, fonts and the game's
+Unit frames, action bars, tooltips, fonts and the game's
 windows for World of Warcraft: Forever, in one clean look. Works on its own;
 with [Pathwise](https://github.com/pathwise-nn/pathwise) installed too, the
 two share one accent color.
@@ -10,24 +10,11 @@ two share one accent color.
 **Beta.** This is Pathwise UI's first release and it has not yet been played
 end to end in Forever. Tell us on Discord what looks or works wrong.
 
-## Healing frames, like HealBot or VuhDo
+## Healing frames: Pathwise Heal
 
-Off until you want them: a Priest, Druid, Paladin or Shaman is asked once.
-
-- Your party or raid as a grid built for healing: heals on the way, what each
-  person is missing, debuffs you can cleanse (shown in a fight too), your
-  HoTs between fights, aggro, mana, and fading out of range.
-- **Click-casting**: each click, with Shift, Ctrl or Alt, casts a spell on
-  the person you click. Type a spell or drag it from your spellbook.
-- **A preset for every healing spec**: Holy and Discipline Priest,
-  Restoration Druid, Restoration Shaman and Holy Paladin, picked from your
-  talents or from a Spec dropdown. One layout for every spec, so switching
-  characters feels the same.
-- Spells fill in as you learn them: a talent like Penance, Swiftmend or Holy
-  Shock appears once you have it, and a better heal replaces a lower one as
-  you level. A click you set yourself is never changed.
-- Built for Forever's rules: health, range and auras the game keeps secret
-  are handed straight to the game to draw.
+Click-to-heal party and raid frames, like HealBot or VuhDo, are their own
+download: **Pathwise Heal**. It works with or without Pathwise UI; with both
+installed they share one accent.
 
 ## Unit frames
 
@@ -58,9 +45,7 @@ game's menu and bag buttons in two neat rows, and your money, always shown.
 ## Credits
 
 Created by leight_nn & florp. Inter by Rasmus Andersson and Cormorant
-Garamond by Christian Thalmann (SIL Open Font License). Healing frame ideas
-from HealForever's notes and VuhDo's feature list; none of their code or art
-is used. Free software under the GNU General Public License, version 3. Not
+Garamond by Christian Thalmann (SIL Open Font License). Free software under the GNU General Public License, version 3. Not
 affiliated with Blizzard Entertainment.
 
 Source: https://github.com/pathwise-nn/pathwise

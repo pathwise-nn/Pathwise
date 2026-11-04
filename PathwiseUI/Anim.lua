@@ -15,6 +15,7 @@
 --
 -- "look.motion" off makes every tween land at once.
 
+-- Shared file (see Core.lua): edit it here, then run npm run kit.
 local ADDON, ns = ...
 local A = {}
 ns.Anim = A

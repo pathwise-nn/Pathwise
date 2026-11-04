@@ -1,0 +1,23 @@
+## Interface: 16001
+## Title: Pathwise Heal
+## Notes: Click-to-heal party and raid frames for WoW: Forever, like HealBot or VuhDo: a preset for every healing spec, heals on the way, cleanses, HoTs, aggro and range. Works on its own.
+## Author: leight_nn & florp
+## Version: 0.1.1
+## SavedVariables: PathwiseHealSettings
+## SavedVariablesPerCharacter: PathwiseHealCharSettings
+## OptionalDeps: Pathwise, PathwiseUI
+## IconTexture: Interface\AddOns\Pathwise_Heal\Media\icon
+## X-License: GPL-3.0-only
+
+Identity.lua
+Kit\Core.lua
+Kit\Theme.lua
+Kit\Anim.lua
+Kit\Widgets.lua
+Kit\Movers.lua
+Healing\Heal.lua
+Healing\Clicks.lua
+Healing\Heal.xml
+Kit\Options.lua
+Pages.lua
+Kit\Minimap.lua
