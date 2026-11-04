@@ -6,6 +6,130 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise UI joins this repository (new addon, its own CurseForge project)
+- Pathwise UI (unit frames, action bars, healing frames, tooltips, fonts and
+  the game's windows in the Pathwise look) moves here from its own
+  repository, from its last commit there (pathwise-nn/Pathwise-UI 6e02f4b),
+  as `PathwiseUI/`. It works on its own; with Pathwise it shares the accent.
+- Its tests run with Pathwise's: `npm test` runs both, `npm run test:ui`
+  only its own (`tests/ui/`). `tools/media-ui.js` draws its textures.
+- `npm run set-version`, `tools/pack.js` and `tools/link.js` take it in;
+  it shares the suite's version (0.1.1). A test checks the four agree.
+- What it has so far:
+
+#### Wayfarer look
+- Signature plus Etched and Codex details: T.Etch (top highlight, bottom
+  shadow, vertical sheen) on every panel, action button and tray slot;
+  T.Sheen on health, power, cast, healing and experience bars.
+- Cormorant Garamond Bold (OFL) for the options title, headings, the move
+  bar and unit frame names; headings in title case with a fading rule.
+- Trim color ("flair") from a dropdown (T.Dropdown, a new widget): Class
+  (your class color), Default (each scheme's gold) or Custom (the color
+  wheel, shown only then); on the Colors page and in scheme codes. The window's top line fades at both ends.
+- Capsule switches (Media/disc.tga ends and knob, drawn by tools/media.js)
+  with a soft knob shadow; picked choices pressed in (top inner shadow).
+- The selected category's label in the trim color.
+
+#### Healing frames (ideas from HealForever's notes and VuhDo's feature list; none of either's code or art used)
+- Healing/Heal.lua, Clicks.lua, Heal.xml: a SecureGroupHeaderTemplate of
+  secure unit buttons (party and raid, solo optional), off by default; a
+  healer class is asked once (per character, ns.CharData).
+- Health and incoming heals (UnitGetIncomingHeals) passed to bars as they
+  come (secret or not); text from UnitHealthPercent with a curve or
+  UnitHealthMissing + C_StringUtil.TruncateWhenZero; health color by class,
+  green, or a game-evaluated color curve; range fade through
+  C_CurveUtil.EvaluateColorValueFromBoolean; target edge the same way.
+- Dispellable debuffs drawn by the game (C_UnitAuras.AddPrivateAuraAnchor),
+  in combat too; out of combat a dispel-colored edge and your HoTs (own aura
+  reads, paused when the client refuses). Aggro when UnitThreatSituation is
+  readable. Mana bars.
+- Click-casting: 11 mouse combos as secure attributes by spell name, class
+  defaults (heal, HoT, big heal, cleanse, shield), drag a spell from the
+  spellbook onto a box; applied out of combat. ClickCastFrames registered.
+- Presets for every healing spec: Holy and Discipline Priest, Restoration
+  Druid, Restoration Shaman, Holy Paladin (other classes: target and menu; a
+  mage's Remove Lesser Curse). One layout for all: quick heal, HoT or
+  instant, shield, big heal, two cleanses, group heal, target, menu and the
+  spec's own spells on buttons 4 and 5. Spec from your talents (the tree with
+  the most points) or a Spec dropdown on the Healing page.
+- Forever's new healing spells in the presets: Penance, Prayer of Mending,
+  Binding Heal, Riptide, Wild Growth, Oath of Light, named from Forever's
+  class previews; not checked in game. A name the game doesn't know is
+  skipped, never cast.
+- Clicks fill in as you learn spells (a talent, a better heal as you level,
+  a new spec), on SPELLS_CHANGED, LEARNED_SPELL_IN_SKILL_LINE, level and
+  talent events, out of combat. A click you set or emptied yourself is never
+  changed.
+- Options page, move mode, hides the game's raid/party frames and Pathwise
+  party frames while on.
+
+#### Polish (ideas from studying EllesmereUI; none of its code or art used)
+- Color schemes and every color your own (Colors page): six schemes,
+  24 colors on the game's color wheel (ColorPickerFrame), right-click to
+  reset one, back to the scheme, scheme codes to share (PWUI1:...).
+- Motion (Anim.lua): one shared driver, idle when nothing moves; eased
+  hovers, sliding switches, segmented choices with a gliding highlight,
+  smooth scrolling with a fading thumb, fading windows, pages, bars, auras,
+  cast bars (interrupted in red), XP numbers; health, power and experience
+  eased by the game (StatusBarInterpolation, secret values included).
+  "look.motion" off makes it all instant.
+- Options window rebuilt: rows with label left and control right, hover
+  grounds and dividers, the selected category a tab joined to the page,
+  choices that look pressed in, "Move everything".
+- Move mode (Movers.lua): one handle style for unit frames, bars and the
+  tray (dimmed, corner brackets, plain names); a grid; drops snap to 8 px (Shift: free);
+  Done locks all. /pwui move.
+- Money display (Bottom/Money.lua): GetMoney/PLAYER_MONEY, gold/silver/
+  copper in scheme colors (Colors > Money), counts to new amounts with a
+  green/red flash, tooltip with this session and every character on the
+  realm (account-wide ns.Data, untouched by resets; /pwui forget Name),
+  click for bags, three styles, moves in move mode.
+- Pixel-perfect 1 px borders (T.Border), one helper instead of five copies.
+- Your target's accent line on party and focus frames.
+
+#### Action bars
+- Five bars of the game's own secure action buttons (ActionBarButtonTemplate)
+  on Pathwise UI's bars: pages as the game's bars (main 1, bar 2 = 6,
+  bar 3 = 5, right = 3, right 2 = 4); the main bar pages with stances, forms,
+  stealth, vehicles and override bars through a state driver.
+- Your bindings for the game's bars point at these (override bindings).
+- Pathwise look: dark slot, thin border, accent on hover and checked, Inter
+  key names and counts; buttons per row, size, spacing, empty slots, fade
+  out of combat; move, reset; the game's action bars put away while on.
+- Experience bar (UnitXP, GetXPExhaustion; reputation by
+  C_Reputation.GetWatchedFactionData at the cap): as wide as the main bar and
+  under it; the game's StatusTrackingBarManager put away.
+- System tray and bag buttons: the game's own micro and bag buttons moved
+  into two Pathwise rows, drawn as action-bar slots with glyphs; put back
+  after the game lays them out again (MicroMenu, BagsBar).
+
+#### Unit frames
+- You, your target, its target, your pet, your focus (off by default) and
+  your party: class-colored health (others by reaction), power, names,
+  levels, short numbers; click to target, right-click for the menu.
+- Debuffs (target, party; only yours optional), cast bars (you, target,
+  focus), combat/resting/leader marks, portraits.
+- Move, size, reset; the game's own unit frames put away while on.
+- Secret values (Forever): passed straight to bars and text, never used in
+  sums; timers and stack counts only when readable.
+
+#### Look and feel
+
+- Accent color: Pathwise blue, your class color, or one you type; shared
+  with Pathwise when it is installed.
+- Tooltips in the Pathwise look: flat ground, thin border by item quality or
+  class color, class-colored names and health bars, optional mouse anchor.
+- Inter for all the game's text, at your size; the game's font back when off.
+- The game's windows on a flat ground with your accent along the top (modern
+  frames only; others keep their look).
+- Profiles: shared by every character or each its own; back to defaults.
+- Options window (/pwui), minimap button, listed in Pathwise's suite.
+
+#### Not checked in game yet
+- Everything: the look of tooltips and windows on Forever, the fonts, the
+  unit frames (health percent in particular: its 0-1 scale is a guess from
+  the documentation), the action bars (casting, paging and keys in game).
+
 ## 0.1.1 (2026-11-04)
 
 ### Changed

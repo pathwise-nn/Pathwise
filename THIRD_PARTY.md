@@ -2,10 +2,11 @@
 
 | What | Used for | Licence | Where |
 |---|---|---|---|
-| [Inter](https://github.com/rsms/inter) by Rasmus Andersson | The interface typeface (Regular, Medium, SemiBold) | SIL Open Font License 1.1 | `Pathwise/Media/Fonts/`, licence in `Inter-OFL.txt` |
+| [Inter](https://github.com/rsms/inter) by Rasmus Andersson | The interface typeface (Regular, Medium, SemiBold) | SIL Open Font License 1.1 | `Pathwise/Media/Fonts/` and `PathwiseUI/Media/Fonts/`, licence in `Inter-OFL.txt` |
+| [Cormorant Garamond](https://github.com/CatharsisFonts/Cormorant) by Christian Thalmann (Catharsis Fonts) | Pathwise UI's Wayfarer serif: window title, headings, unit frame names (Bold) | SIL Open Font License 1.1 | `PathwiseUI/Media/Fonts/`, licence in `CormorantGaramond-OFL.txt` |
 | [QuestieDB](https://github.com/Questie/QuestieDB) by the Questie team and contributors (Forever data, commit `1f538335`) | Quest, NPC, object and item facts (ids, givers, finishers, objectives, spawn positions, levels, prerequisites) that Pathwise's routes are built on | The Questie team permits use under GPL-3.0; parts of the historic data have no recorded licence from every contributor (QuestieDB `LICENSE.md`). The Questie name and logo are not used | Downloaded to `data/sources/questiedb` (not committed); Pathwise ships only the fields it needs, built by its own tools |
 | Blizzard's Forever client tables (SkillLineAbility, SpellEffect, Item, ItemSparse, ItemEffect, ItemXItemEffect), as CSV from [wago.tools](https://wago.tools) (product `wowf`) | Recipes for Pathwise Gear's crafted gear: which profession and skill make each item, which recipe item teaches it, the item's type and levels. `tools/data/recipes.js` follows Polestar's profession tool's method (below), keeping Season of Discovery recipes, marked | © Blizzard Entertainment | Downloaded to `data/sources/wago/` (not committed); `data/recipes.lua` is generated from them |
-| Blizzard's Forever UI source ([Gethe/wow-ui-source](https://github.com/Gethe/wow-ui-source), `forever` branch) | Checking which client APIs exist on Forever | © Blizzard Entertainment | Read while developing; nothing copied |
+| Blizzard's Forever UI source ([Gethe/wow-ui-source](https://github.com/Gethe/wow-ui-source), `forever` branch) | Checking which client APIs, events and fonts exist on Forever; `PathwiseUI/Skins/FontNames.lua` lists the client's font names from it | © Blizzard Entertainment | Read while developing |
 | [Polestar](https://github.com/fitzforge/polestar), Copyright (c) 2026 The Polestar authors | Its leveling routes (1-60, both factions, every starting race), class quest routes and profession routes, adapted into Pathwise's route format by `tools/port/polestar.lua` (what changes is listed in that file). Also a reference for how Forever behaves (secret values, map and world positions, facing, skills); Pathwise's addon code is its own | GPL-3.0 | `Pathwise/Routes/Leveling.lua`, `Class.lua`, `Professions.lua` (generated; each file names its source) |
 
 ## References, nothing copied
@@ -38,5 +39,21 @@ Pathwise Gear needs no other addon. Its custom-weights box also reads the
 `( Pawn: v1: ... )` text format that guide sites share, without Pawn
 installed; no Pawn code is in Pathwise.
 
-Everything else in this repository (code, textures drawn by `tools/media.js`,
-documents) is Pathwise's own, under GPL-3.0 (see `LICENSE`).
+Pathwise UI is its own code. [ElvUI](https://github.com/tukui-org/ElvUI)
+(Tukui) was the reference for what a complete interface addon offers and how
+its options are laid out; ElvUI's code is all rights reserved and none of it
+is in Pathwise UI (its unit frames are its own, not oUF; its action bars use
+the game's own action buttons, not LibActionButton). Its polish came from
+studying EllesmereUI, and its healing frames from HealForever's notes and
+VuhDo's feature list; none of their code or art is used. The names of
+Forever's new healing spells in its click-casting presets (Penance, Prayer of
+Mending, Binding Heal, Riptide, Wild Growth, Oath of Light) come from
+coverage of Forever's class changes, such as
+[Maxroll](https://maxroll.gg/wow-forever/news/wow-forever-class-deep-dives-whats-changing-for-all-nine-classes),
+[games.gg](https://games.gg/world-of-warcraft/guides/wow-forever-every-class-new-ability-and-talent-change/)
+and [MMOEXP](https://www.mmoexp.com/News/wow-forever-class-changes-new-abilities-talent-reworks-and-what-players-can-expect.html);
+only the spell names are used, and they are not yet checked in game.
+
+Everything else in this repository (code, textures drawn by `tools/media.js`
+and `tools/media-ui.js`, documents) is Pathwise's own, under GPL-3.0 (see
+`LICENSE`).
