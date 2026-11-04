@@ -187,6 +187,10 @@ local function convertGoal(goal, g, seenComplete)
 	local label
 	if t == "hearth" then label = "Hearth to " .. (text(goal.location, g) or "your inn")
 	elseif t == "fly" then label = "Fly to " .. (text(goal.location, g) or "the next flight point")
+	elseif t == "train" and not goal.class and goal.npcName then
+		-- A named trainer with no rank (Artisan Enchanting from Annora in
+		-- Uldaman): keep the guide's own words, never the class trainer text.
+		label = text(goal.text, g) or text(goal.note, g) or ("Train at " .. text(goal.npcName, g))
 	elseif t == "train" then label = goal.text and text(goal.text, g) or "Train new spells at your class trainer"
 	elseif t == "vendor" then label = "Sell and repair" .. (goal.npcName and (" at " .. text(goal.npcName, g)) or "")
 	elseif t == "rep" then label = ("%s: reach %s"):format(goal.factionName or "Reputation", ({ "Hated", "Hostile", "Unfriendly", "Neutral", "Friendly", "Honored", "Revered", "Exalted" })[goal.standing or 4] or "")

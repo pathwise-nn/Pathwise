@@ -39,11 +39,16 @@ test("loads every file in the TOC and registers /pw and /pathwise", function()
 	eq(ns.VERSION, "0.1.0-test")
 end)
 
+-- Every Lua file of the addon. "2>nul" is Windows-only: elsewhere it writes
+-- a file named "nul", so each system gets its own command.
+local LUA_FILES = package.config:sub(1, 1) == "\\" and 'dir /s /b "Pathwise\\*.lua" 2>nul'
+	or 'find Pathwise -name "*.lua"'
+
 test("the TOC lists every Lua file in the addon folder", function()
 	local stub = fresh()
 	local listed = {}
 	for _, f in ipairs(stub.files) do listed[f] = true end
-	local p = io.popen('dir /s /b "Pathwise\\*.lua" 2>nul || find Pathwise -name "*.lua"')
+	local p = io.popen(LUA_FILES)
 	for line in p:lines() do
 		local rel = line:gsub("\\", "/"):match("Pathwise/(.+%.lua)$")
 		if rel then ok(listed[rel], "not in the TOC: " .. rel) end
@@ -292,7 +297,7 @@ end)
 
 test("every texture the addon names exists", function()
 	local names = {}
-	local p = io.popen('dir /s /b "Pathwise\\*.lua" 2>nul || find Pathwise -name "*.lua"')
+	local p = io.popen(LUA_FILES)
 	for line in p:lines() do
 		local src = assert(io.open(line)):read("*a")
 		for n in src:gmatch('MEDIA %.%. "([%w%-]+)"') do names[n] = true end

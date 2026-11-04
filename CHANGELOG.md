@@ -110,6 +110,11 @@ First version of the independent Pathwise (not yet released).
   from, or to Pathwise's settings.
 
 ### Fixed
+- Enchanting at 225 said "Train new spells at your class trainer" instead of
+  where Artisan is taught: it now says Annora teaches it inside Uldaman
+  (Badlands). Riding steps in the mount guides name their riding trainer
+  too, instead of the class trainer.
+- Running the tests on Linux or macOS left a file named `nul` behind.
 - Map pins for an objective's monsters had lost the monster's name.
 - Settings, Professions and the other panels drew at the top left of the
   screen with "anchor family connection" errors: the panel's scrolling area
