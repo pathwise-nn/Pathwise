@@ -6,7 +6,9 @@ that version's section.
 
 ## Unreleased
 
-First version of the independent Pathwise (not yet released).
+## 0.1.0 (2026-11-04)
+
+First version of the independent Pathwise, released as a beta on CurseForge.
 
 ### Leveling
 - Leveling routes from 1 to 60 for every starting race on both sides
@@ -115,6 +117,8 @@ First version of the independent Pathwise (not yet released).
   (Badlands). Riding steps in the mount guides name their riding trainer
   too, instead of the class trainer.
 - Running the tests on Linux or macOS left a file named `nul` behind.
+- Pathwise Gear and Pathwise Bags kept a "-dev" version when a release was
+  set; `npm run set-version` now sets all three addons.
 - Map pins for an objective's monsters had lost the monster's name.
 - Settings, Professions and the other panels drew at the top left of the
   screen with "anchor family connection" errors: the panel's scrolling area

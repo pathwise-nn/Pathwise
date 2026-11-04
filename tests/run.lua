@@ -44,6 +44,24 @@ end)
 local LUA_FILES = package.config:sub(1, 1) == "\\" and 'dir /s /b "Pathwise\\*.lua" 2>nul'
 	or 'find Pathwise -name "*.lua"'
 
+-- The release zip ships three addons: one version and one game version for all.
+test("Pathwise, Pathwise Gear and Pathwise Bags share their version and interface", function()
+	local function field(addon, name)
+		local f = assert(io.open(addon .. "/" .. addon .. ".toc"))
+		local text = f:read("*a")
+		f:close()
+		return text:match("## " .. name .. ":%s*([^\r\n]+)")
+	end
+	local version, interface = field("Pathwise", "Version"), field("Pathwise", "Interface")
+	ok(version and interface, "Pathwise.toc has a version and an interface")
+	for _, addon in ipairs({ "Pathwise_Gear", "Pathwise_Bags" }) do
+		eq(field(addon, "Version"), version, addon .. " version")
+		eq(field(addon, "Interface"), interface, addon .. " interface")
+	end
+	local pkg = assert(io.open("package.json")):read("*a")
+	eq(pkg:match('"version":%s*"([^"]+)"'), version, "package.json version")
+end)
+
 test("the TOC lists every Lua file in the addon folder", function()
 	local stub = fresh()
 	local listed = {}
