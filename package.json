@@ -1,6 +1,6 @@
 {
   "name": "pathwise",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "Pathwise: a leveling and profession companion for World of Warcraft: Forever",
   "license": "GPL-3.0-only",
@@ -15,6 +15,7 @@
     "routes": "lua5.1 tools/port/polestar.lua ../pathwise/addon/Pathwise_Guides/Guides.lua Pathwise/Routes",
     "link": "node tools/link.js",
     "pack": "node tools/pack.js",
+    "curseforge": "node tools/curseforge.js",
     "set-version": "node tools/version.js",
     "test:ui": "lua5.1 tests/ui/run.lua",
     "media:ui": "node tools/media-ui.js",

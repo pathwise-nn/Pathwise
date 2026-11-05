@@ -22,6 +22,29 @@ test("bars: three bars of the game's own buttons by default, on the right pages"
 	eq(main.buttons[1]:GetAttribute("showgrid"), 1, "empty slots shown")
 end)
 
+test("bars: active, pressed and flashing drawn inside the slot; the game's cast flourishes faded", function()
+	local stub, ns = fresh()
+	local b = CreateFrame("CheckButton")
+	local checked, pushed = b:CreateTexture(), b:CreateTexture()
+	-- Forever's template: 46 x 45, pinned top left.
+	checked:SetPoint("TOPLEFT") pushed:SetPoint("TOPLEFT")
+	function b:GetCheckedTexture() return checked end
+	function b:GetPushedTexture() return pushed end
+	b.Flash = b:CreateTexture()
+	b.SpellCastAnimFrame = CreateFrame("Frame", nil, b)
+	b.InterruptDisplay = CreateFrame("Frame", nil, b)
+	ns.Bars.Style(b)
+	for name, t in pairs({ checked = checked, pushed = pushed, flash = b.Flash }) do
+		eq(#t.points, 2, name .. ": two corners")
+		eq(t.points[1][1], "TOPLEFT", name)
+		eq(t.points[1][2], 1, name .. ": inside the border")
+		eq(t.points[2][1], "BOTTOMRIGHT", name)
+		eq(t.points[2][2], -1, name)
+	end
+	eq(b.SpellCastAnimFrame.alpha, 0, "cast fill faded")
+	eq(b.InterruptDisplay.alpha, 0, "interrupt faded")
+end)
+
 test("bars: the main bar follows stances, forms and stealth, in combat too", function()
 	local stub, ns = fresh()
 	local main = ns.Bars.bars[1]

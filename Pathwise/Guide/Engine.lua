@@ -75,12 +75,90 @@ function Engine.Check(def)
 	return problems
 end
 
+---------------------------------------------------------------------------
+-- One action per step
+---------------------------------------------------------------------------
+-- Routes are written a place at a time (everything to do in Brill in one
+-- step). Leveling and class routes are followed an action at a time: each
+-- place step is split, as it registers, into steps of their own:
+--   * the actions at one person in a row stay together ("Talk to Holland":
+--     hand in, then accept)
+--   * every other action is a step of its own (each quest to complete, each
+--     place to go, each item to get)
+--   * notes and optional goals go with the next action (a last one with the
+--     one before), so "Hearth to Brill" shows with what you do there
+--   * the place's title, `only` and `when` go to every part; its note to
+--     the first
+-- route.split[old step] = { first, last } and route.goalAt[old][g] =
+-- { step, goal } say where each went (saved marks from before are moved).
+
+local SPLIT_CATEGORIES = { Leveling = true, Class = true }
+local AT_PERSON = { accept = true, turnin = true, bind = true, train = true }
+
+-- Who a goal is done with, for keeping a person's actions together.
+local function personOf(goal)
+	if not AT_PERSON[goal[1]] then return nil end
+	if goal.who then return goal.who end
+	if goal.at then return ("%s:%s:%s"):format(goal.at[1], goal.at[2], goal.at[3]) end
+	local p = goal[1] == "accept" and Q.Giver(goal[2]) or (goal[1] == "turnin" and Q.Finisher(goal[2])) or nil
+	return p and p.name or nil
+end
+
+local function carries(goal) return goal[1] == "note" or goal.optional end
+
+local function splitRoute(def)
+	local out, split, goalAt = {}, {}, {}
+	for s, step in ipairs(def.steps) do
+		goalAt[s] = {}
+		local anchors = 0
+		for _, goal in ipairs(step) do if not carries(goal) then anchors = anchors + 1 end end
+		local first = #out + 1
+		if anchors == 0 then
+			out[#out + 1] = step
+			for g in ipairs(step) do goalAt[s][g] = { #out, g } end
+		else
+			local cur, curPerson, carry = nil, nil, {}
+			local function newStep()
+				cur = { title = step.title, only = step.only, when = step.when, note = (#out + 1 == first) and step.note or nil }
+				out[#out + 1] = cur
+			end
+			for g, goal in ipairs(step) do
+				if carries(goal) then
+					carry[#carry + 1] = { g, goal }
+				else
+					local person = personOf(goal)
+					if not cur or not person or person ~= curPerson or #carry > 0 then newStep() end
+					curPerson = person
+					for _, c in ipairs(carry) do
+						cur[#cur + 1] = c[2]
+						goalAt[s][c[1]] = { #out, #cur }
+					end
+					carry = {}
+					cur[#cur + 1] = goal
+					goalAt[s][g] = { #out, #cur }
+				end
+			end
+			for _, c in ipairs(carry) do -- after the last action: with it
+				cur[#cur + 1] = c[2]
+				goalAt[s][c[1]] = { #out, #cur }
+			end
+		end
+		split[s] = { first, #out }
+	end
+	local copy = {}
+	for k, v in pairs(def) do copy[k] = v end
+	copy.steps, copy.split, copy.goalAt, copy.placeSteps = out, split, goalAt, def.steps
+	return copy
+end
+Engine.SplitRoute = splitRoute
+
 function Pathwise.RegisterRoute(def)
 	local problems = Engine.Check(def)
 	if #problems > 0 then
 		ns.Error("route " .. tostring(def and def.id), table.concat(problems, "; "))
 		return false
 	end
+	if SPLIT_CATEGORIES[def.category or "Leveling"] and def.split ~= false then def = splitRoute(def) end
 	if not routes[def.id] then routeOrder[#routeOrder + 1] = def.id end
 	routes[def.id] = def
 	return true
@@ -170,8 +248,35 @@ local function state()
 	g.skipped = type(g.skipped) == "table" and g.skipped or {}
 	g.extras = type(g.extras) == "table" and g.extras or {}
 	g.reached = type(g.reached) == "table" and g.reached or {}
+	g.stepsDone = type(g.stepsDone) == "table" and g.stepsDone or {} -- "route:step" -> true, marked by the player
 	if g.route and not routes[g.route] and ALIASES[g.route] then g.route = ALIASES[g.route] end
+	if g.layout ~= 2 then Engine.MoveMarks(g) end
 	return g
+end
+
+-- Saved before routes were split an action at a time: marks by place step
+-- moved to the new steps ("route:12" -> each step it became; places reached
+-- likewise). The step being looked at is let go.
+function Engine.MoveMarks(g)
+	local done, reached = {}, {}
+	for key, v in pairs(g.stepsDone) do
+		local id, s = key:match("^(.*):(%d+)$")
+		local r = id and routes[id]
+		local span = r and r.split and r.split[tonumber(s)]
+		if span then
+			for n = span[1], span[2] do done[id .. ":" .. n] = v end
+		elseif not (r and r.split) then
+			done[key] = v
+		end
+	end
+	for key, v in pairs(g.reached) do
+		local id, s, gi = key:match("^(.*):(%d+):(%d+)$")
+		local r = id and routes[id]
+		local at = r and r.goalAt and r.goalAt[tonumber(s)] and r.goalAt[tonumber(s)][tonumber(gi)]
+		if at then reached[("%s:%d:%d"):format(id, at[1], at[2])] = v
+		elseif not (r and r.split) then reached[key] = v end
+	end
+	g.stepsDone, g.reached, g.pin, g.layout = done, reached, nil, 2
 end
 Engine.State = state
 
@@ -233,6 +338,41 @@ end
 
 local function goalKey(route, s, g) return route.id .. ":" .. s .. ":" .. g end
 
+-- A "go to" is only a way to the quests, so it also counts as done once the
+-- player is past it: every quest of its step is done (or not for them), or
+-- they have done a quest further along the route. Without this, a character
+-- who did the quests without walking past each waypoint (or before the
+-- guide was installed) stays stuck on old waypoints.
+local furthest = {} -- route id -> last step with a quest done, this update
+local function stepQuestsDone(route, s)
+	local any = false
+	for _, goal in ipairs(route.steps[s]) do
+		if QUEST_VERBS[goal[1]] and not (goal.only and not fits(goal.only, player)) then
+			local st = questStatus(goal[1], goal[2])
+			if st == "done" then any = true elseif st ~= "na" then return false end
+		end
+	end
+	return any
+end
+local function furthestDone(route)
+	local f = furthest[route.id]
+	if f then return f end
+	f = 0
+	for s = #route.steps, 1, -1 do
+		local step = route.steps[s]
+		for _, goal in ipairs(step) do
+			if QUEST_VERBS[goal[1]] and not (goal.only and not fits(goal.only, player))
+				and questStatus(goal[1], goal[2]) == "done" then f = s break end
+		end
+		if f > 0 then break end
+	end
+	furthest[route.id] = f
+	return f
+end
+local function passed(route, s)
+	return stepQuestsDone(route, s) or s < furthestDone(route)
+end
+
 local function bindMatches(where)
 	local loc = C.BindLocation()
 	if not (loc and where) then return false end
@@ -242,11 +382,14 @@ end
 
 local function goalStatus(route, s, g, goal)
 	if goal.only and not fits(goal.only, player) then return "na" end
+	if state().stepsDone[route.id .. ":" .. s] and goal[1] ~= "note" then return "done" end
 	local verb = goal[1]
 	if QUEST_VERBS[verb] then return questStatus(verb, goal[2]) end
 	if verb == "level" then return (player.level or 1) >= goal[2] and "done" or "open" end
-	if verb == "goto" then return state().reached[goalKey(route, s, g)] and "done" or "open" end
-	if verb == "have" then return C.ItemCount(goal[2]) >= (goal[3] or 1) and "done" or "open" end
+	if verb == "goto" then return (state().reached[goalKey(route, s, g)] or passed(route, s)) and "done" or "open" end
+	-- An item to fetch: had, or behind you (a quest further on done: the item
+	-- may have gone into it, as Samuel's Remains do into Marla's Last Wish).
+	if verb == "have" then return (C.ItemCount(goal[2]) >= (goal[3] or 1) or s < furthestDone(route)) and "done" or "open" end
 	if verb == "bind" then return bindMatches(goal[2]) and "done" or "open" end
 	if verb == "skill" then
 		local rank = C.SkillRank(goal[2])
@@ -329,6 +472,7 @@ local live, current, extra, sideLive
 
 local function compute()
 	player = Q.Player()
+	furthest = {}
 	extra = openExtra()
 	local s = state()
 	local route = Engine.Route()
@@ -365,6 +509,44 @@ function Engine.GoalStatus(route, s, g, goal)
 	return goalStatus(route, s, g, goal)
 end
 function Engine.Refresh() player = Q.Player() end
+
+-- For automation (Guide/Automate.lua): the quests the guide wants handled,
+-- { [q] = true } for "accept" or "turnin": every open goal of that verb on
+-- the route and the side guide (any step: a quest taken early is fine), and
+-- the extra quest picked.
+function Engine.Wanted(verb)
+	player = player or Q.Player()
+	local out = {}
+	for _, route in pairs({ Engine.Route() or false, Engine.Side() or false }) do
+		if route then
+			for s, step in ipairs(route.steps) do
+				if stepApplies(step) then
+					for g, goal in ipairs(step) do
+						if goal[1] == verb and goalStatus(route, s, g, goal) == "open" then out[goal[2]] = true end
+					end
+				end
+			end
+		end
+	end
+	if extra and extra.verb == verb then out[extra.quest] = true end
+	return out
+end
+
+-- The goals of the step being followed (and the side guide's), still to do
+-- or instructions: { goal, ... }.
+function Engine.OpenGoals()
+	local out = {}
+	local function add(route, s)
+		if not (route and s and route.steps[s]) then return end
+		for g, goal in ipairs(route.steps[s]) do
+			local st = goalStatus(route, s, g, goal)
+			if st == "open" or st == "info" then out[#out + 1] = goal end
+		end
+	end
+	add(Engine.Route(), current)
+	add(Engine.Side(), sideLive)
+	return out
+end
 
 function Engine.LiveStep() return live end
 function Engine.CurrentStep() return current end
@@ -507,6 +689,86 @@ local function rowsOf(route, s)
 	return rows
 end
 
+-- A step as the player reads it at the NPC, one line per action:
+--   { kind, lead, name, tail, done, info, optional, have, need }
+-- kind: "talk" heads the goals that share a giver ("Talk to Gryan
+-- Stoutmantle"), then "accept", "turnin", "complete" (with "objective" lines
+-- under it while open), "goto", "have", "bind", "note"... lead and tail are
+-- plain, name is the part to pick out (a person, quest or item).
+local LINE = {
+	accept = "Accept ", turnin = "Turn in ", complete = "", have = "Get ", learn = "Learn ",
+}
+local function goalLine(route, s, g, goal, st, withObjectives, out)
+	local verb = goal[1]
+	local line = { kind = verb, done = st == "done", info = st == "info", optional = goal.optional }
+	if QUEST_VERBS[verb] then
+		line.lead, line.name = LINE[verb], qname(goal)
+	elseif verb == "have" then
+		local name = goal.name or (Q.Data.items[goal[2]] and Q.Data.items[goal[2]][1]) or ("item " .. goal[2])
+		line.lead, line.name = LINE.have, name
+		if (goal[3] or 1) > 1 then line.have, line.need = math.min(C.ItemCount(goal[2]), goal[3]), goal[3] end
+	elseif verb == "bind" then
+		line.lead, line.name, line.tail = "Make ", goal[2] or "this inn", " your home"
+	elseif verb == "learn" then
+		line.lead, line.name = LINE.learn, goal.name or "the recipe"
+	else
+		line.lead = goalText(goal) or ""
+	end
+	out[#out + 1] = line
+	if verb == "complete" and st == "open" and withObjectives then
+		for _, o in ipairs(Q.Objectives(goal[2]) or {}) do
+			out[#out + 1] = { kind = "objective", lead = o.text or "", have = o.have, need = o.need, done = o.done }
+		end
+	end
+end
+
+local TALK = { accept = true, turnin = true, bind = true, train = true }
+local function linesOf(route, s, withObjectives)
+	local out, lastWho, talk = {}, nil, nil
+	for g, goal in ipairs(route.steps[s]) do
+		local st = goalStatus(route, s, g, goal)
+		if st ~= "na" and st ~= "wait" then
+			local who = TALK[goal[1]] and goal.who or nil
+			if who and who ~= lastWho then
+				talk = { kind = "talk", lead = "Talk to ", name = who, done = true }
+				out[#out + 1] = talk
+			elseif not who then
+				talk = nil
+			end
+			lastWho = who
+			if talk and st ~= "done" then talk.done = false end
+			goalLine(route, s, g, goal, st, withObjectives, out)
+		end
+	end
+	return out
+end
+Engine.LinesOf = linesOf
+
+-- The card at the top: the step being followed, every line of it (steps are
+-- one action each: Engine's splitting), its objectives' progress.
+local function cardOf(route, s)
+	return linesOf(route, s, true)
+end
+
+-- How many steps the window lists below the card (the current one included).
+ns.Defaults("guide", { ahead = 6 })
+
+local function stepsAhead(route, from)
+	local out = {}
+	local want = ns.Get("guide.ahead") or 6
+	for s = from, #route.steps do
+		if #out >= want then break end
+		if s == from or stepOpen(route, s) then
+			local step = route.steps[s]
+			out[#out + 1] = {
+				index = s, current = s == from, title = titleOf(step, route, s),
+				note = step.note, lines = linesOf(route, s, s == from),
+			}
+		end
+	end
+	return out
+end
+
 local function textOf(step)
 	if step.note and step.note ~= "" then return step.note end
 	for _, goal in ipairs(step) do
@@ -607,6 +869,11 @@ function Engine.View()
 			title = Q.Name(extra.quest),
 			text = extra.verb == "complete" and Q.Text(extra.quest) or (p and p.name and ((extra.verb == "accept" and "From " or "To ") .. p.name)) or nil,
 			coords = coordsOf(p), objectives = rows, detour = sideCard(),
+			card = (function()
+				local lines = {}
+				goalLine(nil, nil, nil, goal, "open", true, lines)
+				return lines
+			end)(),
 			next = route and live and ("Then back to the route: " .. (titleOf(route.steps[live], route, live) or "")) or nil,
 		}
 	end
@@ -631,6 +898,7 @@ function Engine.View()
 		title = titleOf(step, route, current), text = textOf(step), coords = coordsOf(p),
 		objectives = rowsOf(route, current), next = nextSummary(route, current),
 		pinned = current ~= live, detour = sideCard(),
+		card = cardOf(route, current), steps = stepsAhead(route, current),
 	}
 end
 
@@ -699,6 +967,8 @@ ns.On("DETOUR_SKIP", function()
 	Engine.Update()
 end)
 
+ns.On("SETTING_CHANGED", function(path) if path == "guide.ahead" then Engine.Schedule() end end)
+
 ns.On("READY", function()
 	local s = state()
 	if not s.route then
@@ -728,6 +998,23 @@ function Engine.Pins()
 		out[#out + 1] = { map = p.map, x = p.x, y = p.y, kind = kind, title = title or p.name, sub = sub }
 	end
 	if lead then add(placeOf(lead), "lead", nil, goalText(lead)) end
+	if out[1] and route and current and not extra then out[1].label = tostring(current) end
+	-- The steps after this one, numbered where each begins (the map's step
+	-- numbers): as many as Settings says.
+	if route and current and not extra and ns.Get("pins.stepNumbers") then
+		local shown = 0
+		for s = current + 1, #route.steps do
+			if shown >= (ns.Get("pins.stepCount") or 8) then break end
+			if stepOpen(route, s) then
+				shown = shown + 1
+				local goal = leadIn(route, s)
+				local p = goal and placeOf(goal)
+				local before = #out
+				add(p, "step", ("Step %d · %s"):format(s, titleOf(route.steps[s], route, s)), goal and goalText(goal))
+				if #out > before then out[#out].label = tostring(s) end
+			end
+		end
+	end
 	local goals = {}
 	if extra then goals[1] = { extra.verb, extra.quest }
 	elseif route and current then
@@ -804,6 +1091,41 @@ function Engine.ReportText()
 end
 
 ---------------------------------------------------------------------------
+-- Sync: the guide again from the quest log, now
+---------------------------------------------------------------------------
+
+-- The leveling route as the quest log has it: the step paged to (Back /
+-- Next) let go, every quest read again, and, when the route is finished or
+-- left behind (more than 2 levels above it), the route that suits the
+-- character now. Class and profession routes are never swapped. Returns the
+-- route shown, its live step, and the route switched to (or nil).
+function Engine.Sync()
+	local s = state()
+	player = Q.Player()
+	furthest = {}
+	s.pin = nil
+	local route = Engine.Route()
+	local switched
+	local leveling = not route or (route.category or "Leveling") == "Leveling"
+	local hi = route and route.levels and route.levels[2]
+	if leveling and (not route or not firstOpen(route) or (hi and (player.level or 1) > hi + 2)) then
+		local best = Engine.BestRoute(player, (C.PlayerMapPosition()))
+		if best and best ~= route then s.route, switched = best.id, best end
+	end
+	Engine.Update()
+	route = Engine.Route()
+	if not route then
+		ns.Print("synced: no leveling route for this character.")
+	elseif not live then
+		ns.Print(("synced with your quest log: %s is done."):format(route.title))
+	else
+		ns.Print(("synced with your quest log: %s%s, step %d of %d."):format(
+			switched and "now on " or "", route.title, live, #route.steps))
+	end
+	return route, live, switched
+end
+
+---------------------------------------------------------------------------
 -- Navigation (Back / Next look at other steps; they change nothing)
 ---------------------------------------------------------------------------
 
@@ -872,6 +1194,38 @@ function Engine.SkipQuest(q, followUps)
 	end
 	Engine.Update()
 	return list
+end
+
+-- "I've already done it": the player says so, when the game does not (a
+-- quest done before the guide, or one Forever reports differently). It
+-- counts as handed in (Quests.Done), so its follow-ups come up.
+function Engine.MarkQuestDone(q)
+	Q.MarkDone(q, true)
+	Engine.Update()
+end
+
+-- "This step is done": every goal of the step shown, for a step that is not
+-- just quests (an item, a place).
+function Engine.MarkStepDone()
+	local route = Engine.Route()
+	if not (route and current) then return nil end
+	local s = current
+	state().stepsDone[route.id .. ":" .. s] = true
+	state().pin = nil
+	Engine.Update()
+	return s
+end
+
+-- Everything the player marked done, back to what the game says.
+function Engine.Marked()
+	local n = 0
+	for _ in pairs(state().stepsDone) do n = n + 1 end
+	return n + #Q.Marked()
+end
+function Engine.ClearMarked()
+	state().stepsDone = {}
+	for _, q in ipairs(Q.Marked()) do Q.MarkDone(q, nil) end
+	Engine.Update()
 end
 
 function Engine.UnskipQuest(q)

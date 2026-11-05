@@ -132,6 +132,7 @@ ns.Command("prof", function() ns.Fire("SHOW_PROFESSIONS") end, "your professions
 ns.Command("dungeons", function() ns.Fire("SHOW_DUNGEONS") end, "dungeons and raids for your level, their quests and entrances")
 ns.Command("professions", function() ns.Fire("SHOW_PROFESSIONS") end, "same as /pw prof")
 ns.Command("skip", function() ns.Fire("GUIDE_SKIP") end, "skip the current quest, or pick one nearby instead")
+ns.Command("sync", function() ns.Fire("GUIDE_SYNC") end, "bring the guide in line with your quest log (and the right route)")
 
 ns.Command("route", function(args)
 	local E = ns.Engine
@@ -153,3 +154,4 @@ end, "show or choose the route: /pw route <id or title>")
 
 ns.On("GUIDE_BACK", function() ns.Engine.Back() end)
 ns.On("GUIDE_NEXT", function() ns.Engine.Next() end)
+ns.On("GUIDE_SYNC", function() ns.Engine.Sync() end)

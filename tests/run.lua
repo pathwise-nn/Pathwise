@@ -335,6 +335,8 @@ end)
 assert(loadfile(ROOT .. "/tests/guide.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
 assert(loadfile(ROOT .. "/tests/gear.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
 assert(loadfile(ROOT .. "/tests/bags.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
+assert(loadfile(ROOT .. "/tests/automate.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
+assert(loadfile(ROOT .. "/tests/gathering.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
 
 ---------------------------------------------------------------------------
 

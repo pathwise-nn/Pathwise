@@ -139,6 +139,13 @@ local function curve()
 	return percentCurve or nil
 end
 
+-- A unit's health in percent (0-100), perhaps secret; nil when the client
+-- cannot say.
+function U.Percent(unit)
+	if not (UnitHealthPercent and curve()) then return nil end
+	return call(UnitHealthPercent, unit, true, curve())
+end
+
 -- def = { unit, name, w, h, power (bool), castbar (bool), auras = { filter, count } }
 function U.Make(def)
 	if frames[def.unit] then return frames[def.unit] end

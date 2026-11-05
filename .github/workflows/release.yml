@@ -1,0 +1,77 @@
+# Release: pushing a tag v<version> (e.g. v0.2.0) tests, packs and uploads
+# that version to CurseForge, and attaches the zips to a GitHub release.
+#
+# CurseForge projects (tools/curseforge.js): Pathwise 1783619, Pathwise Gear
+# 1784186, Pathwise Bags 1784179. Only the addons whose folder changed since
+# the last release tag are uploaded. The game version is found by name
+# (1.60.1); a CF_GAME_VERSIONS variable overrides it.
+#
+# Needs, in Settings > Secrets and variables > Actions:
+#   secret CF_API_KEY   the CurseForge API token
+#
+# Before tagging: node tools/version.js <version> (TOCs, package.json and the
+# changelog section), commit, then tag v<version>. The tag must match the TOC.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # the GitHub release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the last release tag, to upload only what changed
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Lua 5.1 for the tests
+        run: sudo apt-get update && sudo apt-get install -y lua5.1
+
+      - name: Tests
+        run: lua5.1 tests/run.lua
+
+      - name: The tag matches the version
+        run: |
+          v=$(node -e "console.log(require('./tools/pack.js').version())")
+          if [ "v$v" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match Pathwise.toc's version $v"; exit 1
+          fi
+
+      - name: Pack
+        run: node tools/pack.js
+
+      - name: Upload to CurseForge
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          CF_GAME_VERSIONS: ${{ vars.CF_GAME_VERSIONS }}
+        run: |
+          CF_SINCE=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)
+          export CF_SINCE
+          node tools/curseforge.js upload
+
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          node -e '
+            const fs = require("fs");
+            const v = process.argv[1];
+            const log = fs.readFileSync("CHANGELOG.md", "utf8").split(/\r?\n/);
+            const s = log.findIndex((l) => l.startsWith("## " + v));
+            const out = [];
+            for (let i = s + 1; s >= 0 && i < log.length && !log[i].startsWith("## "); i++) out.push(log[i]);
+            fs.writeFileSync("notes.md", out.join("\n").trim() + "\n");
+          ' "$v"
+          flag=""
+          case "$v" in *-*) flag="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/*-"$v".zip --title "Pathwise $v" --notes-file notes.md $flag

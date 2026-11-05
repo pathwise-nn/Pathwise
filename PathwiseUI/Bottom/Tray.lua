@@ -22,8 +22,11 @@ ns.Defaults("tray", {
 	size = 28, spacing = 3,
 	microPoint = nil, bagsPoint = nil,
 })
-Tray.MICRO_POINT = { "BOTTOMRIGHT", "BOTTOMRIGHT", -180, 8 }
+Tray.MICRO_POINT = { "BOTTOMRIGHT", "BOTTOMRIGHT", -180, 8 } -- only when the bag row is off
 Tray.BAGS_POINT = { "BOTTOMRIGHT", "BOTTOMRIGHT", -8, 8 }
+-- Not moved, the tray sits just left of the bag row, this far apart, so the
+-- two never overlap however many bags a character has.
+Tray.GAP = 12
 
 Tray.MICRO = {
 	{ "CharacterMicroButton", "person" }, { "ProfessionMicroButton", "prof" }, { "SpellbookMicroButton", "book" },
@@ -227,9 +230,15 @@ function Tray.LayoutBar(kind)
 		end
 	end
 	f:SetSize(math.max(1, n * (size + gap) - gap), size)
-	local p = ns.Get("tray." .. kind .. "Point") or (kind == "micro" and Tray.MICRO_POINT or Tray.BAGS_POINT)
+	local p = ns.Get("tray." .. kind .. "Point")
+	local bagRow = bars.bags
 	f:ClearAllPoints()
-	f:SetPoint(p[1], UIParent, p[2], p[3], p[4])
+	if not p and kind == "micro" and bagRow and bagRow:IsShown() then
+		f:SetPoint("BOTTOMRIGHT", bagRow, "BOTTOMLEFT", -Tray.GAP, 0)
+	else
+		p = p or (kind == "micro" and Tray.MICRO_POINT or Tray.BAGS_POINT)
+		f:SetPoint(p[1], UIParent, p[2], p[3], p[4])
+	end
 	f:SetShown(on and n > 0)
 end
 
@@ -253,8 +262,9 @@ function Tray.Build()
 		for _, f in pairs(bars) do f:Hide() end
 		return
 	end
-	Tray.LayoutBar("micro")
+	-- The bags first: the tray is placed against them.
 	Tray.LayoutBar("bags")
+	Tray.LayoutBar("micro")
 	Tray.HideGame()
 end
 

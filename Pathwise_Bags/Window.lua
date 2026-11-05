@@ -24,7 +24,7 @@
 --
 -- With "Use the Pathwise bag window" on, opening the bags shows this window
 -- and hides the game's (hooksecurefunc on OpenAllBags, ToggleAllBags,
--- ToggleBackpack, OpenBackpack; nothing of the game's is replaced).
+-- ToggleBackpack, OpenBackpack, ToggleBag; nothing of the game's is replaced).
 
 local ADDON, ns = ...
 local S, Items = Pathwise.Suite, ns.Items
@@ -75,7 +75,12 @@ local function makeButton(bag, slot)
 	local parent = holder(bag)
 	local ok, b = pcall(CreateFrame, "ItemButton", nil, parent, "ContainerFrameItemButtonTemplate")
 	if not ok or not b then b = CreateFrame("Button", nil, parent, "ContainerFrameItemButtonTemplate") end
-	if b.Initialize then pcall(b.Initialize, b, bag, slot) else b:SetID(slot) end
+	-- The slot is the button's ID and the bag its holder's: the game's
+	-- GetBagID falls back to the parent's ID. Initialize is not called (on
+	-- Forever it takes a container frame of the game's, and fields our code
+	-- writes on the button would taint the game's click): a wrong ID or a
+	-- tainted click breaks using, selling and the tooltip.
+	b:SetID(slot)
 	b:SetSize(SIZE, SIZE)
 	-- Pathwise's markers: top left (why keep it), top right (best / sell).
 	local tl = b:CreateTexture(nil, "OVERLAY", nil, 5)
@@ -632,51 +637,53 @@ local function hideGame()
 	for _, f in ipairs(list or {}) do if f.IsShown and f:IsShown() then f:Hide() end end
 end
 
--- The bag key runs the game's ToggleAllBags, which itself calls OpenAllBags
--- or CloseBackpack/CloseAllBags (Forever's ContainerFrame.lua). Since the
--- game's bags stay hidden, the game always thinks they are closed and opens
--- them: so a toggle that ends in "open" while this window was already shown
--- means the player pressed the key to close it.
-local opened -- { wasShown } set by the open hook during one toggle
-local closed -- set by the close hooks during one toggle
-local function onOpen()
+-- One press of a bag key runs a chain of the game's bag functions
+-- (Forever's ContainerFrame.lua, separate bags): the bag key's ToggleAllBags
+-- opens through OpenBackpack, which calls ToggleBackpack, which calls
+-- ToggleBag(0); a vendor's OpenAllBags goes through the same chain. The
+-- game's own bags stay hidden, so the game always thinks they are closed.
+-- So every hook in one frame (GetTime() is the same all through it) counts
+-- as one press, decided from how the window was before it, strongest first:
+--   CloseAllBags          close (Escape, leaving a vendor)
+--   OpenAllBags           open (a vendor, the mailbox)
+--   ToggleAllBags, ToggleBackpack, ToggleBag (bags 0-4)
+--                         the other way from before the press
+--   OpenBackpack          open
+--   CloseBackpack         close
+-- The reagent bag and the keyring stay the game's.
+local RANK = { closeAll = 5, openAll = 4, toggle = 3, open = 2, close = 1 }
+local SHOWN_BAGS = {}
+for _, id in ipairs(Items.BAGS) do SHOWN_BAGS[id] = true end
+local press -- { at, before, kind } of the press under way
+local function now() return GetTime and GetTime() or 0 end
+
+local function note(kind)
 	if not S.Get("bags.window") then return end
-	opened, closed = { wasShown = W.IsShown() }, nil
-	W.Show()
+	local t = now()
+	if not press or press.at ~= t then press = { at = t, before = W.IsShown() } end
+	if not press.kind or RANK[kind] > RANK[press.kind] then press.kind = kind end
+	local k = press.kind
+	local show
+	if k == "closeAll" or k == "close" then show = false
+	elseif k == "openAll" or k == "open" then show = true
+	else show = not press.before end
+	if show then W.Show() else W.Hide() end
 	hideGame()
-end
-local function onToggle()
-	if not S.Get("bags.window") then return end
-	local o, c = opened, closed
-	opened, closed = nil, nil
-	if c and not o then
-		W.Hide()
-	elseif o then
-		if o.wasShown then W.Hide() end
-	else
-		W.Toggle()
-	end
-	hideGame()
-end
--- Within one key press the game closes before it opens, so a close always closes.
-local function onClose()
-	if not S.Get("bags.window") then return end
-	closed, opened = true, nil
-	W.Hide()
 end
 
 local hooked = false
 function W.Install()
 	if hooked or not hooksecurefunc then return end
 	hooked = true
-	if OpenAllBags then hooksecurefunc("OpenAllBags", onOpen) end
-	if OpenBackpack then hooksecurefunc("OpenBackpack", onOpen) end
-	if ToggleAllBags then hooksecurefunc("ToggleAllBags", onToggle) end
-	if ToggleBackpack then hooksecurefunc("ToggleBackpack", onToggle) end
-	if CloseAllBags then hooksecurefunc("CloseAllBags", onClose) end
-	if CloseBackpack then hooksecurefunc("CloseBackpack", onClose) end
+	if OpenAllBags then hooksecurefunc("OpenAllBags", function() note("openAll") end) end
+	if OpenBackpack then hooksecurefunc("OpenBackpack", function() note("open") end) end
+	if ToggleAllBags then hooksecurefunc("ToggleAllBags", function() note("toggle") end) end
+	if ToggleBackpack then hooksecurefunc("ToggleBackpack", function() note("toggle") end) end
+	if ToggleBag then hooksecurefunc("ToggleBag", function(id) if SHOWN_BAGS[id] then note("toggle") end end) end
+	if CloseAllBags then hooksecurefunc("CloseAllBags", function() note("closeAll") end) end
+	if CloseBackpack then hooksecurefunc("CloseBackpack", function() note("close") end) end
 end
-W.OnOpen, W.OnToggle, W.OnClose = onOpen, onToggle, onClose
+W.Note = note
 
 local function refreshSoon()
 	if not W.IsShown() or W.waiting then return end

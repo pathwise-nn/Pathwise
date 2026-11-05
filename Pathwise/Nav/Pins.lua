@@ -1,5 +1,6 @@
--- Pathwise pins: the step's places on the world map and the minimap, and
--- the entrances of dungeons for the character's level on the world map.
+-- Pathwise pins: the step's places on the world map and the minimap, the
+-- quests around you (Nav/QuestMarkers.lua: givers, finishers, objectives),
+-- and the entrances of dungeons for the character's level on the world map.
 --
 -- Forever's interface is protected like retail's: a value an addon writes into
 -- the world map's own tables (a data provider, a pin from its pool) taints
@@ -22,7 +23,7 @@ local T, C = ns.Theme, ns.Compat
 local Pins = {}
 ns.Pins = Pins
 
-ns.Defaults("pins", { map = true, minimap = true, dungeons = true })
+ns.Defaults("pins", { map = true, minimap = true, dungeons = true, stepNumbers = true, stepCount = 8 })
 
 local cos, sin, sqrt, max, abs = math.cos, math.sin, math.sqrt, math.max, math.abs
 
@@ -33,7 +34,16 @@ local LOOK = {
 	lead = { tex = "dot-open", size = 18, color = "accent", alpha = 1 },
 	goal = { tex = "dot-open", size = 14, color = "text2", alpha = 0.9 },
 	spot = { tex = "dot-done", size = 7, color = "accent", alpha = 0.55 },
+	-- Herb and ore nodes, in the skill-up colour of each (pin.rgb).
+	gather = { tex = "dot-done", size = 7, color = "text2", alpha = 0.9 },
+	-- The steps ahead, each with its number on a dark disc.
+	step = { tex = "dot-done", size = 16, color = "bg", alpha = 0.9 },
 	dungeon = { tex = "glyph-dungeon", size = 18, color = "warning", alpha = 0.95 },
+	-- Quest markers (Nav/QuestMarkers.lua): givers, finishers, objectives.
+	available = { tex = "glyph-quest", size = 16, color = "warning", alpha = 1 },
+	availableLow = { tex = "glyph-quest", size = 14, color = "muted", alpha = 0.8 },
+	turnin = { tex = "glyph-turnin", size = 16, color = "warning", alpha = 1 },
+	objective = { tex = "dot-done", size = 6, color = "text2", alpha = 0.6 },
 }
 
 local function frameUnder(parent)
@@ -56,6 +66,11 @@ local function makePin(parent)
 	f:SetSize(16, 16)
 	f.tex = f:CreateTexture(nil, "OVERLAY")
 	f.tex:SetAllPoints()
+	f.num = T.Text(f, "small", "accent", "OVERLAY")
+	f.num:SetPoint("CENTER", 0, 0)
+	f.num:SetJustifyH("CENTER")
+	f.num:SetShadowOffset(1, -1)
+	f.num:SetShadowColor(0, 0, 0, 1)
 	f:EnableMouse(true)
 	f:SetScript("OnEnter", tooltip)
 	f:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
@@ -66,10 +81,22 @@ local function dress(f, pin)
 	local look = LOOK[pin.kind] or LOOK.goal
 	f.pin = pin
 	f.tex:SetTexture(T.MEDIA .. look.tex)
-	local c = T.Color(look.color)
+	local c = pin.rgb or T.Color(look.color)
 	f.tex:SetVertexColor(c[1], c[2], c[3], look.alpha)
-	f.size = look.size
-	f:SetSize(look.size, look.size)
+	local size = look.size
+	if pin.kind == "step" and pin.label then size = max(size, 7 * #pin.label + 4) end -- room for "128"
+	f.size = size
+	f:SetSize(size, size)
+	-- A step number: on the dark disc, or beside the lead's ring.
+	f.num:SetText(pin.label or "")
+	f.num:ClearAllPoints()
+	if pin.label and pin.kind == "lead" then
+		f.num:SetPoint("LEFT", f, "RIGHT", 2, 0)
+		T.TextColor(f.num, "accent")
+	else
+		f.num:SetPoint("CENTER", 0, 0)
+		T.TextColor(f.num, "accent")
+	end
 end
 
 ---------------------------------------------------------------------------
@@ -79,6 +106,7 @@ end
 local function stepPins()
 	return ns.Engine and ns.Engine.Pins and ns.Engine.Pins() or {}
 end
+
 
 -- Dungeon entrances for the character's level (world map only).
 local function dungeonPins()
@@ -94,6 +122,31 @@ local function dungeonPins()
 	return out
 end
 Pins.DungeonPins = dungeonPins
+
+local function pinKey(p) return ("%d:%.1f:%.1f"):format(p.map, p.x, p.y) end
+
+-- What a map shows, bottom to top: quest markers, dungeon entrances (world
+-- map), then the step's own pins. A quest marker where the step already has
+-- a pin is left out.
+local function pinsFor(map, setting, withDungeons)
+	local step = stepPins()
+	local taken = {}
+	for _, p in ipairs(step) do if p.map and p.x then taken[pinKey(p)] = true end end
+	local list = {}
+	-- Herb and ore nodes at the bottom (Professions/Gathering.lua).
+	if map and ns.Gathering then
+		for _, p in ipairs(ns.Gathering.Pins(map, withDungeons and "pins.gather" or "pins.gatherMinimap")) do list[#list + 1] = p end
+	end
+	if map and ns.Get(setting) and ns.QuestMarkers then
+		for _, p in ipairs(ns.QuestMarkers.ForMap(map)) do
+			if not taken[pinKey(p)] then list[#list + 1] = p end
+		end
+	end
+	if withDungeons then for _, p in ipairs(dungeonPins()) do list[#list + 1] = p end end
+	for _, p in ipairs(step) do list[#list + 1] = p end
+	return list
+end
+Pins.PinsFor = pinsFor
 
 ---------------------------------------------------------------------------
 -- World map
@@ -113,8 +166,7 @@ local function drawWorld()
 	wm.mapID, wm.width, wm.height, wm.scale = id, w, h, scale
 	local n = 0
 	if ns.Get("pins.map") and w > 0 then
-		local list = stepPins()
-		for _, p in ipairs(dungeonPins()) do list[#list + 1] = p end
+		local list = pinsFor(id, "pins.quests", true)
 		for _, pin in ipairs(list) do
 			if pin.map == id then
 				n = n + 1
@@ -229,7 +281,7 @@ local function buildMini()
 		return
 	end
 	mm.list = {}
-	for _, pin in ipairs(stepPins()) do
+	for _, pin in ipairs(pinsFor((C.PlayerMapPosition()), "pins.questsMinimap", false)) do
 		local inst, north, west = C.MapToWorld(pin.map, pin.x, pin.y)
 		if inst then
 			pin.inst, pin.north, pin.west = inst, north, west
@@ -243,7 +295,7 @@ local function buildMini()
 			mm.pins[i] = f
 		end
 		dress(f, pin)
-		local s = pin.kind == "spot" and 0.8 or 0.75
+		local s = (pin.kind == "spot" or pin.kind == "objective") and 0.8 or 0.75
 		f:SetSize(f.size * s, f.size * s)
 	end
 	for i = #mm.list + 1, #mm.pins do mm.pins[i]:Hide() end
@@ -277,3 +329,5 @@ ns.On("SETTING_CHANGED", function(path) if type(path) == "string" and path:find(
 ns.On("READY", function() attachWorld() Pins.Refresh() end)
 ns.RegisterEvent("ADDON_LOADED", function(_, name) if name == "Blizzard_WorldMap" then attachWorld() end end)
 ns.RegisterEvent("PLAYER_LEVEL_UP", function() wm.dirty = true end)
+-- A new zone: its quest markers on the minimap.
+ns.RegisterEvent("ZONE_CHANGED_NEW_AREA", function() buildMini() end)

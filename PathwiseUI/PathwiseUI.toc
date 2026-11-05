@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: Pathwise UI
-## Notes: Your whole game interface in the Pathwise look, in your color: unit frames, action bars, tooltips, fonts, the game's windows, and more to come. Works on its own or with Pathwise; healing frames are Pathwise Heal.
+## Notes: Your whole game interface in the Pathwise look, in your color: unit frames, action bars, nameplates, tooltips, fonts, the game's windows, and more to come. Works on its own or with Pathwise; healing frames are Pathwise Heal.
 ## Author: leight_nn & florp
-## Version: 0.1.1
+## Version: 0.2.0
 ## SavedVariables: PathwiseUISettings
 ## SavedVariablesPerCharacter: PathwiseUICharSettings
 ## OptionalDeps: Pathwise
@@ -27,6 +27,7 @@ Bars\Style.lua
 Bottom\XPBar.lua
 Bottom\Tray.lua
 Bottom\Money.lua
+Plates\Plates.lua
 Options.lua
 Pages.lua
 Minimap.lua

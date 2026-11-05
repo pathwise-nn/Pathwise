@@ -497,6 +497,57 @@ for id in pairs(objectsUsed) do
 	if type(o) == "table" and o[OK.name] then objects[id] = { o[OK.name], spawnsOf(o[OK.spawns]) } end
 end
 
+-- Herb and ore nodes, for the gathering guides: every spawn (no cap), by
+-- the skill each needs. Positions: QuestieDB's objects by name. Skill: the
+-- node's lock in Forever's own client table Lock (wago.tools, build
+-- 1.60.1.70790; Herbalism is skill index 2, Mining 3), each node joined to
+-- its lock through cmangos classic-db's gameobject_template.data0 (GPL-3.0).
+-- Only these facts are taken, not either source's rows. Forever's new
+-- materials (Bauxite, Pyrite, Demonsage...) have no node in any source yet.
+local GATHER = {
+	herb = {
+		["Peacebloom"] = 1, ["Silverleaf"] = 1, ["Earthroot"] = 15, ["Mageroyal"] = 50, ["Briarthorn"] = 70,
+		["Stranglekelp"] = 85, ["Bruiseweed"] = 100, ["Wild Steelbloom"] = 115, ["Grave Moss"] = 120,
+		["Kingsblood"] = 125, ["Liferoot"] = 150, ["Fadeleaf"] = 160, ["Goldthorn"] = 170,
+		["Khadgar's Whisker"] = 185, ["Wintersbite"] = 195, ["Firebloom"] = 205, ["Purple Lotus"] = 210,
+		["Arthas' Tears"] = 220, ["Sungrass"] = 230, ["Blindweed"] = 235, ["Ghost Mushroom"] = 245,
+		["Gromsblood"] = 250, ["Golden Sansam"] = 260, ["Dreamfoil"] = 270, ["Mountain Silversage"] = 280,
+		["Plaguebloom"] = 285, ["Icecap"] = 290, ["Black Lotus"] = 300,
+	},
+	ore = {
+		["Copper Vein"] = 1, ["Tin Vein"] = 65, ["Incendicite Mineral Vein"] = 65, ["Silver Vein"] = 75,
+		["Lesser Bloodstone Deposit"] = 75, ["Iron Deposit"] = 125, ["Indurium Mineral Vein"] = 150,
+		["Gold Vein"] = 155, ["Mithril Deposit"] = 175, ["Truesilver Deposit"] = 230, ["Dark Iron Deposit"] = 230,
+		["Small Thorium Vein"] = 245, ["Rich Thorium Vein"] = 275,
+		["Ooze Covered Silver Vein"] = 75, ["Ooze Covered Iron Deposit"] = 125, ["Ooze Covered Gold Vein"] = 155,
+		["Ooze Covered Mithril Deposit"] = 175, ["Ooze Covered Truesilver Deposit"] = 230,
+		["Ooze Covered Thorium Vein"] = 245, ["Ooze Covered Rich Thorium Vein"] = 275,
+	},
+}
+local function round1(v) return math.floor(v * 10 + 0.5) / 10 end
+local gather, gatherPoints = {}, 0
+for id, o in pairs(db.Object) do
+	local name = type(o) == "table" and o[OK.name]
+	local kind = name and ((GATHER.herb[name] and "herb") or (GATHER.ore[name] and "ore"))
+	if kind and type(o[OK.spawns]) == "table" then
+		local spawns, any = {}, false
+		for area, list in pairs(o[OK.spawns]) do
+			local map = mapOf(area)
+			if map and type(list) == "table" then
+				local pts = spawns[map] or {}
+				for _, c in ipairs(list) do
+					if type(c) == "table" and c[1] and c[2] and c[1] >= 0 and c[2] >= 0 then
+						pts[#pts + 1] = round1(c[1])
+						pts[#pts + 1] = round1(c[2])
+					end
+				end
+				if #pts > 0 then spawns[map] = pts any = true gatherPoints = gatherPoints + #pts / 2 end
+			end
+		end
+		if any then gather[id] = { name, kind, GATHER[kind][name], spawns } end
+	end
+end
+
 -- Zone levels from the quests the data files under that zone and whose giver
 -- stands there, per side: the 10th to 90th percentile of quest levels, so a
 -- stray high or low quest does not stretch it. Side from the giver's
@@ -711,6 +762,7 @@ f:write("--     objectives = { { kind (m npc, o object, i item, k kill credit), 
 f:write("--   npcs[id]    = { name, minLevel, maxLevel, friendly (\"A\", \"H\", \"AH\" or nil), spawns }\n")
 f:write("--   objects[id] = { name, spawns }      spawns = { [uiMap] = { x, y, x, y, ... } }\n")
 f:write("--   items[id]   = { name, dropNpcs, dropObjects, vendors }\n")
+f:write("--   gather[id]  = { name, \"herb\" | \"ore\", skill, spawns }   herb and ore nodes, every spawn\n")
 f:write("--   zones[uiMap] = { alliance = { low, high, quests }, horde = { ... } } (quest levels, 10th-90th percentile)\n\n")
 f:write("local _, ns = ...\nlocal D = {}\nns.Data = D\n")
 f:write(("D.SOURCE = %q\n"):format("QuestieDB Forever " .. commit))
@@ -728,6 +780,8 @@ section("quests", quests)
 section("npcs", npcs)
 section("objects", objects)
 section("items", items)
+f:write("-- gather[objectId] = { name, \"herb\" | \"ore\", skill, spawns } (every spawn, map percent to 0.1)\n")
+section("gather", gather)
 f:write("-- gear[id] = { requiredLevel, itemLevel, class, subClass, rewardQuests, dropNpcs, vendors, worldDrop, dungeon,\n")
 f:write("--   craft = { skillLine, skill, spell, recipeItem, sod, bindsOnPickup } }\n")
 section("gear", gear)
@@ -751,3 +805,4 @@ f:close()
 
 local function count(t) local n = 0 for _ in pairs(t) do n = n + 1 end return n end
 log(("wrote %s: %d quests, %d npcs, %d objects, %d items, %d gear, %d zones, %d dungeons and raids"):format(OUT, count(quests), count(npcs), count(objects), count(items), count(gear), count(zones), count(dungeons)))
+log(("gathering: %d herb and ore objects, %d spawns"):format(count(gather), gatherPoints))

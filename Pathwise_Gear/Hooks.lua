@@ -214,6 +214,9 @@ S.RegisterEvent("QUEST_FINISHED", function() pick = nil end)
 
 ---------------------------------------------------------------------------
 
+-- Pathwise's quest automation takes this pick when Rewards is on.
+if S.SetRewardChooser then S.SetRewardChooser(function(links) return (H.BestChoice(links)) end) end
+
 S.On("READY", function()
 	H.InstallTooltip()
 	H.InstallBags()

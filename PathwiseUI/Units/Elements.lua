@@ -45,7 +45,7 @@ function U.MakeAuras(f, opts)
 		b:SetScript("OnEnter", function(self)
 			if not (GameTooltip and self.auraID) then return end
 			GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
-			local fn = opts.filter == "HARMFUL" and GameTooltip.SetUnitDebuffByAuraInstanceID or GameTooltip.SetUnitBuffByAuraInstanceID
+			local fn = opts.filter:find("HARMFUL") and GameTooltip.SetUnitDebuffByAuraInstanceID or GameTooltip.SetUnitBuffByAuraInstanceID
 			if fn then pcall(fn, GameTooltip, f.unit, self.auraID, self.filter) end
 			GameTooltip:Show()
 		end)
@@ -101,7 +101,7 @@ function U.UpdateAuras(f)
 					b.cd:Hide()
 				end
 			end
-			local c = a.opts.filter == "HARMFUL" and DISPEL[readable(data.dispelName) or ""] or nil
+			local c = a.opts.filter:find("HARMFUL") and DISPEL[readable(data.dispelName) or ""] or nil
 			if b.pwAura ~= data.auraInstanceID then
 				-- A new aura in this slot: it fades in.
 				b.pwAura = data.auraInstanceID

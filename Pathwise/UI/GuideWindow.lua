@@ -1,19 +1,23 @@
 -- Pathwise guide window, Signature style. Two layouts of one window:
---   full     header, 2 px progress line, current step (title, instructions,
---            coordinates, objectives), an optional detour card, "Then", and
---            the footer (Back, Skip, Report, Next)
+--   full     header (zone, step counter), a toolbar row, 2 px progress line, the step card (what to do right
+--            now: "Step 28", the action with its person or quest picked out,
+--            objective counts, coordinates), the steps from here as a
+--            numbered list with one line per action ("Talk to Gryan
+--            Stoutmantle", "Turn in ...", "Accept ..."), an optional detour
+--            card and the footer (Back, Skip, Report, Next)
 --   compact  one bar: title, current objective, step, distance, expand
 -- Switching layouts changes nothing in the route (the view comes from the
 -- guide engine either way).
 --
--- The window draws a *view*; it never reads quests itself. The guide engine
--- (not built yet) will provide it through Pathwise.Guide.View(); until then
--- the window shows its empty state, and /pw demo shows a labelled sample.
+-- The window draws a *view* from the guide engine (Engine.View); it never
+-- reads quests itself.
 --
 -- view = {
 --   route = "Tirisfal Glades", index = 6, count = 48, progress = 0.12,
 --   title, text, coords = "30.7, 64.2",
---   objectives = { { text, have, need, done }, ... },
+--   card = { line, ... },               what to do now (Engine.LinesOf's lines)
+--   steps = { { index, title, note, current, lines = { line, ... } }, ... },
+--   objectives = { { text, have, need, done }, ... }, (the compact bar)
 --   detour = { label = "Optional · Tailoring", text, sub } or nil,
 --   next = "Turn in ...",
 -- }
@@ -30,11 +34,11 @@ ns.Defaults("guide", {
 })
 
 local PAD = T.SPACE.l
-local MAX_OBJECTIVES = 10
 
 local W = {} -- widgets
 local view -- what the window shows
 local Guide = ns.Guide or {}
+Guide.TOOLS_H = 30 -- the toolbar row under the title
 ns.Guide = Guide
 Pathwise.Guide = Guide
 
@@ -45,12 +49,6 @@ Pathwise.Guide = Guide
 local function savePoint(f)
 	local p, _, _, x, y = f:GetPoint(1)
 	ns.Set("guide.point", { p, floor(x + 0.5), floor(y + 0.5) })
-end
-
-local function label(parent, text)
-	local fs = T.Text(parent, "label", "text2")
-	fs:SetText(text:upper())
-	return fs
 end
 
 local function build()
@@ -71,7 +69,7 @@ local function build()
 		f:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -60, -220)
 	end
 
-	-- Header: icon, name, route, counter, compact, close.
+	-- Header: icon, the route (zone) and the step counter; the buttons below.
 	local head = CreateFrame("Frame", nil, f)
 	W.head = head
 	head:SetPoint("TOPLEFT")
@@ -89,7 +87,37 @@ local function build()
 	W.name:SetText("Pathwise")
 	W.name:SetWordWrap(false)
 
-	W.close = T.IconButton(head, "close", "Close", function()
+	-- Top row: the zone (route) and the step counter. The buttons have a
+	-- row of their own under it, so the name has the whole width.
+	W.counter = T.Text(head, "small", "text2")
+	W.counter:SetPoint("RIGHT", -12, 0)
+	W.counter:SetJustifyH("RIGHT")
+	W.counter:SetWordWrap(false)
+	W.name:SetPoint("RIGHT", W.counter, "LEFT", -8, 0)
+	W.route = W.name
+
+	-- The toolbar: sync, dungeons, professions, zones and settings on the
+	-- left; compact and close on the right.
+	local tools = CreateFrame("Frame", nil, f)
+	W.tools = tools
+	tools:SetPoint("TOPLEFT", head, "BOTTOMLEFT", 0, 0)
+	tools:SetPoint("TOPRIGHT", head, "BOTTOMRIGHT", 0, 0)
+	tools:SetHeight(Guide.TOOLS_H)
+	tools:EnableMouse(true)
+	tools:RegisterForDrag("LeftButton")
+	tools:SetScript("OnDragStart", function() f:StartMoving() end)
+	tools:SetScript("OnDragStop", function() f:StopMovingOrSizing() savePoint(f) end)
+	W.sync = T.IconButton(tools, "sync", "Sync with your quest log", function() ns.Fire("GUIDE_SYNC") end)
+	W.sync:SetPoint("LEFT", 6, 0)
+	W.dungeons = T.IconButton(tools, "dungeon", "Dungeons for your level", function() ns.Fire("SHOW_DUNGEONS") end)
+	W.dungeons:SetPoint("LEFT", W.sync, "RIGHT", 2, 0)
+	W.prof = T.IconButton(tools, "prof", "Professions", function() ns.Fire("SHOW_PROFESSIONS") end)
+	W.prof:SetPoint("LEFT", W.dungeons, "RIGHT", 2, 0)
+	W.zones = T.IconButton(tools, "zones", "Zones for your level", function() ns.Fire("SHOW_ZONES") end)
+	W.zones:SetPoint("LEFT", W.prof, "RIGHT", 2, 0)
+	W.settings = T.IconButton(tools, "settings", "Settings", function() ns.Fire("SHOW_SETTINGS") end)
+	W.settings:SetPoint("LEFT", W.zones, "RIGHT", 2, 0)
+	W.close = T.IconButton(tools, "close", "Close", function()
 		ns.Set("guide.shown", false)
 		if not W.hinted then
 			W.hinted = true
@@ -98,56 +126,37 @@ local function build()
 		end
 	end)
 	W.close:SetPoint("RIGHT", -6, 0)
-	W.mode = T.IconButton(head, "collapse", "Compact mode", function() Guide.SetCompact(not ns.Get("guide.compact")) end)
+	W.mode = T.IconButton(tools, "collapse", "Compact mode", function() Guide.SetCompact(not ns.Get("guide.compact")) end)
 	W.mode:SetPoint("RIGHT", W.close, "LEFT", -2, 0)
-	W.settings = T.IconButton(head, "settings", "Settings", function() ns.Fire("SHOW_SETTINGS") end)
-	W.settings:SetPoint("RIGHT", W.mode, "LEFT", -2, 0)
-	W.zones = T.IconButton(head, "zones", "Zones for your level", function() ns.Fire("SHOW_ZONES") end)
-	W.zones:SetPoint("RIGHT", W.settings, "LEFT", -2, 0)
-	W.prof = T.IconButton(head, "prof", "Professions", function() ns.Fire("SHOW_PROFESSIONS") end)
-	W.prof:SetPoint("RIGHT", W.zones, "LEFT", -2, 0)
-	W.dungeons = T.IconButton(head, "dungeon", "Dungeons for your level", function() ns.Fire("SHOW_DUNGEONS") end)
-	W.dungeons:SetPoint("RIGHT", W.prof, "LEFT", -2, 0)
-	W.counter = T.Text(head, "small", "text2")
-	W.counter:SetPoint("RIGHT", W.dungeons, "LEFT", -6, 0)
-	W.counter:SetJustifyH("RIGHT")
-	W.counter:SetWordWrap(false)
-	W.route = T.Text(head, "meta", "text2")
-	W.route:SetPoint("LEFT", W.name, "RIGHT", 8, 0)
-	W.route:SetPoint("RIGHT", W.counter, "LEFT", -8, 0)
-	W.route:SetWordWrap(false)
 
 	W.progress = T.ProgressLine(f)
-	W.progress.track:SetPoint("TOPLEFT", head, "BOTTOMLEFT", 1, 0)
-	W.progress.track:SetPoint("TOPRIGHT", head, "BOTTOMRIGHT", -1, 0)
+	W.progress.track:SetPoint("TOPLEFT", tools, "BOTTOMLEFT", 1, 0)
+	W.progress.track:SetPoint("TOPRIGHT", tools, "BOTTOMRIGHT", -1, 0)
 
 	-- Body (full layout).
 	local body = CreateFrame("Frame", nil, f)
 	W.body = body
-	body:SetPoint("TOPLEFT", head, "BOTTOMLEFT", 0, -T.PROGRESS_H)
-	body:SetPoint("TOPRIGHT", head, "BOTTOMRIGHT", 0, -T.PROGRESS_H)
+	body:SetPoint("TOPLEFT", tools, "BOTTOMLEFT", 0, -T.PROGRESS_H)
+	body:SetPoint("TOPRIGHT", tools, "BOTTOMRIGHT", 0, -T.PROGRESS_H)
 
-	W.current = label(body, "Current")
-	W.title = T.Text(body, "quest", "text")
-	W.text = T.Text(body, "meta", "text2")
-	W.coords = T.Text(body, "small", "muted")
+	-- The step card: what to do right now.
+	local now = CreateFrame("Frame", nil, body)
+	W.now = now
+	T.Panel(now, "bg2", false)
+	now.accent = now:CreateTexture(nil, "ARTWORK")
+	now.accent:SetWidth(2)
+	now.accent:SetPoint("TOPLEFT", 0, 0)
+	now.accent:SetPoint("BOTTOMLEFT", 0, 0)
+	T.SetColor(now.accent, "accent")
+	now.label = T.Text(now, "label", "accent")
+	now.title = T.Text(now, "small", "text2")
+	now.title:SetJustifyH("RIGHT")
+	now.title:SetWordWrap(false)
+	now.coords = T.Text(now, "small", "muted")
+	now.lines = {}
 
-	W.objectives = {}
-	for i = 1, MAX_OBJECTIVES do
-		local row = CreateFrame("Frame", nil, body)
-		row:SetHeight(18)
-		row.dot = row:CreateTexture(nil, "ARTWORK")
-		row.dot:SetSize(10, 10)
-		row.dot:SetPoint("LEFT", 0, 0)
-		row.text = T.Text(row, "body", "text")
-		row.text:SetPoint("LEFT", row.dot, "RIGHT", 10, 0)
-		row.text:SetWordWrap(false)
-		row.count = T.Text(row, "meta", "text2")
-		row.count:SetPoint("RIGHT")
-		row.count:SetJustifyH("RIGHT")
-		row.text:SetPoint("RIGHT", row.count, "LEFT", -8, 0)
-		W.objectives[i] = row
-	end
+	-- The steps from here on, one line per action.
+	W.blocks = {}
 
 	W.divider = T.Divider(body)
 
@@ -161,9 +170,6 @@ local function build()
 	card.go = T.Button(card, "Go", "default", function() ns.Fire("DETOUR_GO", view and view.detour) end)
 	card.skip = T.IconButton(card, "close", "Skip this detour", function() ns.Fire("DETOUR_SKIP", view and view.detour) end, 20)
 
-	W.thenLabel = label(body, "Then")
-	W.thenText = T.Text(body, "meta", "text2")
-
 	-- Footer.
 	W.back = T.Button(f, "Back", "default", function() ns.Fire("GUIDE_BACK") end)
 	W.skip = T.Button(f, "Skip", "default", function() ns.Fire("GUIDE_SKIP") end)
@@ -172,6 +178,10 @@ local function build()
 
 	-- Empty state.
 	W.empty = T.Text(body, "meta", "text2")
+
+	-- The leveling tracker's line (Guide/Tracker.lua).
+	W.stats = T.Text(body, "small", "text2")
+	W.stats:SetWordWrap(false)
 
 	-- Compact bar.
 	local bar = CreateFrame("Button", nil, f)
@@ -220,44 +230,120 @@ local function height(fs)
 	return fs:IsShown() and max(0, fs:GetStringHeight() or 0) or 0
 end
 
-local function dot(row, done, info, optional)
-	if info then
-		-- An instruction (hearth, fly, train): a small muted dot, no tick.
-		row.dot:SetTexture(T.MEDIA .. "dot-done")
-		local c = T.Color("muted")
-		row.dot:SetVertexColor(c[1], c[2], c[3])
-		row.dot:SetSize(6, 6)
-		T.TextColor(row.text, "text2")
-		T.TextColor(row.count, "text2")
-		return
+---------------------------------------------------------------------------
+-- Action lines: an icon by kind, the text with its name picked out, a count
+---------------------------------------------------------------------------
+
+-- kind -> { texture, colour, size }
+local ICON = {
+	talk = { "glyph-talk", "text2", 12 },
+	accept = { "glyph-quest", "warning", 12 },
+	turnin = { "glyph-turnin", "warning", 12 },
+	complete = { "glyph-kill", "accent", 12 },
+	objective = { "dot-open", "accent", 7 },
+	["goto"] = { "glyph-goto", "text2", 12 },
+	have = { "glyph-bag", "text2", 12 },
+	bind = { "glyph-zones", "text2", 12 },
+	train = { "glyph-prof", "text2", 12 }, learn = { "glyph-prof", "text2", 12 },
+	craft = { "glyph-prof", "text2", 12 }, skill = { "glyph-prof", "text2", 12 },
+	level = { "glyph-upgrade", "text2", 12 },
+}
+local NOTE_ICON = { "dot-done", "muted", 5 }
+Guide.ICON = ICON
+
+local function hex(name)
+	local c = T.Color(name)
+	return ("|cff%02x%02x%02x"):format(floor(c[1] * 255 + 0.5), floor(c[2] * 255 + 0.5), floor(c[3] * 255 + 0.5))
+end
+
+-- The text of a line: "Talk to |cff..Simmer|r", the name in the accent while
+-- the line is still to do.
+function Guide.LineText(line)
+	local name = line.name or ""
+	if name ~= "" and not line.done then name = hex(line.kind == "talk" and "success" or "accent") .. name .. "|r" end
+	local text = (line.lead or "") .. name .. (line.tail or "")
+	if line.optional and not line.done then text = text .. "  (optional)" end
+	return text
+end
+
+local function lineWidget(pool, parent, i)
+	local w = pool[i]
+	if w then return w end
+	w = CreateFrame("Frame", nil, parent)
+	w.icon = w:CreateTexture(nil, "ARTWORK")
+	w.icon:SetPoint("TOPLEFT", 0, -2)
+	w.text = T.Text(w, "meta", "text")
+	w.text:SetPoint("TOPLEFT", 18, 0)
+	w.count = T.Text(w, "small", "text2")
+	w.count:SetPoint("TOPRIGHT", 0, -1)
+	w.count:SetJustifyH("RIGHT")
+	w.text:SetPoint("RIGHT", w.count, "LEFT", -6, 0)
+	pool[i] = w
+	return w
+end
+
+local function paintLine(w, line)
+	local spec = ICON[line.kind] or NOTE_ICON
+	if line.kind == "objective" and line.done then spec = { "dot-done", "success", 7 } end
+	w.icon:SetTexture(T.MEDIA .. spec[1])
+	w.icon:SetSize(spec[3], spec[3])
+	local c = T.Color(line.done and "success" or spec[2])
+	w.icon:SetVertexColor(c[1], c[2], c[3])
+	w.icon:SetAlpha(line.done and 0.7 or 1)
+	w.text:SetText(Guide.LineText(line))
+	T.TextColor(w.text, line.done and "muted" or ((line.info or line.optional) and "text2" or "text"))
+	w.count:SetText(line.need and ("%d/%d"):format(line.have or 0, line.need) or "")
+	T.TextColor(w.count, line.done and "muted" or "text2")
+	w.lineKind = line.kind
+end
+
+-- Lines one under another in `parent`, from `y` down, `inset` from its left
+-- and `right` from its right; -> the y under the last line.
+local function drawLines(pool, parent, lines, y, inset, right)
+	for i, line in ipairs(lines) do
+		local w = lineWidget(pool, parent, i)
+		w:Show()
+		paintLine(w, line)
+		w:ClearAllPoints()
+		w:SetPoint("TOPLEFT", parent, "TOPLEFT", inset, -y)
+		w:SetPoint("RIGHT", parent, "RIGHT", -right, 0)
+		local indent = line.kind == "objective" and 18 or 0
+		w.icon:ClearAllPoints()
+		w.icon:SetPoint("TOPLEFT", indent + (line.kind == "objective" and 3 or 0), line.kind == "objective" and -5 or -2)
+		w.text:ClearAllPoints()
+		w.text:SetPoint("TOPLEFT", 18 + indent, 0)
+		w.text:SetPoint("RIGHT", w.count, "LEFT", -6, 0)
+		local h = max(14, height(w.text))
+		w:SetHeight(h)
+		y = y + h + 3
 	end
-	row.dot:SetSize(10, 10)
-	if optional and not done then
-		row.dot:SetTexture(T.MEDIA .. "dot-open")
-		local c = T.Color("muted")
-		row.dot:SetVertexColor(c[1], c[2], c[3])
-		T.TextColor(row.text, "text2")
-		T.TextColor(row.count, "muted")
-		return
-	end
-	if done then
-		row.dot:SetTexture(T.MEDIA .. "dot-done")
-		local c = T.Color("success")
-		row.dot:SetVertexColor(c[1], c[2], c[3])
-		T.TextColor(row.text, "muted")
-		T.TextColor(row.count, "muted")
-	else
-		row.dot:SetTexture(T.MEDIA .. "dot-open")
-		local c = T.Color("accent")
-		row.dot:SetVertexColor(c[1], c[2], c[3])
-		T.TextColor(row.text, "text")
-		T.TextColor(row.count, "text2")
-	end
+	for i = #lines + 1, #pool do pool[i]:Hide() end
+	return y
+end
+Guide.MAX_LINES = 8 -- per listed step; the rest as "+N more"
+
+-- One step of the list: its number, title, note and lines.
+local function blockWidget(i)
+	local b = W.blocks[i]
+	if b then return b end
+	b = CreateFrame("Frame", nil, W.body)
+	b.num = T.Text(b, "label", "muted")
+	b.num:SetPoint("TOPRIGHT", 0, 0)
+	b.num:SetJustifyH("RIGHT")
+	b.title = T.Text(b, "label", "text2")
+	b.title:SetPoint("TOPLEFT", 0, 0)
+	b.title:SetPoint("RIGHT", b, "RIGHT", -24, 0)
+	b.title:SetWordWrap(false)
+	b.note = T.Text(b, "small", "warning")
+	b.lines = {}
+	W.blocks[i] = b
+	return b
 end
 
 local function layoutFull()
 	local f, body = W.frame, W.body
 	W.head:Show()
+	W.tools:Show()
 	W.body:Show()
 	W.bar:Hide()
 	W.barProgress.track:Hide()
@@ -267,11 +353,12 @@ local function layoutFull()
 	local y = PAD -- running height of the body
 
 	local has = view ~= nil
-	W.route:SetText(has and view.route or "")
+	W.route:SetText(has and view.route or "Pathwise")
 	W.counter:SetText(has and view.count and ("%d / %d"):format(view.index or 0, view.count) or "")
 	W.progress:SetProgress(has and view.progress or 0)
 
-	for _, fs in ipairs({ W.current, W.title, W.text, W.coords, W.thenLabel, W.thenText }) do fs:SetShown(has) end
+
+	W.now:SetShown(has)
 	W.empty:SetShown(not has)
 	W.back:SetShown(has)
 	W.skip:SetShown(has)
@@ -280,61 +367,99 @@ local function layoutFull()
 
 	if not has then
 		place(W.empty, body, y)
-		W.empty:SetText("No route for this character yet.\n\nOpen Zones for your level (the map button above) to pick one. Routes so far: Tirisfal Glades for Undead, levels 1-10.")
+		W.empty:SetText("No route for this character yet.\n\nOpen Zones for your level (the map button above) to pick one.")
 		local h = y + height(W.empty) + PAD
 		W.divider:Hide()
 		W.card:Hide()
-		for _, row in ipairs(W.objectives) do row:Hide() end
+		W.stats:Hide()
+		for _, b in ipairs(W.blocks) do b:Hide() end
 		body:SetHeight(h)
-		f:SetHeight(T.HEADER_H + T.PROGRESS_H + h)
+		f:SetHeight(T.HEADER_H + Guide.TOOLS_H + T.PROGRESS_H + h)
 		return
 	end
 
-	place(W.current, body, y)
-	y = y + height(W.current) + 6
-	W.title:SetText(view.title or "")
-	place(W.title, W.current, 6)
-	y = y + height(W.title) + 6
-	W.text:SetText(view.text or "")
-	place(W.text, W.title, 6)
-	y = y + height(W.text)
-	W.coords:SetText(view.coords or "")
-	W.coords:SetShown(view.coords ~= nil)
-	place(W.coords, W.text, 6)
-	y = y + (view.coords and (height(W.coords) + 6) or 0)
-
-	local anchor = view.coords and W.coords or W.text
-	local objs = view.objectives or {}
-	for i, row in ipairs(W.objectives) do
-		local o = objs[i]
-		if o then
-			row:Show()
-			row:ClearAllPoints()
-			row:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -(i == 1 and 12 or 6))
-			row:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
-			row.text:SetText((o.optional and not o.done) and ((o.text or "") .. "  (optional)") or (o.text or ""))
-			row.count:SetText(o.need and ("%d / %d"):format(o.have or 0, o.need) or "")
-			dot(row, o.done, o.info, o.optional)
-			y = y + 18 + (i == 1 and 12 or 6)
-			anchor = row
-		else
-			row:Hide()
-		end
+	-- The step card: "STEP 28", what to do now, where.
+	local now = W.now
+	now:ClearAllPoints()
+	now:SetPoint("TOPLEFT", body, "TOPLEFT", PAD, -y)
+	now:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
+	now.label:ClearAllPoints()
+	now.label:SetPoint("TOPLEFT", 12, -10)
+	now.label:SetText(view.index and ("Step %d"):format(view.index):upper() or (view.extra and "EXTRA QUEST" or "PATHWISE"))
+	now.title:ClearAllPoints()
+	now.title:SetPoint("TOPRIGHT", -10, -10)
+	now.title:SetPoint("LEFT", now.label, "RIGHT", 10, 0)
+	now.title:SetText(view.title or "")
+	local cardLines = view.card
+	if not cardLines or #cardLines == 0 then
+		cardLines = { { kind = "note", lead = view.text or view.title or "" } }
 	end
+	local cy = drawLines(now.lines, now, cardLines, 10 + max(12, height(now.label)) + 8, 12, 10)
+	now.coords:SetText(view.coords or "")
+	now.coords:SetShown(view.coords ~= nil)
+	now.coords:ClearAllPoints()
+	now.coords:SetPoint("TOPLEFT", now, "TOPLEFT", 30, -(cy + 2))
+	now.coords:SetPoint("RIGHT", now, "RIGHT", -10, 0)
+	if view.coords then cy = cy + 2 + height(now.coords) end
+	local nowH = cy + 8
+	now:SetHeight(nowH)
+	y = y + nowH + 12
 
-	y = y + 14
+	-- The steps from here: number, title, the current one's note, its lines.
+	local listed = view.steps or {}
+	for i, step in ipairs(listed) do
+		local b = blockWidget(i)
+		b:Show()
+		b:ClearAllPoints()
+		b:SetPoint("TOPLEFT", body, "TOPLEFT", PAD, -y)
+		b:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
+		b.num:SetText(("%02d"):format(step.index))
+		T.TextColor(b.num, step.current and "accent" or "muted")
+		-- The place's name where it changes (steps at one place follow each
+		-- other); the number on the right of every step.
+		local newPlace = i == 1 or (listed[i - 1].title ~= step.title)
+		b.title:SetShown(newPlace)
+		b.title:SetText(newPlace and (step.title or ""):upper() or "")
+		T.TextColor(b.title, step.current and "text" or "text2")
+		local by = newPlace and (max(12, height(b.title)) + 6) or 0
+		b.num:ClearAllPoints()
+		b.num:SetPoint("TOPRIGHT", b, "TOPRIGHT", 0, -by)
+		local showNote = step.note and step.note ~= ""
+		b.note:SetShown(showNote and true or false)
+		if showNote then
+			b.note:SetText(step.note)
+			if b.note.SetMaxLines then b.note:SetMaxLines(step.current and 0 or 2) end
+			b.note:ClearAllPoints()
+			b.note:SetPoint("TOPLEFT", b, "TOPLEFT", 0, -by)
+			b.note:SetPoint("RIGHT", b, "RIGHT", -24, 0)
+			by = by + height(b.note) + 4
+		end
+		local lines = step.lines or {}
+		if #lines > Guide.MAX_LINES then
+			local cut = {}
+			for k = 1, Guide.MAX_LINES - 1 do cut[k] = lines[k] end
+			cut[#cut + 1] = { kind = "note", lead = ("+%d more"):format(#lines - (Guide.MAX_LINES - 1)), info = true }
+			lines = cut
+		end
+		by = drawLines(b.lines, b, lines, by, 0, 24)
+		b:SetHeight(by)
+		b:SetAlpha(step.current and 1 or 0.75)
+		y = y + by + 8
+	end
+	for i = #listed + 1, #W.blocks do W.blocks[i]:Hide() end
+
 	W.divider:Show()
 	W.divider:ClearAllPoints()
-	W.divider:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -14)
+	W.divider:SetPoint("TOPLEFT", body, "TOPLEFT", PAD, -y)
 	W.divider:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
-	anchor = W.divider
+	y = y + 1
 
 	local d = view.detour
 	if d then
 		local card = W.card
 		card:Show()
 		card:ClearAllPoints()
-		card:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -12)
+		card:SetPoint("TOPLEFT", body, "TOPLEFT", PAD, -(y + 12))
 		card:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
 		card.skip:ClearAllPoints()
 		card.skip:SetPoint("RIGHT", -6, 0)
@@ -358,18 +483,18 @@ local function layoutFull()
 		local ch = 10 + height(card.label) + 3 + height(card.text) + 2 + height(card.sub) + 10
 		card:SetHeight(ch)
 		y = y + 12 + ch
-		anchor = card
 	else
 		W.card:Hide()
 	end
 
-	W.thenLabel:SetShown(view.next ~= nil)
-	W.thenText:SetShown(view.next ~= nil)
-	if view.next then
-		place(W.thenLabel, anchor, 14)
-		W.thenText:SetText(view.next)
-		place(W.thenText, W.thenLabel, 4)
-		y = y + 14 + height(W.thenLabel) + 4 + height(W.thenText)
+	local stats = ns.Tracker and ns.Tracker.Line()
+	W.stats:SetShown(stats ~= nil)
+	if stats then
+		W.stats:SetText(stats)
+		W.stats:ClearAllPoints()
+		W.stats:SetPoint("TOPLEFT", body, "TOPLEFT", PAD, -(y + 10))
+		W.stats:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
+		y = y + 10 + height(W.stats)
 	end
 
 	-- Footer: Back left; Skip, Report, Next right.
@@ -384,13 +509,14 @@ local function layoutFull()
 	W.skip:SetPoint("LEFT", W.back, "RIGHT", 8, 0)
 	local h = footY + W.next:GetHeight() + PAD
 	body:SetHeight(h)
-	f:SetHeight(T.HEADER_H + T.PROGRESS_H + h)
+	f:SetHeight(T.HEADER_H + Guide.TOOLS_H + T.PROGRESS_H + h)
 	f:SetWidth(width)
 end
 
 local function layoutCompact()
 	local f, bar = W.frame, W.bar
 	W.head:Hide()
+	W.tools:Hide()
 	W.body:Hide()
 	W.progress.track:Hide()
 	W.progress.fill:Hide()
@@ -445,6 +571,7 @@ ns.On("SETTING_CHANGED", function(path)
 	elseif path == "guide.compact" then Guide.Refresh() end
 end)
 ns.On("READY", function() if ns.Get("guide.shown") then Guide.Show(true) end end)
+ns.On("TRACKER_UPDATED", function() if W.frame and W.frame:IsShown() then Guide.Refresh() end end)
 
 -- The compact bar shows the arrow's distance when there is one.
 ns.On("WAYPOINT_CHANGED", function(target)

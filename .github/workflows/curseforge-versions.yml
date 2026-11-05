@@ -1,0 +1,24 @@
+# Lists CurseForge's WoW game versions, to pick the ids for the
+# CF_GAME_VERSIONS variable. Run it by hand: Actions > CurseForge versions >
+# Run workflow. Uses the CF_API_KEY secret; uploads nothing.
+
+name: CurseForge versions
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: List
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+        run: node tools/curseforge.js versions

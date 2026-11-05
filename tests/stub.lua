@@ -31,6 +31,9 @@ function Widget:Show() self.shown = true end
 function Widget:Hide() self.shown = false end
 function Widget:SetShown(on) self.shown = on and true or false end
 function Widget:IsShown() return self.shown end
+-- Secure attributes (the quest item button): kept, read back.
+function Widget:SetAttribute(k, v) local a = rawget(self, "attrs") or {} rawset(self, "attrs", a) a[k] = v end
+function Widget:GetAttribute(k) local a = rawget(self, "attrs") return a and a[k] end
 function Widget:SetWidth(w) self.w = w end
 function Widget:SetHeight(h) self.h = h end
 function Widget:SetSize(w, h) self.w, self.h = w, h end
@@ -101,6 +104,8 @@ function stub.slider(path)
 end
 
 function Widget:SetParent(p) self.parent = p end
+function Widget:SetID(id) rawset(self, "id", id) end
+function Widget:GetID() return rawget(self, "id") or 0 end
 function Widget:GetParent() return self.parent end
 
 function CreateFrame(kind, name, parent) return new(kind, name, parent) end
@@ -246,15 +251,26 @@ MerchantFrame = new("Frame", "MerchantFrame")
 UISpecialFrames = {}
 -- The game's bag functions, for hooksecurefunc to follow.
 stub.bagsOpened = 0
--- Like Forever's ContainerFrame.lua: the bag key's toggle opens the bags
--- through OpenAllBags when none of the game's own bags is open (and they
--- never are while Pathwise Bags shows its window).
-function OpenAllBags() stub.bagsOpened = stub.bagsOpened + 1 end
-function ToggleAllBags() OpenAllBags() end
+-- Like Forever's ContainerFrame.lua (Mainline, separate bags), with the
+-- game's own bags never open (Pathwise Bags hides them):
+--   ToggleAllBags -> OpenAllBagsInternal: OpenBackpack, then OpenBag 1-4
+--   OpenBackpack  -> ToggleBackpack -> ToggleBag(0)
+--   OpenAllBags   -> OpenAllBagsInternal (vendors, the mailbox)
+local function openAllInternal()
+	OpenBackpack()
+	for i = 1, 4 do OpenBag(i) end
+end
+function OpenAllBags() stub.bagsOpened = stub.bagsOpened + 1 openAllInternal() end
+function ToggleAllBags() openAllInternal() end
 function CloseAllBags() end
-function OpenBackpack() end
+function OpenBag() end
+function OpenBackpack() ToggleBackpack() end
 function CloseBackpack() end
-function ToggleBackpack() OpenBackpack() end
+function ToggleBackpack() ToggleBag(0) end
+function ToggleBag() end
+-- The game's clock: the same within one frame; tests move it on by hand.
+stub.now = 0
+function GetTime() return stub.now end
 
 -- Tooltips: TooltipDataProcessor keeps the post-calls; GameTooltip shows stub.tooltipLink.
 stub.postCalls, stub.tooltipLines = {}, {}
@@ -302,6 +318,14 @@ C_QuestLog = {
 	IsComplete = function(id) return stub.log[id] ~= nil and stub.log[id].ready == true end,
 	GetQuestObjectives = function(id) return stub.log[id] and stub.log[id].objectives or {} end,
 	GetTitleForQuestID = function() return nil end,
+	-- The log as the game lists it: one entry per quest, by id.
+	GetNumQuestLogEntries = function() local n = 0 for _ in pairs(stub.log) do n = n + 1 end return n end,
+	GetInfo = function(i)
+		local ids = {}
+		for id in pairs(stub.log) do ids[#ids + 1] = id end
+		table.sort(ids)
+		return ids[i] and { questID = ids[i], isHeader = false, isHidden = false } or nil
+	end,
 }
 function stub.accept(id, objectives)
 	stub.log[id] = { objectives = objectives or {}, ready = objectives == nil }
@@ -339,6 +363,20 @@ function stub.clickLabel(label)
 end
 
 -- Clicks the shown panel row (a "choice") whose text starts with `text`.
+-- A button in a settings row: the row's label, then the button's.
+function stub.clickInRow(rowLabel, label)
+	for _, f in ipairs(stub.frames) do
+		local t = rawget(f, "pwText")
+		local row = rawget(f, "parent")
+		local rl = type(row) == "table" and rawget(row, "label")
+		if t and t.text == label and f.shown and row and row.shown ~= false and type(rl) == "table" and rl.text == rowLabel then
+			f.scripts.OnClick(f)
+			return true
+		end
+	end
+	return false
+end
+
 function stub.clickLabelText(text)
 	for _, f in ipairs(stub.frames) do
 		local t = rawget(f, "text")

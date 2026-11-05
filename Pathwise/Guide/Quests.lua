@@ -76,8 +76,23 @@ end
 
 local turnedIn = {} -- this session; the completed flag can lag QUEST_TURNED_IN
 
+-- Quests the player marked done themselves (per character, saved).
+local function marked()
+	local c = ns.CharState and ns.CharState()
+	if not c then return {} end
+	c.questsDone = type(c.questsDone) == "table" and c.questsDone or {}
+	return c.questsDone
+end
+function Q.MarkDone(id, on) marked()[id] = on and true or nil end
+function Q.Marked()
+	local out = {}
+	for id in pairs(marked()) do out[#out + 1] = id end
+	table.sort(out)
+	return out
+end
+
 function Q.Done(id)
-	if turnedIn[id] then return true end
+	if turnedIn[id] or marked()[id] then return true end
 	local f = C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted
 	return f and ns.Compat.Readable(f(id)) and true or false
 end
