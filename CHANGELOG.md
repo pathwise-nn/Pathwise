@@ -6,6 +6,10 @@ that version's section.
 
 ## Unreleased
 
+### Releases
+- A release uploads to CurseForge only the addons that changed: one whose only
+  change is its new version number is skipped.
+
 ## 0.2.1 (2026-11-05)
 
 ### Pathwise: the guide follows the character you play
