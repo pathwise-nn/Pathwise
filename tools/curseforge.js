@@ -17,7 +17,10 @@
 //                         Without it, the game version named like the TOCs'
 //                         client (CF_GAME_VERSION_NAME, default 1.60.1) is used.
 //   CF_SINCE              optional: a git ref (the last release's tag); addons
-//                         whose folder did not change since it are not uploaded.
+//                         whose folder did not change since it (a new "## Version:"
+//                         line alone does not count) are not uploaded.
+//   CF_ONLY               optional: addon folders, comma-separated
+//                         (PathwiseUI,Pathwise_Heal); the others are not uploaded.
 //
 // The release type follows the version: 1.2.0 is a release, 1.2.0-beta.1 a
 // beta, anything else with a dash (1.2.0-dev) an alpha. The changelog is
@@ -30,8 +33,10 @@ const { version } = require('./pack.js');
 
 const ROOT = path.resolve(__dirname, '..');
 const API = 'https://wow.curseforge.com/api';
-const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI', 'Pathwise_Heal'];
+const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI', 'Pathwise_Heal', 'Pathwise_Encounters'];
 // The CurseForge projects (public ids; CF_PROJECT_<ADDON> overrides one).
+// Pathwise_Encounters has no project yet: it is skipped until it gets one
+// here or in CF_PROJECT_PATHWISE_ENCOUNTERS.
 const PROJECTS = { Pathwise: '1783619', Pathwise_Gear: '1784186', Pathwise_Bags: '1784179', PathwiseUI: '1785205', Pathwise_Heal: '1785207' };
 
 function fail(msg) {
@@ -85,23 +90,40 @@ async function gameVersions() {
 
 function projectVar(addon) { return `CF_PROJECT_${addon.toUpperCase()}`; }
 
-// Whether an addon's folder changed since a git ref (true without one).
-function changedSince(addon, ref) {
+// Whether an addon's folder changed since a git ref (true without one). A
+// TOC whose only change is its "## Version:" line does not count: a release
+// bumps every addon's version, and an addon with nothing else new is not
+// uploaded.
+function changedSince(addon, ref, cwd = ROOT) {
 	if (!ref) return true;
+	let diff;
 	try {
-		execFileSync('git', ['diff', '--quiet', ref, 'HEAD', '--', `${addon}/`], { cwd: ROOT, stdio: 'ignore' });
-		return false;
+		diff = execFileSync('git', ['diff', '-U0', '--no-color', '--no-ext-diff', ref, 'HEAD', '--', `${addon}/`],
+			{ cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
 	} catch {
 		return true;
 	}
+	let file = null;
+	for (const line of diff.split(/\r?\n/)) {
+		const header = line.match(/^diff --git a\/.* b\/(.*)$/);
+		if (header) { file = header[1]; continue; }
+		if (/^(index |--- |\+\+\+ |@@ )/.test(line) || line === '') continue;
+		// A changed line, a new, deleted or renamed file, or a binary change.
+		const versionLine = /\.toc$/i.test(file || '') && /^[+-]## Version:/.test(line);
+		if (!versionLine) return true;
+	}
+	return false;
 }
 
 // What to upload: { addon, project, file, name }, and why others are skipped.
 function plan(v) {
 	const out = [];
 	const skipped = [];
+	const only = (process.env.CF_ONLY || '').split(',').map((a) => a.trim()).filter(Boolean);
+	for (const a of only) if (!ADDONS.includes(a)) fail(`CF_ONLY: no addon "${a}" (${ADDONS.join(', ')})`);
 	for (const addon of ADDONS) {
 		if (!fs.existsSync(path.join(ROOT, addon))) continue;
+		if (only.length && !only.includes(addon)) { skipped.push(`${addon}: not in CF_ONLY`); continue; }
 		const project = process.env[projectVar(addon)] || PROJECTS[addon];
 		const file = path.join(ROOT, 'dist', `${addon}-${v}.zip`);
 		if (!project) skipped.push(`${addon}: no ${projectVar(addon)}`);
@@ -140,7 +162,12 @@ async function versions() {
 	for (const g of await allVersions()) console.log(`${g.id}\t${g.name}\t(type ${g.gameVersionTypeID})`);
 }
 
-const cmd = process.argv[2];
-if (cmd === 'versions') versions();
-else if (cmd === 'upload') upload(process.argv.includes('--dry-run'));
-else fail('usage: node tools/curseforge.js upload [--dry-run] | versions');
+function main() {
+	const cmd = process.argv[2];
+	if (cmd === 'versions') versions();
+	else if (cmd === 'upload') upload(process.argv.includes('--dry-run'));
+	else fail('usage: node tools/curseforge.js upload [--dry-run] | versions');
+}
+
+if (require.main === module) main();
+module.exports = { changedSince };

@@ -1,0 +1,54 @@
+# Uploads chosen addons of an earlier release to CurseForge, by hand:
+# Actions > CurseForge upload > Run workflow. For a project made after its
+# release (Pathwise UI and Pathwise Heal, after 0.2.0). The addons are packed
+# as they were at the tag, with that version's changelog; only the uploader
+# (tools/curseforge.js) is today's, for the project ids and CF_ONLY.
+# Uses the CF_API_KEY secret. Makes no GitHub release (the tag has one).
+
+name: CurseForge upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The release tag, e.g. v0.2.0"
+        required: true
+      addons:
+        description: "Addon folders, comma-separated, e.g. PathwiseUI,Pathwise_Heal"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: The addons as they were at the tag
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          case "$TAG" in v[0-9]*) ;; *) echo "Not a release tag: $TAG"; exit 1 ;; esac
+          git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null || { echo "No tag $TAG"; exit 1; }
+          git checkout "refs/tags/$TAG" -- .
+          git checkout "$GITHUB_SHA" -- tools/curseforge.js
+          v=$(node -e "console.log(require('./tools/pack.js').version())")
+          if [ "v$v" != "$TAG" ]; then echo "Tag $TAG does not match the TOC's version $v"; exit 1; fi
+
+      - name: Pack
+        run: node tools/pack.js
+
+      - name: Upload to CurseForge
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          CF_GAME_VERSIONS: ${{ vars.CF_GAME_VERSIONS }}
+          CF_ONLY: ${{ inputs.addons }}
+        run: node tools/curseforge.js upload

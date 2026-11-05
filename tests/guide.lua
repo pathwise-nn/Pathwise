@@ -673,6 +673,25 @@ test("minimap: projection by zoom, rotation and the rim", function()
 	near(y, 66, 1e-9)
 end)
 
+-- Forever's map stacks its own frames far above the canvas (level 2920 seen in
+-- game, with Pathwise's layer at 53, under them): the pins stay on top.
+test("world map pins: above the map's own frames, also ones made later", function()
+	local stub, ns = fixture()
+	local tiles = CreateFrame("Frame", nil, nil)
+	tiles:SetParent(stub.canvas)
+	tiles:SetFrameLevel(2920)
+	stub.mapShown = 1420
+	stub.advance(0.05)
+	local layer = ns.Pins.world.layer
+	ok(#shownPins(stub, layer) >= 1, "pins drawn")
+	ok(layer:GetFrameLevel() > 2920, "above the map's frames, got " .. layer:GetFrameLevel())
+	local later = CreateFrame("Frame", nil, nil)
+	later:SetParent(stub.canvas)
+	later:SetFrameLevel(3100)
+	stub.advance(1.1)
+	ok(layer:GetFrameLevel() > 3100, "above one made after the map opened, got " .. layer:GetFrameLevel())
+end)
+
 test("minimap pins: the step's places near the player; the arrow's target held to the rim", function()
 	local stub, ns = fixture()
 	local pins = shownPins(stub, Minimap)
@@ -1159,4 +1178,56 @@ test("accent: Pathwise blue, your class colour, or one you pick; the suite can f
 	ok(stub.clickLabel("Apply"))
 	eq(ns.Get("ui.accentColor"), "#7FD98F")
 	RAID_CLASS_COLORS = nil
+end)
+
+-- The guide follows the character played, never a route saved for another
+-- one: a saved route for another race, side or class is let go, and the
+-- route is chosen only once race, class and side can be read.
+local function saved(guide)
+	return function() PathwiseCharSettings = { schema = 1, guide = guide } end
+end
+
+test("character: a saved route for another race and side is replaced at login", function()
+	-- A Tauren whose saved file holds a Human's route (a deleted Human of the
+	-- same name, or a route picked by id).
+	local stub, ns = fresh()
+	stub.player.level, stub.player.race, stub.player.raceID, stub.player.class, stub.player.faction = 1, "Tauren", 6, "WARRIOR", "Horde"
+	saved({ route = "forever/alliance/human/01-elwynn-forest", layout = 2 })()
+	stub.moveTo(1412, 50, 50) -- Mulgore
+	stub.login()
+	eq(ns.Engine.Route().id, "forever/horde/tauren/01-mulgore", "the Tauren's own first route")
+end)
+
+test("character: sync lets go of a route that is not for this character", function()
+	local stub, ns = fresh()
+	stub.player.level, stub.player.race, stub.player.raceID, stub.player.class, stub.player.faction = 1, "Tauren", 6, "WARRIOR", "Horde"
+	stub.moveTo(1412, 50, 50) -- Mulgore
+	stub.login()
+	-- Chosen by id for another character (/pw route), then synced.
+	ns.Engine.SetRoute("forever/alliance/human/01-elwynn-forest")
+	local route = ns.Engine.Sync()
+	eq(route.id, "forever/horde/tauren/01-mulgore", "synced to the Tauren's route")
+end)
+
+test("character: a class route for another class is let go", function()
+	local stub, ns = fresh()
+	stub.player.level, stub.player.race, stub.player.raceID, stub.player.class, stub.player.faction = 10, "Tauren", 6, "WARRIOR", "Horde"
+	saved({ route = "forever/class/druid/bear-form", layout = 2 })()
+	stub.moveTo(1412, 50, 50) -- Mulgore
+	stub.login()
+	local r = ns.Engine.Route()
+	ok(r and ns.Engine.Fits(r, ns.Quests.Player()), "a route for a Tauren warrior, got " .. tostring(r and r.id))
+end)
+
+test("character: race and side not readable at login: no route is chosen until they are", function()
+	local stub, ns = fresh()
+	stub.player.level, stub.player.race, stub.player.raceID, stub.player.class, stub.player.faction = 1, nil, nil, "WARRIOR", nil
+	stub.moveTo(1412, 50, 50) -- Mulgore
+	stub.login()
+	local r = ns.Engine.Route()
+	ok(not r, "nothing chosen blind, got " .. tostring(r and r.id))
+	-- Readable a moment later: the next update picks the character's route.
+	stub.player.race, stub.player.raceID, stub.player.faction = "Tauren", 6, "Horde"
+	ns.Engine.Update()
+	eq(ns.Engine.Route() and ns.Engine.Route().id, "forever/horde/tauren/01-mulgore", "chosen once readable")
 end)

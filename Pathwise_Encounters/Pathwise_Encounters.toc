@@ -1,0 +1,26 @@
+## Interface: 16001
+## Title: Pathwise Encounters
+## Notes: A boss mod for WoW: Forever: boss timers and warnings for Molten Core and Onyxia, the game's own encounter timeline and warnings in the Pathwise look, pull and break timers, and a range check where Forever allows one. Works on its own.
+## Author: leight_nn & florp
+## Version: 0.2.1
+## SavedVariables: PathwiseEncountersSettings
+## SavedVariablesPerCharacter: PathwiseEncountersCharSettings
+## OptionalDeps: Pathwise, PathwiseUI, Pathwise_Heal
+## IconTexture: Interface\AddOns\Pathwise_Encounters\Media\icon
+## X-License: GPL-3.0-only
+
+Identity.lua
+Kit\Core.lua
+Kit\Theme.lua
+Kit\Anim.lua
+Kit\Widgets.lua
+Kit\Movers.lua
+Data\Raids.lua
+Encounters\Engine.lua
+Encounters\Bars.lua
+Encounters\Warnings.lua
+Encounters\Timeline.lua
+Encounters\Group.lua
+Kit\Options.lua
+Pages.lua
+Kit\Minimap.lua

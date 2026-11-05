@@ -18,6 +18,45 @@ that version's section.
   look; the game's own cast bar no longer shows on the experience bar. Unit
   frames options: over the action bars, under your frame, or the game's.
 
+### Pathwise: world map pins show again
+- The step numbers, the step's places, quest markers and dungeon entrances on
+  the world map were drawn under Forever's map (its own frames sit far higher
+  than Pathwise's pin layer did). The layer now stays above them.
+
+### Releases
+- A release uploads to CurseForge only the addons that changed: one whose only
+  change is its new version number is skipped.
+
+## 0.2.1 (2026-11-05)
+
+### Pathwise: the guide follows the character you play
+- A saved route for another race, side or class (from a deleted character of
+  the same name, or one picked with `/pw route`) is let go at login and on
+  Sync, and the route that suits this character is chosen instead. A side
+  guide for another character is let go too.
+- The first route is chosen only once the game lets the addon read race,
+  class and side; before, a character whose race and side could not be read
+  yet at login could be given the other side's route (Westfall for a Tauren).
+- Not checked in game.
+
+### Pathwise Encounters (new addon)
+- A boss mod for Forever, working with or without the other Pathwise addons:
+  `/pwenc` or its minimap button. Its CurseForge page is still to come.
+- Timer bars and "soon" warnings (big text and a sound) for every Molten Core
+  boss and Onyxia. Ragnaros' submerge is timed; Onyxia's phases are moved on
+  with `/pwenc phase 2` and `/pwenc phase 3`. Every other Forever raid boss is
+  recognised by name and fight time, with no timers yet.
+- The timers are estimates: Forever closes the combat log to addons and keeps a
+  boss's casts secret in a fight, so they count from the pull, using timings
+  from cmangos' GPL boss scripts that have not been timed on Forever.
+- The game's own encounter timeline and warnings, when Forever sends them, are
+  shown in the same bars and warnings. Pathwise's timers can be put on the
+  game's timeline too.
+- `/pwenc pull` (the game's group countdown), `/pwenc break` (a break bar sent
+  to the group) and `/pwenc range` (who is close, where the game allows it).
+  Each pull is kept: kill or wipe, and how long it took.
+- Not yet played in game: none of this has been checked on Forever.
+
 ## 0.2.0 (2026-11-05)
 
 ### Leveling, professions and the suite
