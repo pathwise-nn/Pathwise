@@ -100,6 +100,8 @@ function B.Build()
 	B.Bind()
 	B.Watch()
 	B.Fade()
+	-- Your cast bar sits over the topmost bar (Units/Frames.lua).
+	if ns.Units and ns.Units.PlaceCastbar then ns.Units.PlaceCastbar() end
 end
 
 -- Buttons in rows: so many per row, at your size and spacing.

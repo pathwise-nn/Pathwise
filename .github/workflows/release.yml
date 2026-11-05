@@ -2,7 +2,7 @@
 # that version to CurseForge, and attaches the zips to a GitHub release.
 #
 # CurseForge projects (tools/curseforge.js): Pathwise 1783619, Pathwise Gear
-# 1784186, Pathwise Bags 1784179. Only the addons whose folder changed since
+# 1784186, Pathwise Bags 1784179, Pathwise UI 1785205, Pathwise Heal 1785207. Only the addons whose folder changed since
 # the last release tag are uploaded. The game version is found by name
 # (1.60.1); a CF_GAME_VERSIONS variable overrides it.
 #

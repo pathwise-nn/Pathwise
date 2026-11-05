@@ -32,7 +32,7 @@ const ROOT = path.resolve(__dirname, '..');
 const API = 'https://wow.curseforge.com/api';
 const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI', 'Pathwise_Heal'];
 // The CurseForge projects (public ids; CF_PROJECT_<ADDON> overrides one).
-const PROJECTS = { Pathwise: '1783619', Pathwise_Gear: '1784186', Pathwise_Bags: '1784179' };
+const PROJECTS = { Pathwise: '1783619', Pathwise_Gear: '1784186', Pathwise_Bags: '1784179', PathwiseUI: '1785205', Pathwise_Heal: '1785207' };
 
 function fail(msg) {
 	console.error(msg);

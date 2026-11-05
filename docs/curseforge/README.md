@@ -52,7 +52,7 @@ For all five:
 
 | | Pathwise | Pathwise Gear | Pathwise Bags | Pathwise UI | Pathwise Heal |
 |---|---|---|---|---|---|
-| Summary | Every quest. Every craft. Every level. Leveling routes 1-60 and profession guides 1-300 for WoW: Forever. | Is this an upgrade for me? Upgrade arrows, tooltip advice, the best quest reward and Best in Slot (Level) for WoW: Forever. | One bag window that knows what you need: sorted bags, keep and junk marks, and junk selling for WoW: Forever. | Your whole interface, in your color: unit frames, action bars, tooltips, fonts and the game's windows for WoW: Forever. | Click-to-heal party and raid frames, like HealBot or VuhDo, with a preset for every healing spec, for WoW: Forever. |
+| Summary | Every quest. Every craft. Every level. Leveling routes 1-60 and profession guides 1-300 for WoW: Forever. | Is this an upgrade for me? Upgrade arrows, tooltip advice, the best quest reward and Best in Slot (Level) for WoW: Forever. | One bag window that knows what you need: sorted bags, keep and junk marks, and junk selling for WoW: Forever. | Your whole interface, in your color: unit frames, action bars, nameplates, tooltips and fonts for WoW: Forever. | Click-to-heal party and raid frames, like HealBot or VuhDo, with a preset for every healing spec, for WoW: Forever. |
 | Categories | Quests & Leveling; Professions | Bags & Inventory; Tooltip | Bags & Inventory | the closest to Unit Frames, Action Bars | the closest to Raid Frames, Healer, Unit Frames |
 | Relations | none | Pathwise: **Required Dependency** | Pathwise: **Required Dependency**; Pathwise Gear: **Optional Dependency** | Pathwise: **Optional Dependency** | Pathwise, Pathwise UI: **Optional Dependency** |
 

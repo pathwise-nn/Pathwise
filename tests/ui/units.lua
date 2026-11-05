@@ -29,19 +29,50 @@ test("unit frames: you and your target, clickable, in the Pathwise look", functi
 	ok(stub.watched[t], "the target frame shows and hides with the target (in combat too)")
 	ok(not stub.watched[p], "yours is always there")
 	eq(stub.shown(p.name), "Frozen")
-	eq(stub.shown(p.hp), "820", "your health, short")
+	eq(stub.shown(p.hp), "820 / 1.0k", "your health out of your most, so it says what it is")
 	eq(p.health.value, 820)
 	ok(p.power.value == 600, "your mana")
 	near(p.health.barColor[1], 0.25, 1e-6, "your bar in your class color")
+	ok(stub.shown(p.mark):find("LEVEL", 1, true), "the level over the frame, not against the name: " .. tostring(stub.shown(p.mark)))
+	ok(not p.level.shown, "no number beside the name")
+end)
+
+test("unit frames: slim (the default): name and health on the dark ground over slim bars", function()
+	local stub, ns = fresh()
+	local p = ns.Units.frames.player
+	eq(ns.Get("units.style"), "slim")
+	eq(p.name.parent, p, "the name on the frame, not on the bar")
+	ok((p.health.h or 0) <= 6, "a slim health bar: " .. tostring(p.health.h))
+	ok((p.power.h or 0) <= 3, "a thin power bar")
+	ok(not p.pp.shown, "no number on the thin bar")
+	near(p.health.barColor[1], 0.25, 1e-6, "the class color at full strength")
+end)
+
+test("unit frames: a light class color is drawn a shade deeper, so the text reads", function()
+	local _, ns = fresh()
+	local U = ns.Units
+	local white = U.Readable({ 1, 1, 1 })
+	ok(white[1] < 0.7 and math.abs(white[1] - white[2]) < 1e-9, "priest white: a grey white text reads on")
+	local mage = { 0.25, 0.78, 0.92 }
+	eq(U.Readable(mage), mage, "a mid color as it is")
+end)
+
+test("unit frames: full bars: the power number fits its bar and says how much of how much", function()
+	local stub, ns = fresh()
+	ns.Set("units.style", "full")
+	local p = ns.Units.frames.player
+	ok(p.pp.shown, "shown")
+	ok((p.power.h or 0) >= 12, "the bar is tall enough for the number: " .. tostring(p.power.h))
+	ok(tostring(stub.shown(p.pp)):find(" / ", 1, true), "current / most: " .. tostring(stub.shown(p.pp)))
 end)
 
 test("unit frames: secret health is passed on, never used in sums", function()
 	local stub, ns = fresh(withTarget)
 	local t = ns.Units.frames.target
 	ok(issecretvalue(t.health.value), "the bar holds the secret as it came")
-	eq(stub.shown(t.hp), "4.2k", "shortened by the game's AbbreviateNumbers, still secret-safe")
-	ns.Set("units.healthText", "both")
-	eq(stub.shown(t.hp), "4.2k / 5.0k")
+	eq(stub.shown(t.hp), "4.2k / 5.0k", "shortened by the game's AbbreviateNumbers, still secret-safe")
+	ns.Set("units.healthText", "current")
+	eq(stub.shown(t.hp), "4.2k")
 	near(t.health.barColor[1], ns.Theme.Hex("#E66B78")[1], 1e-6, "a hostile monster in red")
 end)
 
@@ -156,6 +187,7 @@ end)
 test("unit frames: names and numbers outlined in black, or a shadow when off", function()
 	local stub, ns = fresh()
 	local f = ns.Units.frames.player
+	ns.Set("units.style", "full") -- text on the bars: outlined; slim text sits on the dark ground
 	local flags = {}
 	local real = f.name.SetFont
 	f.name.SetFont = function(self, file, size, fl) flags[#flags + 1] = fl return true end
@@ -164,4 +196,27 @@ test("unit frames: names and numbers outlined in black, or a shadow when off", f
 	ns.Set("units.outline", true)
 	eq(flags[#flags], "OUTLINE", "outlined")
 	f.name.SetFont = real
+end)
+
+test("your cast bar: over the topmost action bar, the game's silenced; under your frame; or the game's", function()
+	local unregistered = false
+	local stub, ns = fresh(function()
+		PlayerCastingBarFrame = CreateFrame("StatusBar", "PlayerCastingBarFrame")
+		function PlayerCastingBarFrame:UnregisterAllEvents() unregistered = true end
+	end)
+	local U, B = ns.Units, ns.Bars
+	local cb = U.frames.player.castbar
+	local top = U.TopBar()
+	ok(top and B.bars[top.def.id] == top, "a bottom bar to sit on")
+	eq(cb.parent, UIParent, "off your frame")
+	eq(cb.points[1][2], top, "anchored to the topmost bar")
+	eq(cb.points[1][1], "BOTTOMLEFT")
+	ok(unregistered and not PlayerCastingBarFrame.shown, "the game's cast bar silenced, not moved")
+	ns.Set("units.castbarSpot", "frame")
+	eq(cb.parent, U.frames.player, "under your frame")
+	eq(cb.points[1][2], U.frames.player)
+	ns.Set("units.castbarSpot", "game")
+	stub.units.player.casting = { "Bolt of Linen Cloth" }
+	U.UpdateCast(U.frames.player)
+	ok(not cb.shown, "the game's: Pathwise's stays hidden")
 end)
