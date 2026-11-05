@@ -701,6 +701,12 @@ for _, g in pairs(gear) do
 	end
 end
 
+-- tools/data/loot.lua (Pathwise Loot) reads the corrected data from here:
+-- with PATHWISE_DATA_ONLY set, nothing is written.
+if PATHWISE_DATA_ONLY then
+	return { db = db, npcKeys = NK, itemKeys = IK, dungeons = dungeons, dungeonOfArea = dungeonOfArea }
+end
+
 ---------------------------------------------------------------------------
 -- Writing
 ---------------------------------------------------------------------------

@@ -6,6 +6,27 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Loot (new addon)
+- What every dungeon and raid boss in Forever drops, working with or without
+  the other Pathwise addons: `/pwloot` or its minimap button (right-click for
+  options). Its CurseForge page is still to come.
+- A loot browser: Forever's 39 dungeons and raids and their 338 bosses, from
+  the game's own boss list, each boss's drops with quality colors, slots and
+  levels, the game's item tooltip, and shift- and ctrl-click as in the game.
+  Search every boss's loot, filter by slot or by what your class can use, and
+  keep a wishlist per character.
+- Drops come from QuestieDB's Forever data (good for dungeons, thin for
+  raids, no drop chances) and from what you see drop: a boss's corpse, the
+  group's loot rolls and loot received are added to that boss as you play.
+- With Pathwise Gear: upgrade marks for your spec. Item tooltips say which
+  boss drops an item.
+- Nothing comes from AtlasLoot: its GPL-2.0 licence can't be combined with
+  Pathwise's GPL-3.0, and its data is not Forever's.
+- Not yet played in game.
+
+### Pathwise UI, Pathwise Heal, Pathwise Encounters
+- They share one accent color with Pathwise Loot too.
+
 ## 0.2.2 (2026-11-05)
 
 ### Pathwise: world map pins show again

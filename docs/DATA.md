@@ -50,6 +50,13 @@ Levels are the 10th to 90th percentile of the monsters' levels; a raid has
 three or more monsters above level 62. Entrances QuestieDB marks as
 unverified on Forever keep that mark, and the guide says so.
 
+## Pathwise Loot's data
+
+`npm run loot` builds `Pathwise_Loot/Data/Loot.lua` from the same QuestieDB
+sources (through `tools/data/build.lua`, which with `PATHWISE_DATA_ONLY` set
+hands its corrected data over and writes nothing) and Forever's client tables.
+See `docs/LOOT.md`.
+
 ## Known gaps
 
 - **Dynamic Corrections are not applied** (`LoadFactionFixes`,

@@ -17,7 +17,7 @@ Forever. Created by leight_nn & florp. `_nn`
 
 ## The Pathwise addons
 
-This repository holds six addons, each its own download:
+This repository holds seven addons, each its own download:
 
 | Addon | Folder | What it is |
 |---|---|---|
@@ -27,6 +27,7 @@ This repository holds six addons, each its own download:
 | Pathwise UI | `PathwiseUI/` | Unit frames, action bars, tooltips, fonts, the game's windows; works on its own ([docs/UI.md](docs/UI.md)) |
 | Pathwise Heal | `Pathwise_Heal/` | Click-to-heal party and raid frames with a preset for every healing spec; works on its own ([docs/HEAL.md](docs/HEAL.md)) |
 | Pathwise Encounters | `Pathwise_Encounters/` | A boss mod: boss timers and warnings, pull and break timers; works on its own ([docs/ENCOUNTERS.md](docs/ENCOUNTERS.md)) |
+| Pathwise Loot | `Pathwise_Loot/` | What every dungeon and raid boss drops: a loot browser, search, a wishlist; works on its own, upgrade marks with Pathwise Gear ([docs/LOOT.md](docs/LOOT.md)) |
 
 ## Try it
 
@@ -52,10 +53,12 @@ This repository holds six addons, each its own download:
 Needs Lua 5.1 (`lua5.1`) and Node 24 or newer.
 
 - `npm test` runs the tests (a stub of the game client; nothing here proves
-  in-game behaviour): Pathwise's (`tests/`), Pathwise UI's (`tests/ui/`) and
-  Pathwise Heal's (`tests/heal/`) and Pathwise Encounters' (`tests/encounters/`)
-- `npm run kit` copies Pathwise UI's shared files into Pathwise Heal and
-  Pathwise Encounters (`docs/HEAL.md`)
+  in-game behaviour): Pathwise's (`tests/`), Pathwise UI's (`tests/ui/`),
+  Pathwise Heal's (`tests/heal/`), Pathwise Encounters' (`tests/encounters/`)
+  and Pathwise Loot's (`tests/loot/`)
+- `npm run kit` copies Pathwise UI's shared files into Pathwise Heal,
+  Pathwise Encounters and Pathwise Loot (`docs/HEAL.md`)
+- `npm run loot` rebuilds Pathwise Loot's boss and drop data (`docs/LOOT.md`)
 - `npm run media` redraws the textures in `Pathwise/Media/`;
   `npm run media:ui` those in `PathwiseUI/Media/`
 - `node tools/pack.js` builds one release zip per addon in `dist/`
