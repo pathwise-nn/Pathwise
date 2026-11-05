@@ -32,6 +32,7 @@ assert(loadfile(ROOT .. "/tests/ui/ui.lua"))({ test = test, eq = eq, near = near
 assert(loadfile(ROOT .. "/tests/ui/units.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
 assert(loadfile(ROOT .. "/tests/ui/bars.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
 assert(loadfile(ROOT .. "/tests/ui/bottom.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
+assert(loadfile(ROOT .. "/tests/ui/plates.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
 
 for _, t in ipairs(tests) do
 	local okRun, err = pcall(t.fn)

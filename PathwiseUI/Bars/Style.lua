@@ -1,5 +1,6 @@
 -- The action buttons drawn the Pathwise way: a square icon on a dark slot
--- with a 1 px border, your accent on hover and on what is active, hotkeys
+-- with a 1 px border, your accent on hover and on what is active (every
+-- state drawn inside the border, the game's cast flourishes faded), hotkeys
 -- and stack counts in Inter. Only looks change: the game's own button code
 -- still decides what each button does, and no field it reads is written.
 
@@ -11,6 +12,24 @@ local styled = setmetatable({}, { __mode = "k" }) -- button -> our textures
 
 local function fade(region)
 	if type(region) == "table" and region.SetAlpha then region:SetAlpha(0) end
+end
+
+-- Inside the 1 px border. The game sizes its state art for its own 45 px
+-- frame, pinned top left (Forever's ActionButtonTemplate: 46 x 45, or the
+-- atlas size), so on our slot it would spill out of the square.
+local function inset(region)
+	if type(region) == "table" and region.ClearAllPoints then
+		region:ClearAllPoints()
+		region:SetPoint("TOPLEFT", 1, -1)
+		region:SetPoint("BOTTOMRIGHT", -1, 1)
+	end
+end
+
+local function tint(region, r, g, b, a)
+	if type(region) == "table" and region.SetColorTexture then
+		region:SetColorTexture(r, g, b, a)
+		inset(region)
+	end
 end
 
 local function font(fs, size, flags)
@@ -56,12 +75,22 @@ function B.Restyle(b)
 	fade(b.SlotBackground)
 	fade(b.FloatingBG)
 	local a = T.Color("accent")
-	local hl = b.GetHighlightTexture and b:GetHighlightTexture()
-	if type(hl) == "table" and hl.SetColorTexture then hl:SetColorTexture(a[1], a[2], a[3], 0.25) end
-	local ck = b.GetCheckedTexture and b:GetCheckedTexture()
-	if type(ck) == "table" and ck.SetColorTexture then ck:SetColorTexture(a[1], a[2], a[3], 0.35) end
-	local pu = b.GetPushedTexture and b:GetPushedTexture()
-	if type(pu) == "table" and pu.SetColorTexture then pu:SetColorTexture(1, 1, 1, 0.15) end
+	-- Hover, active (casting, toggled on), pressed: flat tints in the slot.
+	tint(b.GetHighlightTexture and b:GetHighlightTexture(), a[1], a[2], a[3], 0.25)
+	tint(b.GetCheckedTexture and b:GetCheckedTexture(), a[1], a[2], a[3], 0.35)
+	tint(b.GetPushedTexture and b:GetPushedTexture(), 1, 1, 1, 0.15)
+	-- Auto-attack / auto-shot flashing: a soft red in the slot.
+	tint(b.Flash, 0.9, 0.3, 0.35, 0.45)
+	-- A new action, a spell the game points out, an equipped item's border
+	-- (the game tints that one): white, in the slot.
+	tint(b.NewActionTexture, a[1], a[2], a[3], 0.3)
+	tint(b.SpellHighlightTexture, a[1], a[2], a[3], 0.3)
+	tint(b.Border, 1, 1, 1, 0.5)
+	-- The game's cast fill, interrupt and targeting flourishes are drawn for
+	-- its round-cornered frame: faded. Active shows in your accent instead.
+	fade(b.SpellCastAnimFrame)
+	fade(b.InterruptDisplay)
+	fade(b.TargetReticleAnimFrame)
 	font(b.Count, 12)
 	font(b.Name, 10)
 	if type(b.Name) == "table" and b.Name.SetAlpha then b.Name:SetAlpha(ns.Get("bars.macroNames") and 1 or 0) end

@@ -61,6 +61,26 @@ test("tray and bags: the game's own buttons in two Pathwise rows", function()
 	eq(CharacterMicroButton.parent, tray, "back in the tray")
 end)
 
+test("tray and bags: the tray left of the bag row, never over it", function()
+	local stub, ns = fresh(function(s) s.makeTray() end)
+	local tray, bags = _G.PathwiseUI_Tray, _G.PathwiseUI_BagBar
+	local p = tray.points[#tray.points]
+	eq(p[2], bags, "against the bag row")
+	eq(p[1], "BOTTOMRIGHT")
+	eq(p[3], "BOTTOMLEFT")
+	eq(p[4], -ns.Tray.GAP, "with a gap")
+	-- Bags off: the tray goes to its own corner place.
+	ns.Set("tray.bags", false)
+	p = tray.points[#tray.points]
+	eq(p[2], UIParent, "on its own")
+	-- Moved by the player: their place, bags or not.
+	ns.Set("tray.bags", true)
+	ns.Set("tray.microPoint", { "BOTTOM", "BOTTOM", 0, 100 })
+	p = tray.points[#tray.points]
+	eq(p[2], UIParent)
+	eq(p[5], 100)
+end)
+
 test("tray and bags: size, moving, off", function()
 	local stub, ns = fresh(function(s) s.makeTray() end)
 	local Tr = ns.Tray

@@ -68,6 +68,19 @@ C.CATEGORIES = {
 		}) do rows[#rows + 1] = r end
 		return rows
 	end },
+	{ key = "plates", name = "Nameplates", rows = function() return {
+		{ "heading", "Nameplates" },
+		{ "toggle", "Pathwise nameplates", "plates.enabled", "A slim bar over each monster and player in the game's own health colors, the name, your target framed in your color." },
+		{ "toggle", "Friendly ones too", "plates.friendly", "Where the game lets addons: friendly plates inside instances stay the game's." },
+		{ "slider", "Width", "plates.width", 80, 220, 2, "count" },
+		{ "slider", "Height", "plates.height", 6, 24, 1, "count" },
+		{ "slider", "Your target bigger by", "plates.targetScale", 1, 1.5, 0.05, "percent" },
+		{ "choice", "Health text", "plates.healthText", { key = "pht", { "None", "none" }, { "Current", "current" }, { "Percent", "percent" } } },
+		{ "toggle", "Enemy players in class color", "plates.classColors" },
+		{ "toggle", "Threat colors", "plates.threat", "Health in the game's threat colors, when the game shares threat. Off, as on the game's own plates." },
+		{ "toggle", "Cast bars", "plates.castbars" },
+		{ "toggle", "Your debuffs", "plates.debuffs" },
+	} end },
 	{ key = "bottom", name = "Tray, money, XP", rows = function()
 		local Tr = ns.Tray
 		return {
@@ -137,7 +150,6 @@ C.CATEGORIES = {
 	{ key = "next", name = "Coming next", rows = function() return {
 		{ "heading", "Coming next" },
 		{ "text", "Pathwise UI grows in stages, each one usable on its own:" },
-		{ "text", "4  Nameplates" },
 		{ "text", "5  Chat" },
 		{ "text", "6  Minimap" },
 		{ "text", "7  Data bars: gold, durability, latency, more (the experience bar and tray are in already)" },

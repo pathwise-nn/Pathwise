@@ -595,6 +595,29 @@ function ColorPickerFrame:GetColorRGB() return unpack(self.rgb) end
 function stub.pick(r, g, b) ColorPickerFrame.rgb = { r, g, b } ColorPickerFrame.info.swatchFunc() end
 function stub.cancelPick() ColorPickerFrame.shown = false ColorPickerFrame.info.cancelFunc() end
 
+-- Nameplates: stub.addPlate(unit, data, forbidden) makes the game's plate for a unit.
+stub.namePlates = {}
+function stub.addPlate(unit, data, forbidden)
+	stub.units[unit] = data
+	local plate = CreateFrame("Frame")
+	plate.namePlateUnitToken = unit
+	plate.UnitFrame = CreateFrame("Button", nil, plate)
+	function plate:IsForbidden() return forbidden or false end
+	stub.namePlates[unit] = plate
+	return plate
+end
+C_NamePlate = {
+	GetNamePlateForUnit = function(unit)
+		if unit == "target" then return stub.namePlates[stub.targetPlate or ""] end
+		return stub.namePlates[unit]
+	end,
+	GetNamePlates = function() local out = {} for _, p in pairs(stub.namePlates) do out[#out + 1] = p end return out end,
+}
+function UnitIsFriend(_, u) local x = stub.units[u] return x and x.friend or false end
+function UnitIsTapDenied(u) local x = stub.units[u] return x and x.tapped or false end
+function UnitThreatSituation(_, u) local x = stub.units[u] return x and x.threat end
+-- The game's threat colours by status (0 none, 1 and 2 slipping, 3 yours).
+function GetThreatStatusColor(s) local c = ({ [0] = { 0.69, 0.69, 0.69 }, { 1, 1, 0.47 }, { 1, 0.6, 0 }, { 1, 0, 0 } })[s] if c then return c[1], c[2], c[3] end end
 -- What a font string shows, a secret one too (the test reads it as the player would).
 function stub.shown(fs) return plain(fs.text) end
 
