@@ -226,20 +226,93 @@ end)
 test("bags window: the bag key opens it and the next press closes it", function()
 	local stub, ns, b = bags()
 	local W = b.Window
-	ToggleAllBags()
+	-- Each press in a frame of its own (the stub runs Forever's chain:
+	-- ToggleAllBags -> OpenBackpack -> ToggleBackpack -> ToggleBag(0)).
+	local function press(fn) stub.now = stub.now + 1 fn() end
+	press(ToggleAllBags)
 	ok(W.IsShown(), "first press: open")
-	ToggleAllBags()
+	press(ToggleAllBags)
 	ok(not W.IsShown(), "second press: closed")
-	ToggleAllBags()
+	press(ToggleAllBags)
 	ok(W.IsShown(), "third press: open again")
-	ToggleBackpack()
+	press(ToggleBackpack)
 	ok(not W.IsShown(), "the backpack key closes it too")
-	OpenAllBags()
+	press(OpenAllBags)
 	ok(W.IsShown(), "a vendor or mailbox opening the bags shows it")
-	OpenAllBags()
+	press(OpenAllBags)
 	ok(W.IsShown(), "and keeps it open")
-	CloseAllBags()
+	press(CloseAllBags)
 	ok(not W.IsShown(), "closing all bags closes it")
+end)
+
+test("bags window: the bag bar's tiles open it, not the game's bags", function()
+	local stub, ns, b = bags()
+	local W = b.Window
+	ToggleBag(0)
+	ok(W.IsShown(), "the backpack tile opens the Pathwise window")
+	stub.now = stub.now + 1
+	ToggleBag(2)
+	ok(not W.IsShown(), "a bag tile closes it again")
+	stub.now = stub.now + 1
+	ToggleBag(5)
+	ToggleBag(-2)
+	ok(not W.IsShown(), "the reagent bag and the keyring stay the game's")
+	ns.Set("bags.window", false)
+	stub.now = stub.now + 1
+	ToggleBag(0)
+	ok(not W.IsShown(), "window off: the game's bags")
+end)
+
+test("bags window: separate bags, where the backpack key runs ToggleBag itself", function()
+	local stub, ns, b = bags(function()
+		-- Forever's ToggleBackpack_Individual: the backpack through ToggleBag(0),
+		-- which builds a bag frame of the game's (no open hook runs).
+		function ToggleBag() end
+		function ToggleBackpack() ToggleBag(0) end
+	end)
+	local W = b.Window
+	ToggleBackpack()
+	ok(W.IsShown(), "one press: open, not opened and closed again")
+	stub.now = stub.now + 1
+	ToggleBackpack()
+	ok(not W.IsShown(), "the next press closes it")
+	stub.now = stub.now + 1
+	ToggleBag(1)
+	ok(W.IsShown(), "a bag tile opens it")
+	stub.now = stub.now + 1
+	ToggleBackpack()
+	ok(not W.IsShown(), "and the backpack key, a moment later, closes it")
+end)
+
+test("bags window: each item button is the game's for its own bag and slot (selling, tooltips)", function()
+	local stub, ns, b = bags(function()
+		-- Forever's ContainerFrameItemButtonMixin: Initialize(containerFrame, bag, slot).
+		local make = CreateFrame
+		function CreateFrame(kind, name, parent, template)
+			local f = make(kind, name, parent, template)
+			if template == "ContainerFrameItemButtonTemplate" then
+				function f:Initialize(containerFrame, bag, slot)
+					self.initialized = true
+					self.bagID = bag
+					self:SetID(slot)
+				end
+				function f:GetBagID() return rawget(self, "bagID") or self:GetParent():GetID() end
+			end
+			return f
+		end
+	end)
+	local W = b.Window
+	OpenAllBags()
+	local seen = 0
+	for _, f in ipairs(stub.frames) do
+		if rawget(f, "pwSlot") then
+			seen = seen + 1
+			eq(f:GetBagID(), f.pwBag, "the button's bag")
+			eq(f:GetID(), f.pwSlot, "the button's slot")
+			ok(not rawget(f, "initialized"), "Initialize left alone: nothing of ours on the game's button")
+		end
+	end
+	ok(seen >= 8, "every item has its button: " .. seen)
 end)
 
 test("panels: Back returns to the panel a suite addon was opened from", function()

@@ -176,6 +176,22 @@ First version of the independent Pathwise, released as a beta on CurseForge.
   the route resumes after it.
 - Zones for your level, and a Routes panel with leveling, class quest,
   reputation, mount, pet and exploration guides.
+- The guide window reads like you play: a "Step N" card with what to do right
+  now (the person or quest picked out in colour, objective counts), then the
+  steps ahead as a numbered list, one line per action ("Talk to ...",
+  "Accept ...", "Turn in ..."). Settings: how many steps are listed.
+- Automation, only for what the route asks (hold Shift to do it yourself):
+  accept and hand in the route's quests, take a reward when there is no
+  choice (or Pathwise Gear's pick, if you switch that on), fly where the step
+  says, set the hearthstone at the step's inn, and (off by default) learn
+  what the trainer has when the step is training. Each can be switched off.
+- A quest item button beside the guide for the item the step wants used,
+  with its own key binding.
+- A leveling tracker: XP per hour this session and time to your next level
+  in the guide window, and the time each level took (Settings > Leveling
+  tracker > Times).
+- Sync with your quest log, mark a quest or step done yourself, and quest
+  markers for every quest around you on the map and minimap.
 
 ### Pathwise Gear (new addon, part of the Pathwise suite)
 - Upgrade advice in gold: a line on item tooltips ("+12.4% upgrade · Head"),
@@ -240,6 +256,14 @@ First version of the independent Pathwise, released as a beta on CurseForge.
   page. Professions dashboard: skill, where the guide stands, the best craft now and
   how many the bags make, materials for this rank, disenchanting, and the
   Tailoring + Enchanting tip. Advice only.
+- Gathering guides for Herbalism and Mining: every Classic herb and ore node
+  (about 25,000, from QuestieDB's Forever data, with the skill each needs
+  from Forever's own tables) on the map and minimap in its skill-up colour,
+  for the gathering professions you have; the profession's page lists the
+  zones with the most skill-ups for your skill and level, and a click sets
+  the arrow there. Forever's new herbs and ores have no node data yet; nodes
+  in Mulgore, Eastern Plaguelands, Redridge and Stormwind are marked as not
+  checked on Forever.
 
 ### No commands needed
 - A minimap button (guide, settings; drag to move), key bindings in the

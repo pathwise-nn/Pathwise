@@ -75,4 +75,11 @@ function S.RegisterModule(def)
 	return true
 end
 function S.Modules() return modules end
+
+-- Quest rewards: a suite addon (Pathwise Gear) can offer to pick one.
+-- fn(links) -> the index to take, or nil. Pathwise's quest automation asks
+-- it when a quest has a choice and Rewards is on.
+local chooser
+function S.SetRewardChooser(fn) chooser = type(fn) == "function" and fn or nil end
+function S.RewardChooser() return chooser end
 ns.Suite = S

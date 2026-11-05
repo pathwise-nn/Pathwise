@@ -238,6 +238,95 @@ test("class quests: a mage gets the Glyphic Scroll, not the warrior's or warlock
 	ok(not contains(texts, "Simple Scroll"), "no warrior scroll")
 end)
 
+test("waypoints you are past do not hold the route: the quest log is what counts", function()
+	local stub, ns = login()
+	ok(Pathwise.RegisterRoute({
+		id = "test/waypoints", title = "Waypoints (test)", category = "Leveling", map = 1420,
+		levels = { 1, 6 }, faction = "Horde", races = { "Scourge" },
+		steps = {
+			{ { "accept", 363 } },
+			{ title = "Walk to Sarvis", { "goto", 1420, 30.8, 66.2, "The crypt door" } },
+			{ { "accept", 364 } },
+			{ title = "Quests and waypoints", { "complete", 364 }, { "goto", 1420, 26, 60, "The field" }, { "goto", 1420, 25, 59, "The far end" } },
+			{ { "turnin", 364 } },
+		},
+	}), "registers")
+	ns.Engine.SetRoute("test/waypoints")
+	eq(ns.Engine.LiveStep(), 1)
+	stub.accept(363)
+	eq(ns.Engine.LiveStep(), 2, "nothing further done yet: the walk still shows")
+	stub.accept(364, { { text = "Mindless Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false } })
+	eq(ns.Engine.LiveStep(), 4, "a quest further on is taken: the walk is behind you")
+	stub.progress(364, 1, 8)
+	ns.Engine.Update()
+	eq(ns.Engine.LiveStep(), 5, "the quest is done: its waypoints do not hold the step")
+end)
+
+test("sync: the guide's button and /pw sync bring it in line with the quest log", function()
+	local stub, ns = fixture()
+	-- The button in the title bar, by its glyph.
+	local button
+	for _, f in ipairs(stub.frames) do
+		local icon = rawget(f, "pwIcon")
+		local tex = icon and rawget(icon, "texture")
+		if type(tex) == "string" and tex:find("glyph%-sync") then button = f end
+	end
+	ok(button, "a sync button in the guide")
+	-- Paged ahead with Next: sync lets go of it.
+	ns.Engine.Next()
+	ns.Engine.Next()
+	ok(ns.Engine.CurrentStep() ~= ns.Engine.LiveStep(), "paged ahead")
+	button.scripts.OnClick(button)
+	eq(ns.Engine.CurrentStep(), ns.Engine.LiveStep(), "back on the live step")
+	ok(lastPrint(stub):find("synced with your quest log: Deathknell %(test%), step 1 of"), lastPrint(stub))
+	eq(ns.Engine.Route().id, FIXTURE.id, "a route still open is kept")
+	-- A finished route: sync moves on to the one that suits the character.
+	-- (The fixture's own last steps ask for items and a level: a one-step
+	-- route stands in for it, its quest handed in.)
+	stub.done[363] = true
+	local route = ns.Engine.Route()
+	local saved = route.steps
+	route.steps = { { { "accept", 363 } } }
+	SlashCmdList.PATHWISE("sync")
+	ok(ns.Engine.Route().id ~= FIXTURE.id, "finished: on to " .. tostring(ns.Engine.Route() and ns.Engine.Route().id))
+	ok(lastPrint(stub):find("now on"), lastPrint(stub))
+	route.steps = saved
+end)
+
+test("an item to fetch is behind you once a quest further on is done (Samuel's Remains)", function()
+	local stub, ns = login()
+	ok(Pathwise.RegisterRoute({
+		id = "test/item", title = "Item (test)", category = "Leveling", map = 1420,
+		levels = { 1, 6 }, faction = "Horde", races = { "Scourge" },
+		steps = {
+			{ title = "Fetch the remains", { "have", 16333, 1, name = "Samuel's Remains" } },
+			{ { "accept", 363 } },
+			{ { "turnin", 363 } },
+		},
+	}), "registers")
+	ns.Engine.SetRoute("test/item")
+	eq(ns.Engine.LiveStep(), 1, "not had yet: fetch it")
+	stub.accept(363)
+	eq(ns.Engine.LiveStep(), 3, "a quest further on done: the item step is behind you")
+end)
+
+test("done by you: a quest, or a whole step, and back again", function()
+	local stub, ns = fixture()
+	eq(ns.Engine.LiveStep(), 1)
+	ns.Panels.Open("skip")
+	ok(stub.clickLabelText("I've already done it"), "the Skip panel offers it")
+	ok(ns.Quests.Done(363), "counts as handed in")
+	eq(ns.Engine.LiveStep(), 2, "on to the quest after it")
+	ok(lastPrint(stub):find("marked .* done"), lastPrint(stub))
+	ns.Panels.Open("skip")
+	ok(stub.clickLabelText("This step is done"), "and the whole step")
+	eq(ns.Engine.LiveStep(), 3, "the step behind you")
+	eq(ns.Engine.Marked(), 2, "two marks")
+	ns.Engine.ClearMarked()
+	eq(ns.Engine.LiveStep(), 1, "brought back: the game's word again")
+	ok(not ns.Quests.Done(363))
+end)
+
 test("a quest not offered yet does not hold the route, which comes back for it", function()
 	local stub, ns = fixture(function(s) s.player.level = 1 end)
 	stub.accept(363) stub.turnin(363) stub.accept(364, {})
@@ -266,10 +355,21 @@ test("have, bind, notes and optional goals", function()
 		if r.text == "Hearth to Brill" then info = r.info end
 	end
 	ok(contains(texts, "Get 10 Linen Cloth (0)"), table.concat(texts, " | "))
+	-- One action per step: the cloth first, then the inn with its note and
+	-- the optional graveyard.
+	stub.items[2589] = 10
+	stub.fire("BAG_UPDATE_DELAYED")
+	v = ns.Guide.View()
+	eq(v.title, "Gear up", "the same place, its next step")
+	texts = {}
+	for _, r in ipairs(v.objectives) do
+		texts[#texts + 1] = r.text
+		if r.text == "The graveyard" then optional = r.optional end
+		if r.text == "Hearth to Brill" then info = r.info end
+	end
 	ok(contains(texts, "Make Brill your home"), "bind")
 	ok(info, "a note row, marked as an instruction")
 	ok(optional, "optional goal marked")
-	stub.items[2589] = 10
 	stub.bind = "Brill"
 	stub.fire("BAG_UPDATE_DELAYED")
 	ok(ns.Guide.View().title ~= "Gear up", "items and hearthstone done: the optional goto does not hold the step")
@@ -492,13 +592,65 @@ test("world map pins: drawn on the map shown, the same size at any zoom, read-on
 	stub.advance(0.05)
 	near(lead.scale, 0.5, 1e-9, "zoomed in: the pin keeps its size on screen")
 	near(lead.points[1][4], 1000 * 30.22 / 100 * 2, 0.01, "and its place")
-	stub.mapShown = 1411 -- Durotar: nothing of this step there
+	stub.mapShown = 1411 -- Durotar: nothing of this step there, only quests to take
 	stub.advance(0.05)
-	eq(#shownPins(stub, layer), 0)
+	for _, f in ipairs(shownPins(stub, layer)) do
+		ok(f.pin.kind == "available" or f.pin.kind == "availableLow", "a quest marker, not the step's: " .. tostring(f.pin.kind))
+	end
 	ns.Set("pins.map", false)
 	stub.mapShown = 1420
 	stub.advance(0.05)
 	eq(#shownPins(stub, layer), 0, "switched off in Settings")
+end)
+
+test("quest markers: givers, hand-ins and objectives for every quest around you", function()
+	local stub, ns = login()
+	local M, Q = ns.QuestMarkers, ns.Quests
+	local function find(kind, text)
+		for _, p in ipairs(M.ForMap(1420)) do
+			if p.kind == kind and (not text or (p.title or ""):find(text, 1, true) or (p.sub or ""):find(text, 1, true)) then return p end
+		end
+	end
+	local damned = Q.Name(363)
+	local giver = find("available", damned)
+	ok(giver, "a ! for " .. damned)
+	eq(giver.title, "Undertaker Mordo", "at its giver")
+	ok(giver.sub:find("Quests to take", 1, true), giver.sub)
+	-- Taken and ready: no ! for it, a ? at its finisher.
+	stub.accept(363)
+	ok(not find("available", damned), "taken: no ! for it")
+	local hand = find("turnin", damned)
+	ok(hand, "a ? to hand it in")
+	eq(hand.title, "Shadow Priest Sarvis")
+	-- A quest with objectives left: dots where its monsters are.
+	stub.accept(364, { { text = "Mindless Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false },
+		{ text = "Wretched Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false } })
+	ok(find("objective", "Mindless Zombie"), "objective spots")
+	stub.progress(364, 1, 8)
+	stub.progress(364, 2, 8)
+	ok(not find("objective", "Mindless Zombie"), "finished: no more dots")
+	ok(find("turnin", Q.Name(364)), "and a ? instead")
+end)
+
+test("quest markers: low-level quests hidden unless asked; switched off in Settings", function()
+	local stub, ns = login(function(s) s.player.level = 20 end)
+	local M = ns.QuestMarkers
+	local function count(kind)
+		local n = 0
+		for _, p in ipairs(M.ForMap(1420)) do if p.kind == kind then n = n + 1 end end
+		return n
+	end
+	local damned = ns.Quests.Name(363)
+	for _, p in ipairs(M.ForMap(1420)) do
+		ok(not (p.kind == "available" and (p.sub or ""):find(damned, 1, true)), "level 20: the level 1 quests are not shown")
+	end
+	ns.Set("pins.lowLevel", true)
+	ok(count("availableLow") > 0, "asked for: shown, in grey")
+	ns.Set("pins.quests", false)
+	ns.Set("pins.questsMinimap", false)
+	for _, p in ipairs(ns.Pins.PinsFor(1420, "pins.quests", false)) do
+		ok(p.kind ~= "available" and p.kind ~= "availableLow" and p.kind ~= "turnin" and p.kind ~= "objective", "off: no quest markers")
+	end
 end)
 
 test("minimap: projection by zoom, rotation and the rim", function()
@@ -855,8 +1007,12 @@ test("settings panel: sliders, compact and arrow toggles", function()
 	near(ns.Get("arrow.scale"), 1.5, 1e-9, "arrow size slider")
 	ok(stub.clickLabel("Turn on"), "compact toggle")
 	eq(ns.Get("guide.compact"), true)
-	ok(stub.clickLabel("Hide"), "arrow toggle")
+	ok(stub.clickInRow("Quest item button", "Hide"), "quest item button toggle")
+	eq(ns.Get("itemButton.shown"), false)
+	ok(stub.clickInRow("Show the arrow", "Hide"), "arrow toggle")
 	eq(ns.Get("arrow.shown"), false)
+	ok(stub.clickInRow("Accept and hand in quests", "Turn off"), "automation toggle")
+	eq(ns.Get("auto.quests"), false)
 end)
 
 test("window size slider: the guide shrinks as it moves, saved, steps of 5%", function()

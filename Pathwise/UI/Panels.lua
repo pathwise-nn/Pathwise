@@ -590,6 +590,11 @@ function builders.skip()
 	for i, q in ipairs(quests) do
 		if i > 1 then rows[#rows + 1] = { "divider" } end
 		rows[#rows + 1] = { "title", Q.Name(q) }
+		rows[#rows + 1] = { "choice", "I've already done it", "Counts as handed in: the quests after it come up", function()
+			E.MarkQuestDone(q)
+			ns.Print(("marked %s done."):format(Q.Name(q)))
+			Panels.Refresh()
+		end }
 		rows[#rows + 1] = { "choice", "Skip just this quest", "Its follow-ups stay in the route", function()
 			E.SkipQuest(q, false)
 			ns.Print(("skipped %s."):format(Q.Name(q)))
@@ -598,6 +603,14 @@ function builders.skip()
 		rows[#rows + 1] = { "choice", "Skip it and its follow-ups", "The whole chain leaves the route", function()
 			local list = E.SkipQuest(q, true)
 			ns.Print(("skipped %s and %d follow-up%s."):format(Q.Name(q), #list - 1, #list == 2 and "" or "s"))
+			Panels.Refresh()
+		end }
+	end
+	if E.CurrentStep() and not E.Extra() then
+		rows[#rows + 1] = { "divider" }
+		rows[#rows + 1] = { "choice", "This step is done", "Everything on it, items and places too: on to the next", function()
+			E.MarkStepDone()
+			ns.Print("step marked done.")
 			Panels.Refresh()
 		end }
 	end
@@ -870,6 +883,33 @@ function builders.profession()
 			end }
 	end
 
+	-- Herbalism and Mining: the zones with the most skill-ups for your rank.
+	local G = ns.Gathering
+	local gk = G and G.BY_KEY[prof.key]
+	if gk then
+		rows[#rows + 1] = { "heading", "Where to gather now" }
+		local zones = G.BestZones(gk, k.rank, nil, 5)
+		if #zones == 0 then
+			rows[#rows + 1] = { "text", "Nothing left that gives you skill: every node is grey to you.", "muted" }
+		end
+		for _, z in ipairs(zones) do
+			local bits = {}
+			for j = 1, math.min(3, #z.nodes) do bits[#bits + 1] = ("%d %s"):format(z.nodes[j].count, z.nodes[j].name) end
+			local about = table.concat(bits, ", ")
+			if z.unchecked then about = about .. "  ·  not checked on Forever" end
+			local levels = z.low and (" (%d-%d)"):format(z.low, z.high) or ""
+			rows[#rows + 1] = { "choice", z.name .. levels, about, function()
+				local spot = G.Spot(z.map, gk, k.rank)
+				if spot then
+					ns.Nav.SetTarget(z.map, spot.x, spot.y, ("%s, %s"):format(spot.name, z.name))
+					ns.Print(("the arrow leads to %s in %s."):format(spot.name, z.name))
+				end
+			end }
+		end
+		rows[#rows + 1] = { "text", "Click a zone for the arrow. Every node that still gives you skill is on your map and minimap in its colour: orange always, yellow often, green seldom (Settings > Map pins).", "muted" }
+		rows[#rows + 1] = { "text", "Forever's new herbs and ores (Bauxite, Pyrite, Demonsage...) aren't in the data yet.", "muted" }
+	end
+
 	-- Disenchanting and the Tailoring tip, on the Enchanting page.
 	if prof.line == 333 then
 		local list = P.Disenchantable(k.rank)
@@ -1070,6 +1110,36 @@ local function toggle(path)
 end
 local function onOff(v) return v and "On" or "Off" end
 
+-- The leveling tracker: this session's pace and every level's time.
+function builders.leveling()
+	local K = ns.Tracker
+	local s = K.Stats()
+	local rows = {
+		{ "heading", "Leveling" },
+		{ "heading", "This session" },
+		{ "setting", "XP gained", tostring(s.gained), {} },
+		{ "setting", "XP per hour", s.xpPerHour and ("%d"):format(s.xpPerHour) or "after a minute", {} },
+		{ "setting", "To the next level", s.secondsToLevel and K.Duration(s.secondsToLevel) or "-", {} },
+		{ "setting", "Rested XP", tostring(s.rested), {} },
+		{ "setting", "At this level", K.Duration(s.levelSeconds), {} },
+		{ "heading", "Time per level" },
+	}
+	local levels = K.Levels()
+	if #levels == 0 then
+		rows[#rows + 1] = { "text", "Each level's time shows here once you reach the next one with Pathwise on.", "muted" }
+	end
+	local total = 0
+	for _, l in ipairs(levels) do
+		total = total + l.seconds
+		rows[#rows + 1] = { "setting", ("Level %d"):format(l.level), K.Duration(l.seconds), {} }
+	end
+	if #levels > 1 then rows[#rows + 1] = { "setting", "In all", K.Duration(total), {} } end
+	rows[#rows + 1] = { "text", "Counted while you play with Pathwise on; /played sets the current level right.", "muted" }
+	rows[#rows + 1] = { "divider" }
+	rows[#rows + 1] = { "setting", "Start again", "", { { "Clear", function() K.Reset() Panels.Refresh() end } } }
+	return rows
+end
+
 function builders.settings()
 	local E = ns.Engine
 	local route = E.Route()
@@ -1080,6 +1150,19 @@ function builders.settings()
 		{ "slider", "Window size", "ui.scale", 0.5, 1.5, 0.05, pct },
 		{ "slider", "Background opacity", "ui.opacity", 0.4, 1, 0.05, pct },
 		{ "setting", "Compact mode", onOff(ns.Get("guide.compact")), { { ns.Get("guide.compact") and "Turn off" or "Turn on", toggle("guide.compact") } } },
+		{ "slider", "Steps listed", "guide.ahead", 1, 12, 1, function(v) return ("%d"):format(v) end, "count" },
+		{ "setting", "Quest item button", onOff(ns.Get("itemButton.shown")), { { ns.Get("itemButton.shown") and "Hide" or "Show", toggle("itemButton.shown") } } },
+		{ "text", "The item the step wants used, beside the guide. Shift-drag it to move; a key for it is in Key Bindings > Pathwise.", "muted" },
+		{ "setting", "Leveling tracker", onOff(ns.Get("tracker.shown")), { { ns.Get("tracker.shown") and "Hide" or "Show", toggle("tracker.shown") }, { "Times", function() Panels.Open("leveling") end } } },
+		{ "heading", "Automation" },
+		{ "text", "Only for what the route asks. Hold Shift when you talk to someone to do it yourself.", "muted" },
+		{ "setting", "Accept and hand in quests", onOff(ns.Get("auto.quests")), { { ns.Get("auto.quests") and "Turn off" or "Turn on", toggle("auto.quests") } } },
+		{ "setting", "Pick rewards", onOff(ns.Get("auto.rewards")), { { ns.Get("auto.rewards") and "Turn off" or "Turn on", toggle("auto.rewards") } } },
+		{ "text", "With a choice of rewards, take the one Pathwise Gear recommends (Gear needed). A single reward is always taken.", "muted" },
+		{ "setting", "Fly where the step says", onOff(ns.Get("auto.fly")), { { ns.Get("auto.fly") and "Turn off" or "Turn on", toggle("auto.fly") } } },
+		{ "setting", "Set your hearthstone", onOff(ns.Get("auto.bind")), { { ns.Get("auto.bind") and "Turn off" or "Turn on", toggle("auto.bind") } } },
+		{ "setting", "Train at trainers", onOff(ns.Get("auto.train")), { { ns.Get("auto.train") and "Turn off" or "Turn on", toggle("auto.train") } } },
+		{ "text", "When the step is training: learns everything the trainer has that you can afford.", "muted" },
 	}
 	-- Colour: the accent, for Pathwise and (if chosen) the whole suite.
 	local mode = ns.Get("ui.accentMode") or "pathwise"
@@ -1123,6 +1206,14 @@ function builders.settings()
 		{ "setting", "On the world map", onOff(ns.Get("pins.map")), { { ns.Get("pins.map") and "Hide" or "Show", toggle("pins.map") } } },
 		{ "setting", "On the minimap", onOff(ns.Get("pins.minimap")), { { ns.Get("pins.minimap") and "Hide" or "Show", toggle("pins.minimap") } } },
 		{ "setting", "Dungeon entrances", onOff(ns.Get("pins.dungeons")), { { ns.Get("pins.dungeons") and "Hide" or "Show", toggle("pins.dungeons") } } },
+		{ "setting", "Herbs and ore on the map", onOff(ns.Get("pins.gather")), { { ns.Get("pins.gather") and "Hide" or "Show", toggle("pins.gather") } } },
+		{ "setting", "Herbs and ore on the minimap", onOff(ns.Get("pins.gatherMinimap")), { { ns.Get("pins.gatherMinimap") and "Hide" or "Show", toggle("pins.gatherMinimap") } } },
+		{ "text", "For Herbalism and Mining: the nodes that still give you skill, in their colour.", "muted" },
+		{ "setting", "Step numbers on the map", onOff(ns.Get("pins.stepNumbers")), { { ns.Get("pins.stepNumbers") and "Hide" or "Show", toggle("pins.stepNumbers") } } },
+		{ "slider", "Steps numbered ahead", "pins.stepCount", 1, 20, 1, function(v) return ("%d"):format(v) end, "count" },
+		{ "setting", "Quest markers on the map", onOff(ns.Get("pins.quests")), { { ns.Get("pins.quests") and "Hide" or "Show", toggle("pins.quests") } } },
+		{ "setting", "Quest markers on the minimap", onOff(ns.Get("pins.questsMinimap")), { { ns.Get("pins.questsMinimap") and "Hide" or "Show", toggle("pins.questsMinimap") } } },
+		{ "setting", "Low-level quests", onOff(ns.Get("pins.lowLevel")), { { ns.Get("pins.lowLevel") and "Hide" or "Show", toggle("pins.lowLevel") } } },
 		{ "heading", "Route" },
 		{ "setting", route and route.title or "No route", "", { { "Routes", function() Panels.Open("routes") end }, { "Zones", function() Panels.Open("zones") end } } },
 		{ "setting", "Side guide", E.Side() and E.Side().title or "None", E.Side() and { { "Stop", function() E.SetSide(nil) Panels.Refresh() end } } or {} },
@@ -1142,6 +1233,10 @@ function builders.settings()
 		{ "setting", "Skipped quests", tostring(skippedN), skippedN > 0 and { { "Bring back", function()
 			for _, q in ipairs(E.Skipped()) do E.State().skipped[q] = nil end
 			E.Update()
+			Panels.Refresh()
+		end } } or {} },
+		{ "setting", "Marked done by you", tostring(E.Marked()), E.Marked() > 0 and { { "Bring back", function()
+			E.ClearMarked()
 			Panels.Refresh()
 		end } } or {} },
 		{ "divider" },

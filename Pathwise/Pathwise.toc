@@ -16,9 +16,13 @@ Nav\Waypoint.lua
 Nav\Arrow.lua
 Guide\Quests.lua
 Guide\Engine.lua
+Guide\Automate.lua
+Guide\Tracker.lua
 Guide\Dungeons.lua
+Nav\QuestMarkers.lua
 Nav\Pins.lua
 UI\GuideWindow.lua
+UI\ItemButton.lua
 UI\Panels.lua
 UI\MinimapButton.lua
 Routes\Leveling.lua
@@ -26,5 +30,6 @@ Routes\Class.lua
 Routes\Professions.lua
 Routes\Other.lua
 Professions\Professions.lua
+Professions\Gathering.lua
 Core\Commands.lua
 Core\Suite.lua

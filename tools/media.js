@@ -318,6 +318,76 @@ T['glyph-bag'] = () => {
 	paint(c, stroke(arch, 2.2));
 	return c;
 };
+// Sync: two arrows chasing round a circle.
+T['glyph-sync'] = () => {
+	const c = canvas(32);
+	const arc = (from, to) => {
+		const pts = [];
+		for (let k = 0; k <= 12; k++) {
+			const a = from + ((to - from) * k) / 12;
+			pts.push([16 + 9 * Math.cos(a), 16 - 9 * Math.sin(a)]);
+		}
+		return pts;
+	};
+	const deg = (d) => (d * Math.PI) / 180;
+	paint(c, stroke(arc(deg(160), deg(20)), 2.4)); // over the top, left to right
+	paint(c, stroke(arc(deg(-20), deg(-160)), 2.4)); // under, right to left
+	// Arrowheads at the ends: right end points down, left end points up.
+	const head = (d, dir) => {
+		const x = 16 + 9 * Math.cos(deg(d)), y = 16 - 9 * Math.sin(deg(d));
+		return polygon([[x - 4.5, y], [x + 4.5, y], [x, y + 5 * dir]]);
+	};
+	paint(c, head(20, 1));
+	paint(c, head(200, -1));
+	return c;
+};
+// Turn in: a question mark (the hook and the dot), next to glyph-quest's "!".
+T['glyph-turnin'] = () => {
+	const c = canvas(32);
+	const hook = [];
+	for (let k = 0; k <= 14; k++) {
+		const a = Math.PI - (k * 1.45 * Math.PI) / 14; // from the left, over the top, round to lower right
+		hook.push([16 + 6.5 * Math.cos(a), 11 - 6.5 * Math.sin(a)]);
+	}
+	hook.push([16, 18.5], [16, 21]);
+	paint(c, stroke(hook, 3.6));
+	paint(c, disc(16, 26.5, 2.4));
+	return c;
+};
+// Talk to: a speech bubble with a tail at the lower left.
+T['glyph-talk'] = () => {
+	const c = canvas(32);
+	const pts = [];
+	for (let k = 0; k < 32; k++) {
+		const a = (k * 2 * Math.PI) / 32;
+		pts.push([16 + 11 * Math.cos(a), 14 - 8 * Math.sin(a)]);
+	}
+	paint(c, stroke(pts, 2.4, true));
+	paint(c, polygon([[9, 19], [14, 21], [7, 27]]), 1);
+	return c;
+};
+// Kill or complete: crosshairs, a ring and four ticks.
+T['glyph-kill'] = () => {
+	const c = canvas(32);
+	paint(c, ring(16, 16, 8, 2.4));
+	paint(c, stroke([[16, 3], [16, 10]], 2.4));
+	paint(c, stroke([[16, 22], [16, 29]], 2.4));
+	paint(c, stroke([[3, 16], [10, 16]], 2.4));
+	paint(c, stroke([[22, 16], [29, 16]], 2.4));
+	return c;
+};
+// Go to: a map pin, a round head narrowing to a point.
+T['glyph-goto'] = () => {
+	const c = canvas(32);
+	const pts = [];
+	for (let k = 0; k <= 20; k++) {
+		const a = Math.PI * (-0.2 + (1.4 * k) / 20);
+		pts.push([16 + 8 * Math.cos(a), 13 - 8 * Math.sin(a)]);
+	}
+	pts.push([16, 29]);
+	paint(c, polygon(pts), 1);
+	return c;
+};
 T['glyph-search'] = () => {
 	const c = canvas(32);
 	paint(c, ring(14, 14, 7, 2.4));

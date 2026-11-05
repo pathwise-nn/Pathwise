@@ -5,4 +5,5 @@
 	<Binding name="PATHWISE_DUNGEONS" category="ADDONS">Pathwise.Binding("dungeons")</Binding>
 	<Binding name="PATHWISE_SETTINGS" category="ADDONS">Pathwise.Binding("settings")</Binding>
 	<Binding name="PATHWISE_REPORT" category="ADDONS">Pathwise.Binding("report")</Binding>
+	<Binding name="CLICK PathwiseItemButton:LeftButton" category="ADDONS"/>
 </Bindings>
