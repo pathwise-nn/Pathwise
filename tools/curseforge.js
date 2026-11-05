@@ -18,6 +18,8 @@
 //                         client (CF_GAME_VERSION_NAME, default 1.60.1) is used.
 //   CF_SINCE              optional: a git ref (the last release's tag); addons
 //                         whose folder did not change since it are not uploaded.
+//   CF_ONLY               optional: addon folders, comma-separated
+//                         (PathwiseUI,Pathwise_Heal); the others are not uploaded.
 //
 // The release type follows the version: 1.2.0 is a release, 1.2.0-beta.1 a
 // beta, anything else with a dash (1.2.0-dev) an alpha. The changelog is
@@ -32,7 +34,7 @@ const ROOT = path.resolve(__dirname, '..');
 const API = 'https://wow.curseforge.com/api';
 const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI', 'Pathwise_Heal'];
 // The CurseForge projects (public ids; CF_PROJECT_<ADDON> overrides one).
-const PROJECTS = { Pathwise: '1783619', Pathwise_Gear: '1784186', Pathwise_Bags: '1784179' };
+const PROJECTS = { Pathwise: '1783619', Pathwise_Gear: '1784186', Pathwise_Bags: '1784179', PathwiseUI: '1785205', Pathwise_Heal: '1785207' };
 
 function fail(msg) {
 	console.error(msg);
@@ -100,8 +102,11 @@ function changedSince(addon, ref) {
 function plan(v) {
 	const out = [];
 	const skipped = [];
+	const only = (process.env.CF_ONLY || '').split(',').map((a) => a.trim()).filter(Boolean);
+	for (const a of only) if (!ADDONS.includes(a)) fail(`CF_ONLY: no addon "${a}" (${ADDONS.join(', ')})`);
 	for (const addon of ADDONS) {
 		if (!fs.existsSync(path.join(ROOT, addon))) continue;
+		if (only.length && !only.includes(addon)) { skipped.push(`${addon}: not in CF_ONLY`); continue; }
 		const project = process.env[projectVar(addon)] || PROJECTS[addon];
 		const file = path.join(ROOT, 'dist', `${addon}-${v}.zip`);
 		if (!project) skipped.push(`${addon}: no ${projectVar(addon)}`);
