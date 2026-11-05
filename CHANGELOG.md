@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.2 (2026-11-05)
+
 ### Pathwise: world map pins show again
 - The step numbers, the step's places, quest markers and dungeon entrances on
   the world map were drawn under Forever's map (its own frames sit far higher
