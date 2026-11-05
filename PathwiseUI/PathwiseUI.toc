@@ -1,0 +1,33 @@
+## Interface: 16001
+## Title: Pathwise UI
+## Notes: Your whole game interface in the Pathwise look, in your color: unit frames, action bars, tooltips, fonts, the game's windows, and more to come. Works on its own or with Pathwise.
+## Author: leight_nn & florp
+## Version: 0.1.1
+## SavedVariables: PathwiseUISettings
+## SavedVariablesPerCharacter: PathwiseUICharSettings
+## OptionalDeps: Pathwise
+## IconTexture: Interface\AddOns\PathwiseUI\Media\icon
+## X-License: GPL-3.0-only
+
+Core.lua
+Theme.lua
+Anim.lua
+Widgets.lua
+Movers.lua
+Skins\Tooltip.lua
+Skins\FontNames.lua
+Skins\Fonts.lua
+Skins\Windows.lua
+Units\Units.lua
+Units\Elements.lua
+Units\Frames.lua
+Bars\Bars.lua
+Bars\Style.lua
+Bottom\XPBar.lua
+Bottom\Tray.lua
+Bottom\Money.lua
+Healing\Heal.lua
+Healing\Clicks.lua
+Healing\Heal.xml
+Config.lua
+Minimap.lua
