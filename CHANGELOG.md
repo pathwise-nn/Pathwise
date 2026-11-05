@@ -6,6 +6,16 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: the guide follows the character you play
+- A saved route for another race, side or class (from a deleted character of
+  the same name, or one picked with `/pw route`) is let go at login and on
+  Sync, and the route that suits this character is chosen instead. A side
+  guide for another character is let go too.
+- The first route is chosen only once the game lets the addon read race,
+  class and side; before, a character whose race and side could not be read
+  yet at login could be given the other side's route (Westfall for a Tauren).
+- Not checked in game.
+
 ### Pathwise Encounters (new addon)
 - A boss mod for Forever, working with or without the other Pathwise addons:
   `/pwenc` or its minimap button. Its CurseForge page is still to come.
