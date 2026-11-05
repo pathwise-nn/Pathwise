@@ -155,11 +155,30 @@ Pins.PinsFor = pinsFor
 local wm = { pins = {}, active = 0 }
 Pins.world = wm
 
+-- The layer sits above every other frame on the canvas: Forever's map stacks
+-- its own frames far above the canvas (level 2920 seen in game), so a fixed
+-- level put the pins under the map. Only Pathwise's own layer is changed.
+local MAX_LEVEL = 9000
+local function raiseWorld(canvas)
+	local layer = wm.layer
+	local top = canvas:GetFrameLevel() or 0
+	for _, f in ipairs({ canvas:GetChildren() }) do
+		if f ~= layer then
+			local l = f.GetFrameLevel and f:GetFrameLevel()
+			if type(l) == "number" and l > top then top = l end
+		end
+	end
+	local want = math.min(top + 10, MAX_LEVEL)
+	if layer:GetFrameLevel() ~= want then layer:SetFrameLevel(want) end
+end
+Pins.RaiseWorld = raiseWorld
+
 local function drawWorld()
 	local map = WorldMapFrame
 	if not (wm.layer and map and map:IsShown()) then return end
 	local id = map:GetMapID()
 	local canvas = map:GetCanvas()
+	raiseWorld(canvas)
 	local w, h = canvas:GetWidth() or 0, canvas:GetHeight() or 0
 	local scale = map.GetCanvasScale and map:GetCanvasScale() or 1
 	if not scale or scale <= 0 then scale = 1 end
@@ -199,7 +218,14 @@ local function attachWorld()
 	layer:SetAllPoints(canvas)
 	layer:SetFrameLevel((canvas:GetFrameLevel() or 1) + 50)
 	wm.layer = layer
-	layer:SetScript("OnUpdate", function()
+	local since = 0
+	layer:SetScript("OnUpdate", function(_, elapsed)
+		-- The map makes frames as it is used: checked again once a second.
+		since = since + (elapsed or 0)
+		if since >= 1 then
+			since = 0
+			raiseWorld(canvas)
+		end
 		local id = map:GetMapID()
 		local s = map.GetCanvasScale and map:GetCanvasScale() or 1
 		if id ~= wm.mapID or s ~= wm.scale or canvas:GetWidth() ~= wm.width or wm.dirty then

@@ -673,6 +673,25 @@ test("minimap: projection by zoom, rotation and the rim", function()
 	near(y, 66, 1e-9)
 end)
 
+-- Forever's map stacks its own frames far above the canvas (level 2920 seen in
+-- game, with Pathwise's layer at 53, under them): the pins stay on top.
+test("world map pins: above the map's own frames, also ones made later", function()
+	local stub, ns = fixture()
+	local tiles = CreateFrame("Frame", nil, nil)
+	tiles:SetParent(stub.canvas)
+	tiles:SetFrameLevel(2920)
+	stub.mapShown = 1420
+	stub.advance(0.05)
+	local layer = ns.Pins.world.layer
+	ok(#shownPins(stub, layer) >= 1, "pins drawn")
+	ok(layer:GetFrameLevel() > 2920, "above the map's frames, got " .. layer:GetFrameLevel())
+	local later = CreateFrame("Frame", nil, nil)
+	later:SetParent(stub.canvas)
+	later:SetFrameLevel(3100)
+	stub.advance(1.1)
+	ok(layer:GetFrameLevel() > 3100, "above one made after the map opened, got " .. layer:GetFrameLevel())
+end)
+
 test("minimap pins: the step's places near the player; the arrow's target held to the rim", function()
 	local stub, ns = fixture()
 	local pins = shownPins(stub, Minimap)
