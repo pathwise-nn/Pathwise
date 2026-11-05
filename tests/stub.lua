@@ -107,6 +107,19 @@ function Widget:SetParent(p) self.parent = p end
 function Widget:SetID(id) rawset(self, "id", id) end
 function Widget:GetID() return rawget(self, "id") or 0 end
 function Widget:GetParent() return self.parent end
+-- Frame levels: one set, else one above the parent's (as the client does).
+function Widget:SetFrameLevel(l) rawset(self, "level", l) end
+function Widget:GetFrameLevel()
+	local l = rawget(self, "level")
+	if l then return l end
+	local p = rawget(self, "parent")
+	return p and p:GetFrameLevel() + 1 or 0
+end
+function Widget:GetChildren()
+	local out = {}
+	for _, f in ipairs(stub.frames) do if rawget(f, "parent") == self then out[#out + 1] = f end end
+	return unpack(out)
+end
 
 function CreateFrame(kind, name, parent) return new(kind, name, parent) end
 UIParent = new("Frame", "UIParent")

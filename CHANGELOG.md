@@ -6,6 +6,11 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: world map pins show again
+- The step numbers, the step's places, quest markers and dungeon entrances on
+  the world map were drawn under Forever's map (its own frames sit far higher
+  than Pathwise's pin layer did). The layer now stays above them.
+
 ### Releases
 - A release uploads to CurseForge only the addons that changed: one whose only
   change is its new version number is skipped.
