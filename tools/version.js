@@ -1,5 +1,5 @@
 'use strict';
-// Sets Pathwise's version everywhere it is written: the TOC's ## Version,
+// Sets Pathwise's version everywhere it is written: each addon's TOC ## Version,
 // package.json, and a new CHANGELOG.md section made from "Unreleased".
 //
 //   node tools/version.js 0.2.0
@@ -16,8 +16,11 @@ if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/.test(v || '')) {
 	process.exit(2);
 }
 
-const toc = path.join(ROOT, 'Pathwise', 'Pathwise.toc');
-fs.writeFileSync(toc, fs.readFileSync(toc, 'utf8').replace(/^## Version:.*$/m, `## Version: ${v}`));
+// Every addon of the release zip (tools/pack.js) carries the same version.
+for (const addon of ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags']) {
+	const toc = path.join(ROOT, addon, `${addon}.toc`);
+	fs.writeFileSync(toc, fs.readFileSync(toc, 'utf8').replace(/^## Version:.*$/m, `## Version: ${v}`));
+}
 
 const pkgPath = path.join(ROOT, 'package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
@@ -32,4 +35,4 @@ if (!log.includes('## Unreleased')) {
 	process.exit(1);
 }
 fs.writeFileSync(logPath, log.replace('## Unreleased', `## Unreleased\n\n## ${v} (${today})`));
-console.log(`version ${v}: Pathwise.toc, package.json, CHANGELOG.md`);
+console.log(`version ${v}: Pathwise, Pathwise_Gear and Pathwise_Bags TOCs, package.json, CHANGELOG.md`);

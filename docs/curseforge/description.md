@@ -5,6 +5,12 @@
 A free, open-source leveling and profession companion for World of Warcraft:
 Forever.
 
+**Beta.** This is Pathwise's first release. The routes, quest data and
+profession guides are complete for every race, class and profession, but
+most routes have not been played end to end in Forever yet. If a step is
+wrong, use **Report this step** (the flag in the guide window) and tell us on
+Discord.
+
 ## Leveling, 1 to 60
 
 - Routes for every starting race on both sides, from your first quest to
@@ -26,6 +32,21 @@ Forever.
   your bags make, the materials still to get for your rank and where, and
   what to disenchant. Tailoring + Enchanting players get tips for both.
 - Advice only: Pathwise never crafts, buys, sells or disenchants for you.
+
+## Also in the download: Pathwise Gear and Pathwise Bags
+
+Two optional addons in the same zip. Turn either off in the game's AddOns list.
+
+- **Pathwise Gear**: upgrade advice for your spec. A line on item tooltips
+  ("+12.4% upgrade · Head"), an arrow on bag items that are upgrades, the
+  best quest reward, and Best in Slot (Level): the best item you can get by
+  now, slot by slot, and where it comes from. Uses Pathwise's own stat
+  weights for all 27 specs; paste your own weights if you prefer.
+- **Pathwise Bags**: one bag window that sorts items by what they are to you
+  (Quest, Upgrades, Equipment, Consumables, Professions, Other, Junk), with
+  search, keep and junk marks, a "Sell junk" button at vendors, and a warning
+  before your bags fill up. It never sells what a quest or your profession
+  route still needs.
 
 ## Made to look good
 

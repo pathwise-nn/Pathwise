@@ -102,6 +102,32 @@ test("routes: every next route exists, and coordinates are on the map", function
 	end
 end)
 
+-- A trainer the guide names (Annora for Artisan Enchanting, riding
+-- trainers) keeps its name; only class training says "class trainer".
+test("routes: named trainers keep their names, not the class trainer text", function()
+	local _, ns = fresh()
+	local CLASS_TEXT = "Train new spells at your class trainer"
+	for _, r in ipairs(ns.Engine.Routes()) do
+		local riding = r.id:find("^forever/collectibles/mounts/alliance/") or r.id:find("^forever/collectibles/mounts/horde/")
+		if r.category == "Professions" or riding then
+			for i, step in ipairs(r.steps) do
+				for _, g in ipairs(step) do
+					ok(not (g[1] == "note" and g[2] == CLASS_TEXT), ("%s step %d: %s"):format(r.id, i, CLASS_TEXT))
+				end
+			end
+		end
+	end
+	local found
+	for _, step in ipairs(ns.Engine.routes["forever/professions/enchanting"].steps) do
+		if step.title == "Artisan Enchanting" then
+			for _, g in ipairs(step) do
+				if g[1] == "note" and g[2]:find("Annora", 1, true) and g[2]:find("Uldaman", 1, true) then found = true end
+			end
+		end
+	end
+	ok(found, "Artisan Enchanting names Annora in Uldaman")
+end)
+
 -- Every race starts at level 1 and its chain of routes reaches 60.
 local CHARACTERS = {
 	{ "Human", 1, "Alliance" }, { "Dwarf", 3, "Alliance" }, { "Gnome", 7, "Alliance" }, { "NightElf", 4, "Alliance" }, { "Skyborne", 95, "Alliance" },
