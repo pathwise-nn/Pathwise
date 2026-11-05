@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.1 (2026-11-05)
+
 ### Pathwise: the guide follows the character you play
 - A saved route for another race, side or class (from a deleted character of
   the same name, or one picked with `/pw route`) is let go at login and on
