@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.0 (2026-11-05)
+
 ### Leveling, professions and the suite
 - The guide window reads like you play: a "Step N" card with what to do right
   now (the person or quest picked out in colour, objective counts), then the
