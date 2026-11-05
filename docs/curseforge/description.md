@@ -33,20 +33,19 @@ Discord.
   what to disenchant. Tailoring + Enchanting players get tips for both.
 - Advice only: Pathwise never crafts, buys, sells or disenchants for you.
 
-## Also in the download: Pathwise Gear and Pathwise Bags
+## Add-ons for Pathwise
 
-Two optional addons in the same zip. Turn either off in the game's AddOns list.
+Two optional addons, each its own download. Both need Pathwise installed.
 
 - **Pathwise Gear**: upgrade advice for your spec. A line on item tooltips
   ("+12.4% upgrade · Head"), an arrow on bag items that are upgrades, the
-  best quest reward, and Best in Slot (Level): the best item you can get by
-  now, slot by slot, and where it comes from. Uses Pathwise's own stat
-  weights for all 27 specs; paste your own weights if you prefer.
-- **Pathwise Bags**: one bag window that sorts items by what they are to you
-  (Quest, Upgrades, Equipment, Consumables, Professions, Other, Junk), with
-  search, keep and junk marks, a "Sell junk" button at vendors, and a warning
-  before your bags fill up. It never sells what a quest or your profession
-  route still needs.
+  best quest reward, and Best in Slot (Level).
+- **Pathwise Bags**: one bag window that sorts items by what they are to you,
+  with keep and junk marks, a "Sell junk" button at vendors, and a warning
+  before your bags fill up.
+
+Pathwise 0.1.0 shipped them in its own download. From 0.1.1 they are separate:
+if you use either, install it from its own page after updating Pathwise.
 
 ## Made to look good
 

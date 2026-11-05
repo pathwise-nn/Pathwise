@@ -6,6 +6,16 @@ that version's section.
 
 ## Unreleased
 
+## 0.1.1 (2026-11-04)
+
+### Changed
+- Pathwise Gear and Pathwise Bags are their own downloads on CurseForge,
+  each needing Pathwise. Pathwise's download no longer includes them: if you
+  use either, install it from its own page. Updating Pathwise may remove the
+  copies that came with 0.1.0.
+- `node tools/pack.js` builds one zip per addon (`dist/<Addon>-<x.y.z>.zip`);
+  `docs/curseforge/` has a description and project settings for each.
+
 ## 0.1.0 (2026-11-04)
 
 First version of the independent Pathwise, released as a beta on CurseForge.
