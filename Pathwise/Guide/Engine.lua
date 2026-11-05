@@ -470,11 +470,36 @@ end
 
 local live, current, extra, sideLive
 
+-- Whether race, class and side can be read: until then no route is chosen
+-- or let go (Forever can hide them, and they can be nil early at login).
+local function known(p) return p.race ~= nil and p.class ~= nil and p.faction ~= nil end
+Engine.Known = known
+
+-- The route and side guide are for the character played: one saved for
+-- another race, side or class (a deleted character of the same name, or a
+-- route picked by id) is let go, and with no route the one that suits the
+-- character is chosen.
+local function ownRoutes(s)
+	if not known(player) then return end
+	local route = Engine.Route()
+	if route and not fits(route, player) then
+		s.route, s.pin = nil, nil
+		ns.Print(("%s is not for this character: choosing one that is."):format(route.title))
+	end
+	if not s.route then
+		local best = Engine.BestRoute(player, (C.PlayerMapPosition()))
+		if best then s.route = best.id end
+	end
+	local side = Engine.Side()
+	if side and not fits(side, player) then s.side, s.aimSide, s.sideHidden = nil, nil, nil end
+end
+
 local function compute()
 	player = Q.Player()
 	furthest = {}
 	extra = openExtra()
 	local s = state()
+	ownRoutes(s)
 	local route = Engine.Route()
 	live = firstOpen(route)
 	-- A finished route hands over to the next one, when it is for this character.
@@ -969,14 +994,9 @@ end)
 
 ns.On("SETTING_CHANGED", function(path) if path == "guide.ahead" then Engine.Schedule() end end)
 
-ns.On("READY", function()
-	local s = state()
-	if not s.route then
-		local best = Engine.BestRoute(Q.Player(), (C.PlayerMapPosition()))
-		if best then s.route = best.id end
-	end
-	Engine.Update()
-end)
+-- The first route is chosen by the update (see ownRoutes), once race, class
+-- and side can be read.
+ns.On("READY", function() Engine.Update() end)
 
 ---------------------------------------------------------------------------
 -- Pins: the places of the step shown, for the world map and the minimap.
@@ -1104,6 +1124,7 @@ function Engine.Sync()
 	player = Q.Player()
 	furthest = {}
 	s.pin = nil
+	ownRoutes(s)
 	local route = Engine.Route()
 	local switched
 	local leveling = not route or (route.category or "Leveling") == "Leveling"
