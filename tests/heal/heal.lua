@@ -1,4 +1,4 @@
--- Tests for the healing frames: off by default, a healer asked once, the
+-- Tests for Pathwise Heal's healing frames: off by default, a healer asked once, the
 -- frames (health, heals on the way, text, range, dispels, HoTs) with secret
 -- values, click-casting, and their options page.
 local h = ...
@@ -25,21 +25,21 @@ end
 test("healing: off by default; a mage is never asked", function()
 	local stub, ns = fresh()
 	eq(ns.Get("heal.enabled"), false)
-	ok(not _G.PathwiseUI_HealPrompt, "no question for a mage")
-	ok(not (_G.PathwiseUI_Heal and _G.PathwiseUI_Heal.shown), "no frames")
+	ok(not _G.PathwiseHeal_Prompt, "no question for a mage")
+	ok(not (_G.PathwiseHeal_Frames and _G.PathwiseHeal_Frames.shown), "no frames")
 end)
 
 test("healing: a healer is asked once; Turn on sets up their class's clicks", function()
 	local stub, ns = fresh(priest)
-	local p = _G.PathwiseUI_HealPrompt
+	local p = _G.PathwiseHeal_Prompt
 	ok(p and p.shown, "a priest is asked")
 	ok(table.concat(stub.texts(), "|"):find("You're playing a Priest", 1, true), table.concat(stub.texts(), " | "))
 	ok(stub.clickLabel("Turn on"))
 	eq(ns.Get("heal.enabled"), true)
 	ok(not p.shown, "the question goes")
-	ok(_G.PathwiseUI_Heal.shown and _G.PathwiseUI_HealHeader.shown, "frames on")
-	eq(_G.PathwiseUI_HealHeader:GetAttribute("template"), "PathwiseUI_HealButtonTemplate")
-	eq(_G.PathwiseUI_HealHeader:GetAttribute("showSolo"), true)
+	ok(_G.PathwiseHeal_Frames.shown and _G.PathwiseHeal_Header.shown, "frames on")
+	eq(_G.PathwiseHeal_Header:GetAttribute("template"), "PathwiseHeal_ButtonTemplate")
+	eq(_G.PathwiseHeal_Header:GetAttribute("showSolo"), true)
 	local C = ns.HealClicks
 	eq(C.Get("1"), "Flash Heal", "left: the quick heal")
 	eq(C.Get("shift-2"), "Dispel Magic", "shift + right: cleanse")
@@ -141,7 +141,7 @@ test("healing: clicks are the frame's own attributes, and wait for the end of co
 	eq(b:GetAttribute("type1"), nil, "cleared")
 end)
 
-test("healing: its options page, and Pathwise party frames step aside", function()
+test("healing: its options page, typing a spell, and move mode", function()
 	local stub, ns = fresh(priest)
 	ns.Config.Show("heal")
 	ok(contains(stub.texts(), "Turn them on to set them up"), "short while off")
@@ -157,9 +157,8 @@ test("healing: its options page, and Pathwise party frames step aside", function
 	box:SetText("Abolish Disease")
 	box.scripts.OnEnterPressed(box)
 	eq(ns.HealClicks.Get("alt-2"), "Abolish Disease")
-	ok(not (ns.Units.frames.party1 and ns.Units.frames.party1.shown), "Pathwise party frames step aside")
-	SlashCmdList.PATHWISEUI("move")
-	ok(ns.Heal.Unlocked(), "moves with everything else")
+	SlashCmdList.PATHWISEHEAL("move")
+	ok(ns.Heal.Unlocked(), "/pwheal move: the frames move")
 	ok(stub.clickLabel("Done"))
 end)
 

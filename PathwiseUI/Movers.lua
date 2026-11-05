@@ -9,6 +9,7 @@
 --   Mv.Active(name, on)          a module unlocked (or locked): the grid follows
 --   Mv.All(on)                   unlock or lock every group
 
+-- Shared file (see Core.lua): edit it here, then run npm run kit.
 local ADDON, ns = ...
 local T = ns.Theme
 local A = ns.Anim
@@ -110,7 +111,7 @@ local overlay
 
 local function buildOverlay()
 	if overlay then return overlay end
-	overlay = CreateFrame("Frame", "PathwiseUI_MoveGrid", nil)
+	overlay = CreateFrame("Frame", ns.ID.global .. "_MoveGrid", nil)
 	overlay:SetParent(UIParent)
 	overlay:SetAllPoints(UIParent)
 	overlay:SetFrameStrata("BACKGROUND")

@@ -17,7 +17,7 @@ if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/.test(v || '')) {
 }
 
 // Every addon of the release zip (tools/pack.js) carries the same version.
-for (const addon of ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI']) {
+for (const addon of ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI', 'Pathwise_Heal']) {
 	const toc = path.join(ROOT, addon, `${addon}.toc`);
 	fs.writeFileSync(toc, fs.readFileSync(toc, 'utf8').replace(/^## Version:.*$/m, `## Version: ${v}`));
 }
@@ -35,4 +35,4 @@ if (!log.includes('## Unreleased')) {
 	process.exit(1);
 }
 fs.writeFileSync(logPath, log.replace('## Unreleased', `## Unreleased\n\n## ${v} (${today})`));
-console.log(`version ${v}: Pathwise, Pathwise_Gear, Pathwise_Bags and PathwiseUI TOCs, package.json, CHANGELOG.md`);
+console.log(`version ${v}: Pathwise, Pathwise_Gear, Pathwise_Bags, PathwiseUI and Pathwise_Heal TOCs, package.json, CHANGELOG.md`);

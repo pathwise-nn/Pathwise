@@ -8,7 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "lua5.1 tests/run.lua && lua5.1 tests/ui/run.lua",
+    "test": "lua5.1 tests/run.lua && lua5.1 tests/ui/run.lua && lua5.1 tests/heal/run.lua",
     "media": "node tools/media.js",
     "recipes": "node tools/data/recipes.js",
     "data": "lua5.1 tools/data/build.lua",
@@ -17,6 +17,8 @@
     "pack": "node tools/pack.js",
     "set-version": "node tools/version.js",
     "test:ui": "lua5.1 tests/ui/run.lua",
-    "media:ui": "node tools/media-ui.js"
+    "media:ui": "node tools/media-ui.js",
+    "test:heal": "lua5.1 tests/heal/run.lua",
+    "kit": "node tools/kit.js"
   }
 }

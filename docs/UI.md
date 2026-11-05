@@ -77,26 +77,12 @@ the two share one accent color and Pathwise UI appears in Pathwise's suite.
   your bags. All coins, gold only, or short (12.3k g).
 - **Crisp lines:** borders are one screen pixel at any UI scale.
 
-## Healing frames (off until you want them)
+## Healing frames
 
-- Your party or raid as a grid built for healing; a priest, druid, paladin or
-  shaman is asked once, and anyone can turn it on in /pwui > Healing.
-- Click-casting: each click (with Shift, Ctrl or Alt) casts a spell you pick
-  on the person you click; type the name or drag it from your spellbook.
-- A preset for every healing spec: Holy or Discipline Priest, Restoration
-  Druid, Restoration Shaman, Holy Paladin. Pathwise UI picks it from your
-  talents, or choose it under /pwui > Healing > Spec. The same layout for
-  every spec: left quick heal, right HoT, middle shield, Shift big heal or
-  cleanse, Alt group heal or second cleanse, Ctrl target or menu, buttons 4
-  and 5 your spec's own spells.
-- Spells fill in as you learn them: talents like Penance, Swiftmend or Holy
-  Shock appear once you have them, and a better heal replaces a lower one as
-  you level. A click you set yourself is never changed.
-- Heals on the way, what each person is missing (or their percent), debuffs
-  you can cleanse (drawn by the game, so they show in a fight too), your
-  HoTs between fights, aggro, mana, and fading out of range.
-- Forever keeps health, range and auras secret from addons: the frames pass
-  those straight to the game's bars and let the game draw what it hides.
+Click-to-heal party and raid frames are a separate addon:
+[Pathwise Heal](HEAL.md). Install it with or without Pathwise UI; with both,
+they share one accent and Pathwise Heal can hide Pathwise UI's party frames
+while it shows your party.
 
 ## Coming next
 

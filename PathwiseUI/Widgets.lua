@@ -5,6 +5,7 @@
 -- remembered and repainted when the accent changes, so a new color shows at
 -- once, without a reload.
 
+-- Shared file (see Core.lua): edit it here, then run npm run kit.
 local ADDON, ns = ...
 local T = ns.Theme
 local A = ns.Anim

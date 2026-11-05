@@ -1,8 +1,11 @@
--- Pathwise UI's options window: categories on the left, the chosen one's
--- settings on the right as rows (label on the left, its control on the
--- right). Switches slide, choices glide, pages fade in, the list scrolls
--- smoothly, and the window fades in and out. /pwui, the minimap button, or
--- Pathwise's suite list opens it.
+-- A Pathwise addon's options window (ns.ID: Pathwise UI, Pathwise Heal):
+-- categories on the left, the chosen one's settings on the right as rows
+-- (label on the left, its control on the right). Switches slide, choices
+-- glide, pages fade in, the list scrolls smoothly, and the window fades in
+-- and out. Its slash command, the minimap button, or Pathwise's suite list
+-- opens it. The addon's own pages are in its Pages.lua (C.CATEGORIES); the
+-- accent, colors and profile pages every Pathwise addon has are here.
+-- Shared file (see Core.lua): edit it here, then run npm run kit.
 
 local ADDON, ns = ...
 local T = ns.Theme
@@ -14,7 +17,8 @@ local W, H, NAV = 700, 540, 172
 local PAD = 18
 local HEAD = 52
 local frame, nav, body, scroll
-local current = "look"
+local current -- the open category (the first one until you pick)
+C.CATEGORIES = {} -- filled by the addon's Pages.lua
 
 ---------------------------------------------------------------------------
 -- What each category holds
@@ -33,7 +37,8 @@ local current = "look"
 --                                           (path may be { get = fn, set = fn } for
 --                                           a value kept elsewhere, per character)
 
-local function accentRows()
+
+function C.AccentRows()
 	local rows = {
 		{ "heading", "Accent" },
 		{ "choice", "Accent", "look.accentMode", { key = "accent", { "Pathwise", "pathwise" }, { "Class", "class" }, { "Custom", "custom" } },
@@ -44,8 +49,8 @@ local function accentRows()
 			"The window title, section headings, the lines beside them and the window's top line. Class: your class color; Default: gold; Custom: any color." },
 	}
 	if ns.Get("look.trim") == "custom" then rows[#rows + 1] = { "color", "Your trim color", "flair" } end
-	if ns.Suite() then
-		rows[#rows + 1] = { "toggle", "Same color as Pathwise", "look.sharePathwise", "One accent for the guide, its suite and Pathwise UI." }
+	if ns.Suite() or #ns.Peers() > 0 then
+		rows[#rows + 1] = { "toggle", "Same color as Pathwise", "look.sharePathwise", "One accent for the Pathwise addons you have installed." }
 	end
 	rows[#rows + 1] = { "heading", "Look" }
 	rows[#rows + 1] = { "slider", "Background opacity", "look.opacity", 0.4, 1, 0.02, "percent" }
@@ -54,7 +59,7 @@ local function accentRows()
 	return rows
 end
 
-local function colorRows()
+function C.ColorRows()
 	local rows = {
 		{ "heading", "Schemes" },
 		{ "text", "A whole set at once. Pick one, then change any color below to make it yours.", "muted" },
@@ -69,7 +74,7 @@ local function colorRows()
 	rows[#rows + 1] = { "heading", "Share" }
 	rows[#rows + 1] = { "input", "colors.code", "A scheme code: paste one from a friend and Apply, or show yours to copy.", function(text)
 		if T.ImportColors(text) then ns.Print("colors applied.") C.exportText = nil return true end
-		ns.Print("that is not a Pathwise UI scheme code.")
+		ns.Print("that is not a Pathwise scheme code.")
 		return false
 	end, C.exportText }
 	rows[#rows + 1] = { "button", "Show my code", function() C.exportText = T.ExportColors() end }
@@ -78,190 +83,15 @@ local function colorRows()
 	return rows
 end
 
-C.CATEGORIES = {
-	{ key = "look", name = "Look and accent", rows = accentRows },
-	{ key = "colors", name = "Colors", rows = colorRows },
-	{ key = "units", name = "Unit frames", rows = function()
-		local U = ns.Units
-		return {
-			{ "heading", "Unit frames" },
-			{ "toggle", "Pathwise unit frames", "units.enabled", "You, your target and the rest in the Pathwise look. Click: target; right-click: the menu." },
-			{ "toggle", "You", "units.player" },
-			{ "toggle", "Your target", "units.target" },
-			{ "toggle", "Your target's target", "units.targettarget" },
-			{ "toggle", "Your pet", "units.pet" },
-			{ "toggle", "Your focus", "units.focus" },
-			{ "toggle", "Your party", "units.party" },
-			{ "heading", "What they show" },
-			{ "choice", "Health text", "units.healthText", { key = "ht", { "Current", "current" }, { "Both", "both" }, { "Percent", "percent" }, { "None", "none" } },
-				"Percent is not yet checked on Forever; Current always works." },
-			{ "choice", "Health color", "units.healthColor", { key = "hc", { "Class", "class" }, { "Accent", "accent" }, { "Dark", "dark" } },
-				"Class: players by class, others red, yellow or green by how they see you." },
-			{ "toggle", "Outlined text", "units.outline", "Names and numbers on the bars get a black outline so they read on any color. Off: a soft shadow." },
-			{ "toggle", "Smooth bars", "units.smooth", "Health and power glide to their new value instead of jumping." },
-			{ "toggle", "Power numbers", "units.powerText" },
-			{ "toggle", "Debuffs on your target and party", "units.auras" },
-			{ "toggle", "Only your own debuffs", "units.onlyMyDebuffs" },
-			{ "toggle", "Cast bars", "units.castbars" },
-			{ "toggle", "Portraits", "units.portraits" },
-			{ "heading", "Size and place" },
-			{ "slider", "Your width", "units.PlayerW", 140, 360, 2, "count" },
-			{ "slider", "Your height", "units.PlayerH", 24, 80, 1, "count" },
-			{ "slider", "Target width", "units.TargetW", 140, 360, 2, "count" },
-			{ "slider", "Target height", "units.TargetH", 24, 80, 1, "count" },
-			{ "button", U.Unlocked() and "Lock the frames" or "Move the frames", function() U.Unlock(not U.Unlocked()) end, U.Unlocked() and "accent" or "default" },
-			{ "button", "Put them back where they were", function() U.ResetPositions() end },
-			{ "toggle", "Hide the game's unit frames", "units.hideBlizzard", "Off brings them back after a reload." },
-		}
-	end },
-	{ key = "bars", name = "Action bars", rows = function()
-		local B = ns.Bars
-		local per = { key = "per", { "12", 12 }, { "6", 6 }, { "4", 4 }, { "3", 3 }, { "2", 2 }, { "1", 1 } }
-		local rows = {
-			{ "heading", "Action bars" },
-			{ "toggle", "Pathwise action bars", "bars.enabled", "The game's own buttons (your spells stay where they are), in the Pathwise look. Your keys keep working." },
-		}
-		for _, def in ipairs(B.DEFS) do rows[#rows + 1] = { "toggle", def.label, "bars." .. def.name } end
-		rows[#rows + 1] = { "heading", "Buttons per row" }
-		for _, def in ipairs(B.DEFS) do rows[#rows + 1] = { "choice", def.label, "bars." .. def.name .. "Per", per } end
-		for _, r in ipairs({
-			{ "heading", "Look" },
-			{ "slider", "Button size", "bars.size", 24, 52, 1, "count" },
-			{ "slider", "Space between", "bars.spacing", 0, 10, 1, "count" },
-			{ "toggle", "Key names", "bars.hotkeys" },
-			{ "toggle", "Macro names", "bars.macroNames" },
-			{ "toggle", "Empty slots", "bars.emptySlots", "Off: an empty slot only shows while you drag a spell." },
-			{ "toggle", "Soft out of combat", "bars.fade", "Bars fade out of combat; back in combat or under the mouse." },
-			{ "slider", "How soft", "bars.fadeAlpha", 0, 0.9, 0.05, "percent" },
-			{ "heading", "Place" },
-			{ "button", B.Unlocked() and "Lock the bars" or "Move the bars", function() B.Unlock(not B.Unlocked()) end, B.Unlocked() and "accent" or "default" },
-			{ "button", "Put them back where they were", function() B.ResetPositions() end },
-			{ "toggle", "Hide the game's action bars", "bars.hideBlizzard", "Off brings them back after a reload. The stance and pet bars stay the game's for now (move them in Edit Mode)." },
-		}) do rows[#rows + 1] = r end
-		return rows
-	end },
-	{ key = "bottom", name = "Tray, money, XP", rows = function()
-		local Tr = ns.Tray
-		return {
-			{ "heading", "Money" },
-			{ "toggle", "Money always shown", "money.enabled", "Your gold, silver and copper above the bags. Hover: this session's change and your other characters; click: your bags." },
-			{ "choice", "Show", "money.style", { key = "ms", { "All coins", "full" }, { "Gold only", "gold" }, { "Short", "short" } },
-				"Short: 12.3k g once you have a thousand gold or more." },
-			{ "toggle", "This session in the tooltip", "money.session" },
-			{ "toggle", "Your other characters in the tooltip", "money.characters", "Characters on this realm, from the last time each logged in. /pwui forget Name drops one." },
-			{ "button", "Put it back where it was", function() ns.Money.ResetPosition() end },
-			{ "heading", "Experience bar" },
-			{ "toggle", "Pathwise experience bar", "xp.enabled", "A thin bar in your color under the main bar, rested experience ahead of it; your watched reputation at the level cap." },
-			{ "toggle", "Numbers always shown", "xp.text", "Off: the numbers fade in when the mouse is over it." },
-			{ "slider", "Height", "xp.height", 4, 20, 1, "count" },
-			{ "toggle", "As wide as the main bar", "xp.matchBar", "And right under it, wherever you move it." },
-			{ "toggle", "Hide the game's experience bar", "xp.hideBlizzard", "Off brings it back after a reload." },
-			{ "heading", "System tray and bags" },
-			{ "toggle", "Pathwise tray", "tray.enabled", "The game's own character, spellbook, quest, social, map and menu buttons, and your bags, as slots like the action bars." },
-			{ "toggle", "Tray buttons", "tray.micro" },
-			{ "toggle", "Bag buttons", "tray.bags" },
-			{ "slider", "Button size", "tray.size", 20, 40, 1, "count" },
-			{ "slider", "Space between", "tray.spacing", 0, 8, 1, "count" },
-			{ "button", Tr.Unlocked() and "Lock the tray" or "Move the tray and bags", function() Tr.Unlock(not Tr.Unlocked()) end, Tr.Unlocked() and "accent" or "default" },
-			{ "button", "Put them back where they were", function() Tr.ResetPositions() end },
-			{ "text", "Turning the tray off brings the game's own back after a reload.", "muted" },
-		}
-	end },
-	{ key = "fonts", name = "Fonts", rows = function() return {
-		{ "heading", "Fonts" },
-		{ "toggle", "Pathwise font everywhere", "fonts.pathwise", "Inter for every text of the game: menus, chat, tooltips, quests. Off puts the game's own back." },
-		{ "slider", "Text size", "fonts.scale", 0.8, 1.3, 0.05, "percent" },
-		{ "text", "Names over heads and chat bubbles take the new font after a reload.", "muted" },
-		{ "button", "Reload now", function() if ReloadUI then ReloadUI() end end },
-	} end },
-	{ key = "tooltips", name = "Tooltips", rows = function() return {
-		{ "heading", "Tooltips" },
-		{ "toggle", "Pathwise look", "tooltip.skin", "A flat ground and a thin border instead of the ornate frame." },
-		{ "choice", "Border", "tooltip.border", { key = "tb", { "Quality", "quality" }, { "Accent", "accent" }, { "Plain", "plain" } },
-			"Quality: an item's quality color, a player's class color." },
-		{ "toggle", "Player names in class color", "tooltip.classNames" },
-		{ "toggle", "Health bar in class color", "tooltip.healthClass" },
-		{ "toggle", "At the mouse", "tooltip.cursor", "Tooltips for the world follow your pointer instead of the corner." },
-	} end },
-	{ key = "windows", name = "Game windows", rows = function() return {
-		{ "heading", "Game windows" },
-		{ "toggle", "Pathwise look", "windows.skin", "Character, spellbook, vendor, mail, quests and more: a flat ground, a thin border and your accent along the top." },
-		{ "toggle", "Accent line along the top", "windows.accentLine" },
-		{ "toggle", "Round portraits", "windows.portraits" },
-		{ "text", "Only windows on the game's modern frame are dressed; others keep their look. Not yet checked on Forever: tell us what looks wrong.", "muted" },
-	} end },
-	{ key = "heal", name = "Healing", rows = function()
-		local H = ns.Heal
-		local rows = {
-			{ "heading", "Healing frames" },
-			{ "toggle", "Healing frames", "heal.enabled", "Your party or raid as bars built for healing: click someone to heal them, see heals on the way, debuffs you can cleanse, your HoTs, aggro and range. Off by default; healers are asked once." },
-		}
-		if not ns.Get("heal.enabled") then
-			rows[#rows + 1] = { "text", "Turn them on to set them up: how they look, and what each click casts.", "muted" }
-			return rows
-		end
-		for _, r in ipairs({
-			{ "toggle", "Show when you're on your own", "heal.solo", "Your own frame when you're not in a group." },
-			{ "heading", "What they show" },
-			{ "choice", "Health color", "heal.color", { key = "hcol", { "Class", "class" }, { "Green", "green" }, { "By health", "health" } },
-				"By health: green, turning yellow then red as it drops." },
-			{ "choice", "Health text", "heal.text", { key = "htxt", { "Missing", "deficit" }, { "Percent", "percent" }, { "None", "none" } },
-				"Missing: how much they need (-1.2k), blank when full." },
-			{ "toggle", "Heals on the way", "heal.incoming", "A lighter bar past their health: heals being cast on them." },
-			{ "toggle", "Debuffs you can cleanse", "heal.dispel", "Drawn by the game in each frame, in combat too; out of combat the frame's edge also takes the debuff's color." },
-			{ "toggle", "Your HoTs", "heal.hots", "Your heals over time and shields, top right. Forever hides auras from addons in a fight, so these show between fights." },
-			{ "toggle", "Aggro", "heal.aggro", "A red edge around whoever the enemy is hitting, when the game says so." },
-			{ "toggle", "Mana bars", "heal.mana" },
-			{ "toggle", "Fade when out of range", "heal.range" },
-			{ "slider", "How faded", "heal.rangeAlpha", 0.1, 0.9, 0.05, "percent" },
-			{ "heading", "Size and place" },
-			{ "slider", "Width", "heal.width", 50, 160, 2, "count" },
-			{ "slider", "Height", "heal.height", 24, 80, 1, "count" },
-			{ "slider", "Space between", "heal.spacing", 0, 10, 1, "count" },
-			{ "choice", "Groups", "heal.grow", { key = "hgrow", { "In columns", "down" }, { "In rows", "right" } } },
-			{ "button", H.Unlocked() and "Lock it" or "Move the healing frames", function() H.Unlock(not H.Unlocked()) end, H.Unlocked() and "accent" or "default" },
-			{ "button", "Put them back where they were", function() H.ResetPosition() end },
-			{ "toggle", "Hide the game's party and raid frames", "heal.hideGame", "Off brings them back after a reload." },
-			{ "toggle", "Hide Pathwise party frames", "heal.hideParty", "These show your party already." },
-			{ "heading", "Click-casting" },
-		}) do rows[#rows + 1] = r end
-		local C = ns.HealClicks
-		local spec, how = C.Spec()
-		local options = { { "Follow my talents", "auto" } }
-		for _, s in ipairs(C.Specs()) do options[#options + 1] = { s.label, s.key } end
-		rows[#rows + 1] = { "dropdown", "Spec", { get = function() return how == "chosen" and spec.key or "auto" end, set = C.SetSpec }, options,
-			("Your clicks follow the %s preset%s. Its spells fill in as you learn them; a click you set yourself is never changed."):format(spec.label,
-				how == "auto" and " (from your talents)" or "") }
-		local talents = {}
-		for _, list in pairs(spec.binds) do
-			for _, name in ipairs(list) do
-				if C.NOTES[name] then talents[#talents + 1] = ("%s: %s"):format(name, C.NOTES[name]) end
-			end
-		end
-		table.sort(talents)
-		if #talents > 0 then
-			rows[#rows + 1] = { "text", table.concat(talents, ". ") .. ". Forever's new spells are named from its previews and not yet checked in game: a name the game doesn't know is skipped.", "muted" }
-		end
-		rows[#rows + 1] = { "text", "What each click on a frame does. Type a spell's name (your highest rank is cast), target or menu, then Enter; or drag a spell from your spellbook onto a box. Empty does nothing.", "muted" }
-		for _, c in ipairs(C.COMBOS) do rows[#rows + 1] = { "bind", c[2], c[1] } end
-		rows[#rows + 1] = { "button", ("Use the %s preset (replaces your own clicks)"):format(spec.label), function() C.Defaults(true) end }
-		return rows
-	end },
-	{ key = "profile", name = "Profile", rows = function() return {
+-- Profile: shared or per character, the minimap button, back to defaults.
+function C.ProfileRows()
+	return {
 		{ "heading", "Profile" },
 		{ "toggle", "Same settings on every character", "profile.shared", "Off: this character keeps its own (it starts from the shared ones)." },
-		{ "toggle", "Minimap button", "minimap.shown", "Without it, type /pwui." },
+		{ "toggle", "Minimap button", "minimap.shown", "Without it, type " .. ns.ID.slash[1] .. "." },
 		{ "button", "Back to the defaults", function() ns.Reset() ns.Print("settings back to the defaults.") end },
-	} end },
-	{ key = "next", name = "Coming next", rows = function() return {
-		{ "heading", "Coming next" },
-		{ "text", "Pathwise UI grows in stages, each one usable on its own:" },
-		{ "text", "4  Nameplates" },
-		{ "text", "5  Chat" },
-		{ "text", "6  Minimap" },
-		{ "text", "7  Data bars: gold, durability, latency, more (the experience bar and tray are in already)" },
-	} end },
-}
+	}
+end
 
 ---------------------------------------------------------------------------
 -- Drawing the rows (pooled: a page reuses the widgets the last one left)
@@ -704,7 +534,7 @@ end
 
 local function build()
 	if frame then return frame end
-	frame = CreateFrame("Frame", "PathwiseUIConfig", nil)
+	frame = CreateFrame("Frame", ns.ID.global .. "Config", nil)
 	frame:SetParent(UIParent)
 	frame:SetSize(W, H)
 	frame:SetPoint("CENTER")
@@ -718,7 +548,7 @@ local function build()
 	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 	T.Panel(frame)
 	T.TrimLine(frame)
-	if UISpecialFrames then table.insert(UISpecialFrames, "PathwiseUIConfig") end
+	if UISpecialFrames then table.insert(UISpecialFrames, ns.ID.global .. "Config") end
 
 	local icon = frame:CreateTexture(nil, "ARTWORK")
 	icon:SetTexture(T.MEDIA .. "icon")
@@ -730,7 +560,7 @@ local function build()
 	local title = T.Text(frame, "wtitle", "flair")
 	title:SetPoint("LEFT", icon, "RIGHT", 8, 0)
 	title:SetJustifyV("MIDDLE")
-	title:SetText("Pathwise UI")
+	title:SetText(ns.ID.name)
 	local version = T.Text(frame, "small", "muted")
 	version:SetPoint("LEFT", title, "RIGHT", 10, -1)
 	version:SetJustifyV("MIDDLE")
@@ -846,8 +676,8 @@ end)
 ns.On("READY", function()
 	local S = ns.Suite()
 	if S and S.RegisterModule then
-		S.RegisterModule({ key = "ui", name = "Pathwise UI", accent = "accent",
-			about = "Your whole interface in the Pathwise look, in your color", open = function() C.Show() end })
+		S.RegisterModule({ key = ns.ID.key, name = ns.ID.name, accent = "accent",
+			about = ns.ID.about, open = function() C.Show() end })
 	end
 end)
 

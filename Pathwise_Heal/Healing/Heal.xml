@@ -2,11 +2,11 @@
 	<!-- The healing frame the group header makes for each person (Heal.lua
 	     dresses it; Clicks.lua gives it its click-casting). A template has to
 	     be XML: the secure header only makes frames from a named template. -->
-	<Button name="PathwiseUI_HealButtonTemplate" virtual="true" inherits="SecureUnitButtonTemplate">
+	<Button name="PathwiseHeal_ButtonTemplate" virtual="true" inherits="SecureUnitButtonTemplate">
 		<Size x="84" y="40"/>
 		<Scripts>
-			<OnLoad inherit="prepend">PathwiseUI.Heal.OnLoad(self)</OnLoad>
-			<OnAttributeChanged inherit="append">PathwiseUI.Heal.OnAttributeChanged(self, name, value)</OnAttributeChanged>
+			<OnLoad inherit="prepend">PathwiseHeal.Heal.OnLoad(self)</OnLoad>
+			<OnAttributeChanged inherit="append">PathwiseHeal.Heal.OnAttributeChanged(self, name, value)</OnAttributeChanged>
 		</Scripts>
 	</Button>
 </Ui>
