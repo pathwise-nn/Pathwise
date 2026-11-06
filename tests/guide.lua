@@ -532,6 +532,29 @@ test("about panel: name, tagline, creators, signature, credits", function()
 	ok(contains(texts, "QuestieDB"), "credits QuestieDB")
 end)
 
+-- The text of every shown copy box (an EditBox in a shown row).
+local function copyBoxes(stub)
+	local out = {}
+	for _, f in ipairs(stub.frames) do
+		if f.kind == "EditBox" and f.shown and (not f.parent or f.parent.shown) and rawget(f, "text") then out[f.text] = true end
+	end
+	return out
+end
+
+test("report and about: the website and the Discord invite, ready to copy", function()
+	local stub, ns = fixture()
+	stub.accept(363)
+	ns.Fire("REPORT_STEP")
+	local boxes = copyBoxes(stub)
+	ok(boxes["https://pathwise.quest/report"], "the website's report form")
+	ok(boxes["https://discord.gg/hSDjBrG8EK"], "the Discord invite")
+	ok(contains(stub.texts(), "Log in with Discord, then paste the report into the form."), "how to use the link")
+	SlashCmdList.PATHWISE("about")
+	boxes = copyBoxes(stub)
+	ok(boxes["https://pathwise.quest"], "the website on About")
+	ok(boxes["https://discord.gg/hSDjBrG8EK"], "the invite on About")
+end)
+
 test("more guides: reputation, mounts and pets are listed, folded until opened", function()
 	local stub, ns = login()
 	local cats = {}

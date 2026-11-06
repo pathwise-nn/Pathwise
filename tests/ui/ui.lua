@@ -344,3 +344,22 @@ test("Wayfarer: serif headings in the trim color, capsule switches", function()
 	eq(sw.pwKnob.texture, ns.Theme.MEDIA .. "disc", "a round knob")
 	eq(sw.pwTrack[1].texture, ns.Theme.MEDIA .. "disc", "round ends")
 end)
+
+test("help and feedback: the website and Discord as links to copy, read-only", function()
+	local stub, ns = fresh()
+	local listed = false
+	for _, c in ipairs(ns.Config.CATEGORIES) do if c.key == "help" then listed = true end end
+	ok(listed, "in the options menu")
+	ns.Config.Show("help")
+	local boxes = {}
+	for _, f in ipairs(stub.frames) do
+		if f.kind == "EditBox" and f.shown and (not f.parent or f.parent.shown) and rawget(f, "text") then boxes[f.text] = f end
+	end
+	for _, url in ipairs({ "https://pathwise.quest/report", "https://pathwise.quest/suggest", "https://pathwise.quest/known-issues", "https://discord.gg/hSDjBrG8EK" }) do
+		ok(boxes[url], "a box with " .. url)
+	end
+	local box = boxes["https://pathwise.quest/report"]
+	box:SetText("typed over")
+	box.scripts.OnTextChanged(box, true)
+	eq(box:GetText(), "https://pathwise.quest/report", "typing puts the link back")
+end)

@@ -29,6 +29,7 @@ C.CATEGORIES = {} -- filled by the addon's Pages.lua
 --       { "slider", label, path, min, max, step, "percent" | "count" }
 --       { "input", key, hint, onApply(text), text }
 --       { "button", label, onClick, kind }
+--       { "copy", label, text, note }       read-only text to copy (Ctrl+C): a link
 --       { "color", label, name }            one of the theme's colors
 --       { "accent" }                        your accent, on the wheel
 --       { "schemes" }                       the color schemes, to pick one
@@ -81,6 +82,21 @@ function C.ColorRows()
 	rows[#rows + 1] = { "button", "Back to the scheme's colors", function() ns.Set("look.colors", nil) end }
 	rows[#rows + 1] = { "text", "Click a color to open the color wheel; right-click puts the scheme's back.", "muted" }
 	return rows
+end
+
+-- Help and feedback: the website and the Discord as links to copy, since the
+-- game opens none. The same addresses as Pathwise's About page.
+C.WEBSITE = "https://pathwise.quest"
+C.DISCORD = "https://discord.gg/hSDjBrG8EK"
+function C.CommunityRows()
+	return {
+		{ "heading", "Help and feedback" },
+		{ "text", "The game can't open links: click a box, press Ctrl+C (Cmd+C on a Mac), then paste it into your browser.", "muted" },
+		{ "copy", "Report a bug", C.WEBSITE .. "/report", "Log in with Discord and tell the team what went wrong. You get a tracking number." },
+		{ "copy", "Suggest a feature", C.WEBSITE .. "/suggest", "Or vote for other players' ideas." },
+		{ "copy", "Known issues", C.WEBSITE .. "/known-issues", "Bugs the team already knows about, and where each fix stands." },
+		{ "copy", "Pathwise on Discord", C.DISCORD, "Help, news and the community." },
+	}
 end
 
 -- Profile: shared or per character, the minimap button, back to defaults.
@@ -207,6 +223,30 @@ function makers.input()
 	return f
 end
 function makers.button() return T.Button(body, "", "default") end
+-- A link to copy: its label and note, the box under them. A click selects it
+-- all; typing puts the link back, so it can't be changed by accident.
+function makers.copy()
+	local f = makeRow()
+	local e = CreateFrame("EditBox", nil, f)
+	e:SetAutoFocus(false)
+	e:SetHeight(26)
+	T.Panel(e, "bg2")
+	T.Font(e, "body")
+	e:SetTextInsets(8, 8, 0, 0)
+	e:SetScript("OnEditFocusGained", function(self) T.SetBorder(self, "accent") if self.HighlightText then self:HighlightText() end end)
+	e:SetScript("OnEditFocusLost", function(self) T.SetBorder(self, "border") if self.HighlightText then self:HighlightText(0, 0) end end)
+	e:SetScript("OnMouseUp", function(self) self:SetFocus() if self.HighlightText then self:HighlightText() end end)
+	e:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+	e:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+	e:SetScript("OnTextChanged", function(self, user)
+		if user and f.pwText and self:GetText() ~= f.pwText then
+			self:SetText(f.pwText)
+			if self.HighlightText then self:HighlightText() end
+		end
+	end)
+	f.box = e
+	return f
+end
 function makers.bind()
 	local f = makeRow()
 	local e = CreateFrame("EditBox", nil, f)
@@ -474,6 +514,18 @@ function C.Render()
 			T.Paint(f.box, (v == nil) and "muted" or "text")
 			f:SetHeight(38)
 			place(f, 38)
+		elseif kind == "copy" then
+			local f = take("copy", makers.copy)
+			f.label:SetText(r[2])
+			f.pwText = r[3]
+			f.box:SetText(r[3])
+			local nh = noteHeight(f, r[4])
+			f.box:ClearAllPoints()
+			f.box:SetPoint("TOPLEFT", 0, -(28 + nh + 4))
+			f.box:SetWidth(math.min(inner, 320))
+			local h = 28 + nh + 4 + 26 + 12
+			f:SetHeight(h)
+			place(f, h)
 		elseif kind == "button" then
 			local b = take("button", makers.button)
 			b.pwText:SetText(r[2])

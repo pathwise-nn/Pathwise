@@ -68,5 +68,6 @@ C.CATEGORIES = {
 
 	{ key = "look", name = "Look and accent", rows = C.AccentRows },
 	{ key = "colors", name = "Colors", rows = C.ColorRows },
+	{ key = "help", name = "Help and feedback", rows = C.CommunityRows },
 	{ key = "profile", name = "Profile", rows = function() return C.ProfileRows() end },
 }

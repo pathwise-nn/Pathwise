@@ -1058,7 +1058,11 @@ end
 -- Report this step, and About
 ---------------------------------------------------------------------------
 
+-- The game opens no links: these are copy boxes, for the player's browser.
 local DISCORD = "https://discord.gg/hSDjBrG8EK"
+local WEBSITE = "https://pathwise.quest"
+local REPORT_URL = WEBSITE .. "/report"
+Panels.DISCORD, Panels.WEBSITE, Panels.REPORT_URL = DISCORD, WEBSITE, REPORT_URL
 
 function builders.report()
 	local text = ns.Engine.ReportText()
@@ -1066,9 +1070,13 @@ function builders.report()
 	for _ in text:gmatch("\n") do n = n + 1 end
 	return {
 		{ "heading", "Report this step" },
-		{ "text", "Click the box, press Ctrl+C, and paste it into Pathwise's Discord with a line on what went wrong. Nothing is sent from the game." },
+		{ "text", "Click the box, press Ctrl+C, and paste it into a bug report with a line on what went wrong. Nothing is sent from the game." },
 		{ "copy", text, math.min(16, n + 1) },
-		{ "heading", "Pathwise's Discord" },
+		{ "heading", "On the website" },
+		{ "text", "Copy the link and open it in your browser. Log in with Discord, then paste the report into the form.", "muted" },
+		{ "copy", REPORT_URL, 1 },
+		{ "heading", "Or on Discord" },
+		{ "text", "Paste it in #report-a-bug. Not in the server yet? Copy the invite.", "muted" },
 		{ "copy", DISCORD, 1 },
 		{ "buttons", { { "Close", "default", Panels.Close } } },
 	}
@@ -1091,6 +1099,9 @@ function builders.about()
 		{ "text", ("Data: %s"):format(tostring(Q.Data.SOURCE)), "muted" },
 		{ "heading", "Licence" },
 		{ "text", "Free and open source under the GNU General Public License, version 3." },
+		{ "heading", "Website" },
+		{ "text", "Known issues, suggestions and bug reports. Copy the link and open it in your browser.", "muted" },
+		{ "copy", WEBSITE, 1 },
 		{ "heading", "Discord" },
 		{ "copy", DISCORD, 1 },
 		{ "buttons", { { "Close", "default", Panels.Close } } },

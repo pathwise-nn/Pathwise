@@ -6,6 +6,16 @@ that version's section.
 
 ## Unreleased
 
+### The website and the Discord, from every addon
+- Report this step now offers two places to send the report: the website
+  (pathwise.quest/report, log in with Discord and paste it into the form) or
+  the Discord's #report-a-bug. Both links sit in boxes to copy, since the game
+  opens no links. About shows the website too.
+- Pathwise UI, Pathwise Heal and Pathwise Loot have a new "Help and feedback"
+  page in their options: links to report a bug, suggest a feature, see the
+  known issues, and join the Discord, each ready to copy (Ctrl+C) and paste
+  into a browser.
+
 ## 0.2.5 (2026-11-06)
 
 ### Pathwise UI: your target's buffs show

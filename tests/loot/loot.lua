@@ -474,3 +474,14 @@ test("catalog: a search loads no items from the server", function()
 	ns.Loot.Item(17076)
 	ok(stub.requested[17076], "showing an item asks for it")
 end)
+
+test("help and feedback: the website and Discord, in Pathwise Loot's own options", function()
+	local stub, ns = fresh()
+	ns.Config.Show("help")
+	local found = {}
+	for _, f in ipairs(stub.frames) do
+		if f.kind == "EditBox" and f.shown and (not f.parent or f.parent.shown) and rawget(f, "text") then found[f.text] = true end
+	end
+	ok(found["https://pathwise.quest/report"], "the report link")
+	ok(found["https://discord.gg/hSDjBrG8EK"], "the Discord invite")
+end)
