@@ -825,6 +825,7 @@ function builders.professions()
 		end }
 		rows[#rows + 1] = { "progress", k.cap > 0 and k.rank / k.cap or 0 }
 	end
+	rows[#rows + 1] = { "choice", "Recipe books", "Every profession's plan by skill range, learned or not", function() Panels.Open("recipebooks") end }
 	rows[#rows + 1] = { "buttons", { { "Profession guides", "default", function() Panels.Open("routes") end }, { "Close", "default", Panels.Close } } }
 	return rows
 end
@@ -935,6 +936,218 @@ function builders.profession()
 		if te and #te > 0 then
 			rows[#rows + 1] = { "heading", "Tailoring + Enchanting" }
 			rows[#rows + 1] = { "text", ("Disenchant what you craft for points instead of selling it: %s."):format(table.concat(te, ", ")) }
+		end
+	end
+	rows[#rows + 1] = { "choice", "Recipe book", "What to craft for every skill range, where the recipes and trainers are", function()
+		Panels.OpenRecipeBook(prof.key)
+	end }
+	rows[#rows + 1] = { "buttons", { { "Back", "default", function() if not Panels.Back() then Panels.Open("professions") end end }, { "Close", "default", Panels.Close } } }
+	return rows
+end
+
+---------------------------------------------------------------------------
+-- Recipe book: a profession's leveling plan by skill range (Professions/
+-- RecipeBook.lua), for any profession, known or not.
+---------------------------------------------------------------------------
+
+local book = { key = nil, path = nil, all = false }
+
+function Panels.OpenRecipeBook(key)
+	if book.key ~= key then book.key, book.path, book.all = key, nil, false end
+	Panels.Open("recipebook")
+end
+
+-- The arrow to an NPC; prints where it leads.
+local function arrowTo(id, what)
+	local p = ns.RecipeBook.Place(id)
+	if not p then return ns.Print(("no position for %s in the data."):format(what or "them")) end
+	ns.Nav.SetTarget(p.map, p.x, p.y, p.name)
+	ns.Print(("the arrow leads to %s%s."):format(p.name, p.zone and (" in " .. p.zone) or ""))
+end
+
+local COLOR_WORD = { red = "can't learn yet", orange = "orange", yellow = "yellow", green = "green", grey = "grey" }
+
+-- One step's rows: its crafts with reagents and colour, materials, where the
+-- recipes come from; for gathering, the zones, nodes and mobs.
+local function stepRows(rows, step, skill, side, full)
+	local RB = ns.RecipeBook
+	local entries = RB.Entries(step, side)
+	local anyShown
+	for _, e in ipairs(entries) do
+		local lead = (e.kind == "alt" and "or " or (e.kind == "any" and (anyShown and "or " or "one of: ") or ""))
+		if e.kind == "any" then anyShown = true end
+		local bits = { RB.ReagentText(e.spell) }
+		local col = skill and RB.Color(e.spell, skill)
+		if full or e.kind ~= "alt" then bits[#bits + 1] = RB.ColorText(e.spell) end
+		if col then bits[#bits + 1] = "now " .. COLOR_WORD[col] end
+		rows[#rows + 1] = { "text", lead .. RB.EntryText(e), e.kind == "alt" and "text2" or "text" }
+		rows[#rows + 1] = { "text", table.concat(bits, "  ·  "), "muted" }
+		if full then
+			for _, src in ipairs(RB.Sources(e.spell, side)) do
+				local first = src.vendors[1] or src.drops[1]
+				local sub = RB.SourceText(src)
+				if first then
+					rows[#rows + 1] = { "choice", src.name, sub, function() arrowTo(first.id, first.name) end }
+				else
+					rows[#rows + 1] = { "text", ("%s: %s"):format(src.name, sub), "text2" }
+				end
+			end
+		end
+	end
+	if full then
+		local mats = RB.Materials(entries)
+		if #mats > 0 then
+			local bits = {}
+			for _, m in ipairs(mats) do bits[#bits + 1] = ("%d %s"):format(m.count, m.name) end
+			rows[#rows + 1] = { "text", "In all: " .. table.concat(bits, ", "), "text2" }
+		end
+	end
+	if step.nodes then
+		local bits = {}
+		for _, n in ipairs(step.nodes) do bits[#bits + 1] = RB.ItemName(n) end
+		rows[#rows + 1] = { "text", table.concat(bits, ", "), "text" }
+	end
+	if step.zones then
+		local list = {}
+		for _, k in ipairs({ side or "A", "AH" }) do
+			for _, map in ipairs(step.zones[k] or {}) do list[#list + 1] = RB.ZoneName(map) end
+		end
+		if #list > 0 then rows[#rows + 1] = { "text", "Where: " .. table.concat(list, ", "), "text2" } end
+	end
+	if step.mobs and full then
+		for _, id in ipairs(step.mobs) do
+			local n = RB.Npc(id)
+			if n then
+				local lv = ns.Data.npcs[id]
+				rows[#rows + 1] = { "choice", n.name, ("level %d-%d  ·  arrow to the nearest"):format(lv[2], lv[3]), function() arrowTo(id, n.name) end }
+			end
+		end
+	end
+	if step.keep and full then rows[#rows + 1] = { "text", step.keep, "accent" } end
+end
+
+function builders.recipebook()
+	local RB, P = ns.RecipeBook, ns.Professions
+	local prof = book.key and P.BY_KEY[book.key]
+	local b = prof and RB.Book(prof.key)
+	if not b then return builders.recipebooks() end
+	local side = RB.Side()
+	local rank, cap = ns.Compat.SkillRank(prof.line)
+	local rows = { { "heading", "Recipe book" } }
+	rows[#rows + 1] = { "title", rank and ("%s   %d / %d"):format(prof.name, rank, cap or 0) or prof.name }
+	local paths = RB.Paths(b)
+	if #paths > 0 then
+		local opts = { { "Main", function() book.path = nil Panels.Refresh() end, not book.path and "accent" or nil } }
+		for _, p in ipairs(paths) do
+			opts[#opts + 1] = { p, function() book.path = p Panels.Refresh() end, book.path == p and "accent" or nil }
+		end
+		rows[#rows + 1] = { "setting", "Way", book.path or "Main", opts }
+	end
+
+	-- Next rank to train.
+	local nr = rank and RB.NextRank(b, cap)
+	if nr and nr.rank ~= "Apprentice" then
+		rows[#rows + 1] = { "heading", "Next rank" }
+		rows[#rows + 1] = { "text", RB.RankText(nr), "text" }
+		if nr.book then rows[#rows + 1] = { "text", "Learned from the book " .. RB.ItemName(nr.book) .. ", sold by:", "text2" } end
+		if nr.quest then rows[#rows + 1] = { "text", "Learned from the quest " .. nr.quest .. ", given by:", "text2" } end
+		for _, p in ipairs(RB.People(nr, side)) do
+			local zone
+			for map in pairs(p.npc and p.npc.spawns or {}) do zone = ns.Compat.MapName(map) break end
+			if p.id then
+				rows[#rows + 1] = { "choice", p.name, (zone and (zone .. "  ·  ") or "") .. "click for the arrow", function() arrowTo(p.id, p.name) end }
+			else
+				rows[#rows + 1] = { "text", p.name, "text2" }
+			end
+		end
+		if nr.needs then
+			local bits = {}
+			for _, it in ipairs(nr.needs) do bits[#bits + 1] = RB.ItemName(it) end
+			rows[#rows + 1] = { "text", "Needs: " .. table.concat(bits, ", "), "text2" }
+		end
+		if nr.note then rows[#rows + 1] = { "text", nr.note, "muted" } end
+	elseif not rank then
+		local first = b.ranks[1]
+		rows[#rows + 1] = { "text", "You don't have this profession. Its trainers:", "text2" }
+		local people = RB.People(first, side)
+		for i, p in ipairs(people) do
+			if i > 6 then break end
+			if p.id then rows[#rows + 1] = { "choice", p.name, "click for the arrow", function() arrowTo(p.id, p.name) end } end
+		end
+		if first.note then rows[#rows + 1] = { "text", first.note, "muted" } end
+	end
+
+	-- The step for your skill, then the plan.
+	local steps = RB.Steps(b, book.path, side)
+	local now = RB.At(steps, rank or 0)
+	if now then
+		local s = steps[now]
+		rows[#rows + 1] = { "heading", ("Now: %d-%d"):format(s.from, s.to) }
+		stepRows(rows, s, rank, side, true)
+	elseif rank then
+		rows[#rows + 1] = { "text", "Your skill is past the end of the plan.", "success" }
+	end
+	rows[#rows + 1] = { "heading", book.all and "Every step" or "Coming up" }
+	local shown = 0
+	for i, s in ipairs(steps) do
+		if i ~= now and (book.all or (now and i > now and shown < 3) or (not now and not rank and shown < 3)) then
+			shown = shown + 1
+			rows[#rows + 1] = { "text", ("%d-%d"):format(s.from, s.to), "accent" }
+			stepRows(rows, s, rank, side, book.all)
+		end
+	end
+	rows[#rows + 1] = { "choice", book.all and "Show fewer steps" or "Show every step",
+		book.all and nil or "With recipe sources, materials and the other recipes", function()
+			book.all = not book.all
+			Panels.Refresh()
+		end }
+
+	if book.all then
+		if b.extra then
+			rows[#rows + 1] = { "heading", "Other recipes" }
+			rows[#rows + 1] = { "text", "Drops, reputation and vendor recipes the guide lists for the late ranges.", "muted" }
+			for _, id in ipairs(b.extra) do
+				local sp = RB.Spell(id)
+				if sp then
+					rows[#rows + 1] = { "text", sp.name, "text" }
+					local srcs = RB.Sources(sp, side)
+					local where = srcs[1] and RB.SourceText(srcs[1]) or nil
+					rows[#rows + 1] = { "text", RB.ReagentText(sp) .. "  ·  " .. RB.ColorText(sp) .. (where and ("  ·  " .. where) or ""), "muted" }
+				end
+			end
+		end
+		if b.tools or b.bonuses then rows[#rows + 1] = { "heading", "Tools and bonuses" } end
+		if b.tools then
+			local bits = {}
+			for _, it in ipairs(b.tools) do bits[#bits + 1] = RB.ItemName(it) end
+			rows[#rows + 1] = { "text", "Carry: " .. table.concat(bits, ", "), "text2" }
+		end
+		for _, x in ipairs(b.bonuses or {}) do
+			local name = x.name or (x.item and RB.ItemName(x.item)) or "?"
+			rows[#rows + 1] = { "text", name .. (x.amount and ("  ·  +%d"):format(x.amount) or "") .. (x.note and ("  ·  " .. x.note) or ""), "text2" }
+		end
+		for _, r in ipairs(b.ranks) do
+			if r.rank ~= "Apprentice" then
+				rows[#rows + 1] = { "text", RB.RankText(r), "text2" }
+			end
+		end
+	end
+	for _, n in ipairs(b.notes or {}) do rows[#rows + 1] = { "text", n, "muted" } end
+	local src = "From wow-professions.com's Forever guide, written on the beta"
+	if b.untestedFrom then src = src .. (", not tested there from %d"):format(b.untestedFrom) end
+	rows[#rows + 1] = { "text", src .. ". Recipes, colours and materials: the Forever client's own data; green is an estimate.", "muted" }
+	rows[#rows + 1] = { "buttons", { { "Back", "default", function() if not Panels.Back() then Panels.Open("recipebooks") end end }, { "Close", "default", Panels.Close } } }
+	return rows
+end
+
+-- Every profession's recipe book.
+function builders.recipebooks()
+	local RB, P = ns.RecipeBook, ns.Professions
+	local rows = { { "heading", "Recipe books" }, { "text", "What to craft or gather for every skill range, for every profession.", "muted" } }
+	for _, prof in ipairs(P.LIST) do
+		if RB.Book(prof.key) then
+			local rank, cap = ns.Compat.SkillRank(prof.line)
+			rows[#rows + 1] = { "choice", rank and ("%s   %d / %d"):format(prof.name, rank, cap or 0) or prof.name, nil, function() Panels.OpenRecipeBook(prof.key) end }
 		end
 	end
 	rows[#rows + 1] = { "buttons", { { "Back", "default", function() if not Panels.Back() then Panels.Open("professions") end end }, { "Close", "default", Panels.Close } } }
@@ -1279,7 +1492,7 @@ ns.On("REPORT_STEP", function() Panels.Open("report") end)
 ns.On("SHOW_DUNGEONS", function() Panels.Open("dungeons") end)
 ns.On("SHOW_ABOUT", function() Panels.Open("about") end)
 ns.On("GUIDE_UPDATED", function() if Panels.IsOpen("skip") or Panels.IsOpen("professions") or Panels.IsOpen("profession") then Panels.Refresh() end end)
-ns.On("PROFESSIONS_CHANGED", function() if Panels.IsOpen("professions") or Panels.IsOpen("profession") then Panels.Refresh() end end)
+ns.On("PROFESSIONS_CHANGED", function() if Panels.IsOpen("professions") or Panels.IsOpen("profession") or Panels.IsOpen("recipebook") then Panels.Refresh() end end)
 ns.On("SETTING_CHANGED", function(path)
 	if path == "guide.shown" and not ns.Get("guide.shown") then Panels.Close() end
 end)

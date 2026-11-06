@@ -1,0 +1,26 @@
+{
+  "key": "skinning",
+  "line": 393,
+  "source": "https://www.wow-professions.com/forever/skinning-leveling-guide",
+  "tools": [7005],
+  "ranks": [
+    { "rank": "Apprentice", "cap": 75, "trainers": ["Thuwd", "Killian Hagey", "Mooranta", "Maris Granger", "Balthus Stoneflayer", "Eladriel", "Kagil", "Nawka Wildsong", "Yonn Deepcut", "Margaret Weaver", "Rand Rhobart", "Riley Peltskinner", "Helene Peltskinner", "Brighid Stormflayer", "Terunne Bearshaper", "Radnaal Maneweaver", "Ishlee Breezewhisper", "Mendalass Tattermend"], "note": "Skyborne: Pelt Collecting for Beginners, a reward of Harvesting Windstones in Thendal Village, teaches Skinning. The starting-area Junior trainers teach only to 75." },
+    { "rank": "Journeyman", "cap": 150, "skill": 50, "note": "A full Skinning trainer, not a Junior one." },
+    { "rank": "Expert", "cap": 225, "skill": 125 },
+    { "rank": "Artisan", "cap": 300, "skill": 200 }
+  ],
+  "notes": ["From mob level 20 a mob needs five times its level in Skinning (level 30: 150). Below that it is less.", "In Forever the starting-area mobs give skill all the way to 75."],
+  "bonuses": [
+    { "spell": 13698, "note": "skin mobs one level higher" }
+  ],
+  "steps": [
+    { "from": 1, "to": 75, "faction": "H", "mobs": [3098], "zones": { "H": ["Durotar"] } },
+    { "from": 1, "to": 75, "faction": "A", "mobs": [299, 69], "zones": { "A": ["Elwynn Forest"] } },
+    { "from": 75, "to": 150, "faction": "H", "mobs": [3256, 3426, 3245], "zones": { "H": ["The Barrens"] } },
+    { "from": 75, "to": 125, "faction": "A", "mobs": [1192, 1189, 1693], "zones": { "A": ["Loch Modan"] } },
+    { "from": 125, "to": 150, "faction": "A", "mobs": [1022, 1023], "zones": { "A": ["Wetlands"] } },
+    { "from": 150, "to": 225, "mobs": [2248, 2249, 898, 533, 205], "zones": { "AH": ["Hillsbrad Foothills", "Duskwood"] } },
+    { "from": 225, "to": 280, "mobs": [5292, 5295, 5293], "zones": { "AH": ["Feralas"] } },
+    { "from": 280, "to": 300, "mobs": [9163, 9166, 9164, 9167], "zones": { "AH": ["Un'Goro Crater"] } }
+  ]
+}

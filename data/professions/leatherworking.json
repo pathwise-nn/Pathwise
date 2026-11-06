@@ -1,0 +1,40 @@
+{
+  "key": "leatherworking",
+  "line": 165,
+  "source": "https://www.wow-professions.com/forever/leatherworking-leveling-guide",
+  "untestedFrom": 225,
+  "ranks": [
+    { "rank": "Apprentice", "cap": 75, "trainers": ["Kamari", "Dan Golthas", "Mak", "Chaw Stronghide", "Shelene Rhobart", "Randal Worth", "Gretta Finespindle", "Darianna", "Adele Fielder", "Nadyia Maneweaver", "Emerii Tallgust", "Indari Sunseam"] },
+    { "rank": "Journeyman", "cap": 150, "level": 10, "skill": 50, "trainers": ["Karolek", "Arthur Moore", "Tarn", "Simon Tanner", "Fimble Finespindle", "Faldron"] },
+    { "rank": "Expert", "cap": 225, "level": 20, "skill": 125, "cost": 5000, "trainers": ["Una", "Telonis"] },
+    { "rank": "Artisan", "cap": 300, "level": 35, "skill": 200, "trainers": ["Hahrana Ironhide", "Drakk Stonehand"], "note": "Nightscape Pants (210) is taught only by these two, not by the Expert trainers." }
+  ],
+  "notes": ["Two ways through 130-175: Cured Heavy Hide, or Heavy Leather if 20 Heavy Hide cost more than about 120 Heavy Leather, 140 Medium Leather and 17 Moss Agate."],
+  "steps": [
+    { "from": 1, "to": 30, "make": [[2881, 33]], "or": [[2152, null]] },
+    { "from": 30, "to": 45, "make": [[2152, 24]], "or": [[3816, 27]] },
+    { "from": 45, "to": 55, "make": [[3756, 10]] },
+    { "from": 55, "to": 75, "make": [[3756, 21]] },
+    { "from": 75, "to": 80, "make": [[20648, 8]] },
+    { "from": 80, "to": 90, "make": [[3817, 10]], "or": [[3763, 11]] },
+    { "from": 90, "to": 100, "make": [[3763, 19]] },
+    { "from": 100, "to": 115, "make": [[2168, 16]], "or": [[9068, 24]] },
+    { "from": 115, "to": 125, "make": [[3766, 10]], "or": [[7135, 6], [3764, 5]] },
+    { "from": 125, "to": 130, "make": [[20649, 7]] },
+    { "from": 130, "to": 140, "make": [[3818, 20]] },
+    { "from": 140, "to": 155, "make": [[3764, 20]] },
+    { "from": 155, "to": 165, "make": [[7151, 10]] },
+    { "from": 165, "to": 175, "make": [[7156, 10]] },
+    { "path": "Heavy Leather", "from": 130, "to": 155, "make": [[3764, 30]] },
+    { "path": "Heavy Leather", "from": 155, "to": 170, "make": [[7149, 17]] },
+    { "path": "Heavy Leather", "from": 170, "to": 175, "make": [[6661, 5]] },
+    { "from": 175, "to": 195, "make": [[7156, 26]] },
+    { "from": 195, "to": 210, "make": [[10507, 21]] },
+    { "from": 210, "to": 225, "make": [[10548, 15]] },
+    { "from": 225, "to": 235, "make": [[10558, 12]] },
+    { "from": 235, "to": 250, "make": [[19049, 15]] },
+    { "from": 250, "to": 265, "make": [[19049, 21]] },
+    { "from": 265, "to": 285, "make": [[19082, 20]] },
+    { "from": 285, "to": 300, "make": [[19082, 33]], "or": [[19100, 15], [19098, 15], [1255018, 15]] }
+  ]
+}

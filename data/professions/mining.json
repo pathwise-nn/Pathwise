@@ -1,0 +1,32 @@
+{
+  "key": "mining",
+  "line": 186,
+  "source": "https://www.wow-professions.com/forever/mining-leveling-guide",
+  "untestedFrom": 125,
+  "tools": [2901],
+  "ranks": [
+    { "rank": "Apprentice", "cap": 75, "trainers": ["Makaru", "Brom Killian", "Brek Stonehoof", "Gelman Stonehand", "Geofram Bouldertoe", "Kurdram Stonehammer", "Norzsh", "Krunn", "Vartha Rockmane", "Walter Mason", "Kelsey Fargo", "Sally Swiftwrench", "Yarr Hammerstone", "Dank Drizzlecut", "Fanorran Stilloak", "Halavuul Cragwind", "Messana Crestwind"], "note": "Skyborne: Mining for Dummies, a reward of Harvesting Windstones in Thendal Village, teaches Mining. The starting-area Junior trainers teach only to 75." },
+    { "rank": "Journeyman", "cap": 150, "skill": 50, "note": "A full Mining trainer, not a Junior one." },
+    { "rank": "Expert", "cap": 225, "skill": 125 },
+    { "rank": "Artisan", "cap": 300, "skill": 200 }
+  ],
+  "notes": ["Smelting bought ore is a quicker way to 105-120 if you have the gold.", "Find Minerals is off after every death: turn it back on."],
+  "bonuses": [
+    { "spell": 13612, "amount": 2 },
+    { "spell": 13841, "amount": 5 },
+    { "item": 10542, "amount": 5 },
+    { "item": 5444, "amount": 2 }
+  ],
+  "steps": [
+    { "from": 1, "to": 65, "nodes": [2770], "zones": { "H": ["Durotar", "Mulgore", "Tirisfal Glades", "Zephras Isle"], "A": ["Elwynn Forest", "Dun Morogh", "Teldrassil", "Zephras Isle"] } },
+    { "from": 65, "to": 125, "nodes": [2771, 2770, 2775], "zones": { "AH": ["Wetlands", "Silverpine Forest", "Westfall", "Hillsbrad Foothills", "The Barrens", "Ashenvale", "Stonetalon Mountains"] } },
+    { "from": 125, "to": 175, "nodes": [2772, 2771, 2776], "zones": { "AH": ["Arathi Highlands", "Thousand Needles", "Desolace"] }, "or": [[3307, 20], [3308, 22]] },
+    { "from": 175, "to": 245, "nodes": [3858, 7911], "zones": { "AH": ["The Hinterlands", "Tanaris"] } },
+    { "from": 245, "to": 275, "nodes": [3858, 7911, 10620], "zones": { "AH": ["Un'Goro Crater", "Blasted Lands", "Felwood"] } },
+    { "from": 275, "to": 300, "nodes": [10620, 3858], "zones": { "AH": ["Un'Goro Crater", "Eastern Plaguelands", "Winterspring", "Burning Steppes"] } },
+    { "path": "Smelting", "from": 1, "to": 65, "make": [[2657, 140]] },
+    { "path": "Smelting", "from": 65, "to": 75, "make": [[3304, 70]] },
+    { "path": "Smelting", "from": 75, "to": 105, "make": [[2659, 70]] },
+    { "path": "Smelting", "from": 105, "to": 120, "make": [[2658, 45]] }
+  ]
+}

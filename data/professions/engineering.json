@@ -1,0 +1,38 @@
+{
+  "key": "engineering",
+  "line": 202,
+  "source": "https://www.wow-professions.com/forever/engineering-leveling-guide",
+  "untestedFrom": 225,
+  "tools": [5956],
+  "ranks": [
+    { "rank": "Apprentice", "cap": 75, "trainers": ["Thund", "Graham Van Talen", "Mukdrak", "Twizwick Sprocketgrind", "Sprite Jumpsprocket", "Jemma Quikswitch", "Bronk Guzzlegear", "Jenna Lemkenilli", "Strange Hermit"] },
+    { "rank": "Journeyman", "cap": 150, "level": 10, "skill": 50, "trainers": ["Nogg", "Franklin Lloyd", "Lilliam Sparkspindle", "Trixie Quikswitch"] },
+    { "rank": "Expert", "cap": 225, "level": 20, "skill": 125, "cost": 5000, "trainers": ["Roxxik", "Springspindle Fizzlegear"] },
+    { "rank": "Artisan", "cap": 300, "level": 35, "skill": 200, "trainers": ["Buzzek Bracketswing"], "note": "Buzzek also teaches the recipes above 200: go to Gadgetzan at 200." }
+  ],
+  "sellers": { "16042": ["Sovik"] },
+  "notes": ["At Engineering 200 and level 30 you can choose Gnomish or Goblin Engineering."],
+  "steps": [
+    { "from": 1, "to": 30, "make": [[3918, 60]] },
+    { "from": 30, "to": 50, "make": [[3922, 30]] },
+    { "from": 50, "to": 51, "make": [[7430, 1]] },
+    { "from": 51, "to": 75, "make": [[3923, 30]] },
+    { "from": 75, "to": 90, "make": [[3929, 60]] },
+    { "from": 90, "to": 100, "make": [[3931, 20]] },
+    { "from": 100, "to": 105, "make": [[3973, 5]], "or": [[3934, 5]] },
+    { "from": 105, "to": 125, "make": [[3938, 25]] },
+    { "from": 125, "to": 135, "make": [[3978, 10]], "or": [[3945, null]] },
+    { "from": 135, "to": 150, "make": [[3945, 30], [3942, 15]] },
+    { "from": 150, "to": 160, "make": [[3953, 15]] },
+    { "from": 160, "to": 175, "make": [[3955, 15]] },
+    { "from": 175, "to": 194, "make": [[12585, 60]] },
+    { "from": 194, "to": 195, "make": [[12590, 1]] },
+    { "from": 195, "to": 200, "make": [[12589, 6]] },
+    { "from": 200, "to": 215, "make": [[12591, 20]], "keep": "Keep the 20 Unstable Triggers and 40 Mithril Casings for the bombs at 238." },
+    { "from": 215, "to": 238, "make": [[12599, 40]] },
+    { "from": 238, "to": 250, "make": [[12619, 20]] },
+    { "from": 250, "to": 260, "make": [[19788, 30]] },
+    { "from": 260, "to": 285, "make": [[19791, 35]] },
+    { "from": 285, "to": 300, "make": [[19795, 20]] }
+  ]
+}

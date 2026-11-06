@@ -57,6 +57,49 @@ sources (through `tools/data/build.lua`, which with `PATHWISE_DATA_ONLY` set
 hands its corrected data over and writes nothing) and Forever's client tables.
 See `docs/LOOT.md`.
 
+## The professions recipe book
+
+The Recipe book pages (`Pathwise/Professions/RecipeBook.lua`) read
+`Data.recipebook`. It is built in three steps, and nothing in it is typed
+into the addon by hand:
+
+1. `data/professions/<key>.json` holds the plan for each of the twelve
+   professions. It covers the recipe for each skill range and how many to
+   make, alternatives, a second way through some ranges (`path`), the zones,
+   nodes and mobs for gathering, and the rank trainers, book sellers and
+   quests by name. These facts come from
+   [wow-professions.com](https://www.wow-professions.com/forever)'s Forever
+   guides, with Pathwise's own wording (THIRD_PARTY.md). The guides were
+   written on Forever's beta, and `untestedFrom` is where each one says it
+   could not test.
+2. `npm run recipebook` (`node tools/data/recipebook.js [build]`) checks the
+   JSON against the Forever client's tables (wago.tools, build
+   1.60.1.70790) and stops on any problem:
+   - every spell must be a recipe of that profession (SkillLineAbility);
+   - every item and zone must exist (Item, ItemSparse, UiMap);
+   - for each faction, the plan must run 1-300 with no gap.
+
+   It then adds the client's facts: names, reagents (SpellReagents), the item
+   made, yellow and grey (TrivialSkillLineRankLow and High), and the recipe
+   items that teach each spell with the skill they need. It writes
+   `data/recipebook.lua`.
+3. `npm run data` joins that with QuestieDB in `tools/data/build.lua`:
+   - where each recipe item is sold, drops or is a quest reward;
+   - the named NPCs, found by name (an NPC whose title names the
+     profession comes first);
+   - the quests by name, and the mobs to skin.
+
+When this was built, all 227 named NPCs were in QuestieDB's Forever data.
+The site's material counts matched the client's reagents in 161 of 163
+craft lines; the other two were a rounding (100 against 99) and a page
+quirk.
+
+The guides and Pathwise's profession routes (`Routes/Professions.lua`,
+from Polestar) often pick different recipes. The book is shown beside the
+routes, and the routes are unchanged. Some rank trainers the guides name
+differ from the routes' too (Expert Alchemy: two trainers in the guide,
+six in the route). Neither has been checked in game.
+
 ## Known gaps
 
 - **Dynamic Corrections are not applied** (`LoadFactionFixes`,

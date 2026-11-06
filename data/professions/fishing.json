@@ -1,0 +1,19 @@
+{
+  "key": "fishing",
+  "line": 356,
+  "source": "https://www.wow-professions.com/forever/fishing-leveling-guide",
+  "tools": [6256, 6529, 6530, 6532],
+  "ranks": [
+    { "rank": "Apprentice", "cap": 75, "trainers": ["Lumak", "Armand Cromwell", "Kah Mistrunner", "Arnold Leland", "Grimnur Stonebrand", "Astaia", "Lau'Tiki", "Uthan Stillwater", "Clyde Kellen", "Lee Brown", "Paxton Ganter", "Androl Oakhand", "Baelann Swiftcurrent", "Fenn Fairweather"] },
+    { "rank": "Journeyman", "cap": 150, "level": 10, "skill": 50, "note": "Any Fishing trainer." },
+    { "rank": "Expert", "cap": 225, "level": 20, "skill": 125, "book": 16083, "trainers": ["Old Man Heming"], "note": "Buy Bright Baubles from him too. The Auction House may have the book." },
+    { "rank": "Artisan", "cap": 300, "level": 35, "skill": 225, "quest": "Nat Pagle, Angler Extreme", "trainers": ["Nat Pagle"], "needs": [16967, 16970, 16968, 16969], "note": "Catch the four fish in Feralas, Swamp of Sorrows, Desolace and Stranglethorn Vale." }
+  ],
+  "notes": ["Fish you catch level Cooking too: cook them as you go.", "From 150, use Bright Baubles when fish get away."],
+  "steps": [
+    { "from": 1, "to": 75, "zones": { "H": ["Durotar", "Mulgore", "Tirisfal Glades", "Zephras Isle"], "A": ["Dun Morogh", "Elwynn Forest", "Teldrassil", "Zephras Isle"] } },
+    { "from": 75, "to": 150, "zones": { "H": ["Orgrimmar", "Undercity", "Thunder Bluff"], "A": ["Darnassus", "Stormwind City", "Ironforge"], "AH": ["The Barrens", "Darkshore", "Loch Modan", "Silverpine Forest", "Westfall"] } },
+    { "from": 150, "to": 225, "zones": { "AH": ["Dustwallow Marsh", "Alterac Mountains", "Arathi Highlands", "Desolace", "Stranglethorn Vale", "Swamp of Sorrows", "Thousand Needles"] } },
+    { "from": 225, "to": 300, "zones": { "AH": ["Felwood", "Feralas", "The Hinterlands", "Tanaris", "Un'Goro Crater", "Western Plaguelands"] } }
+  ]
+}

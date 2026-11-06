@@ -6,6 +6,27 @@ that version's section.
 
 ## Unreleased
 
+### Professions: a recipe book for every profession
+- Each profession's page has a new Recipe book, and the Professions list
+  opens the books for all twelve, learned or not. A book goes skill range by
+  skill range: what to craft and how many, cheaper alternatives, each
+  recipe's materials and its colour at your skill, and the materials for the
+  range in all. For gathering it lists the herbs, ore, zones or mobs per
+  range.
+- It shows the next rank to train, with the level, skill and cost it needs and
+  your faction's trainers (or the book or quest that teaches it). Click one
+  for the arrow.
+- "Show every step" adds where each recipe comes from (the vendors, the drop
+  or the quest), the late recipes from drops and reputation, tools, and items
+  that raise your skill. Enchanting, Leatherworking, First Aid and Mining
+  offer a second way through some ranges (Strange Dust, Heavy Leather,
+  healing potions, smelting bought ore).
+- The recipe choices come from wow-professions.com's Forever guides, written
+  on the beta. Each book says from which skill the guide was not tested
+  there. Names, materials, colours and recipe items are Forever's own client
+  data. Trainers, vendors and recipe sources come from QuestieDB's Forever
+  data. Green is an estimate (halfway from yellow to grey).
+
 ## 0.2.6 (2026-11-06)
 
 ### The website and the Discord, from every addon

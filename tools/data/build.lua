@@ -483,6 +483,125 @@ do
 	end
 end
 
+-- The professions recipe book (data/recipebook.lua, from data/professions/
+-- by tools/data/recipebook.js, checked against the Forever client's tables).
+-- Joined here with QuestieDB's facts: where each recipe item is sold, drops
+-- or is a quest reward; the trainers, book sellers and quest givers the
+-- guides name, found by name (an NPC QuestieDB does not know, such as many
+-- of Forever's new ones, keeps its name and no id); the quests by name; the
+-- mobs to skin.
+--   recipebook = { books, spells, items, sources = { [recipeItem] = { vendors, drops, quests, worldDrop } }, zones }
+local recipebook
+do
+	local f = io.open("data/recipebook.lua", "rb")
+	if f then
+		f:close()
+		local R = dofile("data/recipebook.lua")
+		-- A word of each profession's NPC titles ("Expert Alchemist", "Mining Trainer").
+		local TITLE = { alchemy = "alchem", blacksmithing = "smith", enchanting = "enchant", engineering = "engineer",
+			leatherworking = "leather", tailoring = "tailor", herbalism = "herbalis", mining = "min", skinning = "skin",
+			cooking = "c[oh][oe]", ["first-aid"] = "aid", fishing = "fish" }
+		local byName = {}
+		for id, n in pairs(db.Npc) do
+			local name = type(n) == "table" and n[NK.name]
+			if type(name) == "string" then
+				byName[name] = byName[name] or {}
+				table.insert(byName[name], id)
+			end
+		end
+		local questByName = {}
+		for id, q in pairs(db.Quest) do
+			local name = type(q) == "table" and q[QK.name]
+			if type(name) == "string" then
+				questByName[name] = questByName[name] or {}
+				table.insert(questByName[name], id)
+			end
+		end
+		-- The NPC of that name: one whose title names the profession, else
+		-- one with a spawn, else the lowest id.
+		local function npcNamed(name, key)
+			local list = byName[name]
+			if not list then return nil end
+			table.sort(list)
+			local best, score = nil, -1
+			for _, id in ipairs(list) do
+				local n = db.Npc[id]
+				local title = type(n[NK.subName]) == "string" and n[NK.subName]:lower() or ""
+				local s = (title:find(TITLE[key] or "^$") and 2 or 0) + (type(n[NK.spawns]) == "table" and next(n[NK.spawns]) and 1 or 0)
+				if s > score then best, score = id, s end
+			end
+			return best
+		end
+		local found, missing = 0, 0
+		local books = {}
+		for _, b in ipairs(R.books) do
+			for _, r in ipairs(b.ranks) do
+				local people = {}
+				for _, name in ipairs(r.trainers or {}) do
+					local id = npcNamed(name, b.key)
+					if id then npcsUsed[id] = true found = found + 1 else missing = missing + 1 end
+					people[#people + 1] = { name, id or false }
+				end
+				r.trainers = #people > 0 and people or nil
+				if r.quest then
+					local q = questByName[r.quest]
+					if q then table.sort(q) end
+					r.questIds = q
+				end
+			end
+			for _, s in ipairs(b.steps) do
+				for _, n in ipairs(s.mobs or {}) do
+					if type(db.Npc[n]) ~= "table" then error(("recipebook: %s %d-%d: mob %d is not in QuestieDB"):format(b.key, s.from, s.to, n)) end
+					npcsUsed[n] = true
+				end
+			end
+			books[#books + 1] = b
+		end
+		-- Where each recipe item comes from.
+		local sources = {}
+		for _, s in pairs(R.spells) do
+			for _, it in ipairs(s[8] or {}) do
+				local q = db.Item[it]
+				if type(q) == "table" and not sources[it] then
+					local vendors, drops, quests = ids(q[IK.vendors]), ids(q[IK.npcDrops]), ids(q[IK.questRewards])
+					local world = drops and #drops > MAX_DROPS or nil
+					if world then drops = nil end
+					if vendors then while #vendors > 6 do table.remove(vendors) end for _, n in ipairs(vendors) do npcsUsed[n] = true end end
+					for _, n in ipairs(drops or {}) do npcsUsed[n] = true end
+					if quests then while #quests > 3 do table.remove(quests) end end
+					sources[it] = { vendors = vendors, drops = drops, quests = quests, worldDrop = world }
+				end
+			end
+		end
+		-- Recipe vendors a guide names that QuestieDB does not list for the item.
+		for _, b in ipairs(books) do
+			for _, row in ipairs(b.sellers or {}) do
+				local it, names = row[1], row[2]
+				local src = sources[it] or {}
+				sources[it] = src
+				src.vendors = src.vendors or {}
+				for _, name in ipairs(names) do
+					local id = npcNamed(name, b.key)
+					if not id then error(("recipebook: %s: seller %s of item %d is not in QuestieDB"):format(b.key, name, it)) end
+					if not contains(src.vendors, id) then table.insert(src.vendors, id) end
+					npcsUsed[id] = true
+				end
+			end
+			b.sellers = nil
+		end
+		-- Item names the client tables left out (no ItemSparse row): QuestieDB's.
+		for id, name in pairs(R.items) do
+			if name == false and type(db.Item[id]) == "table" then R.items[id] = db.Item[id][IK.name] end
+		end
+		recipebook = { build = R.build, books = books, spells = R.spells, items = R.items, sources = sources, zones = R.zones }
+		local n = 0
+		for _ in pairs(sources) do n = n + 1 end
+		log(("recipe book: %d professions, %d recipe items with a source, %d named NPCs found, %d not in QuestieDB"):format(#books, n, found, missing))
+	else
+		log("no data/recipebook.lua: run node tools/data/recipebook.js for the recipe book")
+	end
+end
+
 local npcs = {}
 for id in pairs(npcsUsed) do
 	local n = db.Npc[id]
@@ -807,6 +926,28 @@ for _, map in ipairs(sortedIds(zones)) do
 	f:write("[", ("%d"):format(map), "]=", table.concat(out), ",\n")
 end
 f:write("}\n")
+if recipebook then
+	f:write("-- recipebook = { build, books = { per profession: key, line, source, untestedFrom, ranks, steps, ... },\n")
+	f:write("--   spells[id] = { name, skillLine, learn, yellow, grey, itemMade, reagents, recipeItems },\n")
+	f:write("--   items[id] = name, sources[recipeItem] = { vendors, drops, quests, worldDrop }, zones[uiMap] = name }\n")
+	f:write("--   ranks[i].trainers = { { name, npcId or false }, ... }; data/professions/*.json has the facts.\n")
+	f:write(("D.recipebook = { build = %q,\nbooks = {\n"):format(recipebook.build))
+	for _, b in ipairs(recipebook.books) do
+		local out = {}
+		ser(b, out)
+		f:write(table.concat(out), ",\n")
+	end
+	for _, part in ipairs({ "spells", "items", "sources", "zones" }) do
+		f:write("},\n", part, " = {\n")
+		local t = recipebook[part]
+		for _, id in ipairs(sortedIds(t)) do
+			local out = {}
+			ser(t[id], out)
+			f:write("[", ("%d"):format(id), "]=", table.concat(out), ",\n")
+		end
+	end
+	f:write("} }\n")
+end
 f:close()
 
 local function count(t) local n = 0 for _ in pairs(t) do n = n + 1 end return n end
