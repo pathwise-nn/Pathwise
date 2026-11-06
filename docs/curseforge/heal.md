@@ -17,7 +17,7 @@ Off until you want them: a Priest, Druid, Paladin or Shaman is asked once.
 
 - Your party or raid as a grid built for healing: heals on the way, what each
   person is missing, debuffs you can cleanse (shown in a fight too), your
-  HoTs between fights, aggro, mana, and fading out of range.
+  HoTs with the time left on each, aggro, mana, and fading out of range.
 - **Click-casting**: each click, with Shift, Ctrl or Alt, casts a spell on
   the person you click. Type a spell or drag it from your spellbook.
 - **A preset for every healing spec**: Holy and Discipline Priest,

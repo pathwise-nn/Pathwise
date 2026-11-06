@@ -11,8 +11,9 @@
 --     text and alphas, which take them; a yes/no is turned into an alpha by
 --     the game (C_CurveUtil.EvaluateColorValueFromBoolean);
 --   * auras can't be read by addons in a fight, so the debuffs you can cleanse
---     are drawn by the game itself into each frame (a private aura anchor),
---     and our own HoT row and dispel border read auras only when allowed;
+--     and, in a fight, your HoTs are drawn by the game itself into each frame
+--     (private aura anchors); our own HoT row (with its countdown) and the
+--     dispel border read auras only when allowed;
 --   * the frames are a SecureGroupHeaderTemplate of secure unit buttons
 --     (Heal.xml), sized and bound out of combat only.
 
@@ -30,7 +31,9 @@ ns.Defaults("heal", {
 	color = "class", -- "class" | "green" | "health" (green to red as it drops)
 	text = "deficit", -- "none" | "percent" | "deficit"
 	incoming = true, -- heals on the way
-	hots = true, -- your HoTs (out of combat; the game draws them in combat when it can)
+	hots = true, -- your HoTs: ours out of combat, the game's in a fight
+	hotTimers = true, -- the time left on each, red and blinking near the end
+	hotSize = 14, -- their icons, in pixels
 	dispel = true, -- debuffs you can cleanse
 	range = true, rangeAlpha = 0.4,
 	aggro = true,
@@ -41,6 +44,11 @@ ns.Defaults("heal", {
 })
 H.DEFAULT_POINT = { "TOPLEFT", "TOPLEFT", 30, -200 }
 H.HEALERS = { PRIEST = true, DRUID = true, PALADIN = true, SHAMAN = true }
+H.MAX_HOTS = 3
+-- Your HoTs, as Blizzard's Forever UI names them (Blizzard_FrameXMLUtil/
+-- AuraUtil.lua, AuraUtil.AuraFilters.RaidInCombat: "Combine with Player &
+-- Helpful to return self-cast HoTs"). No spell list of our own.
+H.HOT_FILTER = "HELPFUL|PLAYER|RAID_IN_COMBAT"
 
 local function inCombat() return InCombatLockdown and InCombatLockdown() end
 local function call(fn, ...) if type(fn) ~= "function" then return nil end local ok, a, b, c, d = pcall(fn, ...) if ok then return a, b, c, d end end
@@ -108,8 +116,9 @@ end
 ns.On("ACCENT_CHANGED", function() tried.color, colorCurve = nil, nil end)
 
 -- Auras: readable only out of a fight on Forever; a refusal pauses reads.
-local auraPause = 0
+local auraPause, fighting = 0, false
 local function aurasAllowed()
+	if fighting then return false end -- from PLAYER_REGEN_DISABLED, a moment before the lockdown
 	if (GetTime and GetTime() or 0) < auraPause then return false end
 	local R, E = C_RestrictedActions, Enum and Enum.AddOnRestrictionType
 	if R and R.IsAddOnRestrictionActive and E then
@@ -210,18 +219,25 @@ function H.NewButton(b)
 	b.hover = over:CreateTexture(nil, "ARTWORK")
 	b.hover:SetAllPoints()
 	b.hover:SetColorTexture(1, 1, 1, 0)
+	-- Your HoTs out of a fight: an icon each, the time left on it.
 	b.hots = {}
-	for i = 1, 3 do
+	for i = 1, H.MAX_HOTS do
 		local ic = over:CreateTexture(nil, "OVERLAY")
-		ic:SetSize(10, 10)
-		ic:SetPoint("TOPRIGHT", -2 - (i - 1) * 11, -2)
 		ic:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 		ic:Hide()
+		local t = over:CreateFontString(nil, "OVERLAY", nil, 7)
+		t:SetPoint("CENTER", ic, "CENTER", 1, 0)
+		t:SetJustifyH("CENTER")
+		t:SetText("")
+		ic.pwText = t
 		b.hots[i] = ic
 	end
 	-- The game draws the debuffs you can cleanse here, in or out of combat.
 	b.gameAuras = CreateFrame("Frame", nil, over)
 	b.gameAuras:SetAllPoints()
+	-- And your HoTs in a fight, when addons can't read them (attached only then).
+	b.gameHots = CreateFrame("Frame", nil, over)
+	b.gameHots:SetAllPoints()
 	b:HookScript("OnEnter", function(self)
 		A.Hover(self, true, function(p) self.hover:SetColorTexture(1, 1, 1, 0.08 * p) end)
 		if GameTooltip and self.pwUnit then
@@ -250,7 +266,7 @@ function H.SetUnit(b, unit)
 		byUnit[unit] = byUnit[unit] or {}
 		byUnit[unit][b] = true
 		H.AttachGameAuras(b)
-		H.Update(b)
+		H.Update(b) -- attaches the game's HoTs when in a fight (H.Auras)
 	end
 end
 
@@ -269,6 +285,19 @@ function H.Size(b)
 	b.health:SetPoint("BOTTOMRIGHT", -1, ns.Get("heal.mana") and 5 or 1)
 	b.incoming:SetWidth(math.max(1, (ns.Get("heal.width") or 84) - 2))
 	if b.RegisterForClicks then b:RegisterForClicks("AnyUp") end
+	H.PlaceHots(b)
+end
+
+-- The HoT icons, top right, right to left, at the chosen size.
+function H.HotSize() return math.max(8, math.min(24, ns.Get("heal.hotSize") or 14)) end
+function H.PlaceHots(b)
+	local size = H.HotSize()
+	for i, ic in ipairs(b.hots) do
+		ic:SetSize(size, size)
+		ic:ClearAllPoints()
+		ic:SetPoint("TOPRIGHT", -3 - (i - 1) * (size + 1), -3)
+		T.BarText(ic.pwText, "small", math.max(8, math.floor(size * 0.64 + 0.5)))
+	end
 end
 
 ---------------------------------------------------------------------------
@@ -325,6 +354,61 @@ function H.AttachGameAuras(b)
 		})
 	end)
 	if ok and id then b.pwAnchor, b.pwAnchorUnit = id, unit return true end
+	return false
+end
+
+-- Your HoTs in a fight, drawn by the game: a second container, set to show
+-- only buffs (the ones Blizzard's raid frames show in combat: yours that the
+-- game flags for it, your HoTs), top right, with the game's own cooldown
+-- spiral and countdown numbers. Addons can't show those times in a fight
+-- (the aura data is secret, and Cooldown:SetCooldown* are protected on
+-- Forever), so the game draws them. Attached only while our row can't be
+-- drawn (H.Auras): at PLAYER_REGEN_DISABLED, a moment before the lockdown.
+function H.DetachGameHots(b)
+	if b.pwHotAnchor and C_UnitAuras and C_UnitAuras.RemovePrivateAuraAnchor then pcall(C_UnitAuras.RemovePrivateAuraAnchor, b.pwHotAnchor) end
+	b.pwHotAnchor, b.pwHotAnchorUnit = nil, nil
+end
+
+function H.AttachGameHots(b)
+	local unit = b.pwUnit
+	local U = C_UnitAuras
+	if not (unit and b.gameHots and ns.Get("heal.hots") and U and U.AddPrivateAuraAnchor) then H.DetachGameHots(b) return false end
+	if b.pwHotAnchor and b.pwHotAnchorUnit == unit then return true end
+	H.DetachGameHots(b)
+	local g, size = b.gameHots, H.HotSize()
+	local timers = ns.Get("heal.hotTimers") and true or false
+	local ok, id = pcall(function()
+		g:SetAttribute("max-buffs", H.MAX_HOTS)
+		g:SetAttribute("max-debuffs", 0)
+		g:SetAttribute("max-dispel-debuffs", 0)
+		g:SetAttribute("aura-organization-type", enumValue("RaidAuraOrganizationType", "BuffsTopDebuffsBottom", 1))
+		g:SetAttribute("display-only-dispellable-debuffs", true)
+		g:SetAttribute("ignore-buffs", false)
+		g:SetAttribute("ignore-debuffs", true)
+		g:SetAttribute("ignore-dispel-debuffs", true)
+		g:SetAttribute("dispel-indicator-option", enumValue("RaidDispelDisplayType", "Disabled", 0))
+		g:SetAttribute("display-larger-role-specific-debuffs", false)
+		g:SetAttribute("dispel-indicator-overlay-type", enumValue("RaidDispelOverlayType", "Disabled", 0))
+		g:SetAttribute("dispel-indicator-overlay-animation", false)
+		g:SetAttribute("dispel-indicator-animated-border", false)
+		g:SetAttribute("show-big-defensive", false)
+		g:SetAttribute("big-defensive-size", size)
+		g:SetAttribute("debuff-size", size)
+		g:SetAttribute("buff-size", size)
+		g:SetAttribute("debuff-border-scale", 1)
+		g:SetAttribute("buff-border-scale", 1)
+		g:SetAttribute("always-hide-duration", true) -- the countdown numbers say it, inside the icon
+		g:SetAttribute("set-aura-size-to-icon-size", true)
+		g:SetAttribute("power-bar-used-height", 0)
+		g:SetAttribute("group-type", enumValue("EditModeUnitFrameSystemIndices", "Party", 0))
+		return U.AddPrivateAuraAnchor({
+			unitToken = unit, auraIndex = 1, parent = g, isContainer = true,
+			showCooldownFrame = timers, showCooldownEdge = false, showCountdownNumbers = timers, showDispelIcon = false,
+			iconInfo = { iconAnchor = { point = "TOPRIGHT", relativeTo = g, relativePoint = "TOPRIGHT", offsetX = -3, offsetY = -3 },
+				iconWidth = size, iconHeight = size, borderScale = 1 },
+		})
+	end)
+	if ok and id then b.pwHotAnchor, b.pwHotAnchorUnit = id, unit return true end
 	return false
 end
 
@@ -397,9 +481,44 @@ function H.Range(b, unit)
 	if not pcall(b.SetAlpha, b, a) then b:SetAlpha(1) end
 end
 
+-- Our HoT row is drawn while auras are readable; in a fight the game's is
+-- there instead. Its icons take the mouse (for their tooltips), so it is
+-- only attached while it's needed: between fights a click on that corner
+-- still casts.
+local function gameHotsSeen(b, on)
+	if on then H.AttachGameHots(b) else H.DetachGameHots(b) end
+end
+
+local live = {} -- frames with a countdown running
+H.live = live
+
+-- One HoT: shown when it has a duration (a permanent buff is not a HoT).
+local function addHot(b, d, seen)
+	if b.pwHots >= H.MAX_HOTS then return end
+	local id = readable(d.auraInstanceID)
+	if id ~= nil and seen[id] then return end
+	local dur, exp = readable(d.duration), readable(d.expirationTime)
+	if type(dur) ~= "number" or dur <= 0 then return end
+	if id ~= nil then seen[id] = true end
+	b.pwHots = b.pwHots + 1
+	local ic = b.hots[b.pwHots]
+	ic:SetTexture(d.icon)
+	ic.pwDuration = dur
+	ic.pwExpires = (type(exp) == "number" and exp > 0) and exp or nil
+	ic:SetAlpha(1)
+	ic:Show()
+end
+
 function H.Auras(b, unit)
-	for _, ic in ipairs(b.hots) do ic:Hide() end
-	if not aurasAllowed() then return end -- the game draws dispels; HoTs wait for the fight to end
+	for _, ic in ipairs(b.hots) do ic:Hide() ic.pwText:SetText("") ic.pwExpires, ic.pwWarn = nil, nil end
+	b.pwHots = 0
+	live[b] = nil
+	if not aurasAllowed() then -- the game draws dispels and HoTs; ours wait for the fight to end
+		gameHotsSeen(b, true)
+		H.Ticking()
+		return
+	end
+	gameHotsSeen(b, false)
 	local best
 	if ns.Get("heal.dispel") then
 		for i = 1, 40 do
@@ -411,18 +530,94 @@ function H.Auras(b, unit)
 	end
 	if best then b.dispel:SetColor(T.Color(DISPEL_COLOR[best])) end
 	b.dispel:SetShown(best and true or false)
-	if not ns.Get("heal.hots") then return end
-	local n = 0
+	if not ns.Get("heal.hots") then H.Ticking() return end
+	local seen = {}
+	-- Your HoTs, as the game flags them (a client that refuses the filter: skipped).
 	for i = 1, 40 do
+		if b.pwHots >= H.MAX_HOTS then break end
+		local okCall, d = pcall(C_UnitAuras.GetAuraDataByIndex, unit, i, H.HOT_FILTER)
+		if not okCall or type(d) ~= "table" then break end
+		addHot(b, d, seen)
+	end
+	-- Then your other short buffs (shields and the like), up to a minute.
+	for i = 1, 40 do
+		if b.pwHots >= H.MAX_HOTS then break end
 		local d, refused = aura(unit, i, "HELPFUL|PLAYER")
-		if refused or not d or n >= 3 then break end
+		if refused or not d then break end
 		local dur = readable(d.duration)
-		if type(dur) == "number" and dur > 0 and dur <= 60 then
-			n = n + 1
-			b.hots[n]:SetTexture(d.icon)
-			b.hots[n]:Show()
+		if type(dur) == "number" and dur <= 60 then addHot(b, d, seen) end
+	end
+	if b.pwHots > 0 and ns.Get("heal.hotTimers") then live[b] = true end
+	H.HotTimers(b)
+	H.Ticking()
+end
+
+---------------------------------------------------------------------------
+-- The time left on your HoTs (out of a fight): a light timer that runs only
+-- while a countdown shows; UNIT_AURA redraws the icons themselves.
+---------------------------------------------------------------------------
+
+H.TICK = 0.1
+-- Red and blinking for its last 3 seconds (the last third of a short one).
+function H.WarnAt(duration) return math.min(3, (duration or 9) / 3) end
+
+-- 75 -> "2m", 12.2 -> "13", 0.4 -> "1": whole units, rounded up, to fit an icon.
+function H.FormatLeft(sec)
+	if type(sec) ~= "number" or sec <= 0 then return "" end
+	if sec >= 60 then return ("%dm"):format(math.ceil(sec / 60)) end
+	return ("%d"):format(math.ceil(sec))
+end
+
+function H.HotTimers(b, now)
+	now = now or (GetTime and GetTime() or 0)
+	local timers = ns.Get("heal.hotTimers")
+	for i = 1, b.pwHots or 0 do
+		local ic = b.hots[i]
+		local left = ic.pwExpires and (ic.pwExpires - now)
+		if not (timers and left) then
+			ic.pwText:SetText("")
+			ic.pwWarn = nil
+			ic:SetAlpha(1)
+		else
+			ic.pwText:SetText(H.FormatLeft(left))
+			local warn = left <= H.WarnAt(ic.pwDuration)
+			T.Paint(ic.pwText, warn and "error" or "text")
+			ic.pwWarn = warn
+			-- Near the end it blinks, twice a second.
+			ic:SetAlpha(warn and (0.4 + 0.6 * (0.5 + 0.5 * math.cos(now * 4 * math.pi))) or 1)
 		end
 	end
+end
+
+local ticker, since = nil, 0
+-- The timer runs while any frame has a countdown, and stops when none does.
+function H.Ticking()
+	local on = ns.Get("heal.enabled") and next(live) ~= nil or false
+	if on and not ticker then
+		ticker = CreateFrame("Frame")
+		ticker:SetScript("OnUpdate", function(_, dt)
+			since = since + (dt or 0)
+			if since < H.TICK then return end
+			since = 0
+			if not aurasAllowed() then H.Fighting() return end -- a fight began: the game's HoTs take over
+			local now = GetTime and GetTime() or 0
+			for b in pairs(live) do H.HotTimers(b, now) end
+		end)
+	end
+	if ticker then ticker:SetShown(on) end
+	return on
+end
+function H.Ticker() return ticker end
+
+-- Auras just went out of reach: every frame with a countdown hands over to
+-- the game's HoTs.
+function H.Fighting()
+	local list = {}
+	for b in pairs(live) do list[#list + 1] = b end
+	for _, b in ipairs(list) do
+		if b.pwUnit then H.Auras(b, b.pwUnit) else live[b] = nil end
+	end
+	H.Ticking()
 end
 
 function H.Update(b)
@@ -628,10 +823,21 @@ end
 ns.RegisterEvent("PLAYER_TARGET_CHANGED", function() if ns.Get("heal.enabled") then H.UpdateAll() end end)
 ns.RegisterEvent("GROUP_ROSTER_UPDATE", function() if ns.Get("heal.enabled") then H.UpdateAll() end end)
 ns.RegisterEvent("PLAYER_REGEN_ENABLED", function()
+	fighting = false
 	if H.pending then H.pending = false if anchor or ns.Get("heal.enabled") then H.Layout() end end
 	if ns.Get("heal.enabled") then H.UpdateAll() end -- auras readable again
 end)
-ns.RegisterEvent("PLAYER_REGEN_DISABLED", function() if handle then handle:Hide() end unlocked = false end)
+ns.RegisterEvent("PLAYER_REGEN_DISABLED", function()
+	if handle then handle:Hide() end
+	unlocked = false
+	-- The fight starts a moment after this: hand the HoTs to the game now.
+	fighting = true
+	if ns.Get("heal.enabled") then for _, b in ipairs(buttons) do if b.pwUnit then H.Auras(b, b.pwUnit) end end end
+end)
+-- Fired just before a restriction starts, or after it ends: look again soon.
+ns.RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED", function()
+	if ns.Get("heal.enabled") and C_Timer and C_Timer.After then C_Timer.After(0.05, H.UpdateAll) end
+end)
 
 ns.On("READY", function()
 	if ns.Get("heal.enabled") then H.Layout() end
@@ -650,6 +856,13 @@ ns.On("SETTING_CHANGED", function(path)
 	if path == "heal.enabled" or path == "heal.hideParty" or path == "*" then tellUI() end
 	if path:find("^heal%.") or path == "*" then
 		if path == "heal.dispel" then for _, b in ipairs(buttons) do H.AttachGameAuras(b) end end
+		-- The game's HoTs take the new settings at once, in a fight too.
+		if path == "heal.hots" or path == "heal.hotTimers" or path == "heal.hotSize" or path == "*" then
+			for _, b in ipairs(buttons) do
+				H.DetachGameHots(b)
+				if b.pwUnit and ns.Get("heal.enabled") then H.Auras(b, b.pwUnit) end
+			end
+		end
 		if anchor or ns.Get("heal.enabled") then H.Layout() end
 	end
 end)

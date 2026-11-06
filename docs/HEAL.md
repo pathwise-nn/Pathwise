@@ -25,7 +25,9 @@ or its minimap button.
   you level. A click you set yourself is never changed.
 - Heals on the way, what each person is missing (or their percent), debuffs
   you can cleanse (drawn by the game, so they show in a fight too), your
-  HoTs between fights, aggro, mana, and fading out of range.
+  HoTs with the time left on each (red and blinking when one is about to
+  run out; in a fight the game draws them with its own countdown), aggro,
+  mana, and fading out of range.
 - Forever keeps health, range and auras secret from addons: the frames pass
   those straight to the game's bars and let the game draw what it hides.
 

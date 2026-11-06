@@ -6,6 +6,14 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Heal: the time left on your HoTs
+- Each healing frame shows your HoTs and shields top right, with the time
+  left on each. In its last seconds the number turns red and the icon
+  blinks, so you can see when to renew it. In a fight, when Forever hides
+  auras from addons, the game draws your HoTs there itself with its own
+  countdown. On by default; /pwheal > Healing has "Time left on your HoTs"
+  and the icon size. Not yet checked in game.
+
 ## 0.2.7 (2026-11-06)
 
 ### Professions: a recipe book for every profession
