@@ -13,4 +13,5 @@ ns.ID = {
 	slash = { "/pwloot", "/pathwiseloot" },
 	about = "What every dungeon and raid boss drops, and a wishlist",
 	minimapAngle = 160,
+	color = "#A970FF", -- the logo's purple: its minimap button's mark
 }

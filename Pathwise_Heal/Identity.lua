@@ -13,4 +13,5 @@ ns.ID = {
 	slash = { "/pwheal", "/pathwiseheal" },
 	about = "Click-to-heal party and raid frames, with a preset for every healing spec",
 	minimapAngle = 155,
+	color = "#FF6EB4", -- the logo's pink: its minimap button's mark
 }

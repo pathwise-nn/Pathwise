@@ -13,4 +13,5 @@ ns.ID = {
 	slash = { "/pwui", "/pathwiseui" },
 	about = "Your whole interface in the Pathwise look, in your color",
 	minimapAngle = 135,
+	color = "#4F86FF", -- the logo's royal blue: its minimap button's mark
 }

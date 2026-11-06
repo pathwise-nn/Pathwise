@@ -1,6 +1,7 @@
 -- A Pathwise addon's minimap button (ns.ID: Pathwise UI, Pathwise Heal): a
--- dark disc with a thin ring and the Pathwise mark in your accent. Click:
--- the options; drag: around the rim.
+-- dark disc with a thin ring and the Pathwise mark in the addon's logo colour
+-- (ns.ID.color), so each addon's button is told apart on the minimap; the
+-- accent if it has none. Click: the options; drag: around the rim.
 -- Shared file (see Core.lua): edit it here, then run npm run kit.
 
 local ADDON, ns = ...
@@ -11,6 +12,11 @@ ns.Minimap = M
 ns.Defaults("minimap", { shown = true, angle = ns.ID.minimapAngle or 135 })
 
 local button
+
+-- The mark's colour: the addon's logo colour, else your accent.
+function M.Color()
+	return ns.ID.color and T.Hex(ns.ID.color) or T.Color("accent")
+end
 
 function M.Offset(angle, width)
 	local r = (width or 140) / 2 + 6
@@ -45,7 +51,7 @@ local function build()
 	icon:SetSize(20, 20)
 	icon:SetPoint("CENTER")
 	local function tint()
-		local a = T.Color("accent") icon:SetVertexColor(a[1], a[2], a[3])
+		local a = M.Color() icon:SetVertexColor(a[1], a[2], a[3])
 		ground()
 		ring:SetVertexColor(T.Color("border")[1], T.Color("border")[2], T.Color("border")[3])
 	end
@@ -54,7 +60,7 @@ local function build()
 	button.icon, button.ring = icon, ring
 	button:SetScript("OnClick", function() ns.Fire("SHOW_CONFIG") end)
 	local function look(p)
-		local r, g, b = ns.Anim.Mix(T.Color("border"), T.Color("accent"), p)
+		local r, g, b = ns.Anim.Mix(T.Color("border"), M.Color(), p)
 		ring:SetVertexColor(r, g, b)
 		icon:SetSize(20 + 2 * p, 20 + 2 * p)
 	end

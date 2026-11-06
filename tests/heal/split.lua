@@ -89,6 +89,20 @@ test("split: both installed: one accent, set from either", function()
 	eq(heal.Get("look.accentColor"), "#22CC88", "not when sharing is off")
 end)
 
+test("split: each minimap button's mark is its own logo's colour, not the shared accent", function()
+	local stub, ui, heal = both()
+	local function mark(b) return ui.Theme.ToHex(b.icon.vertex) end
+	eq(mark(_G.PathwiseUIMinimapButton), ui.ID.color, "Pathwise UI: its logo's blue")
+	eq(mark(_G.PathwiseHealMinimapButton), heal.ID.color, "Pathwise Heal: its logo's pink")
+	ok(ui.ID.color ~= heal.ID.color, "told apart")
+	ui.Set("look.accentMode", "custom")
+	ui.Set("look.accentColor", "#FF8800")
+	ui.Fire("ACCENT_CHANGED")
+	heal.Fire("ACCENT_CHANGED")
+	eq(mark(_G.PathwiseUIMinimapButton), ui.ID.color, "a new accent leaves the mark alone")
+	eq(mark(_G.PathwiseHealMinimapButton), heal.ID.color)
+end)
+
 test("split: both installed: Pathwise UI's party frames step aside while the healing frames show", function()
 	local stub, ui, heal = both(priestInParty)
 	local party = ui.Units.frames.party1
