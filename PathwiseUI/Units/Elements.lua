@@ -21,8 +21,9 @@ local function call(fn, ...) if type(fn) ~= "function" then return nil end local
 ---------------------------------------------------------------------------
 
 -- opts = { filter = "HELPFUL" | "HARMFUL", count, size, grow = "RIGHT" | "LEFT", at = "BELOW" | "RIGHT" }
-function U.MakeAuras(f, opts)
-	f.auras = { opts = opts, icons = {} }
+-- One row of aura icons.
+local function makeRow(f, opts)
+	local row = { opts = opts, icons = {} }
 	local size = opts.size or 22
 	for i = 1, opts.count or 8 do
 		local b = CreateFrame("Button", nil, f)
@@ -51,18 +52,23 @@ function U.MakeAuras(f, opts)
 		end)
 		b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
 		b:Hide()
-		f.auras.icons[i] = b
+		row.icons[i] = b
 	end
+	return row
+end
+
+-- f.auras: the debuffs (or the frame's one row); f.buffs: a row of buffs
+-- over them, when the frame has one (the target's).
+function U.MakeAuras(f, opts, buffs)
+	f.auras = makeRow(f, opts)
+	if buffs then f.buffs = makeRow(f, buffs) end
 	U.PlaceAuras(f)
 end
 
-function U.PlaceAuras(f)
-	local a = f.auras
-	if not a then return end
-	local o = a.opts
+local function placeRow(f, row, below)
+	local o = row.opts
 	local size, gap = o.size or 22, 3
-	local below = (f.castbar and not f.castbar.pwAway) and -24 or -4 -- under the cast bar when there is one
-	for i, b in ipairs(a.icons) do
+	for i, b in ipairs(row.icons) do
 		b:ClearAllPoints()
 		local step = (i - 1) * (size + gap)
 		if o.at == "RIGHT" then
@@ -75,13 +81,23 @@ function U.PlaceAuras(f)
 	end
 end
 
+function U.PlaceAuras(f)
+	if not f.auras then return end
+	local below = (f.castbar and not f.castbar.pwAway) and -24 or -4 -- under the cast bar when there is one
+	if f.buffs then
+		placeRow(f, f.buffs, below)
+		-- The debuffs under the buffs, or in their place when there are none.
+		if f.buffs.n and f.buffs.n > 0 then below = below - (f.buffs.opts.size or 22) - 3 end
+	end
+	placeRow(f, f.auras, below)
+end
+
 -- The debuff border color by dispel type (Magic blue, Curse purple...).
 local DISPEL = { Magic = "magic", Curse = "curse", Disease = "disease", Poison = "poison" }
 
-function U.UpdateAuras(f)
-	local a = f.auras
-	if not a then return end
+local function updateRow(f, a)
 	local on = ns.Get("units.auras")
+	local shown = 0
 	local filter = a.opts.filter
 	if filter == "HARMFUL" and ns.Get("units.onlyMyDebuffs") and f.unit ~= "player" then filter = "HARMFUL|PLAYER" end
 	local get = C_UnitAuras and C_UnitAuras.GetAuraDataByIndex
@@ -110,11 +126,24 @@ function U.UpdateAuras(f)
 			end
 			T.SetBorder(b, c or "border")
 			b:Show()
+			shown = shown + 1
 		else
 			b.auraID, b.pwAura = nil, nil
 			b:Hide()
 		end
 	end
+	return shown
+end
+
+function U.UpdateAuras(f)
+	if not f.auras then return end
+	if f.buffs then
+		local n = updateRow(f, f.buffs)
+		local moved = (n > 0) ~= ((f.buffs.n or 0) > 0)
+		f.buffs.n = n
+		if moved then U.PlaceAuras(f) end
+	end
+	updateRow(f, f.auras)
 end
 
 ---------------------------------------------------------------------------

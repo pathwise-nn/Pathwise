@@ -158,7 +158,7 @@ function U.Percent(unit)
 	return call(UnitHealthPercent, unit, true, curve())
 end
 
--- def = { unit, name, w, h, power (bool), castbar (bool), auras = { filter, count } }
+-- def = { unit, name, w, h, power (bool), castbar (bool), auras = { filter, count }, buffs = { filter, count } }
 function U.Make(def)
 	if frames[def.unit] then return frames[def.unit] end
 	if inCombat() then return nil end
@@ -218,7 +218,7 @@ function U.Make(def)
 
 	if def.unit ~= "player" and RegisterUnitWatch then RegisterUnitWatch(f) end
 	if def.castbar then U.MakeCastbar(f) end
-	if def.auras then U.MakeAuras(f, def.auras) end
+	if def.auras then U.MakeAuras(f, def.auras, def.buffs) end
 	frames[def.unit] = f
 	U.Layout(f)
 	U.Events(f)

@@ -108,6 +108,31 @@ test("unit frames: debuffs on the target, timers only when readable", function()
 	ok(not a.icons[1].shown, "switched off")
 end)
 
+test("unit frames: the target's buffs in a row, its debuffs under them", function()
+	local stub, ns = fresh(function(s)
+		withTarget(s)
+		s.auras.target = {
+			HELPFUL = { { icon = 135987, auraInstanceID = 21 }, { icon = s.Secret(136078), auraInstanceID = 22 } },
+			HARMFUL = { { icon = 136207, auraInstanceID = 11 } },
+		}
+	end)
+	local f = ns.Units.frames.target
+	ok(f.buffs, "the target has a buff row")
+	ok(f.buffs.icons[1].shown and f.buffs.icons[2].shown and not f.buffs.icons[3].shown, "its two buffs shown")
+	ok(f.auras.icons[1].shown, "and its debuff")
+	local function y(b) local p = b.points[#b.points] return p[5] end
+	ok(y(f.auras.icons[1]) < y(f.buffs.icons[1]), "the debuffs under the buffs")
+	stub.auras.target.HELPFUL = {}
+	stub.fire("UNIT_AURA", "target")
+	ok(not f.buffs.icons[1].shown, "no buffs: none shown")
+	eq(y(f.auras.icons[1]), y(f.buffs.icons[1]), "and the debuffs move up into their place")
+	ok(ns.Units.frames.party1 == nil or ns.Units.frames.party1.buffs == nil, "party frames keep debuffs only")
+	ns.Set("units.auras", false)
+	stub.auras.target.HELPFUL = { { icon = 135987, auraInstanceID = 21 } }
+	stub.fire("UNIT_AURA", "target")
+	ok(not f.buffs.icons[1].shown, "switched off with the debuffs")
+end)
+
 test("unit frames: cast bars fill by time, or stay full when the times are secret", function()
 	local stub, ns = fresh(function(s)
 		withTarget(s)

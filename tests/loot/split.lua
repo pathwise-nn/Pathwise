@@ -77,3 +77,36 @@ test("split: beside Pathwise UI: two addons, one accent, no clashes", function()
 	enc.Set("look.accentColor", "#22CC88")
 	eq(ui.Get("look.accentColor"), "#22CC88", "and the other way")
 end)
+
+test("split: beside Pathwise UI: the dead Adventure Guide button in the tray opens Pathwise Loot", function()
+	local stub, ui, loot = both(function(s)
+		s.makeTray()
+		local b = CreateFrame("Button", "EJMicroButton", MicroMenu)
+		function b:IsEnabled() return false end
+	end)
+	local tray, button = _G.PathwiseUI_Tray, _G.PathwiseUI_TrayLootButton
+	ok(button, "Pathwise UI's own button for Pathwise Loot")
+	eq(button.parent, tray, "in the tray")
+	ok(button.shown and #button.points > 0, "shown, in the row")
+	ok(EJMicroButton.parent ~= tray, "the game's dead button left out")
+	eq(tray.w, 9 * 28 + 8 * 3, "in the Adventure Guide's place: nine buttons")
+	ok(not loot.LootBrowser.IsShown(), "the browser closed")
+	button.scripts.OnClick(button, "LeftButton")
+	ok(loot.LootBrowser.IsShown(), "a click opens the loot browser")
+	button.scripts.OnClick(button, "LeftButton")
+	ok(not loot.LootBrowser.IsShown(), "and closes it")
+	ok(ui.Tray.Tooltip(button), "its tooltip")
+	-- The game turns the Adventure Guide on: its own button back.
+	AdventureGuideUtil = { IsAvailable = function() return true end }
+	ui.Tray.Build()
+	eq(EJMicroButton.parent, tray, "the game's button back in the tray")
+	local inTray = false
+	for _, e in ipairs(ui.Tray.Buttons("micro")) do if e[1] == button then inTray = true end end
+	ok(not inTray, "and the Pathwise Loot button out of the row")
+	ok(not button.shown, "and out of sight")
+	-- Off again: the Pathwise Loot button back.
+	AdventureGuideUtil = nil
+	ui.Tray.Build()
+	ok(button.shown and button.parent == tray, "the Pathwise Loot button back")
+	ok(EJMicroButton.parent == MicroMenu, "the game's button back under its own menu")
+end)

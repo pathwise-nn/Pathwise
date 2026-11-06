@@ -10,6 +10,12 @@
 -- vehicle); those are followed with hooksecurefunc and the buttons put back.
 -- Names from Forever's own files (Blizzard_MicroMenu Camelot, Blizzard_
 -- MainMenuBarBagButtons): the ones missing on a client are skipped.
+--
+-- Forever has the Adventure Guide switched off (C_AdventureJournal.CanBeShown,
+-- the server's say; Forever's key bindings have no entry for it either), so
+-- its tray button is dead. With Pathwise Loot installed, that slot holds a
+-- button of Pathwise UI's own that opens the loot browser instead; the game's
+-- button comes back if the Adventure Guide is ever turned on.
 
 local ADDON, ns = ...
 local T = ns.Theme
@@ -46,6 +52,7 @@ Tray.LABELS = {
 	LFDMicroButton = { "Group finder", "TOGGLEGROUPFINDER" }, CollectionsMicroButton = { "Collections", "TOGGLECOLLECTIONS" },
 	EJMicroButton = { "Adventure guide", "TOGGLEENCOUNTERJOURNAL" }, HelpMicroButton = { "Help", nil },
 	StoreMicroButton = { "Shop", nil }, MainMenuMicroButton = { "Game menu and settings", "TOGGLEGAMEMENU" },
+	PathwiseUI_TrayLootButton = { "Pathwise Loot: what each boss drops", nil },
 	MainMenuBarBackpackButton = { "Backpack", "OPENALLBAGS" }, KeyRingButton = { "Key ring", "TOGGLEKEYRING" },
 }
 
@@ -181,14 +188,60 @@ local function bar(kind)
 	return f
 end
 
+-- Whether the game lets the Adventure Guide open (its own test, Blizzard_
+-- FrameXMLUtil AdventureGuideUtil.IsAvailable, else C_AdventureJournal).
+function Tray.AdventureGuideAvailable()
+	local U, A = AdventureGuideUtil, C_AdventureJournal
+	local fn = (type(U) == "table" and U.IsAvailable) or (type(A) == "table" and A.CanBeShown)
+	if type(fn) ~= "function" then return false end
+	local good, on = pcall(fn)
+	return good and ns.Readable(on) == true
+end
+
+-- Pathwise Loot's browser, or nil when Pathwise Loot isn't installed.
+local function lootBrowser()
+	local L = _G.PathwiseLoot
+	local B = type(L) == "table" and L.LootBrowser
+	return type(B) == "table" and type(B.Toggle) == "function" and B or nil
+end
+
+-- The tray's Pathwise Loot button, in the Adventure Guide's place.
+local lootButton
+function Tray.LootButton()
+	if not lootBrowser() then return nil end
+	if not lootButton then
+		lootButton = CreateFrame("Button", "PathwiseUI_TrayLootButton", nil)
+		lootButton:RegisterForClicks("LeftButtonUp")
+		lootButton:SetScript("OnClick", function()
+			local B = lootBrowser()
+			if B then B.Toggle() end
+		end)
+	end
+	return lootButton
+end
+
 -- The buttons of each bar, in order, as the client has them now.
 function Tray.Buttons(kind)
 	local out = {}
 	if kind == "micro" then
+		local usedLoot = false
 		for _, m in ipairs(Tray.MICRO) do
 			local b = _G[m[1]]
+			if m[1] == "EJMicroButton" and not Tray.AdventureGuideAvailable() then
+				local loot = Tray.LootButton()
+				if loot then
+					-- The game's dead button goes back under its own (hidden) menu.
+					if type(b) == "table" and b.SetParent and type(MicroMenu) == "table" and b:GetParent() ~= MicroMenu then
+						b:SetParent(MicroMenu)
+					end
+					b, usedLoot = loot, true
+					loot:Show()
+				end
+			end
 			if type(b) == "table" and b.SetParent then out[#out + 1] = { b, m[2] } end
 		end
+		-- Not needed (the Adventure Guide opens): out of sight.
+		if lootButton and not usedLoot then lootButton:Hide() end
 	else
 		local M = MainMenuBarBagManager
 		if M and M.EnumerateBagButtons then

@@ -61,6 +61,20 @@ test("tray and bags: the game's own buttons in two Pathwise rows", function()
 	eq(CharacterMicroButton.parent, tray, "back in the tray")
 end)
 
+-- The game's Adventure Guide button, as Forever has it.
+local function adventureGuide(s)
+	s.makeTray()
+	local b = CreateFrame("Button", "EJMicroButton", MicroMenu)
+	function b:IsEnabled() return false end
+end
+
+test("tray: without Pathwise Loot, the Adventure Guide's own button stays", function()
+	local stub, ns = fresh(adventureGuide)
+	eq(EJMicroButton.parent, _G.PathwiseUI_Tray, "the game's button in the tray")
+	ok(not _G.PathwiseUI_TrayLootButton, "no Pathwise Loot button made")
+	eq(ns.Tray.AdventureGuideAvailable(), false, "the game says it can't open")
+end)
+
 test("tray and bags: the tray left of the bag row, never over it", function()
 	local stub, ns = fresh(function(s) s.makeTray() end)
 	local tray, bags = _G.PathwiseUI_Tray, _G.PathwiseUI_BagBar

@@ -6,6 +6,20 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise UI: your target's buffs show
+- The target frame showed only debuffs, so a target's buffs never appeared.
+  Its buffs now sit in a row under the frame, with the debuffs under them
+  (moving up when there are no buffs). "Buffs and debuffs on your target" in
+  Unit frames switches both.
+
+### Pathwise UI: the Adventure Guide's tray slot opens Pathwise Loot
+- Forever has the Adventure Guide switched off (the server says so; its key
+  bindings have no Shift+J for it either), so its tray button opened nothing.
+  With Pathwise Loot installed, that slot now holds a button that opens the
+  loot browser: what each boss drops. Without Pathwise Loot the game's button
+  stays, and if Forever ever turns the Adventure Guide on, its own button
+  comes back by itself.
+
 ### Minimap buttons in each addon's logo colour
 - Pathwise UI, Pathwise Heal, Pathwise Encounters and Pathwise Loot drew the
   same compass in your accent, so their minimap buttons looked alike. Each
