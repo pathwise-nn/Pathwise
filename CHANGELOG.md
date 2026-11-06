@@ -6,6 +6,16 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Bags: the reagent bag shows in the window
+- The reagent bag and its items were missing from the bag window (it read
+  only the backpack and bags 1-4, and kept the game's own reagent bag hidden).
+  Its items are now in every view, it has its own section in "By bag" and a
+  tile on the bag bar, and its tile in the game's bag bar opens the window.
+  Its slots are not counted in the free-slot count or the "bags nearly full"
+  warning, since it holds only reagents. Nothing changes on a client without
+  a reagent bag.
+- Not checked in game.
+
 ## 0.2.2 (2026-11-05)
 
 ### Pathwise: world map pins show again

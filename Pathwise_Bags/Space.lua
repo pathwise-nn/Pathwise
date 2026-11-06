@@ -1,7 +1,7 @@
 -- Pathwise Bags: bag space. How many slots are free, a warning when the bags
 -- are nearly full, and what to let go first to make room.
 --
---   Space.Free() -> free, total        general slots (a quiver or soul bag's own slots not counted)
+--   Space.Free() -> free, total        general slots (a quiver, soul bag or the reagent bag's own slots not counted)
 --   Space.MakeRoom(n) -> { entry, ... } what to sell or drop first: junk, then
 --       what you cannot use or no longer need, cheapest first
 
@@ -17,7 +17,7 @@ function Space.Free()
 	local Cn = C_Container
 	local free, total = 0, 0
 	for _, bag in ipairs(Items.BAGS) do
-		local n = Items.NumSlots(bag)
+		local n = bag ~= Items.REAGENT_BAG and Items.NumSlots(bag) or 0
 		if n > 0 and Cn and Cn.GetContainerNumFreeSlots then
 			local ok, f, family = pcall(Cn.GetContainerNumFreeSlots, bag)
 			f, family = ok and readable(f) or 0, ok and readable(family) or 0
