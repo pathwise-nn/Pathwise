@@ -11,8 +11,8 @@ that version's section.
   left on each. In its last seconds the number turns red and the icon
   blinks, so you can see when to renew it. In a fight, when Forever hides
   auras from addons, the game draws your HoTs there itself with its own
-  countdown. On by default; /pwheal > Healing has "Time left on your HoTs"
-  and the icon size. Not yet checked in game.
+  countdown. On by default ("Time left on buffs" under /pwheal > Healing).
+  Not yet checked in game.
 
 ### Pathwise Heal: a buff row and a debuff row, and click a debuff to remove it
 - Each healing frame has a buff row (top right: your HoTs first, then big
@@ -28,6 +28,17 @@ that version's section.
   countdown, as one set (the cleanse icons no longer sit on top of the
   HoTs). /pwheal > Healing > Buffs and debuffs has each row, the cleanse
   click, the colored edge and both icon sizes. Not yet checked in game.
+
+## 0.2.8 (2026-11-06)
+
+### Professions: the recipe book in its own window, and the list knows your rank
+- The recipe book opens in a window of its own instead of beside the
+  guide. Drag it anywhere and it stays there. Escape or its close button
+  closes it, and the Professions panel stays open while it is up.
+- The Professions list said "Now: Apprentice" for a profession well past
+  that rank (Enchanting 150/150) once its Apprentice materials were used up.
+  A step now counts as behind you once your skill passes a later step's
+  skill, craft or training goal.
 
 ## 0.2.7 (2026-11-06)
 

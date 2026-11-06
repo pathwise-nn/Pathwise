@@ -369,6 +369,26 @@ local function furthestDone(route)
 	furthest[route.id] = f
 	return f
 end
+-- A profession route has no quests to say how far along you are: there,
+-- the last step whose skill, craft-until or training goal you already meet
+-- does. A step before it is behind you, though its materials are used up.
+-- Read live (no cache): the skill changes between guide updates.
+local function furthestSkill(route)
+	for s = #route.steps, 1, -1 do
+		for _, goal in ipairs(route.steps[s]) do
+			local verb, rank, cap = goal[1], nil, nil
+			if verb == "skill" or verb == "train" then rank, cap = C.SkillRank(goal[2])
+			elseif verb == "craft" and goal.untilSkill and goal.skillLine then rank = C.SkillRank(goal.skillLine) end
+			if (verb == "skill" and rank and rank >= goal[3])
+				or (verb == "train" and cap and cap >= goal[3])
+				or (verb == "craft" and rank and goal.untilSkill and rank >= goal.untilSkill) then
+				return s
+			end
+		end
+	end
+	return 0
+end
+
 local function passed(route, s)
 	return stepQuestsDone(route, s) or s < furthestDone(route)
 end
@@ -389,7 +409,9 @@ local function goalStatus(route, s, g, goal)
 	if verb == "goto" then return (state().reached[goalKey(route, s, g)] or passed(route, s)) and "done" or "open" end
 	-- An item to fetch: had, or behind you (a quest further on done: the item
 	-- may have gone into it, as Samuel's Remains do into Marla's Last Wish).
-	if verb == "have" then return (C.ItemCount(goal[2]) >= (goal[3] or 1) or s < furthestDone(route)) and "done" or "open" end
+	if verb == "have" then
+		return (C.ItemCount(goal[2]) >= (goal[3] or 1) or s < furthestDone(route) or s < furthestSkill(route)) and "done" or "open"
+	end
 	if verb == "bind" then return bindMatches(goal[2]) and "done" or "open" end
 	if verb == "skill" then
 		local rank = C.SkillRank(goal[2])
@@ -399,13 +421,15 @@ local function goalStatus(route, s, g, goal)
 		local _, cap = C.SkillRank(goal[2])
 		return cap and cap >= goal[3] and "done" or "open"
 	end
-	if verb == "learn" then return C.SpellKnown(goal[2]) and "done" or "open" end
+	if verb == "learn" then return (C.SpellKnown(goal[2]) or s < furthestSkill(route)) and "done" or "open" end
 	if verb == "craft" then
 		if goal.untilSkill and goal.skillLine then
 			local rank = C.SkillRank(goal.skillLine)
 			return rank and rank >= goal.untilSkill and "done" or "open"
 		end
-		if goal.item and goal.count then return C.ItemCount(goal.item) >= goal.count and "done" or "open" end
+		if goal.item and goal.count then
+			return (C.ItemCount(goal.item) >= goal.count or s < furthestSkill(route)) and "done" or "open"
+		end
 		return "info"
 	end
 	return "info"
