@@ -256,11 +256,58 @@ test("bags window: the bag bar's tiles open it, not the game's bags", function()
 	stub.now = stub.now + 1
 	ToggleBag(5)
 	ToggleBag(-2)
-	ok(not W.IsShown(), "the reagent bag and the keyring stay the game's")
+	ok(not W.IsShown(), "no reagent bag in this client (no Enum.BagIndex), and the keyring stay the game's")
 	ns.Set("bags.window", false)
 	stub.now = stub.now + 1
 	ToggleBag(0)
 	ok(not W.IsShown(), "window off: the game's bags")
+end)
+
+test("bags: the reagent bag, where the client has one", function()
+	local secret = setmetatable({}, {})
+	local stub, ns, b = bags(function(s)
+		Enum.BagIndex = { Backpack = 0, ReagentBag = 5 }
+		s.bags[5] = { { itemID = 204, quality = 1, stackCount = 40 } }
+		function C_Container.ContainerIDToInventoryID(bag) return 30 + bag end
+		function GetInventoryItemTexture(_, inv) return "icon-" .. inv end
+		-- The bag's name kept secret: the window names it itself.
+		function issecretvalue(v) return v == secret end
+		function C_Container.GetBagName(bag) return bag == 5 and secret or nil end
+	end)
+	local I, W, Sp = b.Items, b.Window, b.Space
+	eq(I.REAGENT_BAG, 5)
+	eq(I.BAGS[#I.BAGS], 5, "read with the other bags")
+	local inReagent
+	for _, x in ipairs(I.Scan()) do if x.bag == 5 and x.id == 204 then inReagent = x end end
+	ok(inReagent and inReagent.count == 40, "its items are scanned")
+	eq(select(2, Sp.Free()), 16, "bag space leaves the reagent bag out")
+	local groups = W.Groups("bags")
+	eq(#groups, 2, "the backpack and the reagent bag")
+	ok(groups[2].name:find("^Reagent bag  ·  15 free"), groups[2].name)
+	eq(groups[2].bag, 5)
+	eq(#W.Groups("grid")[1].entries, 32, "the grid has its slots")
+	ns.Set("bags.bagBar", true)
+	W.Show()
+	local bar = W.BagBar()
+	local tile = bar.slots[#I.BAGS]
+	ok(tile.shown, "a tile on the bag bar")
+	eq(tile.text.text, "15/16")
+	eq(W.BagInfo(5).icon, "icon-35")
+	W.Hide()
+	stub.now = stub.now + 1
+	ToggleBag(5)
+	ok(W.IsShown(), "the reagent bag's own tile opens the Pathwise window")
+	issecretvalue = nil
+end)
+
+test("bags: no reagent bag in the client, nothing read for one", function()
+	local stub, ns, b = bags(function(s) s.bags[5] = { { itemID = 204, quality = 1 } } end)
+	eq(b.Items.REAGENT_BAG, nil)
+	eq(#b.Items.BAGS, 5, "bags 0-4 only")
+	for _, x in ipairs(b.Items.Scan()) do ok(x.bag ~= 5, "bag 5 not read") end
+	ns.Set("bags.bagBar", true)
+	b.Window.Show()
+	eq(#b.Window.BagBar().slots, 5, "five tiles")
 end)
 
 test("bags window: separate bags, where the backpack key runs ToggleBag itself", function()
