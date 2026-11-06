@@ -1,11 +1,11 @@
 'use strict';
 // Builds the release zips, one per CurseForge project: dist/<Addon>-<version>.zip
-// for Pathwise, Pathwise_Gear, Pathwise_Bags, PathwiseUI, Pathwise_Heal and
-// Pathwise_Encounters, each holding its addon folder
+// for Pathwise, Pathwise_Gear, Pathwise_Bags, PathwiseUI, Pathwise_Heal,
+// Pathwise_Encounters and Pathwise_Loot, each holding its addon folder
 // as players install it, with LICENSE and THIRD_PARTY.md inside it (the GPL
 // asks that the licence travels with every copy). Nothing is uploaded.
 //
-//   node tools/pack.js                  build all six zips
+//   node tools/pack.js                  build all seven zips
 //   node tools/pack.js Pathwise_Gear    build only the zips named
 //   node tools/pack.js --list           print what would go in, build nothing
 //
@@ -28,8 +28,8 @@ function version() {
 
 // The addons, each its own CurseForge project and zip. Gear and Bags need
 // Pathwise installed (## Dependencies in their TOCs); Pathwise UI,
-// Pathwise Heal and Pathwise Encounters work on their own (## OptionalDeps).
-const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI', 'Pathwise_Heal', 'Pathwise_Encounters'];
+// Pathwise Heal, Pathwise Encounters and Pathwise Loot work on their own (## OptionalDeps).
+const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI', 'Pathwise_Heal', 'Pathwise_Encounters', 'Pathwise_Loot'];
 
 // Every file of the addon folders asked for (all by default), sorted,
 // skipping dotfiles; then the licence files from the repository root, in
@@ -123,11 +123,11 @@ function zip(list) {
 }
 
 function main() {
-	// Pathwise Heal and Pathwise Encounters carry copies of Pathwise UI's shared files: never ship stale ones.
+	// Pathwise Heal, Pathwise Encounters and Pathwise Loot carry copies of Pathwise UI's shared files: never ship stale ones.
 	const kit = require('./kit');
 	const stale = kit.plan().filter(([, to, want]) => !fs.existsSync(to) || !fs.readFileSync(to).equals(want));
 	if (stale.length) {
-		console.error(`${stale.length} stale copied kit file(s) (Pathwise_Heal, Pathwise_Encounters): run npm run kit first`);
+		console.error(`${stale.length} stale copied kit file(s) (Pathwise_Heal, Pathwise_Encounters, Pathwise_Loot): run npm run kit first`);
 		process.exit(1);
 	}
 	const v = version();

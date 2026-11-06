@@ -1,0 +1,25 @@
+## Interface: 16001
+## Title: Pathwise Loot
+## Notes: What every dungeon and raid boss in WoW: Forever drops: a loot browser with search, a wishlist, the drops you see in game, and upgrade marks with Pathwise Gear. Works on its own.
+## Author: leight_nn & florp
+## Version: 0.2.4
+## SavedVariables: PathwiseLootSettings
+## SavedVariablesPerCharacter: PathwiseLootCharSettings
+## OptionalDeps: Pathwise, PathwiseUI, Pathwise_Gear
+## IconTexture: Interface\AddOns\Pathwise_Loot\Media\icon
+## X-License: GPL-3.0-only
+
+Identity.lua
+Kit\Core.lua
+Kit\Theme.lua
+Kit\Anim.lua
+Kit\Widgets.lua
+Kit\Movers.lua
+Data\Loot.lua
+Loot\Catalog.lua
+Loot\Learn.lua
+Loot\Browser.lua
+Kit\Options.lua
+Pages.lua
+Kit\Minimap.lua
+Loot\Entry.lua

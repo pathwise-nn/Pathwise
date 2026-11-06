@@ -262,7 +262,7 @@ end
 function W.BagName(bag)
 	if bag == 0 then return "Backpack" end
 	local name = C_Container and C_Container.GetBagName and readable(call(C_Container.GetBagName, bag))
-	return name or ("Bag " .. bag)
+	return name or (bag == Items.REAGENT_BAG and "Reagent bag") or ("Bag " .. bag)
 end
 
 -- Fold a bag away (by bag), or show it again.
@@ -400,12 +400,12 @@ function W.BagInfo(bag)
 	local n = Items.NumSlots(bag)
 	local free = 0
 	if C_Container and C_Container.GetContainerNumFreeSlots then free = readable(call(C_Container.GetContainerNumFreeSlots, bag)) or 0 end
-	local icon = BACKPACK_ICON
+	local icon, inv = BACKPACK_ICON, nil
 	if bag > 0 and C_Container and C_Container.ContainerIDToInventoryID and GetInventoryItemTexture then
-		local inv = call(C_Container.ContainerIDToInventoryID, bag)
+		inv = readable(call(C_Container.ContainerIDToInventoryID, bag))
 		icon = inv and readable(call(GetInventoryItemTexture, "player", inv)) or nil
 	end
-	return { bag = bag, slots = n, free = free, icon = icon }
+	return { bag = bag, slots = n, free = free, icon = icon, inv = inv }
 end
 
 function W.RefreshBagBar()
@@ -416,6 +416,8 @@ function W.RefreshBagBar()
 	for i, bag in ipairs(Items.BAGS) do
 		local s = bagbar.slots[i]
 		local info = W.BagInfo(bag)
+		-- The reagent bag's tile only where the character has a slot for one.
+		s:SetShown(bag ~= Items.REAGENT_BAG or info.slots > 0 or info.inv ~= nil)
 		s.icon:SetTexture(info.icon or nil)
 		s.icon:SetAlpha(info.slots > 0 and 1 or 0.25)
 		s.text:SetText(info.slots > 0 and ("%d/%d"):format(info.free, info.slots) or "")
@@ -425,7 +427,7 @@ end
 local function buildBagBar()
 	bagbar = CreateFrame("Frame", nil, frame)
 	bagbar:SetPoint("TOPLEFT", frame, "TOPLEFT", PAD, -TOP + 2)
-	bagbar:SetSize(5 * 44, BAGBAR - 6)
+	bagbar:SetSize(#Items.BAGS * 44, BAGBAR - 6)
 	bagbar.slots = {}
 	for i, bag in ipairs(Items.BAGS) do
 		local s = CreateFrame("Button", nil, bagbar)
@@ -445,6 +447,7 @@ local function buildBagBar()
 end
 
 function W.HoverBag(bag) hoverBag = bag W.Refresh() end
+function W.BagBar() return bagbar end
 
 ---------------------------------------------------------------------------
 -- Mark mode: click catchers over the items
@@ -646,11 +649,12 @@ end
 -- as one press, decided from how the window was before it, strongest first:
 --   CloseAllBags          close (Escape, leaving a vendor)
 --   OpenAllBags           open (a vendor, the mailbox)
---   ToggleAllBags, ToggleBackpack, ToggleBag (bags 0-4)
+--   ToggleAllBags, ToggleBackpack, ToggleBag (bags 0-4, and the reagent bag)
 --                         the other way from before the press
 --   OpenBackpack          open
 --   CloseBackpack         close
--- The reagent bag and the keyring stay the game's.
+-- The keyring stays the game's; the reagent bag, where the client has one,
+-- is in the window with the others.
 local RANK = { closeAll = 5, openAll = 4, toggle = 3, open = 2, close = 1 }
 local SHOWN_BAGS = {}
 for _, id in ipairs(Items.BAGS) do SHOWN_BAGS[id] = true end

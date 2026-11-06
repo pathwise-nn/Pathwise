@@ -1,6 +1,6 @@
 {
   "name": "pathwise",
-  "version": "0.2.1",
+  "version": "0.2.4",
   "private": true,
   "description": "Pathwise: a leveling and profession companion for World of Warcraft: Forever",
   "license": "GPL-3.0-only",
@@ -8,7 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "node --test tests/curseforge.test.js && lua5.1 tests/run.lua && lua5.1 tests/ui/run.lua && lua5.1 tests/heal/run.lua && lua5.1 tests/encounters/run.lua",
+    "test": "node --test tests/curseforge.test.js && lua5.1 tests/run.lua && lua5.1 tests/ui/run.lua && lua5.1 tests/heal/run.lua && lua5.1 tests/encounters/run.lua && lua5.1 tests/loot/run.lua",
     "media": "node tools/media.js",
     "recipes": "node tools/data/recipes.js",
     "data": "lua5.1 tools/data/build.lua",
@@ -21,6 +21,8 @@
     "media:ui": "node tools/media-ui.js",
     "test:heal": "lua5.1 tests/heal/run.lua",
     "kit": "node tools/kit.js",
-    "test:encounters": "lua5.1 tests/encounters/run.lua"
+    "test:encounters": "lua5.1 tests/encounters/run.lua",
+    "test:loot": "lua5.1 tests/loot/run.lua",
+    "loot": "node tools/data/loot.js"
   }
 }

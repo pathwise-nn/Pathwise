@@ -18,6 +18,57 @@ that version's section.
   look; the game's own cast bar no longer shows on the experience bar. Unit
   frames options: over the action bars, under your frame, or the game's.
 
+### Pathwise: quest markers stand out on the world map
+- The "!" of a quest to take, the "?" of a hand-in and dungeon entrances were
+  thin pale-gold glyphs, nearly the colour of the map's parchment and hard to
+  see. Each is now a solid badge: the glyph, larger, on a dark disc with a
+  soft edge and a ring in the marker's colour. Objective dots are opaque and
+  outlined too. The minimap shows the same badges, smaller.
+- Quest markers show only the quests you are following, so the map is not
+  crowded: a "!" for a quest the guide's step says to take, and a "?" or
+  objective dots for the step's quests and for the quests ticked as tracked
+  in the quest log. Untick a quest in the log to hide its markers. Where the
+  step's own pin stands on a giver or a hand-in, it wears the "!" or "?"
+  badge and keeps its step number. The "Low-level quests" setting is gone:
+  quests around you that you are not following are no longer shown.
+
+## 0.2.4 (2026-11-06)
+
+### Pathwise Loot (new addon)
+- What every dungeon and raid boss in Forever drops, working with or without
+  the other Pathwise addons: `/pwloot` or its minimap button (right-click for
+  options). Its CurseForge page is still to come.
+- A loot browser: Forever's 39 dungeons and raids and their 338 bosses, from
+  the game's own boss list, each boss's drops with quality colors, slots and
+  levels, the game's item tooltip, and shift- and ctrl-click as in the game.
+  Search every boss's loot, filter by slot or by what your class can use, and
+  keep a wishlist per character.
+- Drops come from QuestieDB's Forever data (good for dungeons, thin for
+  raids, no drop chances) and from what you see drop: a boss's corpse, the
+  group's loot rolls and loot received are added to that boss as you play.
+- With Pathwise Gear: upgrade marks for your spec. Item tooltips say which
+  boss drops an item.
+- Nothing comes from AtlasLoot: its GPL-2.0 licence can't be combined with
+  Pathwise's GPL-3.0, and its data is not Forever's.
+- Not yet played in game.
+
+### Pathwise UI, Pathwise Heal, Pathwise Encounters
+- They share one accent color with Pathwise Loot too.
+
+## 0.2.3 (2026-11-06)
+
+### Pathwise Bags: the reagent bag shows in the window
+- The reagent bag and its items were missing from the bag window (it read
+  only the backpack and bags 1-4, and kept the game's own reagent bag hidden).
+  Its items are now in every view, it has its own section in "By bag" and a
+  tile on the bag bar, and its tile in the game's bag bar opens the window.
+  Its slots are not counted in the free-slot count or the "bags nearly full"
+  warning, since it holds only reagents. Nothing changes on a client without
+  a reagent bag.
+- Checked in game.
+
+## 0.2.2 (2026-11-05)
+
 ### Pathwise: world map pins show again
 - The step numbers, the step's places, quest markers and dungeon entrances on
   the world map were drawn under Forever's map (its own frames sit far higher
