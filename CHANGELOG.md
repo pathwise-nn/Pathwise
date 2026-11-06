@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.4 (2026-11-06)
+
 ### Pathwise Loot (new addon)
 - What every dungeon and raid boss in Forever drops, working with or without
   the other Pathwise addons: `/pwloot` or its minimap button (right-click for
