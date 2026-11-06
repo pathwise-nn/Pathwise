@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.7 (2026-11-06)
+
 ### Professions: a recipe book for every profession
 - Each profession's page has a new Recipe book, and the Professions list
   opens the books for all twelve, learned or not. A book goes skill range by
