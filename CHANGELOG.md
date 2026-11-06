@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.6 (2026-11-06)
+
 ### The website and the Discord, from every addon
 - Report this step now offers two places to send the report: the website
   (pathwise.quest/report, log in with Discord and paste it into the form) or
