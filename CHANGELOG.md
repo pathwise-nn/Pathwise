@@ -6,6 +6,13 @@ that version's section.
 
 ## Unreleased
 
+### Minimap buttons in each addon's logo colour
+- Pathwise UI, Pathwise Heal, Pathwise Encounters and Pathwise Loot drew the
+  same compass in your accent, so their minimap buttons looked alike. Each
+  mark is now in its logo's colour: UI royal blue, Heal pink, Encounters red,
+  Loot purple. Pathwise (icy blue), Gear (gold) and Bags (green) already
+  matched theirs. Your accent still colours everything else.
+
 ### Pathwise UI
 - Unit frames in Pathwise's own look (the new default, "Slim"): the name and
   "207 / 207" in Pathwise's typeface on the dark ground, over a slim health

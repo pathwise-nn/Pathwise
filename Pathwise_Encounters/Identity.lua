@@ -13,4 +13,5 @@ ns.ID = {
 	slash = { "/pwenc", "/pathwiseencounters" },
 	about = "Boss timers, warnings, pull and break timers for raids",
 	minimapAngle = 125,
+	color = "#FF4D4D", -- the logo's red: its minimap button's mark
 }
