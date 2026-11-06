@@ -1,0 +1,30 @@
+{
+  "key": "alchemy",
+  "line": 171,
+  "source": "https://www.wow-professions.com/forever/alchemy-leveling-guide",
+  "untestedFrom": 225,
+  "ranks": [
+    { "rank": "Apprentice", "cap": 75, "trainers": ["Whuut", "Doctor Martin Felben", "Kray", "Miao'zan", "Carolai Anise", "Tel'Athir", "Vosur Brakthel", "Milla Fairancora", "Alchemist Mallory", "Cyndra Kindwhisper", "Iaadaria Bitterwind", "Valiena Swiftgale", "Nyassa Swiftdraught"] },
+    { "rank": "Journeyman", "cap": 150, "level": 10, "skill": 50, "trainers": ["Yelmak", "Doctor Marsh", "Bena Winterhoof", "Lilyssia Nightbreeze", "Tally Berryfizz", "Sylvanna Forestmoon"] },
+    { "rank": "Expert", "cap": 225, "level": 20, "skill": 125, "cost": 5000, "trainers": ["Doctor Herbert Halsey", "Ainethil"] },
+    { "rank": "Artisan", "cap": 300, "level": 35, "skill": 200, "trainers": ["Rogvar", "Kylanna Windwhisper"] }
+  ],
+  "steps": [
+    { "from": 1, "to": 10, "make": [[1245246, 9]], "or": [[1245250, 9]] },
+    { "from": 10, "to": 55, "make": [[7183, 45]] },
+    { "from": 55, "to": 65, "make": [[2331, 10]] },
+    { "from": 65, "to": 90, "make": [[2334, 27]] },
+    { "from": 90, "to": 120, "make": [[3171, 30]], "keep": "Tailors use the Elixirs of Wisdom for Gloves of Meditation." },
+    { "from": 120, "to": 130, "make": [[3173, 10]] },
+    { "from": 130, "to": 150, "make": [[7837, 20]], "or": [[3173, 20]], "keep": "Each craft makes 2 Fire Oil: keep 30 for Elixir of Fire Power." },
+    { "from": 150, "to": 165, "make": [[7845, 15]], "or": [[3173, 22]] },
+    { "from": 165, "to": 195, "make": [[3452, 36]] },
+    { "from": 195, "to": 225, "make": [[7259, 36]] },
+    { "from": 225, "to": 230, "make": [[7259, 12]] },
+    { "from": 230, "to": 265, "make": [[11460, 45]] },
+    { "from": 265, "to": 275, "make": [[17553, 10]] },
+    { "from": 275, "to": 290, "any": [[17553, 20], [17554, 17], [11476, 27]] },
+    { "from": 290, "to": 300, "make": [[1251740, 17]] }
+  ],
+  "extra": [17555, 17557, 17571, 17570, 17573, 17572, 17577, 17574, 17575, 17579, 17576, 17578, 24366, 24365, 24367, 24368, 17580, 1250792, 1250785, 1251734]
+}

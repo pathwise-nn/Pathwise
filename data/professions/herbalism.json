@@ -1,0 +1,27 @@
+{
+  "key": "herbalism",
+  "line": 182,
+  "source": "https://www.wow-professions.com/forever/herbalism-leveling-guide",
+  "untestedFrom": 170,
+  "ranks": [
+    { "rank": "Apprentice", "cap": 75, "trainers": ["Jandi", "Martha Alliestar", "Komin Winterhoof", "Tannysa", "Reyna Stonebranch", "Firodren Mooncaller", "Zor'la", "Mishiki", "Garan Sunstrider", "Florence Nightshade", "Faruza", "Nancy Songflower", "Herbalist Pomeroy", "Emrys Flintbeard", "Kali Healtouch", "Eleyna Duskbreeze", "Malorne Bladeleaf", "Syriel Nightrain", "Halassa Fernbreeze"], "note": "Skyborne: Wild Harvest, a reward of Harvesting Windstones in Thendal Village, teaches Herbalism. The starting-area Junior trainers teach only to 75." },
+    { "rank": "Journeyman", "cap": 150, "skill": 50, "note": "A full Herbalism trainer, not a Junior one." },
+    { "rank": "Expert", "cap": 225, "skill": 125 },
+    { "rank": "Artisan", "cap": 300, "skill": 200, "note": "Learn it before Tanaris or Searing Gorge: neither has a trainer." }
+  ],
+  "bonuses": [
+    { "spell": 13617, "amount": 2 },
+    { "spell": 13868, "amount": 5 },
+    { "item": 7349, "amount": 5 },
+    { "item": 10841, "amount": 15 }
+  ],
+  "steps": [
+    { "from": 1, "to": 70, "nodes": [2447, 765, 2449], "zones": { "H": ["Durotar", "Mulgore", "Tirisfal Glades", "Zephras Isle"], "A": ["Elwynn Forest", "Dun Morogh", "Teldrassil", "Zephras Isle"] } },
+    { "from": 70, "to": 115, "nodes": [785, 2450, 3820], "zones": { "AH": ["Silverpine Forest", "Loch Modan", "Darkshore"] } },
+    { "from": 115, "to": 170, "nodes": [2453, 3355, 3820, 3356, 3357], "zones": { "AH": ["Hillsbrad Foothills", "Stonetalon Mountains"] } },
+    { "from": 170, "to": 205, "nodes": [3356, 3357, 3818, 3821, 3358], "zones": { "AH": ["Stranglethorn Vale", "Arathi Highlands"] } },
+    { "from": 205, "to": 230, "nodes": [8831, 4625], "zones": { "AH": ["Tanaris", "Searing Gorge"] } },
+    { "from": 230, "to": 270, "nodes": [8838, 8831, 8845, 13464], "zones": { "AH": ["The Hinterlands"] } },
+    { "from": 270, "to": 300, "nodes": [8838, 8846, 13464, 13463, 13465, 13466], "zones": { "AH": ["Felwood"] } }
+  ]
+}

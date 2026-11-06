@@ -1,0 +1,23 @@
+{
+  "key": "cooking",
+  "line": 185,
+  "source": "https://www.wow-professions.com/forever/cooking-leveling-guide",
+  "untestedFrom": 225,
+  "ranks": [
+    { "rank": "Apprentice", "cap": 75, "trainers": ["Zamja", "Eunice Burch", "Aska Mistrunner", "Cook Torka", "Pyall Silentstride", "William Pickman", "Stephen Ryback", "Daryl Riknussun", "Alegorn", "Tomas", "Gremlock Pilsnor", "Zarrin", "Nyalah Brightfire", "Zerril Softbreeze"] },
+    { "rank": "Journeyman", "cap": 150, "skill": 50, "note": "Any Cooking trainer. Without it, skill stops at 75." },
+    { "rank": "Expert", "cap": 225, "skill": 125, "book": 16072, "trainers": ["Wulan", "Shandrina"] },
+    { "rank": "Artisan", "cap": 300, "level": 35, "skill": 225, "quest": "Clamlette Surprise", "trainers": ["Dirge Quikcleave"], "note": "Bring 12 Giant Egg, 10 Zesty Clam Meat and 20 Alterac Swiss to Gadgetzan." }
+  ],
+  "notes": ["In Forever the campfire is an item: Basic Campfire Kit, made from Simple Wood with a Flint and Tinder.", "Each range lists a few dishes: cook one of them, whichever meat or fish you have."],
+  "steps": [
+    { "from": 1, "to": 50, "any": [[7751, 55], [7752, 55], [2538, 55], [2540, 55], [8604, 55], [15935, null, "H"], [6413, null, "H"], [6412, null, "A"]] },
+    { "from": 50, "to": 100, "any": [[7753, 55], [7827, 55], [8607, 75], [6499, 55], [2541, 55], [6416, 55]] },
+    { "from": 100, "to": 130, "any": [[7755, 30], [2544, 40], [2546, 35], [2545, 35]] },
+    { "from": 130, "to": 150, "any": [[7755, 25], [3376, 20], [6500, 25], [3398, 25]] },
+    { "from": 150, "to": 175, "any": [[3376, 25], [3398, 25]] },
+    { "from": 175, "to": 225, "any": [[20916, 50], [15855, 50], [3400, 50]] },
+    { "from": 225, "to": 275, "any": [[18238, 65], [18241, 65], [20626, 65], [15933, 65], [22480, 65]] },
+    { "from": 275, "to": 300, "any": [[18244, 35], [18243, 35]], "or": [[24801, 15]] }
+  ]
+}

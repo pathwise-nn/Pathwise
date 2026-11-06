@@ -31,5 +31,6 @@ Routes\Professions.lua
 Routes\Other.lua
 Professions\Professions.lua
 Professions\Gathering.lua
+Professions\RecipeBook.lua
 Core\Commands.lua
 Core\Suite.lua

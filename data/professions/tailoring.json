@@ -1,0 +1,31 @@
+{
+  "key": "tailoring",
+  "line": 197,
+  "source": "https://www.wow-professions.com/forever/tailoring-leveling-guide",
+  "untestedFrom": 225,
+  "ranks": [
+    { "rank": "Apprentice", "cap": 75, "trainers": ["Snang", "Victor Ward", "Vhan", "Bowen Brisboise", "Lawrence Schneider", "Uthrar Threx", "Trianna", "Eldrin", "Othesia Evengale", "Taleen Shimmerthread"] },
+    { "rank": "Journeyman", "cap": 150, "level": 10, "skill": 50, "trainers": ["Magar", "Rhiannon Davis", "Tepa", "Sellandus", "Jormund Stonebrow", "Me'lynn"] },
+    { "rank": "Expert", "cap": 225, "level": 20, "skill": 125, "cost": 5000, "trainers": ["Josef Gregorian", "Georgio Bolero"] },
+    { "rank": "Artisan", "cap": 300, "level": 35, "skill": 200, "trainers": ["Daryl Stack", "Timothy Worthington"] }
+  ],
+  "notes": ["Make bolts ahead: 153 Bolts of Woolen Cloth to 140, 184 Bolts of Silk Cloth to 190, 180 Bolts of Mageweave to 225, 244 Bolts of Runecloth to 265.", "No trainer or vendor recipe is known past 265 yet; the two world-drop patterns are the candidates."],
+  "steps": [
+    { "from": 1, "to": 30, "make": [[2963, 30]] },
+    { "from": 30, "to": 55, "make": [[8776, 28]] },
+    { "from": 55, "to": 80, "make": [[2964, 45]] },
+    { "from": 80, "to": 95, "make": [[2402, 22]] },
+    { "from": 95, "to": 100, "make": [[3848, 5]] },
+    { "from": 100, "to": 120, "make": [[3839, 54]] },
+    { "from": 120, "to": 125, "make": [[3852, 5]] },
+    { "from": 125, "to": 140, "make": [[3852, 24]] },
+    { "from": 140, "to": 150, "make": [[3865, 23]], "or": [[8489, 10]] },
+    { "from": 150, "to": 170, "make": [[8791, 20]] },
+    { "from": 170, "to": 190, "make": [[8799, 26]] },
+    { "from": 190, "to": 215, "make": [[12053, 38]] },
+    { "from": 215, "to": 225, "make": [[12065, 26]] },
+    { "from": 225, "to": 240, "make": [[18402, 24]] },
+    { "from": 240, "to": 265, "make": [[18417, 43]] },
+    { "from": 265, "to": 300, "any": [[18449, null], [18450, null]] }
+  ]
+}

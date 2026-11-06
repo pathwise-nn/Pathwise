@@ -11,6 +11,7 @@
 | [cmangos mangos-classic](https://github.com/cmangos/mangos-classic) ScriptDev2 boss scripts (commit `cc34343b`, `src/game/AI/ScriptDevAI/scripts/`) | Pathwise Encounters' boss timers for Molten Core and Onyxia: spell ids and the time windows between casts. They are an emulator's re-creation, not Blizzard's values; every timer is marked as an estimate | GPL-2.0-or-later (each file's header) | The numbers in `Pathwise_Encounters/Data/Raids.lua`, each encounter naming its file |
 | Blizzard's Forever client tables DungeonEncounter and SpellName, from [wago.tools](https://wago.tools) (build 1.60.1.70532) | Pathwise Encounters' encounter ids and boss names (what ENCOUNTER_START sends) and its spell names | © Blizzard Entertainment | `Pathwise_Encounters/Data/Raids.lua` |
 | Blizzard's Forever client tables Map, Difficulty, DungeonEncounter, Item and ItemSparse, from [wago.tools](https://wago.tools) (build 1.60.1.70790) | Pathwise Loot's instances, bosses and encounter ids, and its items' names, quality, levels, slots and classes | © Blizzard Entertainment | Downloaded to `data/sources/wago/` (not committed); `Pathwise_Loot/Data/Loot.lua` is generated from them by `tools/data/loot.lua` |
+| Blizzard's Forever client tables SkillLineAbility, SpellReagents, SpellName, SpellEffect, Item, ItemSparse, ItemEffect, ItemXItemEffect and UiMap, from [wago.tools](https://wago.tools) (build 1.60.1.70790) | The professions recipe book: checking that every recipe, item and zone it names exists in Forever, and each recipe's name, materials, item made, yellow and grey skill and recipe items | © Blizzard Entertainment | Downloaded to `data/sources/wago/` (not committed); `data/recipebook.lua` is generated from them by `tools/data/recipebook.js` |
 | Blizzard's Forever UI source ([Gethe/wow-ui-source](https://github.com/Gethe/wow-ui-source), `forever` branch) | Checking which client APIs, events and fonts exist on Forever; `PathwiseUI/Skins/FontNames.lua` lists the client's font names from it | © Blizzard Entertainment | Read while developing |
 | [Polestar](https://github.com/fitzforge/polestar), Copyright (c) 2026 The Polestar authors | Its leveling routes (1-60, both factions, every starting race), class quest routes and profession routes, adapted into Pathwise's route format by `tools/port/polestar.lua` (what changes is listed in that file). Also a reference for how Forever behaves (secret values, map and world positions, facing, skills); Pathwise's addon code is its own | GPL-3.0 | `Pathwise/Routes/Leveling.lua`, `Class.lua`, `Professions.lua` (generated; each file names its source) |
 
@@ -28,6 +29,22 @@ explains how the numbers were set).
 | [Mobalytics: WoW Forever class guides](https://mobalytics.gg/wow-forever/classes) | Each spec's levelling stat priority, and Forever's talent changes that move it |
 | [Warcraft Tavern: WoW Forever stats guide](https://www.warcrafttavern.com/forever/guides/stats/) | Forever's stat rules (attack power, crit, Spirit for healers, Haste) |
 | [Wowhead: WoW Forever class guides](https://www.wowhead.com/forever/guides/classes) | Read as a cross-check; they list gear rather than stat orders |
+
+The professions recipe book uses
+[wow-professions.com's Forever guides](https://www.wow-professions.com/forever)
+(© WoW-Professions.com) as a source of facts. Its plans in
+`data/professions/*.json` take from them which recipe to make for each
+skill range and how many, the alternatives, the rank trainers, book sellers
+and quests by name, and the gathering zones, nodes and mobs. Only those
+facts are used, checked against Forever's client tables and QuestieDB
+(`docs/DATA.md`). The site's text, tables, maps and images are not in
+Pathwise; the few notes in the JSON are Pathwise's own words. The site
+states no terms of use (read 2026-11-06), so it is credited here and on
+each Recipe book page.
+
+| Reference | Used for |
+|---|---|
+| [wow-professions.com: WoW Forever profession guides](https://www.wow-professions.com/forever) (the 12 profession leveling guides, read 2026-11-06) | The recipe book's plan per profession: recipe choices by skill range, rank trainers, book sellers and quests, gathering zones and mobs (recipe vendors come from QuestieDB) |
 
 Pathwise Gear's "Best in Slot (Level)" list is worked out in game: which items
 exist and where they come from is QuestieDB's Forever data (above), their

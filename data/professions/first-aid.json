@@ -1,0 +1,28 @@
+{
+  "key": "first-aid",
+  "line": 129,
+  "source": "https://www.wow-professions.com/forever/first-aid-leveling-guide",
+  "untestedFrom": 225,
+  "ranks": [
+    { "rank": "Apprentice", "cap": 75, "trainers": ["Arnok", "Mary Edras", "Pand Stonebinder", "Rawrk", "Vira Younghoof", "Nurse Neela", "Shaina Fuller", "Nissa Firestone", "Dannelor", "Michelle Belle", "Thamner Pol", "Byancie", "Melasa Fairmend", "Naleeia Tattermend"] },
+    { "rank": "Journeyman", "cap": 150, "skill": 50, "note": "Any First Aid trainer. Learn Silk Bandage there too: it is the last recipe trainers teach." },
+    { "rank": "Expert", "cap": 225, "skill": 125, "book": 16084, "trainers": ["Deneb Walker", "Balai Lok'Wein"], "note": "The book has no level requirement." },
+    { "rank": "Artisan", "cap": 300, "level": 35, "skill": 225, "quest": "Triage", "trainers": ["Doctor Gregory Victor", "Doctor Gustaf VanHowzen"], "note": "Save 15 patients with the doctor's Triage Bandages, then turn in at once." }
+  ],
+  "notes": ["In Forever, First Aid makes the healing potions that were Alchemy recipes in Classic.", "Two ways through 1-75: bandages from Linen Cloth, or Minor Healing Potions from herbs."],
+  "steps": [
+    { "from": 1, "to": 40, "make": [[3275, 50]] },
+    { "from": 40, "to": 75, "make": [[3276, 40]] },
+    { "path": "Healing Potions", "from": 1, "to": 75, "make": [[1244431, 81]] },
+    { "from": 75, "to": 80, "make": [[3276, 12]] },
+    { "from": 80, "to": 115, "make": [[3277, 50]] },
+    { "from": 115, "to": 150, "make": [[3278, 50]] },
+    { "from": 150, "to": 180, "make": [[7928, 42]] },
+    { "from": 180, "to": 210, "make": [[7929, 46]] },
+    { "from": 210, "to": 225, "make": [[10840, 17]], "or": [[7929, 42]] },
+    { "from": 225, "to": 240, "make": [[1244435, 16]] },
+    { "from": 240, "to": 260, "make": [[10841, 30]] },
+    { "from": 260, "to": 275, "make": [[18629, 20]] },
+    { "from": 275, "to": 300, "make": [[1244436, 30]] }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "key": "blacksmithing",
+  "line": 164,
+  "source": "https://www.wow-professions.com/forever/blacksmithing-leveling-guide",
+  "untestedFrom": 225,
+  "tools": [5956],
+  "ranks": [
+    { "rank": "Apprentice", "cap": 75, "trainers": ["Ug'thok", "Basil Frye", "Thrag Stonehoof", "Dwukk", "Angus Hammerhand", "Dane Lindgren", "Groum Stonebeard", "Smith Argus", "Tognus Flintfire", "Delfrum Flintbeard", "Daeann Steelwind", "Aedi Thriceforged"] },
+    { "rank": "Journeyman", "cap": 150, "level": 10, "skill": 50, "trainers": ["Snarl", "James Van Brunt", "Karn Stonehoof", "Angus Hammerhand", "Therum Deepforge", "Rotgath Stonebeard"] },
+    { "rank": "Expert", "cap": 225, "level": 20, "skill": 125, "cost": 5000, "trainers": ["Saru Steelfury", "Bengus Deepforge"] },
+    { "rank": "Artisan", "cap": 300, "level": 35, "skill": 200, "trainers": ["Brikk Keencraft"] }
+  ],
+  "steps": [
+    { "from": 1, "to": 25, "make": [[2660, 30]] },
+    { "from": 25, "to": 50, "make": [[3320, 30]], "keep": "Keep 26 Rough Grinding Stones: 16 for the gauntlets, 10 for Silver Rods." },
+    { "from": 50, "to": 67, "make": [[3326, 36]], "keep": "Keep all 36 Coarse Grinding Stones for the bracers at 95 and 112." },
+    { "from": 67, "to": 75, "make": [[3323, 8]] },
+    { "from": 75, "to": 80, "make": [[2666, 5]], "or": [[7818, 5]] },
+    { "from": 80, "to": 95, "make": [[2666, 18]] },
+    { "from": 95, "to": 100, "make": [[2672, 5]] },
+    { "from": 100, "to": 112, "make": [[3337, 20]], "keep": "Keep the 20 Heavy Grinding Stones for Golden Scale Bracers at 175." },
+    { "from": 112, "to": 125, "make": [[2672, 13]] },
+    { "from": 125, "to": 140, "make": [[2742, 24]] },
+    { "from": 140, "to": 150, "make": [[9985, 10]] },
+    { "from": 150, "to": 170, "make": [[9985, 29]] },
+    { "from": 170, "to": 175, "make": [[3501, 9]] },
+    { "from": 175, "to": 185, "make": [[7223, 10]] },
+    { "from": 185, "to": 215, "make": [[9931, 36]], "or": [[9916, 15], [9935, 17]] },
+    { "from": 215, "to": 225, "make": [[9959, 10]], "or": [[9964, 10]] },
+    { "from": 225, "to": 230, "make": [[16641, 5]] },
+    { "from": 230, "to": 240, "make": [[9968, 16]] },
+    { "from": 240, "to": 245, "make": [[16647, 5]], "or": [[10013, 15], [16645, 15], [16644, 17]], "keep": "The Imperial Plate plans are quest rewards from Derotain Mudsipper in Tanaris; bring about 250 Thorium Bars." },
+    { "from": 245, "to": 270, "make": [[16649, 27]], "or": [[16969, 15]] },
+    { "from": 270, "to": 290, "make": [[16657, 20]] },
+    { "from": 290, "to": 300, "make": [[16730, 10]] }
+  ]
+}
