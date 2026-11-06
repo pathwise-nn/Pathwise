@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.8 (2026-11-06)
+
 ### Professions: the recipe book in its own window, and the list knows your rank
 - The recipe book opens in a window of its own instead of beside the
   guide. Drag it anywhere and it stays there. Escape or its close button
