@@ -6,6 +6,13 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: quest markers stand out on the world map
+- The "!" of a quest to take, the "?" of a hand-in and dungeon entrances were
+  thin pale-gold glyphs, nearly the colour of the map's parchment and hard to
+  see. Each is now a solid badge: the glyph, larger, on a dark disc with a
+  soft edge and a ring in the marker's colour. Objective dots are opaque and
+  outlined too. The minimap shows the same badges, smaller.
+
 ## 0.2.4 (2026-11-06)
 
 ### Pathwise Loot (new addon)

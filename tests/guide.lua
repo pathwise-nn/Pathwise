@@ -603,6 +603,70 @@ test("world map pins: drawn on the map shown, the same size at any zoom, read-on
 	eq(#shownPins(stub, layer), 0, "switched off in Settings")
 end)
 
+-- WCAG contrast, for a glyph on its badge.
+local function contrast(a, b)
+	local function lum(c)
+		local function ch(v) return v <= 0.03928 and v / 12.92 or ((v + 0.055) / 1.055) ^ 2.4 end
+		return 0.2126 * ch(c[1]) + 0.7152 * ch(c[2]) + 0.0722 * ch(c[3])
+	end
+	local la, lb = lum(a), lum(b)
+	if la < lb then la, lb = lb, la end
+	return (la + 0.05) / (lb + 0.05)
+end
+
+test("quest markers stand out on the map: solid, a readable size, on a dark badge with a ring", function()
+	local stub, ns = fixture()
+	local P, T = ns.Pins, ns.Theme
+	local bg = T.Color("bg")
+	-- Every quest marker's look: opaque, big enough, its glyph legible on the badge.
+	for _, kind in ipairs({ "available", "availableLow", "turnin", "dungeon" }) do
+		local look = P.LOOK[kind]
+		eq(look.alpha, 1, kind .. ": opaque")
+		ok(look.size >= 20, kind .. ": size " .. look.size)
+		ok(look.size * look.badge >= 14, kind .. ": glyph " .. look.size * look.badge)
+		ok(look.ring, kind .. ": a ring in its colour")
+		ok(contrast(T.Color(look.color), bg) >= 4.5, kind .. " on the badge: " .. contrast(T.Color(look.color), bg))
+	end
+	ok(P.LOOK.objective.alpha == 1 and P.LOOK.objective.badge, "objective dots: solid, outlined")
+	ok(P.BADGE_ALPHA >= 0.85, "the badge is near solid")
+	-- Drawn on Durotar's map: quests to take.
+	stub.mapShown = 1411
+	stub.advance(0.05)
+	local layer = P.world.layer
+	local pins = shownPins(stub, layer)
+	ok(#pins >= 1, "quest givers on Durotar")
+	local warning = T.Color("warning")
+	for _, f in ipairs(pins) do
+		local look = P.LOOK[f.pin.kind]
+		eq(f.w, look.size, "pin size")
+		near(f.tex.w, look.size * look.badge, 1e-9, "the glyph inside the badge")
+		eq(f.tex.vertex[4], 1, "the glyph is opaque")
+		ok(f.back.shown, "the dark disc is shown")
+		eq(f.back.texture, T.MEDIA .. "pin-disc")
+		near(f.back.vertex[1], bg[1], 1e-9, "the disc is the theme's ground")
+		eq(f.back.vertex[4], P.BADGE_ALPHA)
+		ok(f.ring.shown, "the ring is shown")
+		if f.pin.kind == "available" then
+			near(f.ring.vertex[1], warning[1], 1e-9, "the ring in the marker's gold")
+			near(f.tex.vertex[1], warning[1], 1e-9, "the glyph in the marker's gold")
+		end
+	end
+	-- The step's pins, drawn in frames the markers used, have no badge.
+	stub.mapShown = 1420
+	stub.advance(0.05)
+	for _, g in ipairs(shownPins(stub, layer)) do
+		if g.pin.kind == "lead" then
+			ok(not g.back.shown and not g.ring.shown, "no badge under the step's own pins")
+			eq(g.tex.w, g.w, "the step's ring fills its pin")
+		end
+	end
+	-- The minimap: the same badges, smaller, the glyph scaled with them.
+	for _, g in ipairs(shownPins(stub, Minimap)) do
+		local look = P.LOOK[g.pin.kind]
+		if look.badge then near(g.tex.w, g.w * look.badge, 1e-9, "minimap glyph follows its badge") end
+	end
+end)
+
 test("quest markers: givers, hand-ins and objectives for every quest around you", function()
 	local stub, ns = login()
 	local M, Q = ns.QuestMarkers, ns.Quests
