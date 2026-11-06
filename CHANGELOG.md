@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.3 (2026-11-06)
+
 ### Pathwise Bags: the reagent bag shows in the window
 - The reagent bag and its items were missing from the bag window (it read
   only the backpack and bags 1-4, and kept the game's own reagent bag hidden).
