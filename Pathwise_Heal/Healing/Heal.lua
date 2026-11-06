@@ -10,9 +10,9 @@
 --     secret values: never compared or used in sums here, only handed to bars,
 --     text and alphas, which take them; a yes/no is turned into an alpha by
 --     the game (C_CurveUtil.EvaluateColorValueFromBoolean);
---   * auras can't be read by addons in a fight, so in a fight the game itself
---     draws the buff and debuff rows into each frame (a private aura anchor);
---     between fights our own rows (Auras.lua) read auras, when allowed;
+--   * auras are secret in a fight: our buff row then shows their icons only,
+--     and the game itself draws the debuff row into each frame (a private
+--     aura anchor); between fights our own rows (Auras.lua) read them fully;
 --   * the frames are a SecureGroupHeaderTemplate of secure unit buttons
 --     (Heal.xml), sized and bound out of combat only.
 
@@ -30,8 +30,8 @@ ns.Defaults("heal", {
 	color = "class", -- "class" | "green" | "health" (green to red as it drops)
 	text = "deficit", -- "none" | "percent" | "deficit"
 	incoming = true, -- heals on the way
-	-- The buff row (top right) and debuff row (bottom), Auras.lua: ours
-	-- between fights, the game's in a fight.
+	-- The buff row (top right) and debuff row (bottom), Auras.lua: ours,
+	-- but the game draws the debuff row in a fight.
 	hots = true, -- your HoTs, first in the buff row
 	buffs = true, -- the rest of the buff row: big defensives and your buffs
 	timers = true, -- the time left on buffs, red and blinking near the end
@@ -537,7 +537,12 @@ end
 local UNIT_EVENTS = { "UNIT_HEALTH", "UNIT_MAXHEALTH", "UNIT_HEAL_PREDICTION", "UNIT_CONNECTION", "UNIT_FLAGS",
 	"UNIT_NAME_UPDATE", "UNIT_POWER_UPDATE", "UNIT_DISPLAYPOWER", "UNIT_THREAT_SITUATION_UPDATE", "UNIT_IN_RANGE_UPDATE", "UNIT_AURA" }
 for _, ev in ipairs(UNIT_EVENTS) do
-	ns.RegisterEvent(ev, function(_, unit) if ns.Get("heal.enabled") and unit then H.UpdateUnit(unit) end end)
+	ns.RegisterEvent(ev, function(_, unit)
+		if not ns.Get("heal.enabled") then return end
+		-- In a fight UNIT_AURA's unit may be secret: redraw every frame's auras, soon.
+		if isSecret(unit) then if ev == "UNIT_AURA" and H.AurasSoon then H.AurasSoon() end return end
+		if unit then H.UpdateUnit(unit) end
+	end)
 end
 ns.RegisterEvent("PLAYER_TARGET_CHANGED", function() if ns.Get("heal.enabled") then H.UpdateAll() end end)
 ns.RegisterEvent("GROUP_ROSTER_UPDATE", function() if ns.Get("heal.enabled") then H.UpdateAll() end end)
