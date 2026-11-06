@@ -28,6 +28,15 @@ S.Defaults("bags", {
 
 Items.BAGS = { 0, 1, 2, 3, 4 }
 
+-- The reagent bag (Enum.BagIndex.ReagentBag, 5 in Blizzard's clients), read
+-- and drawn with the others when the client has one. It holds only
+-- reagents, so bag space (Space.Free) leaves it out.
+local reagent = Enum and type(Enum.BagIndex) == "table" and readable(Enum.BagIndex.ReagentBag)
+if type(reagent) == "number" and reagent > 4 then
+	Items.REAGENT_BAG = reagent
+	Items.BAGS[#Items.BAGS + 1] = reagent
+end
+
 -- Categories in the order the window shows them.
 Items.CATEGORIES = {
 	{ key = "quest", name = "Quest" },
