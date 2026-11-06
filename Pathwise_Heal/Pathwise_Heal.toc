@@ -16,6 +16,7 @@ Kit\Anim.lua
 Kit\Widgets.lua
 Kit\Movers.lua
 Healing\Heal.lua
+Healing\Auras.lua
 Healing\Clicks.lua
 Healing\Heal.xml
 Kit\Options.lua

@@ -16,8 +16,10 @@ skipped, never cast. Tell us on Discord what works or doesn't.
 Off until you want them: a Priest, Druid, Paladin or Shaman is asked once.
 
 - Your party or raid as a grid built for healing: heals on the way, what each
-  person is missing, debuffs you can cleanse (shown in a fight too), your
-  HoTs with the time left on each, aggro, mana, and fading out of range.
+  person is missing, aggro, mana, and fading out of range.
+- **Buffs and debuffs**: a row of buffs, your HoTs first with the time left
+  on each, and a row of debuffs, the ones you can remove first. Click a
+  debuff to remove it (between fights).
 - **Click-casting**: each click, with Shift, Ctrl or Alt, casts a spell on
   the person you click. Type a spell or drag it from your spellbook.
 - **A preset for every healing spec**: Holy and Discipline Priest,

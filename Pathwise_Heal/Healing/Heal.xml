@@ -1,9 +1,25 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\..\FrameXML\UI.xsd">
 	<!-- The healing frame the group header makes for each person (Heal.lua
 	     dresses it; Clicks.lua gives it its click-casting). A template has to
-	     be XML: the secure header only makes frames from a named template. -->
+	     be XML: the secure header only makes frames from a named template.
+
+	     Debuff1..3: the debuffs you can remove (Auras.lua), secure buttons so a
+	     left click on a debuff can cast the spell that removes it.
+	     "useparent*": every other click, and the unit, are the frame's own
+	     (SecureButton_GetModifiedAttribute, Blizzard_FrameXML/SecureTemplates.lua). -->
+	<Button name="PathwiseHeal_DebuffTemplate" virtual="true" inherits="SecureUnitButtonTemplate" hidden="true">
+		<Size x="14" y="14"/>
+		<Attributes>
+			<Attribute name="useparent*" type="boolean" value="true"/>
+		</Attributes>
+	</Button>
 	<Button name="PathwiseHeal_ButtonTemplate" virtual="true" inherits="SecureUnitButtonTemplate">
 		<Size x="84" y="40"/>
+		<Frames>
+			<Button parentKey="Debuff1" inherits="PathwiseHeal_DebuffTemplate"/>
+			<Button parentKey="Debuff2" inherits="PathwiseHeal_DebuffTemplate"/>
+			<Button parentKey="Debuff3" inherits="PathwiseHeal_DebuffTemplate"/>
+		</Frames>
 		<Scripts>
 			<OnLoad inherit="prepend">PathwiseHeal.Heal.OnLoad(self)</OnLoad>
 			<OnAttributeChanged inherit="append">PathwiseHeal.Heal.OnAttributeChanged(self, name, value)</OnAttributeChanged>
