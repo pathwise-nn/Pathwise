@@ -6,6 +6,15 @@ that version's section.
 
 ## Unreleased
 
+### Professions: the recipe book in its own window, and the list knows your rank
+- The recipe book opens in a window of its own instead of beside the
+  guide. Drag it anywhere and it stays there. Escape or its close button
+  closes it, and the Professions panel stays open while it is up.
+- The Professions list said "Now: Apprentice" for a profession well past
+  that rank (Enchanting 150/150) once its Apprentice materials were used up.
+  A step now counts as behind you once your skill passes a later step's
+  skill, craft or training goal.
+
 ## 0.2.7 (2026-11-06)
 
 ### Professions: a recipe book for every profession

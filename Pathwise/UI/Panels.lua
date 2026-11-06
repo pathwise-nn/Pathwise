@@ -31,8 +31,8 @@ local pool = { heading = {}, title = {}, text = {}, choice = {}, setting = {}, d
 local inputs = {} -- key -> the text typed into that input row
 local used
 
-local function build()
-	panel = CreateFrame("Frame", "PathwisePanel", UIParent)
+local function build(name)
+	panel = CreateFrame("Frame", name or "PathwisePanel", UIParent)
 	panel:SetWidth(WIDTH)
 	panel:SetFrameStrata("MEDIUM")
 	panel:SetClampedToScreen(true)
@@ -49,8 +49,9 @@ local function build()
 	host:SetHeight(1)
 	scroll:SetScrollChild(host)
 	scroll:EnableMouseWheel(true)
+	local child = host
 	scroll:SetScript("OnMouseWheel", function(self, delta)
-		local maxScroll = math.max(0, (host:GetHeight() or 0) - (self:GetHeight() or 0))
+		local maxScroll = math.max(0, (child:GetHeight() or 0) - (self:GetHeight() or 0))
 		local v = math.max(0, math.min(maxScroll, (self:GetVerticalScroll() or 0) - delta * 40))
 		self:SetVerticalScroll(v)
 	end)
@@ -825,7 +826,7 @@ function builders.professions()
 		end }
 		rows[#rows + 1] = { "progress", k.cap > 0 and k.rank / k.cap or 0 }
 	end
-	rows[#rows + 1] = { "choice", "Recipe books", "Every profession's plan by skill range, learned or not", function() Panels.Open("recipebooks") end }
+	rows[#rows + 1] = { "choice", "Recipe books", "Every profession's plan by skill range, learned or not", function() Panels.OpenRecipeBook(nil) end }
 	rows[#rows + 1] = { "buttons", { { "Profession guides", "default", function() Panels.Open("routes") end }, { "Close", "default", Panels.Close } } }
 	return rows
 end
@@ -952,10 +953,73 @@ end
 
 local book = { key = nil, path = nil, all = false }
 
+-- The book has a window of its own (PathwiseRecipeBook): the panel's rows
+-- in a frame that is not beside the guide. Drag it anywhere; it stays
+-- there (recipebook.point) and Escape closes it. It is built like the panel
+-- (build, render) with its own frames, swapped in while it is drawn.
+ns.Defaults("recipebook", { point = nil })
+local win -- { panel, scroll, host, pool }
+
+local function swapIn(s)
+	local before = { panel = panel, scroll = scroll, host = host, pool = pool, used = used }
+	panel, scroll, host, pool, used = s.panel, s.scroll, s.host, s.pool, s.used
+	return before
+end
+
+local function buildWindow()
+	local fresh = {}
+	for k in pairs(pool) do fresh[k] = {} end
+	local main = swapIn({ pool = fresh })
+	build("PathwiseRecipeBook")
+	win = { panel = panel, scroll = scroll, host = host, pool = pool }
+	swapIn(main)
+	local f = win.panel
+	f:SetFrameStrata("MEDIUM")
+	f:SetMovable(true)
+	f:RegisterForDrag("LeftButton")
+	f:SetScript("OnDragStart", function(self) self:StartMoving() end)
+	f:SetScript("OnDragStop", function(self)
+		self:StopMovingOrSizing()
+		local p, _, _, x, y = self:GetPoint(1)
+		if p and x and y then ns.Set("recipebook.point", { p, math.floor(x + 0.5), math.floor(y + 0.5) }) end
+	end)
+	f.close:SetScript("OnClick", function() Panels.CloseRecipeBook() end)
+	f.back:SetScript("OnClick", function() Panels.OpenRecipeBook(nil) end)
+	local saved = ns.Get("recipebook.point")
+	f:ClearAllPoints()
+	if type(saved) == "table" then f:SetPoint(saved[1], UIParent, saved[1], saved[2], saved[3])
+	else f:SetPoint("CENTER", UIParent, "CENTER", -200, 60) end
+	if type(UISpecialFrames) == "table" then table.insert(UISpecialFrames, "PathwiseRecipeBook") end
+end
+
+local function drawWindow()
+	local rows = book.key and builders.recipebook() or builders.recipebooks()
+	local main = swapIn(win)
+	panel:SetScale(ns.Get("ui.scale") or 1)
+	render(rows)
+	win.used = used
+	swapIn(main)
+	win.panel.back:SetShown(book.key ~= nil)
+end
+
+-- Opens the window on a profession's book, or on the list with nil.
 function Panels.OpenRecipeBook(key)
 	if book.key ~= key then book.key, book.path, book.all = key, nil, false end
-	Panels.Open("recipebook")
+	if not win then buildWindow() end
+	win.scroll:SetVerticalScroll(0)
+	drawWindow()
+	win.panel:Show()
 end
+
+function Panels.RefreshRecipeBook()
+	if win and win.panel:IsShown() then drawWindow() end
+end
+
+function Panels.CloseRecipeBook()
+	if win then win.panel:Hide() end
+end
+
+function Panels.RecipeBookShown() return win ~= nil and win.panel:IsShown() end
 
 -- The arrow to an NPC; prints where it leads.
 local function arrowTo(id, what)
@@ -1037,9 +1101,9 @@ function builders.recipebook()
 	rows[#rows + 1] = { "title", rank and ("%s   %d / %d"):format(prof.name, rank, cap or 0) or prof.name }
 	local paths = RB.Paths(b)
 	if #paths > 0 then
-		local opts = { { "Main", function() book.path = nil Panels.Refresh() end, not book.path and "accent" or nil } }
+		local opts = { { "Main", function() book.path = nil Panels.RefreshRecipeBook() end, not book.path and "accent" or nil } }
 		for _, p in ipairs(paths) do
-			opts[#opts + 1] = { p, function() book.path = p Panels.Refresh() end, book.path == p and "accent" or nil }
+			opts[#opts + 1] = { p, function() book.path = p Panels.RefreshRecipeBook() end, book.path == p and "accent" or nil }
 		end
 		rows[#rows + 1] = { "setting", "Way", book.path or "Main", opts }
 	end
@@ -1099,7 +1163,7 @@ function builders.recipebook()
 	rows[#rows + 1] = { "choice", book.all and "Show fewer steps" or "Show every step",
 		book.all and nil or "With recipe sources, materials and the other recipes", function()
 			book.all = not book.all
-			Panels.Refresh()
+			Panels.RefreshRecipeBook()
 		end }
 
 	if book.all then
@@ -1136,7 +1200,7 @@ function builders.recipebook()
 	local src = "From wow-professions.com's Forever guide, written on the beta"
 	if b.untestedFrom then src = src .. (", not tested there from %d"):format(b.untestedFrom) end
 	rows[#rows + 1] = { "text", src .. ". Recipes, colours and materials: the Forever client's own data; green is an estimate.", "muted" }
-	rows[#rows + 1] = { "buttons", { { "Back", "default", function() if not Panels.Back() then Panels.Open("recipebooks") end end }, { "Close", "default", Panels.Close } } }
+	rows[#rows + 1] = { "buttons", { { "All professions", "default", function() Panels.OpenRecipeBook(nil) end }, { "Close", "default", function() Panels.CloseRecipeBook() end } } }
 	return rows
 end
 
@@ -1150,7 +1214,7 @@ function builders.recipebooks()
 			rows[#rows + 1] = { "choice", rank and ("%s   %d / %d"):format(prof.name, rank, cap or 0) or prof.name, nil, function() Panels.OpenRecipeBook(prof.key) end }
 		end
 	end
-	rows[#rows + 1] = { "buttons", { { "Back", "default", function() if not Panels.Back() then Panels.Open("professions") end end }, { "Close", "default", Panels.Close } } }
+	rows[#rows + 1] = { "buttons", { { "Close", "default", function() Panels.CloseRecipeBook() end } } }
 	return rows
 end
 
@@ -1492,7 +1556,9 @@ ns.On("REPORT_STEP", function() Panels.Open("report") end)
 ns.On("SHOW_DUNGEONS", function() Panels.Open("dungeons") end)
 ns.On("SHOW_ABOUT", function() Panels.Open("about") end)
 ns.On("GUIDE_UPDATED", function() if Panels.IsOpen("skip") or Panels.IsOpen("professions") or Panels.IsOpen("profession") then Panels.Refresh() end end)
-ns.On("PROFESSIONS_CHANGED", function() if Panels.IsOpen("professions") or Panels.IsOpen("profession") or Panels.IsOpen("recipebook") then Panels.Refresh() end end)
+ns.On("PROFESSIONS_CHANGED", function() if Panels.IsOpen("professions") or Panels.IsOpen("profession") then Panels.Refresh() end
+	Panels.RefreshRecipeBook()
+end)
 ns.On("SETTING_CHANGED", function(path)
 	if path == "guide.shown" and not ns.Get("guide.shown") then Panels.Close() end
 end)
