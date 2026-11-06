@@ -25,7 +25,7 @@ the two share one accent color and Pathwise UI appears in Pathwise's suite.
   Pathwise look: health in your class color (players) or by how a monster
   sees you; power; names and levels; short health numbers ("12.3k").
 - Click to target, right-click for the menu, in combat too.
-- Debuffs on your target and party (only yours if you like), cast bars for
+- Buffs and debuffs on your target, debuffs on party (only yours if you like), cast bars for
   you, your target and focus; combat, resting and leader marks; portraits.
 - Move them (Options > Unit frames > Move the frames), size them, put them
   back; the game's own unit frames are put away while these are on.

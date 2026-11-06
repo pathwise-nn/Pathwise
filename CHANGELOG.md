@@ -6,6 +6,12 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise UI: your target's buffs show
+- The target frame showed only debuffs, so a target's buffs never appeared.
+  Its buffs now sit in a row under the frame, with the debuffs under them
+  (moving up when there are no buffs). "Buffs and debuffs on your target" in
+  Unit frames switches both.
+
 ### Pathwise UI: the Adventure Guide's tray slot opens Pathwise Loot
 - Forever has the Adventure Guide switched off (the server says so; its key
   bindings have no Shift+J for it either), so its tray button opened nothing.

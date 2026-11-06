@@ -30,7 +30,7 @@ C.CATEGORIES = {
 			{ "toggle", "Outlined text", "units.outline", "Names and numbers on the bars get a black outline so they read on any color. Off: a soft shadow." },
 			{ "toggle", "Smooth bars", "units.smooth", "Health and power glide to their new value instead of jumping." },
 			{ "toggle", "Power numbers", "units.powerText" },
-			{ "toggle", "Debuffs on your target and party", "units.auras" },
+			{ "toggle", "Buffs and debuffs on your target, debuffs on party", "units.auras" },
 			{ "toggle", "Only your own debuffs", "units.onlyMyDebuffs" },
 			{ "toggle", "Cast bars", "units.castbars" },
 			{ "choice", "Your cast bar", "units.castbarSpot", { key = "cbs", { "Over the action bars", "bars" }, { "Under your frame", "frame" }, { "The game's", "game" } } },
