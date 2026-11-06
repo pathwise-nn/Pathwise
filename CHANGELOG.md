@@ -6,6 +6,18 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise UI
+- Unit frames in Pathwise's own look (the new default, "Slim"): the name and
+  "207 / 207" in Pathwise's typeface on the dark ground, over a slim health
+  bar in the class colour and a thin power bar, so no text sits on a coloured
+  bar; the level and LEADER, COMBAT or RESTING as a small label over the frame
+  ("LEVEL 10 · LEADER", the words in your accent). "Full bars" keeps the old
+  look, with very light class colours drawn a shade deeper and the power
+  number fitting its bar. Health text has a new "Auto" choice (the default).
+- Your cast bar sits over the top action bar, as wide as it, in the Pathwise
+  look; the game's own cast bar no longer shows on the experience bar. Unit
+  frames options: over the action bars, under your frame, or the game's.
+
 ### Pathwise: quest markers stand out on the world map
 - The "!" of a quest to take, the "?" of a hand-in and dungeon entrances were
   thin pale-gold glyphs, nearly the colour of the map's parchment and hard to

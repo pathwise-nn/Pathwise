@@ -61,7 +61,7 @@ function U.PlaceAuras(f)
 	if not a then return end
 	local o = a.opts
 	local size, gap = o.size or 22, 3
-	local below = f.castbar and -24 or -4 -- under the cast bar when there is one
+	local below = (f.castbar and not f.castbar.pwAway) and -24 or -4 -- under the cast bar when there is one
 	for i, b in ipairs(a.icons) do
 		b:ClearAllPoints()
 		local step = (i - 1) * (size + gap)
@@ -154,7 +154,7 @@ end
 function U.UpdateCast(f)
 	local cb = f.castbar
 	if not cb then return end
-	if not ns.Get("units.castbars") then cb:Hide() return end
+	if not ns.Get("units.castbars") or (f.unit == "player" and ns.Get("units.castbarSpot") == "game") then cb:Hide() return end
 	local name, _, texture, startMS, endMS, _, _, notInterruptible = call(UnitCastingInfo, f.unit)
 	local channel = false
 	if not has(name) then

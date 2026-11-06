@@ -61,6 +61,17 @@ function T.BarText(fs, role, size)
 	fs:SetShadowColor(0, 0, 0, on and 0 or 0.8)
 	return fs
 end
+-- Text on the dark ground (the slim unit frames, like Pathwise's windows):
+-- no outline, no shadow, in a color of the scheme. Forgets any BarText.
+function T.PlainText(fs, role, color, size)
+	barTexts[fs] = nil
+	T.Font(fs, role, size, "")
+	fs:SetShadowOffset(0, 0)
+	fs:SetShadowColor(0, 0, 0, 0)
+	if color then T.Paint(fs, color) end
+	return fs
+end
+
 ns.On("SETTING_CHANGED", function(path)
 	if path == "units.outline" or path == "*" or path == "units.*" then
 		for fs, r in pairs(barTexts) do T.BarText(fs, r[1], r[2]) end

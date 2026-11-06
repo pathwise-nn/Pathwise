@@ -68,7 +68,81 @@ function U.Build()
 		end
 	end
 	if on and ns.Get("units.hideBlizzard") then U.HideBlizzard() end
+	U.PlaceCastbar()
 end
+
+---------------------------------------------------------------------------
+-- Your cast bar: above the action bars, under your frame, or the game's
+---------------------------------------------------------------------------
+-- "bars" (default): Pathwise's bar for your casts sits centred over the
+-- topmost of Pathwise UI's bottom action bars, as wide as it. "frame": under
+-- your unit frame. "game": Pathwise's is off and the game's shows.
+-- With Pathwise's on, the game's own player cast bar is silenced (its events
+-- off: it never shows). It is not moved or reparented: Edit Mode owns its
+-- place, and an addon writing there could get the game's actions blocked.
+-- Back after a reload when switched to "game".
+ns.Defaults("units", { castbarSpot = "bars" })
+
+-- The topmost shown bar of the bottom three (Pathwise UI's bars 1-3).
+function U.TopBar()
+	local B = ns.Bars
+	if not (B and B.bars) then return nil end
+	local best, bestTop
+	for id = 1, 3 do
+		local bar = B.bars[id]
+		if bar and bar:IsShown() then
+			local top = bar.GetTop and bar:GetTop()
+			top = type(top) == "number" and top or id
+			if not bestTop or top > bestTop then best, bestTop = bar, top end
+		end
+	end
+	return best
+end
+
+-- Pathwise shows your casts (not "game", cast bars and your frame on).
+function U.OwnPlayerCastbar()
+	return ns.Get("units.enabled") and ns.Get("units.player") and ns.Get("units.castbars")
+		and ns.Get("units.castbarSpot") ~= "game" and true or false
+end
+
+local silenced = false
+function U.SilenceGameCastbar()
+	local g = _G.PlayerCastingBarFrame
+	if silenced or type(g) ~= "table" then return end
+	silenced = true
+	pcall(g.UnregisterAllEvents, g)
+	pcall(g.Hide, g)
+end
+
+function U.PlaceCastbar()
+	local f = U.frames.player
+	local cb = f and f.castbar
+	if not cb then return end
+	if inCombat() then U.pending = true return end
+	if U.OwnPlayerCastbar() then U.SilenceGameCastbar() end
+	cb:ClearAllPoints()
+	local top = U.OwnPlayerCastbar() and ns.Get("units.castbarSpot") == "bars" and U.TopBar() or nil
+	if top then
+		cb.pwAway = true
+		cb:SetParent(UIParent)
+		cb:SetFrameStrata("MEDIUM")
+		cb:SetHeight(18)
+		cb.icon:SetSize(18, 18)
+		cb:SetPoint("BOTTOMLEFT", top, "TOPLEFT", 20, 12)
+		cb:SetPoint("BOTTOMRIGHT", top, "TOPRIGHT", 0, 12)
+	else
+		cb.pwAway = nil
+		cb:SetParent(f)
+		cb:SetHeight(16)
+		cb.icon:SetSize(16, 16)
+		cb:SetPoint("TOPLEFT", f, "BOTTOMLEFT", 18, -4)
+		cb:SetPoint("TOPRIGHT", f, "BOTTOMRIGHT", 0, -4)
+	end
+	if f.auras then U.PlaceAuras(f) end
+end
+ns.On("SETTING_CHANGED", function(path)
+	if type(path) == "string" and path:find("^bars%.") then U.PlaceCastbar() end
+end)
 
 ---------------------------------------------------------------------------
 -- Moving the frames

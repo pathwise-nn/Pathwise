@@ -23,7 +23,8 @@ ns.Units = U
 ns.Defaults("units", {
 	enabled = true,
 	hideBlizzard = true,
-	healthText = "current", -- "current" | "both" | "percent" | "none"
+	style = "slim", -- "slim" (Pathwise: text on the dark ground, slim bars) | "full" (the bars fill the frame, text on them)
+	healthText = "auto", -- "auto" (both on your and your target's frame, current on small ones) | "current" | "both" | "percent" | "none"
 	healthColor = "class", -- "class" (players by class, others by reaction) | "accent" | "dark"
 	powerText = true,
 	auras = true,
@@ -64,6 +65,17 @@ U.REACTION = setmetatable({}, { __index = function(_, k) return T.Color(k) end }
 local POWER_COLOR = { MANA = "mana", RAGE = "rage", ENERGY = "energy", FOCUS = "focus", RUNIC_POWER = "accent", HAPPINESS = "success" }
 U.POWER = setmetatable({}, { __index = function(_, k) local n = POWER_COLOR[k] return n and T.Color(n) or nil end })
 
+-- A bar color white text reads on: the very light class colors (priest
+-- white, rogue yellow, hunter green) a shade deeper, same hue. Others as
+-- they are.
+U.LIGHT, U.DEEPEN_TO = 0.7, 0.62 -- relative luminance
+function U.Readable(c)
+	local lum = 0.2126 * c[1] + 0.7152 * c[2] + 0.0722 * c[3]
+	if lum <= U.LIGHT then return c end
+	local k = U.DEEPEN_TO / lum
+	return { c[1] * k, c[2] * k, c[3] * k }
+end
+
 -- The health bar's color for a unit.
 function U.HealthColor(unit)
 	local mode = ns.Get("units.healthColor")
@@ -73,7 +85,7 @@ function U.HealthColor(unit)
 	if isPlayer then
 		local class = readable(select(2, call(UnitClass, unit)))
 		local c = class and T.ClassColor(class)
-		if c then return c end
+		if c then return U.Slim() and c or U.Readable(c) end
 	end
 	local r = readable(call(UnitReaction, unit, "player"))
 	if type(r) == "number" then
@@ -184,7 +196,7 @@ function U.Make(def)
 	-- Portrait (optional), status marks.
 	f.portrait = f:CreateTexture(nil, "ARTWORK")
 	f.portrait:Hide()
-	f.mark = T.Text(f, "label", "warning")
+	f.mark = T.Text(f, "label", "text2")
 	-- A thin line in your accent along the top while this is your target.
 	f.glow = f:CreateTexture(nil, "OVERLAY")
 	f.glow:SetPoint("TOPLEFT", 1, -1)
@@ -232,7 +244,20 @@ function U.Layout(f)
 	else
 		f.portrait:Hide()
 	end
-	local powerH = (d.power and h >= 30) and math.max(4, math.floor(h * 0.22)) or 0
+	if U.Slim() then return U.LayoutSlim(f, w, h, left) end
+	-- Full bars: health fills the frame, the texts on it.
+	f.name:SetParent(f.health) f.hp:SetParent(f.health)
+	for _, b in ipairs({ f.health, f.power }) do
+		for _, t in ipairs(b.pwSheen or {}) do t:Show() end
+	end
+	-- The power bar is tall enough for its number when it shows one.
+	local powerText = ns.Get("units.powerText")
+	local powerH = (d.power and h >= 30) and math.max(powerText and 12 or 4, math.floor(h * (powerText and 0.27 or 0.22))) or 0
+	f.name:ClearAllPoints()
+	f.name:SetPoint("LEFT", f.health, "LEFT", 6, 0)
+	f.name:SetPoint("RIGHT", f.hp, "LEFT", -6, 0)
+	f.hp:ClearAllPoints()
+	f.hp:SetPoint("RIGHT", f.health, "RIGHT", -6, 0)
 	f.health:ClearAllPoints()
 	f.health:SetPoint("TOPLEFT", left, -1)
 	f.health:SetPoint("BOTTOMRIGHT", -1, 1 + powerH + (powerH > 0 and 1 or 0))
@@ -241,9 +266,51 @@ function U.Layout(f)
 	f.power:SetPoint("BOTTOMRIGHT", -1, 1)
 	f.power:SetHeight(math.max(1, powerH))
 	f.power:SetShown(powerH > 0)
-	f.pp:SetShown(powerH >= 8 and ns.Get("units.powerText"))
+	f.pp:SetShown(powerH >= 8 and powerText and true or false)
+	T.BarText(f.pp, "small", math.min(11, powerH - 1))
 	T.BarText(f.name, h >= 30 and "uname" or "unameSmall")
 	T.BarText(f.hp, h >= 30 and "body" or "meta")
+end
+
+-- Slim, Pathwise's own look (as its guide window): the name and health in
+-- text on the dark ground, a slim health bar under them in the unit's color,
+-- a thin power bar under that. No text sits on a colored bar.
+--   | Florp                 207 / 207 |
+--   | ███████████████████░░░░░░░░░░░ |
+--   | ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬ |
+function U.Slim() return ns.Get("units.style") ~= "full" end
+
+function U.LayoutSlim(f, w, h, left)
+	local d = f.def
+	local roomy = h >= 34
+	local pad = roomy and 9 or 5
+	local x = left + pad - 1
+	local powerH = (d.power and h >= 30) and 3 or 0
+	local healthH = roomy and 6 or 4
+	local gap = powerH > 0 and 2 or 0
+	f.power:ClearAllPoints()
+	f.power:SetPoint("BOTTOMLEFT", x, pad - 1)
+	f.power:SetPoint("BOTTOMRIGHT", -pad, pad - 1)
+	f.power:SetHeight(math.max(1, powerH))
+	f.power:SetShown(powerH > 0)
+	f.health:ClearAllPoints()
+	f.health:SetPoint("BOTTOMLEFT", x, pad - 1 + powerH + gap)
+	f.health:SetPoint("BOTTOMRIGHT", -pad, pad - 1 + powerH + gap)
+	f.health:SetHeight(healthH)
+	for _, b in ipairs({ f.health, f.power }) do
+		for _, t in ipairs(b.pwSheen or {}) do t:Hide() end
+	end
+	-- The texts on the frame's own ground, over the bars.
+	f.name:SetParent(f) f.hp:SetParent(f)
+	f.name:ClearAllPoints()
+	f.hp:ClearAllPoints()
+	f.hp:SetPoint("BOTTOMRIGHT", f.health, "TOPRIGHT", 0, roomy and 5 or 3)
+	f.name:SetPoint("BOTTOMLEFT", f.health, "TOPLEFT", 0, roomy and 5 or 3)
+	f.name:SetPoint("RIGHT", f.hp, "LEFT", -8, 0)
+	f.name:SetJustifyV("BOTTOM") f.hp:SetJustifyV("BOTTOM")
+	T.PlainText(f.name, roomy and "window" or "body", "text")
+	T.PlainText(f.hp, roomy and "meta" or "small", "text2")
+	f.pp:Hide() -- the power bar speaks for itself; the tooltip has the number
 end
 
 ---------------------------------------------------------------------------
@@ -261,6 +328,7 @@ function U.UpdateHealth(f)
 	local dead = readable(call(UnitIsDead, u))
 	local online = readable(call(UnitIsConnected, u))
 	local mode = ns.Get("units.healthText")
+	if mode == "auto" then mode = f.def.big and "both" or "current" end
 	if online == false then f.hp:SetText("Offline")
 	elseif dead then f.hp:SetText("Dead")
 	elseif mode == "none" or not has(cur) then f.hp:SetText("")
@@ -285,7 +353,11 @@ function U.UpdatePower(f)
 	if has(cur) then U.SetBar(f.power, cur) end
 	local c = U.PowerColor(u)
 	f.power:SetStatusBarColor(c[1], c[2], c[3])
-	if f.pp:IsShown() and has(cur) then f.pp:SetText(short(cur)) end
+	if f.pp:IsShown() and has(cur) then
+		-- "427 / 427" on your and your target's frame, so it says what it is.
+		if f.def.big and has(max) then f.pp:SetFormattedText("%s / %s", short(cur), short(max))
+		else f.pp:SetText(short(cur)) end
+	end
 end
 
 function U.UpdateName(f)
@@ -295,18 +367,28 @@ function U.UpdateName(f)
 	local level = call(UnitLevel, u)
 	local lv = readable(level)
 	if lv == -1 then f.level:SetText("??") elseif has(level) then f.level:SetText(level) else f.level:SetText("") end
-	f.level:SetShown(f.def.big and true or false)
+	-- The level is in the line over the frame (U.UpdateMarks), not against the name.
+	f.level:Hide()
+	f.levelText = (lv == -1 and "??") or (type(lv) == "number" and tostring(lv)) or nil
 	if f.portrait:IsShown() and SetPortraitTexture then pcall(SetPortraitTexture, f.portrait, u) end
 end
 
--- Little words over the frame: combat, resting, party leader.
+-- Little words over the frame, Pathwise's labels: the level quiet, then
+-- combat, resting and party leader in your accent: "LEVEL 10 · LEADER".
+local function hexOf(name)
+	local c = T.Color(name)
+	return ("%02x%02x%02x"):format(math.floor(c[1] * 255 + 0.5), math.floor(c[2] * 255 + 0.5), math.floor(c[3] * 255 + 0.5))
+end
 function U.UpdateMarks(f)
 	local bits = {}
+	if f.def.big and f.levelText then bits[#bits + 1] = "LEVEL " .. f.levelText end
+	local flags = {}
 	if f.unit == "player" then
-		if inCombat() then bits[#bits + 1] = "COMBAT" elseif readable(call(IsResting)) then bits[#bits + 1] = "RESTING" end
+		if inCombat() then flags[#flags + 1] = "COMBAT" elseif readable(call(IsResting)) then flags[#flags + 1] = "RESTING" end
 	end
-	if readable(call(UnitIsGroupLeader, f.unit)) then bits[#bits + 1] = "LEADER" end
-	f.mark:SetText(table.concat(bits, "  "))
+	if readable(call(UnitIsGroupLeader, f.unit)) then flags[#flags + 1] = "LEADER" end
+	for _, w in ipairs(flags) do bits[#bits + 1] = ("|cff%s%s|r"):format(hexOf("accent"), w) end
+	f.mark:SetText(table.concat(bits, "  ·  "))
 end
 
 -- Your target among the others (party, focus...): the accent line fades in.
