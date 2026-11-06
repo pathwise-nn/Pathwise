@@ -1,5 +1,6 @@
 -- Pathwise pins: the step's places on the world map and the minimap, the
--- quests around you (Nav/QuestMarkers.lua: givers, finishers, objectives),
+-- markers of the step's and the tracked quests (Nav/QuestMarkers.lua:
+-- givers, finishers, objectives),
 -- and the entrances of dungeons for the character's level on the world map.
 --
 -- Forever's interface is protected like retail's: a value an addon writes into
@@ -38,13 +39,17 @@ local LOOK = {
 	gather = { tex = "dot-done", size = 7, color = "text2", alpha = 0.9 },
 	-- The steps ahead, each with its number on a dark disc.
 	step = { tex = "dot-done", size = 16, color = "bg", alpha = 0.9 },
-	dungeon = { tex = "glyph-dungeon", size = 18, color = "warning", alpha = 0.95 },
+	-- Badges (badge = the glyph's share of the pin): the glyph on a dark disc
+	-- with a ring in its colour (ring = true). A bare light glyph was lost on
+	-- the world map's parchment, close to the theme's gold in colour.
+	dungeon = { tex = "glyph-dungeon", size = 24, color = "warning", alpha = 1, badge = 0.7, ring = true },
 	-- Quest markers (Nav/QuestMarkers.lua): givers, finishers, objectives.
-	available = { tex = "glyph-quest", size = 16, color = "warning", alpha = 1 },
-	availableLow = { tex = "glyph-quest", size = 14, color = "muted", alpha = 0.8 },
-	turnin = { tex = "glyph-turnin", size = 16, color = "warning", alpha = 1 },
-	objective = { tex = "dot-done", size = 6, color = "text2", alpha = 0.6 },
+	available = { tex = "glyph-quest", size = 24, color = "warning", alpha = 1, badge = 0.7, ring = true },
+	turnin = { tex = "glyph-turnin", size = 24, color = "warning", alpha = 1, badge = 0.7, ring = true },
+	objective = { tex = "dot-done", size = 10, color = "text2", alpha = 1, badge = 0.7 },
 }
+Pins.LOOK = LOOK
+Pins.BADGE_ALPHA = 0.9 -- the dark disc under a badge's glyph
 
 local function frameUnder(parent)
 	local f = CreateFrame("Frame", nil, nil)
@@ -64,8 +69,14 @@ end
 local function makePin(parent)
 	local f = frameUnder(parent)
 	f:SetSize(16, 16)
+	-- A badge's dark disc and ring, under the glyph.
+	f.back = f:CreateTexture(nil, "ARTWORK", nil, 0)
+	f.back:SetAllPoints()
+	f.back:SetTexture(T.MEDIA .. "pin-disc")
+	f.ring = f:CreateTexture(nil, "ARTWORK", nil, 1)
+	f.ring:SetAllPoints()
+	f.ring:SetTexture(T.MEDIA .. "dot-open")
 	f.tex = f:CreateTexture(nil, "OVERLAY")
-	f.tex:SetAllPoints()
 	f.num = T.Text(f, "small", "accent", "OVERLAY")
 	f.num:SetPoint("CENTER", 0, 0)
 	f.num:SetJustifyH("CENTER")
@@ -77,16 +88,32 @@ local function makePin(parent)
 	return f
 end
 
-local function dress(f, pin)
-	local look = LOOK[pin.kind] or LOOK.goal
+-- `k` scales the pin (smaller on the minimap).
+local function dress(f, pin, k)
+	local look = LOOK[pin.marker or pin.kind] or LOOK.goal
 	f.pin = pin
 	f.tex:SetTexture(T.MEDIA .. look.tex)
 	local c = pin.rgb or T.Color(look.color)
 	f.tex:SetVertexColor(c[1], c[2], c[3], look.alpha)
 	local size = look.size
 	if pin.kind == "step" and pin.label then size = max(size, 7 * #pin.label + 4) end -- room for "128"
+	size = size * (k or 1)
 	f.size = size
 	f:SetSize(size, size)
+	local glyph = size * (look.badge or 1)
+	f.tex:ClearAllPoints()
+	f.tex:SetPoint("CENTER", f, "CENTER", 0, 0)
+	f.tex:SetSize(glyph, glyph)
+	if look.badge then
+		local bg = T.Color("bg")
+		f.back:SetVertexColor(bg[1], bg[2], bg[3], Pins.BADGE_ALPHA)
+		f.back:Show()
+		f.ring:SetVertexColor(c[1], c[2], c[3], look.alpha)
+		f.ring:SetShown(look.ring == true)
+	else
+		f.back:Hide()
+		f.ring:Hide()
+	end
 	-- A step number: on the dark disc, or beside the lead's ring.
 	f.num:SetText(pin.label or "")
 	f.num:ClearAllPoints()
@@ -127,11 +154,13 @@ local function pinKey(p) return ("%d:%.1f:%.1f"):format(p.map, p.x, p.y) end
 
 -- What a map shows, bottom to top: quest markers, dungeon entrances (world
 -- map), then the step's own pins. A quest marker where the step already has
--- a pin is left out.
+-- a pin is left out; on the step's lead or goal it gives that pin its badge
+-- (pin.marker: a "!" or "?"), which keeps the step's number and tooltip.
+local BADGES = { available = true, turnin = true }
 local function pinsFor(map, setting, withDungeons)
 	local step = stepPins()
 	local taken = {}
-	for _, p in ipairs(step) do if p.map and p.x then taken[pinKey(p)] = true end end
+	for _, p in ipairs(step) do if p.map and p.x then taken[pinKey(p)] = p end end
 	local list = {}
 	-- Herb and ore nodes at the bottom (Professions/Gathering.lua).
 	if map and ns.Gathering then
@@ -139,7 +168,12 @@ local function pinsFor(map, setting, withDungeons)
 	end
 	if map and ns.Get(setting) and ns.QuestMarkers then
 		for _, p in ipairs(ns.QuestMarkers.ForMap(map)) do
-			if not taken[pinKey(p)] then list[#list + 1] = p end
+			local s = taken[pinKey(p)]
+			if not s then
+				list[#list + 1] = p
+			elseif BADGES[p.kind] and (s.kind == "lead" or s.kind == "goal") then
+				s.marker = p.kind
+			end
 		end
 	end
 	if withDungeons then for _, p in ipairs(dungeonPins()) do list[#list + 1] = p end end
@@ -320,9 +354,7 @@ local function buildMini()
 			f = makePin(Minimap)
 			mm.pins[i] = f
 		end
-		dress(f, pin)
-		local s = (pin.kind == "spot" or pin.kind == "objective") and 0.8 or 0.75
-		f:SetSize(f.size * s, f.size * s)
+		dress(f, pin, (pin.kind == "spot" or pin.kind == "objective") and 0.8 or 0.75)
 	end
 	for i = #mm.list + 1, #mm.pins do mm.pins[i]:Hide() end
 	placeMini()

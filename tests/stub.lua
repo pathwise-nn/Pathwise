@@ -331,6 +331,8 @@ C_QuestLog = {
 	IsComplete = function(id) return stub.log[id] ~= nil and stub.log[id].ready == true end,
 	GetQuestObjectives = function(id) return stub.log[id] and stub.log[id].objectives or {} end,
 	GetTitleForQuestID = function() return nil end,
+	-- Tracked (ticked in the log): 0 (automatic) as the game does on accept, nil when not.
+	GetQuestWatchType = function(id) return stub.log[id] and stub.log[id].watched and 0 or nil end,
 	-- The log as the game lists it: one entry per quest, by id.
 	GetNumQuestLogEntries = function() local n = 0 for _ in pairs(stub.log) do n = n + 1 end return n end,
 	GetInfo = function(i)
@@ -341,9 +343,14 @@ C_QuestLog = {
 	end,
 }
 function stub.accept(id, objectives)
-	stub.log[id] = { objectives = objectives or {}, ready = objectives == nil }
+	stub.log[id] = { objectives = objectives or {}, ready = objectives == nil, watched = true }
 	stub.fire("QUEST_ACCEPTED", id)
 	stub.fire("QUEST_LOG_UPDATE")
+end
+-- Tick or untick a quest in the log.
+function stub.watch(id, on)
+	stub.log[id].watched = on and true or false
+	stub.fire("QUEST_WATCH_LIST_CHANGED")
 end
 function stub.progress(id, i, have)
 	local o = stub.log[id].objectives[i]

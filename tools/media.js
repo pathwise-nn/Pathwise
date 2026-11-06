@@ -195,6 +195,15 @@ T['dot-done'] = () => {
 	return c;
 };
 
+// Map markers' badge: a solid disc with a soft half-opaque rim, tinted dark
+// under a glyph so it stands out on the light parchment of the world map.
+T['pin-disc'] = () => {
+	const c = canvas(32);
+	paint(c, disc(16, 16, 15.5), 1, 0.45);
+	paint(c, disc(16, 16, 14), 1);
+	return c;
+};
+
 // The slider's handle: a disc with a thin darker ring, so it reads on the fill.
 T.thumb = () => {
 	const c = canvas(32);
