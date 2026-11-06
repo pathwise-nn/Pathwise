@@ -6,6 +6,31 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.9 (2026-11-06)
+
+### Pathwise Heal: the time left on your HoTs
+- Each healing frame shows your HoTs and shields top right, with the time
+  left on each. In its last seconds the number turns red and the icon
+  blinks, so you can see when to renew it. In a fight, when Forever hides
+  auras from addons, the game draws your HoTs there itself with its own
+  countdown. On by default ("Time left on buffs" under /pwheal > Healing).
+  Not yet checked in game.
+
+### Pathwise Heal: a buff row and a debuff row, and click a debuff to remove it
+- Each healing frame has a buff row (top right: your HoTs first, then big
+  defensives and the buffs you put on them) and a debuff row along the
+  bottom: the debuffs you can remove on the left, in their type's color,
+  the others on the right.
+- Left click on a debuff you can remove casts the spell that removes it
+  (Remove Curse on a curse, Abolish Poison on a poison). Every other click
+  on it does what that click does on the frame. Between fights only: in a
+  fight the game draws the rows, so use your cleanse clicks (Shift or Alt +
+  right) there.
+- In a fight the game draws both rows in the same places with its own
+  countdown, as one set (the cleanse icons no longer sit on top of the
+  HoTs). /pwheal > Healing > Buffs and debuffs has each row, the cleanse
+  click, the colored edge and both icon sizes. Not yet checked in game.
+
 ## 0.2.8 (2026-11-06)
 
 ### Professions: the recipe book in its own window, and the list knows your rank

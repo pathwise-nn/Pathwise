@@ -55,6 +55,7 @@ local function lastPrint(stub) return stub.printed[#stub.printed] or "" end
 local h = { test = test, eq = eq, near = near, ok = ok, fresh = fresh, both = both, clean = clean, lastPrint = lastPrint }
 assert(loadfile(ROOT .. "/tests/heal/heal.lua"))(h)
 assert(loadfile(ROOT .. "/tests/heal/split.lua"))(h)
+assert(loadfile(ROOT .. "/tests/heal/auras.lua"))(h)
 
 for _, t in ipairs(tests) do
 	local okRun, err = pcall(t.fn)
