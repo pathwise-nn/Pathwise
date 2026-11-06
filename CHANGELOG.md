@@ -14,7 +14,7 @@ that version's section.
   Its slots are not counted in the free-slot count or the "bags nearly full"
   warning, since it holds only reagents. Nothing changes on a client without
   a reagent bag.
-- Not checked in game.
+- Checked in game.
 
 ## 0.2.2 (2026-11-05)
 
