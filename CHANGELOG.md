@@ -12,6 +12,13 @@ that version's section.
   see. Each is now a solid badge: the glyph, larger, on a dark disc with a
   soft edge and a ring in the marker's colour. Objective dots are opaque and
   outlined too. The minimap shows the same badges, smaller.
+- Quest markers show only the quests you are following, so the map is not
+  crowded: a "!" for a quest the guide's step says to take, and a "?" or
+  objective dots for the step's quests and for the quests ticked as tracked
+  in the quest log. Untick a quest in the log to hide its markers. Where the
+  step's own pin stands on a giver or a hand-in, it wears the "!" or "?"
+  badge and keeps its step number. The "Low-level quests" setting is gone:
+  quests around you that you are not following are no longer shown.
 
 ## 0.2.4 (2026-11-06)
 

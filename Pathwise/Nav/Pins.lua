@@ -1,5 +1,6 @@
 -- Pathwise pins: the step's places on the world map and the minimap, the
--- quests around you (Nav/QuestMarkers.lua: givers, finishers, objectives),
+-- markers of the step's and the tracked quests (Nav/QuestMarkers.lua:
+-- givers, finishers, objectives),
 -- and the entrances of dungeons for the character's level on the world map.
 --
 -- Forever's interface is protected like retail's: a value an addon writes into
@@ -44,7 +45,6 @@ local LOOK = {
 	dungeon = { tex = "glyph-dungeon", size = 24, color = "warning", alpha = 1, badge = 0.7, ring = true },
 	-- Quest markers (Nav/QuestMarkers.lua): givers, finishers, objectives.
 	available = { tex = "glyph-quest", size = 24, color = "warning", alpha = 1, badge = 0.7, ring = true },
-	availableLow = { tex = "glyph-quest", size = 20, color = "muted", alpha = 1, badge = 0.7, ring = true },
 	turnin = { tex = "glyph-turnin", size = 24, color = "warning", alpha = 1, badge = 0.7, ring = true },
 	objective = { tex = "dot-done", size = 10, color = "text2", alpha = 1, badge = 0.7 },
 }
@@ -90,7 +90,7 @@ end
 
 -- `k` scales the pin (smaller on the minimap).
 local function dress(f, pin, k)
-	local look = LOOK[pin.kind] or LOOK.goal
+	local look = LOOK[pin.marker or pin.kind] or LOOK.goal
 	f.pin = pin
 	f.tex:SetTexture(T.MEDIA .. look.tex)
 	local c = pin.rgb or T.Color(look.color)
@@ -154,11 +154,13 @@ local function pinKey(p) return ("%d:%.1f:%.1f"):format(p.map, p.x, p.y) end
 
 -- What a map shows, bottom to top: quest markers, dungeon entrances (world
 -- map), then the step's own pins. A quest marker where the step already has
--- a pin is left out.
+-- a pin is left out; on the step's lead or goal it gives that pin its badge
+-- (pin.marker: a "!" or "?"), which keeps the step's number and tooltip.
+local BADGES = { available = true, turnin = true }
 local function pinsFor(map, setting, withDungeons)
 	local step = stepPins()
 	local taken = {}
-	for _, p in ipairs(step) do if p.map and p.x then taken[pinKey(p)] = true end end
+	for _, p in ipairs(step) do if p.map and p.x then taken[pinKey(p)] = p end end
 	local list = {}
 	-- Herb and ore nodes at the bottom (Professions/Gathering.lua).
 	if map and ns.Gathering then
@@ -166,7 +168,12 @@ local function pinsFor(map, setting, withDungeons)
 	end
 	if map and ns.Get(setting) and ns.QuestMarkers then
 		for _, p in ipairs(ns.QuestMarkers.ForMap(map)) do
-			if not taken[pinKey(p)] then list[#list + 1] = p end
+			local s = taken[pinKey(p)]
+			if not s then
+				list[#list + 1] = p
+			elseif BADGES[p.kind] and (s.kind == "lead" or s.kind == "goal") then
+				s.marker = p.kind
+			end
 		end
 	end
 	if withDungeons then for _, p in ipairs(dungeonPins()) do list[#list + 1] = p end end

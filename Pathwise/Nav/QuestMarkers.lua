@@ -1,16 +1,18 @@
--- Pathwise quest markers: every quest around you on the world map and the
--- minimap, from the quest data (QuestieDB's Forever data, Data/Data.lua),
--- not just the guide's step:
---   "!" at a giver for each quest this character can take now,
---   "?" at the finisher of each quest in the log that is ready to hand in,
---   small dots where the monsters and objects of an unfinished objective are,
---     for every quest in the log.
+-- Pathwise quest markers on the world map and the minimap, for the quests
+-- you are following, not every quest around you (that crowded the map):
+--   the quests of the guide's step shown (and its side guide's, and the extra
+--   quest picked), and the quests ticked as tracked in the game's quest log.
+-- For those, from the quest data (QuestieDB's Forever data, Data/Data.lua):
+--   "!" at the giver of a quest the step says to take, if you can take it,
+--   "?" at the finisher of a quest in the log that is ready to hand in,
+--   small dots where the monsters and objects of an unfinished objective are.
 -- Pins.lua draws them (its frames, its rules about not touching the map's
 -- own tables); this file only decides what they are.
 --
 -- Quest log APIs (Forever's QuestLogDocumentation): C_QuestLog.
--- GetNumQuestLogEntries, GetInfo (questID, isHeader, isHidden), plus what
--- Guide/Quests.lua reads.
+-- GetNumQuestLogEntries, GetInfo (questID, isHeader, isHidden),
+-- GetQuestWatchType (nil when not tracked; the classic IsQuestWatched(index)
+-- if that is missing), plus what Guide/Quests.lua reads.
 
 local ADDON, ns = ...
 local Q = ns.Quests
@@ -20,48 +22,18 @@ ns.QuestMarkers = M
 ns.Defaults("pins", {
 	quests = true, -- quest markers on the world map
 	questsMinimap = true, -- and on the minimap
-	lowLevel = false, -- also quests far below your level
 })
 
 -- Data layout positions (tools/data/build.lua, as in Guide/Quests.lua).
 local START_NPC, START_OBJ, END_NPC, END_OBJ, SPECIAL = 7, 8, 10, 11, 16
-M.LOW = 5 -- a quest this many levels below you or more is "low" (hidden unless lowLevel)
 
 local readable = function(v) return ns.Compat.Readable(v) end
 
----------------------------------------------------------------------------
--- Index: the quests whose giver stands on each map (built once)
----------------------------------------------------------------------------
-
-local byMap
 local function spawnsOf(kind, id)
 	local D = Q.Data
 	if kind == "n" then local n = D.npcs[id] return n and n[5], n and n[1] end
 	local o = D.objects[id]
 	return o and o[2], o and o[1]
-end
-
-function M.Index()
-	if byMap then return byMap end
-	byMap = {}
-	for id, q in pairs(Q.Data.quests) do
-		local maps = {}
-		for _, n in ipairs(q[START_NPC] or {}) do
-			local sp = spawnsOf("n", n)
-			if type(sp) == "table" then for map in pairs(sp) do maps[map] = true end end
-		end
-		for _, o in ipairs(q[START_OBJ] or {}) do
-			local sp = spawnsOf("o", o)
-			if type(sp) == "table" then for map in pairs(sp) do maps[map] = true end end
-		end
-		for map in pairs(maps) do
-			byMap[map] = byMap[map] or {}
-			local list = byMap[map]
-			list[#list + 1] = id
-		end
-	end
-	for _, list in pairs(byMap) do table.sort(list) end
-	return byMap
 end
 
 ---------------------------------------------------------------------------
@@ -85,26 +57,58 @@ function M.Available(id, p)
 	return true
 end
 
--- Far below the character: a grey quest.
-function M.Low(id, p)
-	local lvl = Q.Level(id)
-	return lvl > 0 and lvl <= ((p and p.level) or 1) - M.LOW
+-- Whether the quest log entry is tracked (ticked in the log): a function
+-- (id, index) -> bool, or nil when the client has no way to say.
+local function watchTest()
+	local L = C_QuestLog
+	if L and L.GetQuestWatchType then
+		return function(id) return readable(L.GetQuestWatchType(id)) ~= nil end
+	end
+	if IsQuestWatched then
+		return function(_, i) return readable(IsQuestWatched(i)) and true or false end
+	end
+	return nil
 end
 
--- The quests in the log: { id, ... } (headers and hidden ones left out).
+-- The quests in the log: { id, ... } (headers and hidden ones left out),
+-- and { [id] = true } for the tracked ones (all of them when the client
+-- cannot say which are tracked).
 function M.LogQuests()
 	local L = C_QuestLog
-	local out = {}
-	if not (L and L.GetNumQuestLogEntries and L.GetInfo) then return out end
+	local out, tracked = {}, {}
+	if not (L and L.GetNumQuestLogEntries and L.GetInfo) then return out, tracked end
+	local watched = watchTest()
 	local n = readable(L.GetNumQuestLogEntries()) or 0
 	for i = 1, n do
 		local info = L.GetInfo(i)
 		if type(info) == "table" and not readable(info.isHeader) and not readable(info.isHidden) then
 			local id = readable(info.questID)
-			if type(id) == "number" and id > 0 then out[#out + 1] = id end
+			if type(id) == "number" and id > 0 then
+				out[#out + 1] = id
+				if not watched or watched(id, i) then tracked[id] = true end
+			end
 		end
 	end
-	return out
+	return out, tracked
+end
+
+-- The quests of the step shown (and the side guide's, and the extra quest
+-- picked): { [id] = true } to take, { [id] = true } to work on or hand in.
+function M.StepQuests()
+	local take, work = {}, {}
+	local E = ns.Engine
+	if not E then return take, work end
+	local goals = E.OpenGoals and E.OpenGoals() or {}
+	local x = E.Extra and E.Extra()
+	if x then goals[#goals + 1] = { x.verb, x.quest } end
+	for _, goal in ipairs(goals) do
+		local verb, id = goal[1], goal[2]
+		if type(id) == "number" then
+			if verb == "accept" then take[id] = true
+			elseif verb == "turnin" or verb == "complete" then work[id] = true end
+		end
+	end
+	return take, work
 end
 
 ---------------------------------------------------------------------------
@@ -125,56 +129,58 @@ local function atEntities(out, map, groups, kind, header)
 			table.sort(g.lines)
 			local sub = header .. "\n" .. table.concat(g.lines, "\n")
 			for k = 1, #pts, 2 do
-				out[#out + 1] = { map = map, x = pts[k], y = pts[k + 1], kind = g.low and "availableLow" or kind, title = g.name, sub = sub }
+				out[#out + 1] = { map = map, x = pts[k], y = pts[k + 1], kind = kind, title = g.name, sub = sub }
 			end
 		end
 	end
 end
 
-local function group(groups, entityKind, eid, line, low)
+local function group(groups, entityKind, eid, line)
 	local key = entityKind .. eid
 	local g = groups[key]
 	if not g then
 		local spawns, name = spawnsOf(entityKind, eid)
-		g = { spawns = spawns, name = name or "?", lines = {}, low = true }
+		g = { spawns = spawns, name = name or "?", lines = {} }
 		groups[key] = g
 	end
 	g.lines[#g.lines + 1] = line
-	if not low then g.low = false end
 end
 
--- { { map, x, y, kind, title, sub }, ... } for `map`: givers ("available",
--- "availableLow"), finishers ("turnin") and objective spots ("objective").
+-- { { map, x, y, kind, title, sub }, ... } for `map`: givers ("available"),
+-- finishers ("turnin") and objective spots ("objective"), for the step's
+-- quests and the tracked ones.
 function M.ForMap(map)
 	local out = {}
 	if not map then return out end
 	local p = Q.Player()
-	local showLow = ns.Get("pins.lowLevel")
-	-- Givers.
+	local take, work = M.StepQuests()
+	-- Givers of the quests the step says to take.
 	local givers = {}
-	for _, id in ipairs(M.Index()[map] or {}) do
+	local ids = {}
+	for id in pairs(take) do ids[#ids + 1] = id end
+	table.sort(ids)
+	for _, id in ipairs(ids) do
 		if M.Available(id, p) then
-			local low = M.Low(id, p)
-			if showLow or not low then
-				local q = Q.Get(id)
-				for _, n in ipairs(q[START_NPC] or {}) do group(givers, "n", n, levelText(id), low) end
-				for _, o in ipairs(q[START_OBJ] or {}) do group(givers, "o", o, levelText(id), low) end
-			end
+			local q = Q.Get(id)
+			for _, n in ipairs(q[START_NPC] or {}) do group(givers, "n", n, levelText(id)) end
+			for _, o in ipairs(q[START_OBJ] or {}) do group(givers, "o", o, levelText(id)) end
 		end
 	end
 	atEntities(out, map, givers, "available", "Quests to take:")
-	-- The log: ready ones at their finisher, the others' objectives.
+	-- The log: the step's and the tracked quests, ready ones at their
+	-- finisher, the others' objectives.
 	local finishers = {}
-	for _, id in ipairs(M.LogQuests()) do
+	local log, tracked = M.LogQuests()
+	for _, id in ipairs(log) do
 		local q = Q.Get(id)
-		if q then
+		if q and (work[id] or tracked[id]) then
 			if Q.Ready(id) then
-				for _, n in ipairs(q[END_NPC] or {}) do group(finishers, "n", n, Q.Name(id), false) end
-				for _, o in ipairs(q[END_OBJ] or {}) do group(finishers, "o", o, Q.Name(id), false) end
+				for _, n in ipairs(q[END_NPC] or {}) do group(finishers, "n", n, Q.Name(id)) end
+				for _, o in ipairs(q[END_OBJ] or {}) do group(finishers, "o", o, Q.Name(id)) end
 			else
-				local log = Q.Objectives(id)
+				local objs = Q.Objectives(id)
 				for i = 1, Q.ObjectiveCount(id) do
-					if not (log and log[i] and log[i].done) then
+					if not (objs and objs[i] and objs[i].done) then
 						local pts, name = Q.ObjectiveSpots(id, i, map)
 						for k = 1, pts and #pts or 0, 2 do
 							out[#out + 1] = { map = map, x = pts[k], y = pts[k + 1], kind = "objective", title = name, sub = Q.Name(id) }
@@ -188,5 +194,5 @@ function M.ForMap(map)
 	return out
 end
 
--- For other modules: forget the index (new data in tests).
-function M.Reset() byMap = nil end
+-- Ticking a quest in the log or unticking it: the pins again.
+ns.RegisterEvent("QUEST_WATCH_LIST_CHANGED", function() ns.Fire("PINS_CHANGED") end)

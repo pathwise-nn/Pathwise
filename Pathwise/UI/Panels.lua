@@ -1213,7 +1213,6 @@ function builders.settings()
 		{ "slider", "Steps numbered ahead", "pins.stepCount", 1, 20, 1, function(v) return ("%d"):format(v) end, "count" },
 		{ "setting", "Quest markers on the map", onOff(ns.Get("pins.quests")), { { ns.Get("pins.quests") and "Hide" or "Show", toggle("pins.quests") } } },
 		{ "setting", "Quest markers on the minimap", onOff(ns.Get("pins.questsMinimap")), { { ns.Get("pins.questsMinimap") and "Hide" or "Show", toggle("pins.questsMinimap") } } },
-		{ "setting", "Low-level quests", onOff(ns.Get("pins.lowLevel")), { { ns.Get("pins.lowLevel") and "Hide" or "Show", toggle("pins.lowLevel") } } },
 		{ "heading", "Route" },
 		{ "setting", route and route.title or "No route", "", { { "Routes", function() Panels.Open("routes") end }, { "Zones", function() Panels.Open("zones") end } } },
 		{ "setting", "Side guide", E.Side() and E.Side().title or "None", E.Side() and { { "Stop", function() E.SetSide(nil) Panels.Refresh() end } } or {} },

@@ -592,10 +592,10 @@ test("world map pins: drawn on the map shown, the same size at any zoom, read-on
 	stub.advance(0.05)
 	near(lead.scale, 0.5, 1e-9, "zoomed in: the pin keeps its size on screen")
 	near(lead.points[1][4], 1000 * 30.22 / 100 * 2, 0.01, "and its place")
-	stub.mapShown = 1411 -- Durotar: nothing of this step there, only quests to take
+	stub.mapShown = 1411 -- Durotar: nothing of this step there, and no other quests' givers
 	stub.advance(0.05)
 	for _, f in ipairs(shownPins(stub, layer)) do
-		ok(f.pin.kind == "available" or f.pin.kind == "availableLow", "a quest marker, not the step's: " .. tostring(f.pin.kind))
+		ok(f.pin.kind ~= "available" and f.pin.kind ~= "turnin", "no marker of a quest not followed: " .. tostring(f.pin.kind))
 	end
 	ns.Set("pins.map", false)
 	stub.mapShown = 1420
@@ -619,7 +619,7 @@ test("quest markers stand out on the map: solid, a readable size, on a dark badg
 	local P, T = ns.Pins, ns.Theme
 	local bg = T.Color("bg")
 	-- Every quest marker's look: opaque, big enough, its glyph legible on the badge.
-	for _, kind in ipairs({ "available", "availableLow", "turnin", "dungeon" }) do
+	for _, kind in ipairs({ "available", "turnin", "dungeon" }) do
 		local look = P.LOOK[kind]
 		eq(look.alpha, 1, kind .. ": opaque")
 		ok(look.size >= 20, kind .. ": size " .. look.size)
@@ -629,45 +629,45 @@ test("quest markers stand out on the map: solid, a readable size, on a dark badg
 	end
 	ok(P.LOOK.objective.alpha == 1 and P.LOOK.objective.badge, "objective dots: solid, outlined")
 	ok(P.BADGE_ALPHA >= 0.85, "the badge is near solid")
-	-- Drawn on Durotar's map: quests to take.
-	stub.mapShown = 1411
-	stub.advance(0.05)
-	local layer = P.world.layer
-	local pins = shownPins(stub, layer)
-	ok(#pins >= 1, "quest givers on Durotar")
-	local warning = T.Color("warning")
-	for _, f in ipairs(pins) do
-		local look = P.LOOK[f.pin.kind]
-		eq(f.w, look.size, "pin size")
-		near(f.tex.w, look.size * look.badge, 1e-9, "the glyph inside the badge")
-		eq(f.tex.vertex[4], 1, "the glyph is opaque")
-		ok(f.back.shown, "the dark disc is shown")
-		eq(f.back.texture, T.MEDIA .. "pin-disc")
-		near(f.back.vertex[1], bg[1], 1e-9, "the disc is the theme's ground")
-		eq(f.back.vertex[4], P.BADGE_ALPHA)
-		ok(f.ring.shown, "the ring is shown")
-		if f.pin.kind == "available" then
-			near(f.ring.vertex[1], warning[1], 1e-9, "the ring in the marker's gold")
-			near(f.tex.vertex[1], warning[1], 1e-9, "the glyph in the marker's gold")
-		end
-	end
-	-- The step's pins, drawn in frames the markers used, have no badge.
+	-- Drawn: the step's first goal is to take The Damned from Undertaker
+	-- Mordo, so the step's lead pin there wears the "!" badge.
 	stub.mapShown = 1420
 	stub.advance(0.05)
-	for _, g in ipairs(shownPins(stub, layer)) do
-		if g.pin.kind == "lead" then
-			ok(not g.back.shown and not g.ring.shown, "no badge under the step's own pins")
-			eq(g.tex.w, g.w, "the step's ring fills its pin")
+	local layer = P.world.layer
+	local warning = T.Color("warning")
+	local lead
+	for _, f in ipairs(shownPins(stub, layer)) do
+		local look = P.LOOK[f.pin.marker or f.pin.kind]
+		if f.pin.kind == "lead" then lead = f end
+		if look.badge then
+			eq(f.w, look.size, "pin size")
+			near(f.tex.w, look.size * look.badge, 1e-9, "the glyph inside the badge")
+			eq(f.tex.vertex[4], 1, "the glyph is opaque")
+			ok(f.back.shown, "the dark disc is shown")
+			eq(f.back.texture, T.MEDIA .. "pin-disc")
+			near(f.back.vertex[1], bg[1], 1e-9, "the disc is the theme's ground")
+			eq(f.back.vertex[4], P.BADGE_ALPHA)
+		else
+			ok(not f.back.shown and not f.ring.shown, "no badge under " .. f.pin.kind)
+			eq(f.tex.w, f.w, "the glyph fills its pin")
 		end
 	end
+	ok(lead, "the step's lead pin")
+	eq(lead.pin.marker, "available", "the lead at a giver: a \"!\"")
+	eq(lead.pin.title, "Undertaker Mordo", "the step's tooltip kept")
+	eq(lead.num.text, lead.pin.label, "and its step number")
+	ok(lead.ring.shown, "the ring is shown")
+	near(lead.ring.vertex[1], warning[1], 1e-9, "the ring in the marker's gold")
+	near(lead.tex.vertex[1], warning[1], 1e-9, "the glyph in the marker's gold")
+	eq(lead.tex.texture, T.MEDIA .. "glyph-quest")
 	-- The minimap: the same badges, smaller, the glyph scaled with them.
 	for _, g in ipairs(shownPins(stub, Minimap)) do
-		local look = P.LOOK[g.pin.kind]
+		local look = P.LOOK[g.pin.marker or g.pin.kind]
 		if look.badge then near(g.tex.w, g.w * look.badge, 1e-9, "minimap glyph follows its badge") end
 	end
 end)
 
-test("quest markers: givers, hand-ins and objectives for every quest around you", function()
+test("quest markers: only the step's quests and the tracked ones", function()
 	local stub, ns = login()
 	local M, Q = ns.QuestMarkers, ns.Quests
 	local function find(kind, text)
@@ -675,45 +675,57 @@ test("quest markers: givers, hand-ins and objectives for every quest around you"
 			if p.kind == kind and (not text or (p.title or ""):find(text, 1, true) or (p.sub or ""):find(text, 1, true)) then return p end
 		end
 	end
+	ok(Pathwise.RegisterRoute(FIXTURE), "fixture registers")
+	ns.Engine.SetRoute(FIXTURE.id)
+	-- Quests you could take on this map that the step does not name: no "!".
+	local others = 0
+	for id in pairs(Q.Data.quests) do
+		if id ~= 363 and M.Available(id) then
+			for _, n in ipairs(Q.Get(id)[7] or {}) do
+				local npc = Q.Data.npcs[n]
+				if npc and type(npc[5]) == "table" and npc[5][1420] then
+					others = others + 1
+					ok(not find("available", Q.Name(id)), "not the step's: no \"!\" for " .. Q.Name(id))
+				end
+			end
+		end
+	end
+	ok(others > 0, "there are other quests to take around Deathknell")
 	local damned = Q.Name(363)
 	local giver = find("available", damned)
-	ok(giver, "a ! for " .. damned)
+	ok(giver, "the step says take " .. damned .. ": a \"!\"")
 	eq(giver.title, "Undertaker Mordo", "at its giver")
 	ok(giver.sub:find("Quests to take", 1, true), giver.sub)
-	-- Taken and ready: no ! for it, a ? at its finisher.
+	ok(not find("available", Q.Name(376)), "a later step's quest: no \"!\" yet")
+	-- Taken and ready: no ! for it, a ? at its finisher (the step's turn-in).
 	stub.accept(363)
 	ok(not find("available", damned), "taken: no ! for it")
 	local hand = find("turnin", damned)
 	ok(hand, "a ? to hand it in")
 	eq(hand.title, "Shadow Priest Sarvis")
-	-- A quest with objectives left: dots where its monsters are.
+	stub.watch(363, false)
+	ok(find("turnin", damned), "not tracked, but the step's: still shown")
+	stub.turnin(363)
+	-- A tracked quest with objectives left: dots where its monsters are.
 	stub.accept(364, { { text = "Mindless Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false },
 		{ text = "Wretched Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false } })
-	ok(find("objective", "Mindless Zombie"), "objective spots")
+	ok(find("objective", "Mindless Zombie"), "tracked: objective spots")
+	-- Unticked in the log, and not the step's (it takes 376 and 1470 now): gone.
+	stub.watch(364, false)
+	ok(not find("objective", "Mindless Zombie"), "untracked: no dots")
+	stub.watch(364, true)
 	stub.progress(364, 1, 8)
 	stub.progress(364, 2, 8)
 	ok(not find("objective", "Mindless Zombie"), "finished: no more dots")
 	ok(find("turnin", Q.Name(364)), "and a ? instead")
-end)
-
-test("quest markers: low-level quests hidden unless asked; switched off in Settings", function()
-	local stub, ns = login(function(s) s.player.level = 20 end)
-	local M = ns.QuestMarkers
-	local function count(kind)
-		local n = 0
-		for _, p in ipairs(M.ForMap(1420)) do if p.kind == kind then n = n + 1 end end
-		return n
-	end
-	local damned = ns.Quests.Name(363)
-	for _, p in ipairs(M.ForMap(1420)) do
-		ok(not (p.kind == "available" and (p.sub or ""):find(damned, 1, true)), "level 20: the level 1 quests are not shown")
-	end
-	ns.Set("pins.lowLevel", true)
-	ok(count("availableLow") > 0, "asked for: shown, in grey")
+	-- A client that cannot say what is tracked: every quest in the log.
+	stub.watch(364, false)
+	C_QuestLog.GetQuestWatchType = nil
+	ok(find("turnin", Q.Name(364)), "no watch API: the log's quests all shown")
+	-- Switched off in Settings.
 	ns.Set("pins.quests", false)
-	ns.Set("pins.questsMinimap", false)
 	for _, p in ipairs(ns.Pins.PinsFor(1420, "pins.quests", false)) do
-		ok(p.kind ~= "available" and p.kind ~= "availableLow" and p.kind ~= "turnin" and p.kind ~= "objective", "off: no quest markers")
+		ok(p.kind ~= "available" and p.kind ~= "turnin" and p.kind ~= "objective" and not p.marker, "off: no quest markers")
 	end
 end)
 
