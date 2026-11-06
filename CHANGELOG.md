@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.5 (2026-11-06)
+
 ### Pathwise UI: your target's buffs show
 - The target frame showed only debuffs, so a target's buffs never appeared.
   Its buffs now sit in a row under the frame, with the debuffs under them
