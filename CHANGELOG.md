@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.9 (2026-11-06)
+
 ### Pathwise Heal: the time left on your HoTs
 - Each healing frame shows your HoTs and shields top right, with the time
   left on each. In its last seconds the number turns red and the icon
