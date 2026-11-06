@@ -150,6 +150,7 @@ C.CATEGORIES = {
 			{ "text", "Click-to-heal party and raid frames, like HealBot or VuhDo, are a separate addon: Pathwise Heal. Install it to get them; it works with or without Pathwise UI." },
 		}
 	end },
+	{ key = "help", name = "Help and feedback", rows = C.CommunityRows },
 	{ key = "profile", name = "Profile", rows = function() return C.ProfileRows() end },
 	{ key = "next", name = "Coming next", rows = function() return {
 		{ "heading", "Coming next" },
