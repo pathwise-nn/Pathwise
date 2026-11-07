@@ -565,6 +565,18 @@ function Widget:SetValue(v)
 	return setValue(self, v)
 end
 function Widget:SetStatusBarColor(r, g, b) self.barColor = { r, g, b } end
+-- A bar takes a secret range from addon code (Forever's SetMinMaxValues):
+-- kept as it came, and the value is no longer clamped by the addon side.
+local setMinMax = Widget.SetMinMaxValues
+function Widget:SetMinMaxValues(lo, hi)
+	if issecretvalue(lo) or issecretvalue(hi) then
+		self.min, self.max, self.secretRange = nil, nil, { lo, hi }
+		return
+	end
+	self.secretRange = nil
+	return setMinMax(self, lo, hi)
+end
+function Widget:SetFillStyle(style) self.fillStyle = style end
 function Widget:SetID(id) rawset(self, "id", id) end
 function Widget:GetName() return rawget(self, "name") end
 function Widget:GetID() return rawget(self, "id") or 0 end
