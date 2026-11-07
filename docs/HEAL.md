@@ -25,8 +25,8 @@ or its minimap button.
   you level. A click you set yourself is never changed.
 - Heals on the way, what each person is missing (or their percent), aggro,
   mana, and fading out of range.
-- A buff row (top right): your HoTs first, with the time left on each (red
-  and blinking when one is about to run out), then big defensives and the
+- A buff row (top right): your HoTs first, with the time left in its last
+  minute (red and blinking when one is about to run out), then big defensives and the
   buffs you put on them. A debuff row (along the bottom): the ones you can
   remove on the left, in their type's color, the others on the right.
 - Left click on a debuff you can remove casts the spell that removes it;

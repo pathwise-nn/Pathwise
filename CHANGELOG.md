@@ -6,6 +6,11 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Heal: buff icons no longer overlap
+- A buff's countdown shows only in its last minute. A long buff's "57m"
+  was wider than its icon and ran over the icons beside it; now a long
+  buff shows just its icon. Not yet checked in game.
+
 ## 0.2.12 (2026-11-07)
 
 ### Pathwise UI: mana on the slim frames, percent or both, auras on your frame

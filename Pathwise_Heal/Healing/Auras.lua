@@ -397,14 +397,19 @@ function H.FormatLeft(sec)
 	return ("%d"):format(math.ceil(sec))
 end
 
+-- A countdown shows only in its last minute: "57m" is wider than an icon
+-- and ran over the icons beside it (a long buff shows just its icon).
+H.TIMER_FROM = 60
+
 function H.Timers(b, now)
 	now = now or (GetTime and GetTime() or 0)
 	local timers = ns.Get("heal.timers")
 	for i = 1, b.pwBuffs or 0 do
 		local ic = b.buffs[i]
 		local left = ic.pwExpires and (ic.pwExpires - now)
-		if not (timers and left) then
-			ic.pwText:SetText("")
+		if not (timers and left and left <= H.TIMER_FROM) then
+			if ic.pwShown ~= "" then ic.pwText:SetText("") ic.pwShown = "" end
+			if ic.pwWarn then T.Paint(ic.pwText, "text") end
 			ic.pwWarn = nil
 			ic:SetAlpha(1)
 		else
