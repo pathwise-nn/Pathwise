@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.13 (2026-11-07)
+
 ### Pathwise Heal: buff icons no longer overlap
 - A buff's countdown shows only in its last minute. A long buff's "57m"
   was wider than its icon and ran over the icons beside it; now a long
