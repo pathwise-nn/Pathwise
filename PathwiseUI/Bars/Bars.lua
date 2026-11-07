@@ -9,7 +9,10 @@
 --     icons, cooldowns, range, charges, glows, dragging spells on and off.
 --   * The main bar changes page with your stance, form or stealth through a
 --     state driver (SecureHandlerStateTemplate + RegisterStateDriver), which
---     the game runs in combat too.
+--     the game runs in combat too. The new page is also handed to each of
+--     its buttons (ChildUpdate): a button redraws when its own attribute
+--     changes (ActionBarActionButtonMixin:OnAttributeChanged), not its bar's,
+--     and the game's own refresh on a stance change runs before the driver.
 --   * Your key bindings for the game's bars (ACTIONBUTTON1, MULTIACTIONBAR1
 --     BUTTON1, ...) are pointed at these buttons (SetOverrideBindingClick),
 --     so the keys you already use keep working.
@@ -64,7 +67,11 @@ local function makeBar(def)
 		bar:SetAttribute("actionpage", def.page)
 	else
 		bar:SetAttribute("actionpage", 1)
-		bar:SetAttribute("_onstate-page", [[ self:SetAttribute("actionpage", tonumber(newstate) or 1) ]])
+		bar:SetAttribute("_onstate-page", [[
+			local page = tonumber(newstate) or 1
+			self:SetAttribute("actionpage", page)
+			control:ChildUpdate("actionpage", page)
+		]])
 		if RegisterStateDriver then RegisterStateDriver(bar, "page", B.MAIN_PAGING) end
 	end
 	for i = 1, 12 do
@@ -73,6 +80,8 @@ local function makeBar(def)
 		b:SetID(i)
 		b.pwBinding = def.binding .. i
 		b:SetAttribute("showgrid", 1)
+		-- The main bar's page, on the button itself, so it redraws at once.
+		if not def.page then b:SetAttribute("_childupdate-actionpage", [[ self:SetAttribute("actionpage", message) ]]) end
 		bar.buttons[i] = b
 		B.Style(b)
 	end

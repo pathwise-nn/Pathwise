@@ -6,6 +6,11 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise UI: the main bar changes with your stance or form at once
+- Changing stance (warrior), form (druid) or stealth left the main bar
+  showing the old spells until you moused over it. Now its buttons
+  change with it straight away, in combat too. Not yet checked in game.
+
 ### Pathwise UI: enemies' cast bars fill as they cast
 - An enemy's cast bar, on your target and on nameplates, stayed full for
   the whole cast: Forever keeps its cast times secret. Now the bar fills

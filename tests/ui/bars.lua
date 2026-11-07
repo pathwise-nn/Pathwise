@@ -56,6 +56,24 @@ test("bars: the main bar follows stances, forms and stealth, in combat too", fun
 	ok(not stub.drivers[ns.Bars.bars[2]], "other bars keep their page")
 end)
 
+test("bars: a stance or form change redraws the main bar's buttons at once", function()
+	local stub, ns = fresh()
+	local main = ns.Bars.bars[1]
+	-- Run the secure snippets as the game would: the bar's page state, then
+	-- each button's child update.
+	local function run(code, env) local fn = assert(loadstring(code)) setfenv(fn, env) fn() end
+	local control = { ChildUpdate = function(_, id, message)
+		for _, b in ipairs(main.buttons) do
+			local code = b:GetAttribute("_childupdate-" .. id)
+			if code then run(code, { self = b, message = message }) end
+		end
+	end }
+	run(main:GetAttribute("_onstate-page"), { self = main, newstate = "7", control = control, tonumber = tonumber })
+	eq(main:GetAttribute("actionpage"), 7, "battle stance's page on the bar")
+	for i, b in ipairs(main.buttons) do eq(b:GetAttribute("actionpage"), 7, "and on button " .. i .. ", which redraws it") end
+	ok(ns.Bars.bars[2].buttons[1]:GetAttribute("_childupdate-actionpage") == nil, "a fixed bar's buttons keep their page")
+end)
+
 test("bars: your keys for the game's bars work on these", function()
 	local stub, ns = fresh(function(s)
 		s.bindings.ACTIONBUTTON1 = { "1" }
