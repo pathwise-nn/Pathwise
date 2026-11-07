@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.12 (2026-11-07)
+
 ### Pathwise UI: mana on the slim frames, percent or both, auras on your frame
 - The slim unit frames show your mana (or rage, energy) beside your
   health, in its color: "Freezer   543 / 587   400 / 600". "Power
