@@ -24,9 +24,10 @@ ns.Defaults("units", {
 	enabled = true,
 	hideBlizzard = true,
 	style = "slim", -- "slim" (Pathwise: text on the dark ground, slim bars) | "full" (the bars fill the frame, text on them)
-	healthText = "auto", -- "auto" (both on your and your target's frame, current on small ones) | "current" | "both" | "percent" | "none"
+	healthText = "auto", -- "auto" (both on your and your target's frame, current on small ones) | "current" | "both" (current / most) | "percent" | "full" (current / most and percent) | "none"
 	healthColor = "class", -- "class" (players by class, others by reaction) | "accent" | "dark"
 	powerText = true,
+	powerFormat = "auto", -- as healthText, without "none" (powerText switches the number off)
 	auras = true,
 	onlyMyDebuffs = false,
 	castbars = true,
@@ -96,9 +97,14 @@ function U.HealthColor(unit)
 end
 
 function U.PowerColor(unit)
+	return T.Color(U.PowerColorName(unit))
+end
+-- The scheme's name for it ("mana", "rage"...), so text painted in it
+-- follows the Colors page.
+function U.PowerColorName(unit)
 	local _, token = call(UnitPowerType, unit)
 	token = readable(token)
-	return (token and U.POWER[token]) or U.POWER.MANA
+	return (token and POWER_COLOR[token]) or "mana"
 end
 
 ---------------------------------------------------------------------------
@@ -157,6 +163,35 @@ function U.Percent(unit)
 	if not (UnitHealthPercent and curve()) then return nil end
 	return call(UnitHealthPercent, unit, true, curve())
 end
+
+-- A unit's power in percent (0-100), perhaps secret; nil when unknown.
+-- From the numbers when they are readable, else UnitPowerPercent with the
+-- curve (where the client has it; not yet checked on Forever).
+function U.PowerPercent(unit, cur, max)
+	local c, m = readable(cur), readable(max)
+	if type(c) == "number" and type(m) == "number" then
+		if m > 0 then return c / m * 100 end
+		return nil
+	end
+	if not (UnitPowerPercent and curve()) then return nil end
+	return call(UnitPowerPercent, unit, nil, true, curve())
+end
+
+-- An amount as text: "current" 543, "both" 543 / 587, "percent" 93%,
+-- "full" 543 / 587 · 93%. Secret values pass through the game's own
+-- formatting; a missing percent falls back to the numbers.
+function U.ShowAmount(fs, mode, cur, max, pct)
+	if mode == "percent" then
+		if has(pct) then fs:SetFormattedText("%.0f%%", pct) else fs:SetText(short(cur)) end
+	elseif mode == "full" and has(max) and has(pct) then
+		fs:SetFormattedText("%s / %s  \194\183  %.0f%%", short(cur), short(max), pct)
+	elseif (mode == "both" or mode == "full") and has(max) then
+		fs:SetFormattedText("%s / %s", short(cur), short(max))
+	else
+		fs:SetText(short(cur))
+	end
+end
+local function wantsPercent(mode) return mode == "percent" or mode == "full" end
 
 -- def = { unit, name, w, h, power (bool), castbar (bool), auras = { filter, count }, buffs = { filter, count } }
 function U.Make(def)
@@ -246,7 +281,11 @@ function U.Layout(f)
 	end
 	if U.Slim() then return U.LayoutSlim(f, w, h, left) end
 	-- Full bars: health fills the frame, the texts on it.
-	f.name:SetParent(f.health) f.hp:SetParent(f.health)
+	f.name:SetParent(f.health) f.hp:SetParent(f.health) f.pp:SetParent(f.power)
+	f.pp:ClearAllPoints()
+	f.pp:SetPoint("RIGHT", f.power, "RIGHT", -6, 0)
+	f.pp:SetJustifyV("MIDDLE")
+	T.Paint(f.pp, "text")
 	for _, b in ipairs({ f.health, f.power }) do
 		for _, t in ipairs(b.pwSheen or {}) do t:Show() end
 	end
@@ -274,8 +313,9 @@ end
 
 -- Slim, Pathwise's own look (as its guide window): the name and health in
 -- text on the dark ground, a slim health bar under them in the unit's color,
--- a thin power bar under that. No text sits on a colored bar.
---   | Florp                 207 / 207 |
+-- a thin power bar under that, its number beside the health in its color.
+-- No text sits on a colored bar.
+--   | Florp           207 / 207   180 / 180 |
 --   | ███████████████████░░░░░░░░░░░ |
 --   | ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬ |
 function U.Slim() return ns.Get("units.style") ~= "full" end
@@ -301,16 +341,27 @@ function U.LayoutSlim(f, w, h, left)
 		for _, t in ipairs(b.pwSheen or {}) do t:Hide() end
 	end
 	-- The texts on the frame's own ground, over the bars.
-	f.name:SetParent(f) f.hp:SetParent(f)
+	-- The power number (when the frame has a power bar) at the right, the
+	-- health number before it.
+	local showPP = powerH > 0 and ns.Get("units.powerText") and true or false
+	local lift = roomy and 5 or 3
+	f.name:SetParent(f) f.hp:SetParent(f) f.pp:SetParent(f)
 	f.name:ClearAllPoints()
 	f.hp:ClearAllPoints()
-	f.hp:SetPoint("BOTTOMRIGHT", f.health, "TOPRIGHT", 0, roomy and 5 or 3)
-	f.name:SetPoint("BOTTOMLEFT", f.health, "TOPLEFT", 0, roomy and 5 or 3)
+	f.pp:ClearAllPoints()
+	if showPP then
+		f.pp:SetPoint("BOTTOMRIGHT", f.health, "TOPRIGHT", 0, lift)
+		f.hp:SetPoint("BOTTOMRIGHT", f.pp, "BOTTOMLEFT", -10, 0)
+	else
+		f.hp:SetPoint("BOTTOMRIGHT", f.health, "TOPRIGHT", 0, lift)
+	end
+	f.name:SetPoint("BOTTOMLEFT", f.health, "TOPLEFT", 0, lift)
 	f.name:SetPoint("RIGHT", f.hp, "LEFT", -8, 0)
-	f.name:SetJustifyV("BOTTOM") f.hp:SetJustifyV("BOTTOM")
+	f.name:SetJustifyV("BOTTOM") f.hp:SetJustifyV("BOTTOM") f.pp:SetJustifyV("BOTTOM")
 	T.PlainText(f.name, roomy and "window" or "body", "text")
 	T.PlainText(f.hp, roomy and "meta" or "small", "text2")
-	f.pp:Hide() -- the power bar speaks for itself; the tooltip has the number
+	T.PlainText(f.pp, roomy and "meta" or "small", U.PowerColorName(f.unit))
+	f.pp:SetShown(showPP)
 end
 
 ---------------------------------------------------------------------------
@@ -332,14 +383,8 @@ function U.UpdateHealth(f)
 	if online == false then f.hp:SetText("Offline")
 	elseif dead then f.hp:SetText("Dead")
 	elseif mode == "none" or not has(cur) then f.hp:SetText("")
-	elseif mode == "percent" then
-		local pct
-		if UnitHealthPercent and curve() then pct = call(UnitHealthPercent, u, true, curve()) end
-		if has(pct) then f.hp:SetFormattedText("%.0f%%", pct) else f.hp:SetText(short(cur)) end
-	elseif mode == "both" and has(max) then
-		f.hp:SetFormattedText("%s / %s", short(cur), short(max))
 	else
-		f.hp:SetText(short(cur))
+		U.ShowAmount(f.hp, mode, cur, max, wantsPercent(mode) and U.Percent(u) or nil)
 	end
 	f:SetAlpha(online == false and 0.6 or 1)
 end
@@ -353,10 +398,13 @@ function U.UpdatePower(f)
 	if has(cur) then U.SetBar(f.power, cur) end
 	local c = U.PowerColor(u)
 	f.power:SetStatusBarColor(c[1], c[2], c[3])
-	if f.pp:IsShown() and has(cur) then
-		-- "427 / 427" on your and your target's frame, so it says what it is.
-		if f.def.big and has(max) then f.pp:SetFormattedText("%s / %s", short(cur), short(max))
-		else f.pp:SetText(short(cur)) end
+	if f.pp:IsShown() then
+		if U.Slim() then T.Paint(f.pp, U.PowerColorName(u)) end
+		-- Auto: "427 / 427" on your and your target's frame, so it says what it is.
+		local mode = ns.Get("units.powerFormat")
+		if mode == "auto" then mode = f.def.big and "both" or "current" end
+		if not has(cur) or readable(max) == 0 then f.pp:SetText("") -- nothing to show (a monster without mana)
+		else U.ShowAmount(f.pp, mode, cur, max, wantsPercent(mode) and U.PowerPercent(u, cur, max) or nil) end
 	end
 end
 
