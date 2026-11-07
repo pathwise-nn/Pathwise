@@ -195,7 +195,9 @@ test("unit frames: cast bars fill by time, or stay full when the times are secre
 	pc.scripts.OnUpdate(pc)
 	near(pc.value, 0.5, 1e-6, "half way through")
 	ok(tc.shown and stub.shown(tc.text) == "Bash")
-	eq(tc.value, 1, "secret times: full while it lasts")
+	ok(tc.secretRange and issecretvalue(tc.secretRange[1]), "secret times: the cast is the bar's range, passed on as it came")
+	tc.scripts.OnUpdate(tc)
+	eq(tc.value, 2000, "and the bar is given the time now, so the game fills it")
 	stub.casts.player = nil
 	ns.Units.UpdateCast(ns.Units.frames.player)
 	ok(pc.shown, "it fades out rather than vanishing")
@@ -208,6 +210,26 @@ test("unit frames: cast bars fill by time, or stay full when the times are secre
 	near(tc.barColor[1], ns.Theme.Color("error")[1], 1e-6, "in the bad color")
 	stub.advance(1)
 	ok(not tc.shown, "then gone")
+	eq(tc.max, 1, "back to a plain bar")
+end)
+
+test("unit frames: an enemy's channel with secret times drains", function()
+	local stub, ns = fresh(function(s)
+		withTarget(s)
+		function UnitChannelInfo(u)
+			if u == "target" then return "Drain Life", "Drain Life", 136169, s.Secret(1000), s.Secret(6000), false, false end
+		end
+	end)
+	local tc = ns.Units.frames.target.castbar
+	ok(tc.shown and stub.shown(tc.text) == "Drain Life")
+	ok(tc.secretRange, "the channel is the bar's range")
+	eq(tc.fillStyle, "REVERSE", "filled from the right")
+	ok(tc.track.shown, "over the cast's color, so what is left shrinks")
+	UnitChannelInfo = function() return nil end
+	ns.Units.UpdateCast(ns.Units.frames.target)
+	stub.advance(1)
+	eq(tc.fillStyle, "STANDARD", "a plain bar again after")
+	ok(not tc.track.shown)
 end)
 
 test("unit frames: move them, put them back, sizes from the options", function()

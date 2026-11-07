@@ -5,8 +5,10 @@
 -- spiral only when the numbers are readable, because Cooldown:SetCooldown
 -- does not take secrets from addon code (Forever's API documentation).
 -- Cast bars: UnitCastingInfo / UnitChannelInfo. The spell's name and icon
--- always show; the bar fills by time when the times are readable, else it
--- stays full while the cast lasts.
+-- always show; the bar fills by time. When the times are secret (enemies'
+-- casts), the bar runs from the cast's start to its end as its own range
+-- (SetMinMaxValues takes secrets from addon code) and is given the time
+-- now: the game does the sum, the addon never reads the times.
 
 local ADDON, ns = ...
 local T = ns.Theme
@@ -166,10 +168,19 @@ function U.MakeCastbar(f)
 	cb.text:SetPoint("LEFT", 4, 0)
 	cb.text:SetJustifyV("MIDDLE")
 	cb.text:SetWordWrap(false)
+	-- Behind the fill, for a channel with secret times: the cast's color,
+	-- which the fill (in the ground's color) covers from the right as time
+	-- passes, so it drains as a channel does.
+	cb.track = cb:CreateTexture(nil, "BACKGROUND", nil, 2)
+	cb.track:SetPoint("TOPLEFT", 1, -1)
+	cb.track:SetPoint("BOTTOMRIGHT", -1, 1)
+	cb.track:Hide()
 	cb:SetMinMaxValues(0, 1)
 	cb:Hide()
 	cb:SetScript("OnUpdate", function(self)
-		if not (self.start and self.finish) or self.pwEnding then return end
+		if self.pwEnding then return end
+		if self.pwSecret then self:SetValue((GetTime and GetTime() or 0) * 1000) return end
+		if not (self.start and self.finish) then return end
 		local now = (GetTime and GetTime() or 0) * 1000
 		local p = (now - self.start) / math.max(1, self.finish - self.start)
 		if p >= 1 then U.EndCast(f, false) return end
@@ -197,16 +208,43 @@ function U.UpdateCast(f)
 	cb.text:SetText(name)
 	if has(texture) then cb.icon:SetTexture(texture) end
 	local s, e = readable(startMS), readable(endMS)
+	local drain = false
 	if type(s) == "number" and type(e) == "number" then
+		U.PlainCastRange(cb)
 		cb.start, cb.finish, cb.channel = s, e, channel
+	elseif has(startMS) and has(endMS) and pcall(cb.SetMinMaxValues, cb, startMS, endMS) then
+		-- Secret times: the range is the cast, the value the time now.
+		cb.start, cb.finish, cb.channel = nil, nil, channel
+		cb.pwSecret = true
+		drain = channel and pcall(cb.SetFillStyle, cb, "REVERSE") or false
+		cb:SetValue((GetTime and GetTime() or 0) * 1000)
 	else
+		U.PlainCastRange(cb)
 		cb.start, cb.finish = nil, nil
 		cb:SetValue(1)
 	end
 	local locked = readable(notInterruptible)
 	local c = locked and T.Color("muted") or T.Color("accent")
-	cb:SetStatusBarColor(c[1], c[2], c[3])
+	if drain then
+		cb.track:SetColorTexture(c[1], c[2], c[3], 1)
+		cb.track:Show()
+		local g = T.Color("bg")
+		cb:SetStatusBarColor(g[1], g[2], g[3])
+	else
+		cb.track:Hide()
+		cb:SetStatusBarColor(c[1], c[2], c[3])
+	end
 	cb:Show()
+end
+
+-- Back to a 0-1 bar filled from the left (after a cast with secret times).
+function U.PlainCastRange(cb)
+	if cb.pwSecret then
+		cb.pwSecret = nil
+		cb:SetMinMaxValues(0, 1)
+		pcall(cb.SetFillStyle, cb, "STANDARD")
+	end
+	cb.track:Hide()
 end
 
 -- A cast that ends: the bar fills (done) or turns red (interrupted), then
@@ -219,6 +257,7 @@ function U.EndCast(f, interrupted)
 	end
 	cb.pwEnding = true
 	cb.start, cb.finish = nil, nil
+	U.PlainCastRange(cb)
 	if interrupted then
 		local e = T.Color("error")
 		cb:SetStatusBarColor(e[1], e[2], e[3])

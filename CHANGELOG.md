@@ -6,6 +6,12 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise UI: enemies' cast bars fill as they cast
+- An enemy's cast bar, on your target and on nameplates, stayed full for
+  the whole cast: Forever keeps its cast times secret. Now the bar fills
+  as the cast goes on, and a channel drains, worked out by the game
+  itself. Not yet checked in game.
+
 ## 0.2.13 (2026-11-07)
 
 ### Pathwise Heal: buff icons no longer overlap
