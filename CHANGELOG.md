@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.14 (2026-11-07)
+
 ### Pathwise UI: enemies' cast bars fill as they cast
 - An enemy's cast bar, on your target and on nameplates, stayed full for
   the whole cast: Forever keeps its cast times secret. Now the bar fills
