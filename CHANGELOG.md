@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.11 (2026-11-07)
+
 ### Pathwise Heal: your HoTs stay on the frames in a fight
 - In a fight the buff row went empty: the game's own row, which took over
   there, leaves your HoTs out. Now the buff row stays Pathwise's own in a
