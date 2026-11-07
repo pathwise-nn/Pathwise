@@ -7,13 +7,20 @@
 --     left, in their type's color (a left click on one casts the spell that
 --     removes it), the others on the right.
 --
--- Forever hides aura data from addons in a fight (Heal.lua's notes), so then
--- the game draws both rows into the frame itself: one private aura container
--- (C_UnitAuras.AddPrivateAuraAnchor, Blizzard_PrivateAurasUI.lua) laid out
--- the same way (BuffsTopDebuffsBottom: buffs top right, the debuffs you can
--- remove bottom left, the rest bottom right), with the game's countdown. It
--- is attached only for the fight: its icons take the mouse for their
--- tooltips, and between fights our own rows, and clicks, are wanted there.
+-- In a fight Forever makes aura data secret (SecretWhenUnitAuraRestricted):
+-- an addon can still list the auras and hand their icons to the game
+-- (Texture:SetTexture takes secret values), but can't compare them or read
+-- their times. So in a fight:
+--   * the buff row stays ours: your HoTs (the RAID_IN_COMBAT filter) and big
+--     defensives, icons only, unless the game leaves the time readable. The
+--     game's own container shows buffs by its raid-frame rules
+--     (AuraUtil.ShouldDisplayBuff), which leave HoTs out on Forever;
+--   * the game draws the debuff row and the dispel edge into the frame: one
+--     private aura container (C_UnitAuras.AddPrivateAuraAnchor,
+--     Blizzard_PrivateAurasUI.lua) laid out like ours (BuffsTopDebuffsBottom:
+--     the debuffs you can remove bottom left, the rest bottom right), with the
+--     game's countdown. It is attached only for the fight: its icons take the
+--     mouse for their tooltips, and between fights our clicks are wanted there.
 --
 -- Which auras: filters from Blizzard's Forever UI (Blizzard_FrameXMLUtil/
 -- AuraUtil.lua, AuraUtil.AuraFilters), no spell list of our own:
@@ -175,9 +182,9 @@ end
 
 function H.AttachGame(b)
 	local unit, U = b.pwUnit, C_UnitAuras
-	local buffs = ns.Get("heal.hots") or ns.Get("heal.buffs")
+	local buffs = false -- the buff row stays ours (H.FightBuffs)
 	local debuffs, dispel = ns.Get("heal.debuffs"), ns.Get("heal.dispel")
-	if not (unit and b.gameAuras and (buffs or debuffs or dispel) and U and U.AddPrivateAuraAnchor) then H.DetachGame(b) return false end
+	if not (unit and b.gameAuras and (debuffs or dispel) and U and U.AddPrivateAuraAnchor) then H.DetachGame(b) return false end
 	if b.pwAnchor and b.pwAnchorUnit == unit then return true end
 	H.DetachGame(b)
 	local g, bs, ds = b.gameAuras, H.BuffSize(), H.DebuffSize()
@@ -210,8 +217,8 @@ function H.AttachGame(b)
 		return U.AddPrivateAuraAnchor({
 			unitToken = unit, auraIndex = 1, parent = g, isContainer = true,
 			showCooldownFrame = timers, showCooldownEdge = false, showCountdownNumbers = timers, showDispelIcon = true,
-			iconInfo = { iconAnchor = { point = "TOPRIGHT", relativeTo = g, relativePoint = "TOPRIGHT", offsetX = -3, offsetY = -3 },
-				iconWidth = bs, iconHeight = bs, borderScale = 1 },
+			iconInfo = { iconAnchor = { point = "BOTTOMRIGHT", relativeTo = g, relativePoint = "BOTTOMRIGHT", offsetX = -3, offsetY = 3 },
+				iconWidth = ds, iconHeight = ds, borderScale = 1 },
 		})
 	end)
 	if ok and id then b.pwAnchor, b.pwAnchorUnit = id, unit return true end
@@ -273,6 +280,37 @@ local function each(unit, filter, fn)
 	end
 end
 
+-- The buff row in a fight, from secret aura data: no two filters that could
+-- list the same aura (their ids can't be compared), no duration check (the
+-- in-combat HoT filter is the game's own choice). A refusal ends a filter
+-- without pausing the reads that resume after the fight.
+function H.FightBuffs(b, unit)
+	local filters = {}
+	if ns.Get("heal.hots") then filters[#filters + 1] = H.HOT_FILTER end
+	if ns.Get("heal.buffs") then
+		filters[#filters + 1] = "HELPFUL|BIG_DEFENSIVE"
+		if not ns.Get("heal.hots") then filters[#filters + 1] = "HELPFUL|PLAYER|RAID" end
+	end
+	local seen = {}
+	for _, filter in ipairs(filters) do
+		for i = 1, 40 do
+			if b.pwBuffs >= H.MAX_BUFFS then return end
+			local okCall, d = pcall(C_UnitAuras.GetAuraDataByIndex, unit, i, filter)
+			if not okCall or type(d) ~= "table" then break end
+			addBuff(b, d, seen, "any")
+		end
+	end
+end
+
+local handedOver = false -- the fight's rows are up (H.Fighting)
+
+-- A frame counts down while one of its buffs has a time we can read.
+local function counting(b)
+	if not ns.Get("heal.timers") then return false end
+	for i = 1, b.pwBuffs or 0 do if b.buffs[i].pwExpires then return true end end
+	return false
+end
+
 function H.Auras(b, unit)
 	if not built(b) then return end
 	for _, ic in ipairs(b.buffs) do ic:Hide() ic.pwText:SetText("") ic.pwShown, ic.pwExpires, ic.pwWarn = nil, nil, nil end
@@ -280,12 +318,16 @@ function H.Auras(b, unit)
 	for _, d in ipairs(b.removable) do setRemovable(d, nil) end
 	b.pwBuffs = 0
 	live[b] = nil
-	if not H.AurasAllowed() then -- the game draws both rows (and the dispel edge) until the fight ends
+	if not H.AurasAllowed() then -- our buff row from secret data; the game draws the debuffs (and the dispel edge)
 		b.dispel:SetShown(false)
 		H.AttachGame(b)
+		H.FightBuffs(b, unit)
+		if counting(b) then live[b] = true end
+		H.Timers(b)
 		H.Ticking()
 		return
 	end
+	handedOver = false
 	H.DetachGame(b)
 	-- The debuffs you can remove: the left of the row, and the frame's edge.
 	local seen, best, n = {}, nil, 0
@@ -332,7 +374,7 @@ function H.Auras(b, unit)
 		each(unit, "HELPFUL|BIG_DEFENSIVE", function(d) addBuff(b, d, had, "any") return full() end)
 		each(unit, "HELPFUL|PLAYER|RAID", function(d) addBuff(b, d, had, "any") return full() end)
 	end
-	if b.pwBuffs > 0 and ns.Get("heal.timers") then live[b] = true end
+	if counting(b) then live[b] = true end
 	H.Timers(b)
 	H.Ticking()
 end
@@ -387,7 +429,7 @@ function H.Ticking()
 			since = since + (dt or 0)
 			if since < H.TICK then return end
 			since = 0
-			if not H.AurasAllowed() then H.Fighting() return end -- a fight began: the game's rows take over
+			if not H.AurasAllowed() and not handedOver then H.Fighting() return end -- a fight began without the combat event
 			local now = GetTime and GetTime() or 0
 			for b in pairs(live) do H.Timers(b, now) end
 		end)
@@ -397,12 +439,26 @@ function H.Ticking()
 end
 function H.Ticker() return ticker end
 
--- Auras just went out of reach: every frame hands over to the game's rows.
+-- Auras just turned secret: every frame switches to its fight rows.
 function H.Fighting()
+	handedOver = true
 	for _, b in ipairs(H.buttons) do
 		if b.pwUnit then H.Auras(b, b.pwUnit) else live[b] = nil end
 	end
 	H.Ticking()
+end
+
+-- Every frame's auras, at most five times a second (a UNIT_AURA that doesn't
+-- say whose).
+local soon = false
+function H.AurasSoon()
+	if soon then return end
+	local function run()
+		soon = false
+		if not ns.Get("heal.enabled") then return end
+		for _, b in ipairs(H.buttons) do if b.pwUnit then H.Auras(b, b.pwUnit) end end
+	end
+	if C_Timer and C_Timer.After then soon = true C_Timer.After(0.2, run) else run() end
 end
 
 ---------------------------------------------------------------------------

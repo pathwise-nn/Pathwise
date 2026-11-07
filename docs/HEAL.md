@@ -30,9 +30,11 @@ or its minimap button.
   buffs you put on them. A debuff row (along the bottom): the ones you can
   remove on the left, in their type's color, the others on the right.
 - Left click on a debuff you can remove casts the spell that removes it;
-  every other click on it is the frame's own. In a fight the game draws both
-  rows in the same places with its own countdown, and your cleanse clicks
-  (Shift or Alt + right) remove debuffs there.
+  every other click on it is the frame's own. In a fight your HoTs and big
+  defensives stay in the buff row (the time left only where the game lets
+  addons read it), the game draws the debuff row in the same place with its
+  own countdown, and your cleanse clicks (Shift or Alt + right) remove
+  debuffs there.
 - Forever keeps health, range and auras secret from addons: the frames pass
   those straight to the game's bars and let the game draw what it hides.
 

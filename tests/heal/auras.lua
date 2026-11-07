@@ -216,7 +216,7 @@ end)
 
 -- In a fight ----------------------------------------------------------------
 
-test("in a fight: the game draws both rows, ours and our clicks step aside; back after", function()
+test("in a fight: our buff row stays, the game draws the debuffs, our clicks step aside; back after", function()
 	local stub, ns = fresh(setup({
 		[HOTS] = { { auraInstanceID = 1, icon = 135953, duration = 15, expirationTime = 12 } },
 		["HARMFUL|RAID"] = { { auraInstanceID = 11, icon = 136139, dispelName = "Magic" } },
@@ -228,20 +228,19 @@ test("in a fight: the game draws both rows, ours and our clicks step aside; back
 	ok(not gameAnchor(stub, b), "no game rows between fights: their icons would take the clicks")
 	local id
 	fight(stub, function()
-		ok(not b.buffs[1].shown, "our buffs hidden")
+		ok(b.buffs[1].shown and b.buffs[1].texture == 135953, "your HoT stays in a fight")
 		ok(not b.removable[1].shown, "our clickable debuffs hidden before the lockdown")
 		eq(b.removable[1]:GetAttribute("type1"), nil, "and their spell cleared")
 		ok(not b.dispel.edges[1].shown, "the game colors the edge in a fight")
-		ok(not H.Ticker().shown, "no timer of ours")
 		local a
 		a, id = gameAnchor(stub, b)
-		ok(a, "the game's rows")
-		eq(#stub.anchors, 1, "one container for both rows")
-		eq(a.attrs["aura-organization-type"], 1, "buffs top, debuffs bottom, like ours")
-		eq(a.attrs["max-buffs"], 3)
+		ok(a, "the game's debuff row")
+		eq(#stub.anchors, 1, "one container")
+		eq(a.attrs["aura-organization-type"], 1, "debuffs bottom, like ours")
+		eq(a.attrs["max-buffs"], 0, "no buffs from the game: its rules leave HoTs out")
+		eq(a.attrs["ignore-buffs"], true)
 		eq(a.attrs["max-dispel-debuffs"], 3, "the ones you can remove (bottom left)")
 		eq(a.attrs["max-debuffs"], 2, "the others (bottom right)")
-		eq(a.attrs["ignore-buffs"], false)
 		eq(a.attrs["ignore-debuffs"], false)
 		eq(a.attrs["ignore-dispel-debuffs"], false)
 		eq(a.attrs["display-only-dispellable-debuffs"], false)
@@ -261,6 +260,45 @@ test("in a fight: the game draws both rows, ours and our clicks step aside; back
 	ok(b.buffs[1].shown, "ours again")
 	ok(not b.removable[1].shown, "the debuff it had is gone")
 	ok(H.Ticker().shown)
+	done()
+end)
+
+test("in a fight: secret auras still show their icons; a secret UNIT_AURA redraws", function()
+	local S
+	local stub, ns = fresh(setup({}, "DRUID"))
+	S = stub.Secret
+	local H = ns.Heal
+	ns.Set("heal.enabled", true)
+	local b = frame(ns, "party1")
+	local function secretAura(id, icon) return { auraInstanceID = S(id), icon = S(icon), duration = S(12), expirationTime = S(10) } end
+	fight(stub, function()
+		-- Rejuvenation lands mid-fight, everything about it secret.
+		stub.auras.party1 = {
+			[HOTS] = { secretAura(1, 136081) },
+			["HELPFUL|BIG_DEFENSIVE"] = { secretAura(5, 132362) },
+			["HELPFUL|PLAYER|RAID"] = { secretAura(1, 136081) }, -- the same HoT: not read in a fight
+		}
+		stub.fire("UNIT_AURA", S("party1"))
+		ok(b.buffs[1].shown and issecretvalue(b.buffs[1].texture) and b.buffs[1].texture.value == 136081, "the HoT's icon, handed to the game")
+		ok(b.buffs[2].shown and b.buffs[2].texture.value == 132362, "then the big defensive")
+		ok(not b.buffs[3].shown, "the HoT not twice")
+		eq(b.buffs[1].pwText.text, "", "no time left we can't read")
+		ok(not (H.Ticker() and H.Ticker().shown), "no timer for it")
+		-- A HoT whose time the game leaves readable counts down.
+		stub.auras.party1[HOTS] = { { auraInstanceID = S(2), icon = S(136081), duration = 12, expirationTime = 10 } }
+		stub.fire("UNIT_AURA", S("party1"))
+		eq(b.buffs[1].pwText.text, "10")
+		ok(H.Ticker().shown, "counting down in a fight")
+		stub.advance(0.3)
+		ok(b.buffs[1].shown, "the timer doesn't hand over again each tick")
+		-- A client that refuses the read: the row is empty, nothing breaks.
+		local get = C_UnitAuras.GetAuraDataByIndex
+		C_UnitAuras.GetAuraDataByIndex = function() error("refused") end
+		H.Update(b)
+		ok(not b.buffs[1].shown, "nothing shown")
+		C_UnitAuras.GetAuraDataByIndex = get
+	end)
+	ok(H.AurasAllowed(), "reads aren't paused after the fight")
 	done()
 end)
 
@@ -288,9 +326,9 @@ test("in a fight: a restriction that starts without the combat event hands over 
 	local b = frame(ns, "party1")
 	stub.restricted = true -- e.g. an encounter, no lockdown yet
 	stub.advance(0.2)
-	ok(not b.buffs[1].shown and not b.removable[1].shown, "ours hidden")
-	ok(gameAnchor(stub, b), "the game's attached")
-	ok(not ns.Heal.Ticker().shown, "and the timer stops")
+	ok(b.buffs[1].shown, "our buff row stays")
+	ok(not b.removable[1].shown, "our clickable debuffs hidden")
+	ok(gameAnchor(stub, b), "the game's debuff row attached")
 	stub.restricted = false
 	done()
 end)

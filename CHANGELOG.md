@@ -6,6 +6,14 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Heal: your HoTs stay on the frames in a fight
+- In a fight the buff row went empty: the game's own row, which took over
+  there, leaves your HoTs out. Now the buff row stays Pathwise's own in a
+  fight, with your HoTs and big defensives, and the game draws only the
+  debuff row. Forever keeps the time left on auras secret in a fight, so a
+  HoT shows its icon then, and its countdown only where the game allows it.
+  Not yet checked in game.
+
 ## 0.2.10 (2026-11-07)
 
 ### Pathwise Heal: fixed
