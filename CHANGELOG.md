@@ -14,6 +14,16 @@ that version's section.
   HoT shows its icon then, and its countdown only where the game allows it.
   Not yet checked in game.
 
+## 0.2.10 (2026-11-07)
+
+### Pathwise Heal: fixed
+- 0.2.9 showed "bad argument #1 to 'ipairs'" (Auras.lua:275) on every health,
+  power or threat change, and the buff and debuff rows stayed empty. The
+  time left on a HoT was written before its font was set, which the game
+  refuses, so each frame's rows were only half made. Fixed, and a frame
+  whose rows are half made is now left alone instead of erroring on every
+  update. The tests now refuse text without a font, as the game does.
+
 ## 0.2.9 (2026-11-06)
 
 ### Pathwise Heal: the time left on your HoTs

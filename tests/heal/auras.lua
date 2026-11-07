@@ -61,6 +61,20 @@ local function done() C_RestrictedActions = nil end
 
 -- The buff row ------------------------------------------------------------
 
+test("a new frame gets every row, its timers with a font (the game refuses text without one)", function()
+	local stub, ns = fresh(setup({}))
+	local b = frame(ns, "party1")
+	ok(b.buffs and b.otherDebuffs and b.removable, "all three rows made")
+	eq(#b.buffs, ns.Heal.MAX_BUFFS)
+	eq(#b.otherDebuffs, ns.Heal.MAX_OTHER_DEBUFFS)
+	for _, ic in ipairs(b.buffs) do ok(rawget(ic.pwText, "hasFont"), "a timer with a font") end
+	-- A frame whose rows were only half made is left alone, not an error on every update.
+	b.otherDebuffs, b.removable = nil, nil
+	ns.Heal.Auras(b, "party1")
+	ns.Heal.PlaceAuras(b)
+	done()
+end)
+
 test("buff row: your HoTs first, with the time left, counting down without UNIT_AURA", function()
 	local stub, ns = fresh(setup({
 		[HOTS] = {

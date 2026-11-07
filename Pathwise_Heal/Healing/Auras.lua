@@ -86,6 +86,7 @@ local function icon(parent, layer, timer)
 	if timer then
 		local t = parent:CreateFontString(nil, "OVERLAY", nil, 7)
 		t:SetPoint("CENTER", ic, "CENTER", 1, 0)
+		T.BarText(t, "small", 9) -- a font first: text on a font string without one is an error
 		t:SetJustifyH("CENTER")
 		t:SetText("")
 		ic.pwText = t
@@ -143,8 +144,11 @@ function H.MakeAuras(b)
 end
 
 -- Sizes and places (out of combat: H.Size).
+-- A frame whose rows were all made (a frame made half way is left alone).
+local function built(b) return b.buffs and b.otherDebuffs and b.removable and true or false end
+
 function H.PlaceAuras(b)
-	if not b.buffs then return end
+	if not built(b) then return end
 	local bs, ds = H.BuffSize(), H.DebuffSize()
 	for i, ic in ipairs(b.buffs) do
 		ic:SetSize(bs, bs)
@@ -308,7 +312,7 @@ local function counting(b)
 end
 
 function H.Auras(b, unit)
-	if not b.buffs then return end
+	if not built(b) then return end
 	for _, ic in ipairs(b.buffs) do ic:Hide() ic.pwText:SetText("") ic.pwShown, ic.pwExpires, ic.pwWarn = nil, nil, nil end
 	for _, ic in ipairs(b.otherDebuffs) do ic:Hide() end
 	for _, d in ipairs(b.removable) do setRemovable(d, nil) end
