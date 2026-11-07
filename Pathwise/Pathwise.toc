@@ -2,7 +2,7 @@
 ## Title: Pathwise
 ## Notes: Every quest. Every craft. Every level.
 ## Author: leight_nn & florp
-## Version: 0.2.13
+## Version: 0.2.14
 ## IconTexture: Interface\AddOns\Pathwise\Media\icon
 ## SavedVariables: PathwiseSettings
 ## SavedVariablesPerCharacter: PathwiseCharSettings

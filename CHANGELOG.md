@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.14 (2026-11-07)
+
 ### Pathwise UI: the main bar changes with your stance or form at once
 - Changing stance (warrior), form (druid) or stealth left the main bar
   showing the old spells until you moused over it. Now its buttons
