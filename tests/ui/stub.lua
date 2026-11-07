@@ -28,7 +28,14 @@ local function new(kind, name, parent)
 end
 
 function Widget:CreateTexture() return new("Texture", nil, self) end
-function Widget:CreateFontString() local f = new("FontString", nil, self) f.text = "" return f end
+-- Like the client, a font string made without a template has no font, and
+-- writing text to it before SetFont or SetFontObject is an error.
+function Widget:CreateFontString(name, layer, template)
+	local f = new("FontString", nil, self)
+	f.text = ""
+	rawset(f, "hasFont", template ~= nil)
+	return f
+end
 function Widget:SetScript(k, fn) self.scripts[k] = fn end
 function Widget:GetScript(k) return self.scripts[k] end
 function Widget:Show() self.shown = true end
@@ -43,11 +50,15 @@ function Widget:GetHeight() return self.h end
 function Widget:SetPoint(...) self.points[#self.points + 1] = { ... } end
 function Widget:ClearAllPoints() self.points = {} end
 function Widget:GetPoint() return "CENTER", nil, "CENTER", 0, 0 end
-function Widget:SetText(t) self.text = t end
+function Widget:SetText(t)
+	if self.kind == "FontString" and rawget(self, "hasFont") == false then error("FontString:SetText(): Font not set", 2) end
+	self.text = t
+end
+function Widget:SetFontObject(o) rawset(self, "hasFont", true) self.fontObject = o end
 function Widget:GetText() return self.text end
 function Widget:GetStringWidth() return #(self.text or "") * 6 end
 function Widget:GetStringHeight() return (self.text and self.text ~= "") and 14 or 0 end
-function Widget:SetFont() return true end
+function Widget:SetFont() rawset(self, "hasFont", true) return true end
 function Widget:SetTexture(t) self.texture = t end
 function Widget:SetRotation(r) self.rotation = r end
 function Widget:SetColorTexture(r, g, b, a) self.color = { r, g, b, a } end
