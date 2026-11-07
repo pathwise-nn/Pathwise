@@ -2,7 +2,7 @@
 ## Title: Pathwise Gear
 ## Notes: Upgrades for your spec, stat priority, Best in Slot (Level) and the best quest reward. Part of Pathwise.
 ## Author: leight_nn & florp
-## Version: 0.2.12
+## Version: 0.2.13
 ## Dependencies: Pathwise
 ## IconTexture: Interface\AddOns\Pathwise\Media\icon
 ## X-License: GPL-3.0-only
