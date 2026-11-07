@@ -44,8 +44,58 @@ test("unit frames: slim (the default): name and health on the dark ground over s
 	eq(p.name.parent, p, "the name on the frame, not on the bar")
 	ok((p.health.h or 0) <= 6, "a slim health bar: " .. tostring(p.health.h))
 	ok((p.power.h or 0) <= 3, "a thin power bar")
-	ok(not p.pp.shown, "no number on the thin bar")
 	near(p.health.barColor[1], 0.25, 1e-6, "the class color at full strength")
+end)
+
+test("unit frames: slim: your mana beside your health, in the mana color, off the bar", function()
+	local stub, ns = fresh()
+	local p = ns.Units.frames.player
+	ok(p.pp.shown, "the power number shows")
+	eq(p.pp.parent, p, "on the dark ground, not on the thin bar")
+	eq(stub.shown(p.pp), "600 / 900", "current / most, as the health")
+	eq(stub.shown(p.hp), "820 / 1.0k")
+	local mana = ns.Theme.Color("mana")
+	near((p.pp.textColor or p.pp.color)[1], mana[1], 1e-6, "in the mana color")
+	eq(p.hp.points[#p.hp.points][2], p.pp, "the health number just before it")
+	ns.Set("units.powerText", false)
+	ok(not p.pp.shown, "switched off")
+	eq(p.hp.points[#p.hp.points][2], p.health, "and the health number back at the right")
+end)
+
+test("unit frames: health and power as numbers, percent or both", function()
+	local stub, ns = fresh()
+	local p = ns.Units.frames.player
+	ns.Set("units.powerFormat", "percent")
+	eq(stub.shown(p.pp), "67%", "600 of 900 mana")
+	ns.Set("units.powerFormat", "full")
+	eq(stub.shown(p.pp), "600 / 900  \194\183  67%", "numbers and percent")
+	ns.Set("units.powerFormat", "current")
+	eq(stub.shown(p.pp), "600")
+	ns.Set("units.healthText", "full")
+	ok(tostring(stub.shown(p.hp)):find("820 / 1.0k", 1, true), "health numbers, and the percent when the client gives one: " .. tostring(stub.shown(p.hp)))
+end)
+
+test("unit frames: a monster without mana shows no power number", function()
+	local stub, ns = fresh(withTarget)
+	eq(stub.shown(ns.Units.frames.target.pp), "", "not 0 / 0")
+end)
+
+test("unit frames: your own buffs and debuffs on your frame, curses in their color", function()
+	local stub, ns = fresh(function(s)
+		s.auras.player = {
+			HELPFUL = { { icon = 135932, auraInstanceID = 31 } },
+			HARMFUL = { { icon = 136139, auraInstanceID = 32, dispelName = "Curse" } },
+		}
+	end)
+	local f = ns.Units.frames.player
+	ok(f.buffs and f.auras, "your frame has a buff row and a debuff row")
+	ok(f.buffs.icons[1].shown and not f.buffs.icons[2].shown, "your buff")
+	ok(f.auras.icons[1].shown, "your curse")
+	local curse = ns.Theme.Color("curse")
+	local edge = f.auras.icons[1].pwBorder
+	ok(edge and edge.color and math.abs(edge.color[1] - curse[1]) < 1e-6, "framed in the curse color")
+	ns.Set("units.onlyMyDebuffs", true)
+	ok(f.auras.icons[1].shown, "only-my-debuffs leaves your own frame alone")
 end)
 
 test("unit frames: a light class color is drawn a shade deeper, so the text reads", function()

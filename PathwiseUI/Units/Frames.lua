@@ -11,7 +11,7 @@ local function inCombat() return InCombatLockdown and InCombatLockdown() end
 -- key: the switch for it (units.<key>)
 U.DEFS = {
 	{ unit = "player", name = "Player", key = "player", w = 230, h = 48, big = true, power = true, castbar = true,
-		point = { "CENTER", "CENTER", -300, -180 } },
+		auras = { filter = "HARMFUL", count = 8, size = 22 }, buffs = { filter = "HELPFUL", count = 8, size = 20 }, point = { "CENTER", "CENTER", -300, -180 } },
 	{ unit = "target", name = "Target", key = "target", w = 230, h = 48, big = true, power = true, castbar = true,
 		auras = { filter = "HARMFUL", count = 8, size = 22 }, buffs = { filter = "HELPFUL", count = 8, size = 20 }, point = { "CENTER", "CENTER", 300, -180 } },
 	{ unit = "targettarget", name = "TargetTarget", key = "targettarget", w = 130, h = 24,

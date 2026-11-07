@@ -6,6 +6,18 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise UI: mana on the slim frames, percent or both, auras on your frame
+- The slim unit frames show your mana (or rage, energy) beside your
+  health, in its color: "Freezer   543 / 587   400 / 600". "Power
+  numbers" switches it off.
+- Health text and the new Power text each offer Numbers (543 / 587),
+  Current, Percent (93%) or Both (543 / 587 · 93%), under /pwui > Unit
+  frames. Percent of power where Forever keeps it secret is not yet
+  checked in game.
+- Your own frame shows your buffs and debuffs (curses, poisons, magic and
+  diseases framed in their color), as your target's does. Not yet checked
+  in game.
+
 ## 0.2.11 (2026-11-07)
 
 ### Pathwise Heal: your HoTs stay on the frames in a fight
