@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.10 (2026-11-07)
+
 ### Pathwise Heal: fixed
 - 0.2.9 showed "bad argument #1 to 'ipairs'" (Auras.lua:275) on every health,
   power or threat change, and the buff and debuff rows stayed empty. The
