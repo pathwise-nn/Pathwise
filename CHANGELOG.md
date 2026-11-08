@@ -6,6 +6,13 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: a quest split over several stops moves on after each one
+- Some quests send you to several places in turn, like The Warsong
+  Reports (the Warsong Scout, Runner and Outrider). The guide stayed on
+  the first stop until every part of the quest was done, so it never
+  said where to go next. Now each stop is done once its own part is, and
+  it lists only that part. Not yet checked in game.
+
 ## 0.2.17 (2026-11-08)
 
 ### Pathwise: the level line stays in view in a smaller guide window

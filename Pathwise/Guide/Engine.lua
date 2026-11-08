@@ -21,6 +21,7 @@
 --   })
 -- Goals:
 --   { "accept", q }  { "turnin", q }  { "complete", q }       quests (log)
+--   { "complete", q, obj = { 1, 3 } }                         only those objectives
 --   { "goto", map, x, y, "label" }                            reached when the arrow arrives
 --   { "level", n }  { "note", "text" }
 --   { "have", item, count, name = }                           items owned
@@ -336,6 +337,24 @@ local function questStatus(verb, q)
 	end
 end
 
+-- A "complete" can be for some of a quest's objectives (obj = { 1 }): the
+-- route splits the quest over several steps, one place each.
+local function wantsObjective(goal, i)
+	if not goal.obj then return true end
+	for _, k in ipairs(goal.obj) do if k == i then return true end end
+	return false
+end
+Engine.WantsObjective = wantsObjective
+
+local function objectivesDone(goal)
+	local log = Q.Objectives(goal[2])
+	if not log then return false end
+	for _, i in ipairs(goal.obj) do
+		if not (log[i] and log[i].done) then return false end
+	end
+	return true
+end
+
 local function goalKey(route, s, g) return route.id .. ":" .. s .. ":" .. g end
 
 -- A "go to" is only a way to the quests, so it also counts as done once the
@@ -404,7 +423,11 @@ local function goalStatus(route, s, g, goal)
 	if goal.only and not fits(goal.only, player) then return "na" end
 	if state().stepsDone[route.id .. ":" .. s] and goal[1] ~= "note" then return "done" end
 	local verb = goal[1]
-	if QUEST_VERBS[verb] then return questStatus(verb, goal[2]) end
+	if QUEST_VERBS[verb] then
+		local st = questStatus(verb, goal[2])
+		if st == "open" and verb == "complete" and goal.obj and objectivesDone(goal) then return "done" end
+		return st
+	end
 	if verb == "level" then return (player.level or 1) >= goal[2] and "done" or "open" end
 	if verb == "goto" then return (state().reached[goalKey(route, s, g)] or passed(route, s)) and "done" or "open" end
 	-- An item to fetch: had, or behind you (a quest further on done: the item
@@ -636,13 +659,14 @@ local function placeOf(goal)
 	if verb == "turnin" then return atPlace(goal.who) or Q.Finisher(q, from) end
 	if verb == "complete" then
 		local log = Q.Objectives(q)
+		if goal.obj and goal.at then return atPlace(qname(goal)) end
 		for i = 1, Q.ObjectiveCount(q) do
-			if not (log and log[i] and log[i].done) then
+			if wantsObjective(goal, i) and not (log and log[i] and log[i].done) then
 				local p = Q.ObjectivePlace(q, i, from)
 				if p then return p end
 			end
 		end
-		return atPlace(qname(goal)) or Q.ObjectivePlace(q, 1, from)
+		return atPlace(qname(goal)) or Q.ObjectivePlace(q, goal.obj and goal.obj[1] or 1, from)
 	end
 	if verb == "goto" then return { map = goal[2], x = goal[3], y = goal[4], name = goal[5] } end
 	if goal.from then
@@ -726,7 +750,9 @@ local function rowsOf(route, s)
 			if goal[1] == "complete" and st == "open" then
 				local log = Q.Objectives(goal[2])
 				if log then
-					for _, o in ipairs(log) do rows[#rows + 1] = { text = o.text, have = o.have, need = o.need, done = o.done } end
+					for i, o in ipairs(log) do
+						if wantsObjective(goal, i) then rows[#rows + 1] = { text = o.text, have = o.have, need = o.need, done = o.done } end
+					end
 				else
 					rows[#rows + 1] = { text = goalText(goal) }
 				end
@@ -765,8 +791,10 @@ local function goalLine(route, s, g, goal, st, withObjectives, out)
 	end
 	out[#out + 1] = line
 	if verb == "complete" and st == "open" and withObjectives then
-		for _, o in ipairs(Q.Objectives(goal[2]) or {}) do
-			out[#out + 1] = { kind = "objective", lead = o.text or "", have = o.have, need = o.need, done = o.done }
+		for i, o in ipairs(Q.Objectives(goal[2]) or {}) do
+			if wantsObjective(goal, i) then
+				out[#out + 1] = { kind = "objective", lead = o.text or "", have = o.have, need = o.need, done = o.done }
+			end
 		end
 	end
 end
@@ -1072,7 +1100,7 @@ function Engine.Pins()
 			local q = goal[2]
 			local log = Q.Objectives(q)
 			for i = 1, Q.ObjectiveCount(q) do
-				if not (log and log[i] and log[i].done) then
+				if wantsObjective(goal, i) and not (log and log[i] and log[i].done) then
 					local p = placeOf(goal)
 					local map = p and p.map
 					local pts, name

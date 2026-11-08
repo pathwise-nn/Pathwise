@@ -310,6 +310,45 @@ test("an item to fetch is behind you once a quest further on is done (Samuel's R
 	eq(ns.Engine.LiveStep(), 3, "a quest further on done: the item step is behind you")
 end)
 
+test("a quest split over steps: each step is done with its own objectives (The Warsong Reports)", function()
+	local stub, ns = login()
+	local function obj(text) return { text = text, numFulfilled = 0, numRequired = 1, finished = false } end
+	ok(Pathwise.RegisterRoute({
+		id = "test/split", title = "Split (test)", category = "Leveling", map = 1420,
+		levels = { 1, 6 }, faction = "Horde", races = { "Scourge" },
+		steps = {
+			{ title = "First", { "complete", 363, at = { 1420, 30, 70 }, obj = { 1 } } },
+			{ title = "On the way", { "goto", 1420, 40, 60, "Somewhere" } },
+			{ title = "Second", { "complete", 363, at = { 1420, 50, 50 }, obj = { 2 } } },
+		},
+	}), "registers")
+	ns.Engine.SetRoute("test/split")
+	stub.accept(363, { obj("Scout Update"), obj("Runner Update") })
+	eq(ns.Engine.LiveStep(), 1, "the first objective is open")
+	local rows = ns.Engine.View().objectives
+	eq(#rows, 1, "the step lists only its own objective")
+	eq(rows[1].text, "Scout Update")
+	stub.progress(363, 1, 1)
+	eq(ns.Engine.LiveStep(), 2, "its objective done: on to the next place, the quest still open")
+	stub.moveTo(1420, 40, 60)
+	ns.Engine.Refresh()
+	stub.advance(1)
+	eq(ns.Engine.LiveStep(), 3, "then the step for the other objective")
+	eq(ns.Engine.View().objectives[1].text, "Runner Update")
+
+	-- The route this came from: each visit is for its own update.
+	local route
+	for _, r in ipairs(ns.Engine.Routes()) do if r.id == "forever/horde/05-stonetalon-mountains" then route = r end end
+	ok(route, "the Stonetalon route")
+	local objs = {}
+	for _, step in ipairs(route.steps) do
+		for _, goal in ipairs(step) do
+			if goal[1] == "complete" and goal[2] == 6543 then objs[#objs + 1] = goal.obj and table.concat(goal.obj, ",") or "all" end
+		end
+	end
+	eq(table.concat(objs, " "), "1 3 2", "scout, outrider, runner")
+end)
+
 test("done by you: a quest, or a whole step, and back again", function()
 	local stub, ns = fixture()
 	eq(ns.Engine.LiveStep(), 1)
