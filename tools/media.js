@@ -214,6 +214,14 @@ T.thumb = () => {
 
 // Glyphs, 32 px drawn for a 16 px button.
 T['glyph-close'] = () => { const c = canvas(32); paint(c, stroke([[10, 10], [22, 22]], 2.4)); paint(c, stroke([[22, 10], [10, 22]], 2.4)); return c; };
+// The guide window's resize grip: three diagonal lines in the bottom-right corner.
+T['glyph-resize'] = () => {
+	const c = canvas(32);
+	paint(c, stroke([[27, 11], [11, 27]], 2.2));
+	paint(c, stroke([[27, 18], [18, 27]], 2.2));
+	paint(c, stroke([[27, 25], [25, 27]], 2.2));
+	return c;
+};
 T['glyph-back'] = () => { const c = canvas(32); paint(c, stroke([[19, 9], [12, 16], [19, 23]], 2.4)); return c; };
 T['glyph-collapse'] = () => { const c = canvas(32); paint(c, stroke([[9, 19], [16, 12], [23, 19]], 2.4)); return c; };
 T['glyph-expand'] = () => { const c = canvas(32); paint(c, stroke([[9, 13], [16, 20], [23, 13]], 2.4)); return c; };

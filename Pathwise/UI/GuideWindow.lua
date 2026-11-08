@@ -24,13 +24,14 @@
 
 local ADDON, ns = ...
 local T = ns.Theme
-local floor, max = math.floor, math.max
+local floor, max, min, abs = math.floor, math.max, math.min, math.abs
 
 ns.Defaults("guide", {
 	shown = true,
 	compact = false,
-	point = nil, -- { point, x, y }
+	point = nil, -- { point, x, y [, relativePoint] }
 	width = 340,
+	height = nil, -- nil: the window fits each step; a number: the height dragged with the grip
 })
 
 local PAD = T.SPACE.l
@@ -39,22 +40,173 @@ local W = {} -- widgets
 local view -- what the window shows
 local Guide = ns.Guide or {}
 Guide.TOOLS_H = 30 -- the toolbar row under the title
+-- The resize grip's bounds (and the client's, SetResizeBounds).
+Guide.MIN_W, Guide.MAX_W = 280, 600
+Guide.MIN_H, Guide.MAX_H = 220, 900
 ns.Guide = Guide
 Pathwise.Guide = Guide
+
+local liveHeight -- the height while the grip is dragged, before guide.height saves it
+
+local function clampW(w) return min(Guide.MAX_W, max(Guide.MIN_W, w)) end
+local function clampH(h) return min(Guide.MAX_H, max(Guide.MIN_H, h)) end
+
+-- The window's own height (the grip's drag, else guide.height), or nil when
+-- it fits each step.
+function Guide.FixedHeight()
+	local h = liveHeight or ns.Get("guide.height")
+	if type(h) ~= "number" then return nil end
+	return clampH(h)
+end
 
 ---------------------------------------------------------------------------
 -- Building
 ---------------------------------------------------------------------------
 
+-- The point the window hangs from. The grip pins it by its top-left to the
+-- screen's bottom-left, so the relative point is kept when it differs.
 local function savePoint(f)
-	local p, _, _, x, y = f:GetPoint(1)
-	ns.Set("guide.point", { p, floor(x + 0.5), floor(y + 0.5) })
+	local p, _, rel, x, y = f:GetPoint(1)
+	if not (p and x and y) then return end
+	ns.Set("guide.point", { p, floor(x + 0.5), floor(y + 0.5), rel ~= p and rel or nil })
+end
+
+---------------------------------------------------------------------------
+-- Resize grip: drag the bottom-right corner for width and height. The drag
+-- is followed by hand, so the steps reflow as it goes.
+---------------------------------------------------------------------------
+
+-- A vertical drag shorter than this leaves the height fitting each step, so
+-- a sideways drag only changes the width.
+local HEIGHT_SLOP = 4
+
+-- The grip's state: held, under the cursor, and the drag under way.
+local drag = {}
+
+local function paintGrip(g)
+	local c = T.Color(drag.pressed and "accent" or (drag.over and "text" or "muted"))
+	g.icon:SetVertexColor(c[1], c[2], c[3], 1)
+end
+
+-- The cursor in the window's own units ("Window size" included).
+local function cursorAt(f)
+	local x, y = GetCursorPosition()
+	local s = f:GetEffectiveScale() or 1
+	return x / s, y / s
+end
+
+local function resizeUpdate(g)
+	local f = W.frame
+	local x, y = cursorAt(f)
+	local w = clampW(floor(drag.startW + (x - drag.startX) + 0.5))
+	local dy = drag.startY - y -- down is taller
+	if not drag.sizingH and abs(dy) >= HEIGHT_SLOP then drag.sizingH = true end
+	local h = drag.sizingH and clampH(floor(drag.startH + dy + 0.5)) or liveHeight
+	if w ~= floor(f:GetWidth() + 0.5) or h ~= liveHeight then
+		f:SetWidth(w)
+		liveHeight = h
+		Guide.Refresh()
+	end
+end
+
+local function resizeStart(g, button)
+	if button and button ~= "LeftButton" then return end
+	local f = W.frame
+	-- The top-left corner stays where it is; the right and bottom edges follow the grip.
+	local l, t = f:GetLeft(), f:GetTop()
+	if l and t then
+		f:ClearAllPoints()
+		f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", l, t)
+	end
+	drag.startX, drag.startY = cursorAt(f)
+	drag.startW, drag.startH = f:GetWidth(), f:GetHeight()
+	drag.sizingH = nil
+	liveHeight = Guide.FixedHeight()
+	drag.pressed = true
+	paintGrip(g)
+	if GameTooltip then GameTooltip:Hide() end
+	g:SetScript("OnUpdate", resizeUpdate)
+end
+
+local function resizeStop(g, button)
+	if button == "RightButton" and not g:GetScript("OnUpdate") then
+		-- Right-click: the height fits each step again.
+		ns.Set("guide.height", nil)
+		return
+	end
+	drag.pressed = nil
+	paintGrip(g)
+	if not g:GetScript("OnUpdate") then return end
+	g:SetScript("OnUpdate", nil)
+	local f = W.frame
+	local h = drag.sizingH and liveHeight
+	liveHeight = nil
+	drag.sizingH = nil
+	ns.Set("guide.width", floor(f:GetWidth() + 0.5))
+	if h then ns.Set("guide.height", h) end
+	savePoint(f)
+	Guide.Refresh()
+end
+
+local function buildGrip(f)
+	f:SetResizable(true)
+	if f.SetResizeBounds then f:SetResizeBounds(Guide.MIN_W, Guide.MIN_H, Guide.MAX_W, Guide.MAX_H) end
+	local g = CreateFrame("Button", nil, f)
+	W.grip = g
+	g:SetSize(14, 14) -- inside the 16 px padding, clear of Next
+	g:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -1, 1)
+	g:SetFrameLevel((f:GetFrameLevel() or 0) + 10)
+	g.icon = g:CreateTexture(nil, "OVERLAY")
+	g.icon:SetTexture(T.MEDIA .. "glyph-resize")
+	g.icon:SetSize(12, 12)
+	g.icon:SetPoint("BOTTOMRIGHT", 0, 0)
+	paintGrip(g)
+	g:SetScript("OnEnter", function(self)
+		drag.over = true
+		paintGrip(self)
+		if GameTooltip and not self:GetScript("OnUpdate") then
+			GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+			GameTooltip:SetText("Resize", 1, 1, 1)
+			GameTooltip:AddLine("Drag to change the width and height.", nil, nil, nil, true)
+			GameTooltip:AddLine("Right-click: fit the height to each step.", nil, nil, nil, true)
+			GameTooltip:Show()
+		end
+	end)
+	g:SetScript("OnLeave", function(self)
+		drag.over = nil
+		paintGrip(self)
+		if GameTooltip then GameTooltip:Hide() end
+	end)
+	g:SetScript("OnMouseDown", resizeStart)
+	g:SetScript("OnMouseUp", resizeStop)
+	g:SetScript("OnHide", resizeStop)
+end
+
+-- The step list scrolls once the window is shorter than the step.
+local function scrollBy(scroll, delta)
+	local v = max(0, min(W.scrollRange or 0, (scroll:GetVerticalScroll() or 0) - delta * 40))
+	scroll:SetVerticalScroll(v)
+	Guide.PaintThumb()
+end
+
+-- A thin thumb on the right edge says how far down the step the view is.
+function Guide.PaintThumb()
+	local thumb, range, viewH = W.thumb, W.scrollRange or 0, W.viewH or 0
+	if not thumb then return end
+	if range <= 0 or viewH <= 0 then thumb:Hide() return end
+	local content = viewH + range
+	local h = max(20, viewH * viewH / content)
+	local at = (W.scroll:GetVerticalScroll() or 0) / range
+	thumb:ClearAllPoints()
+	thumb:SetPoint("TOPRIGHT", W.scroll, "TOPRIGHT", -3, -((viewH - h) * at))
+	thumb:SetHeight(h)
+	thumb:Show()
 end
 
 local function build()
 	local f = CreateFrame("Frame", "PathwiseGuide", UIParent)
 	W.frame = f
-	f:SetWidth(ns.Get("guide.width"))
+	f:SetWidth(clampW(ns.Get("guide.width") or 340))
 	f:SetFrameStrata("MEDIUM")
 	f:SetClampedToScreen(true)
 	f:SetMovable(true)
@@ -64,7 +216,7 @@ local function build()
 	T.TrackScale(f)
 	local saved = ns.Get("guide.point")
 	if type(saved) == "table" then
-		f:SetPoint(saved[1], UIParent, saved[1], saved[2], saved[3])
+		f:SetPoint(saved[1], UIParent, saved[4] or saved[1], saved[2], saved[3])
 	else
 		f:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -60, -220)
 	end
@@ -133,11 +285,23 @@ local function build()
 	W.progress.track:SetPoint("TOPLEFT", tools, "BOTTOMLEFT", 1, 0)
 	W.progress.track:SetPoint("TOPRIGHT", tools, "BOTTOMRIGHT", -1, 0)
 
-	-- Body (full layout).
-	local body = CreateFrame("Frame", nil, f)
+	-- Body (full layout): the child of a scroll area under the progress line.
+	-- It fits the step, or scrolls when the window has a height of its own.
+	local scroll = CreateFrame("ScrollFrame", nil, f)
+	W.scroll = scroll
+	scroll:SetPoint("TOPLEFT", tools, "BOTTOMLEFT", 0, -T.PROGRESS_H)
+	scroll:SetPoint("TOPRIGHT", tools, "BOTTOMRIGHT", 0, -T.PROGRESS_H)
+	scroll:EnableMouseWheel(false)
+	scroll:SetScript("OnMouseWheel", scrollBy)
+	local body = CreateFrame("Frame", nil, scroll)
 	W.body = body
-	body:SetPoint("TOPLEFT", tools, "BOTTOMLEFT", 0, -T.PROGRESS_H)
-	body:SetPoint("TOPRIGHT", tools, "BOTTOMRIGHT", 0, -T.PROGRESS_H)
+	body:SetWidth(f:GetWidth())
+	body:SetHeight(1)
+	scroll:SetScrollChild(body)
+	W.thumb = f:CreateTexture(nil, "OVERLAY")
+	W.thumb:SetWidth(2)
+	T.SetColor(W.thumb, "muted")
+	W.thumb:Hide()
 
 	-- The step card: what to do right now.
 	local now = CreateFrame("Frame", nil, body)
@@ -214,6 +378,8 @@ local function build()
 	W.barProgress = T.ProgressLine(f)
 	W.barProgress.track:SetPoint("TOPLEFT", bar, "BOTTOMLEFT", 1, 0)
 	W.barProgress.track:SetPoint("TOPRIGHT", bar, "BOTTOMRIGHT", -1, 0)
+
+	buildGrip(f)
 end
 
 ---------------------------------------------------------------------------
@@ -340,11 +506,35 @@ local function blockWidget(i)
 	return b
 end
 
+-- Size the scroll area for a body `contentH` tall and the window around it.
+-- `footH`: the footer's room under the step list when the window has its own
+-- height (the footer then stays at the bottom edge; else it follows the list).
+local CHROME_H -- header, toolbar and progress line
+local function fitBody(contentH, footH)
+	local f, scroll = W.frame, W.scroll
+	CHROME_H = T.HEADER_H + Guide.TOOLS_H + T.PROGRESS_H
+	local fixed = Guide.FixedHeight()
+	local viewH = fixed and max(1, fixed - CHROME_H - footH) or contentH
+	W.body:SetWidth(f:GetWidth())
+	W.body:SetHeight(max(1, contentH))
+	scroll:SetHeight(max(1, viewH))
+	W.viewH = viewH
+	W.scrollRange = max(0, contentH - viewH)
+	if (scroll:GetVerticalScroll() or 0) > W.scrollRange then scroll:SetVerticalScroll(W.scrollRange) end
+	-- The wheel only where there is something to scroll, so it zooms the camera otherwise.
+	scroll:EnableMouseWheel(W.scrollRange > 0)
+	f:SetHeight(fixed or (CHROME_H + contentH))
+	Guide.PaintThumb()
+	return fixed
+end
+
 local function layoutFull()
 	local f, body = W.frame, W.body
 	W.head:Show()
 	W.tools:Show()
+	W.scroll:Show()
 	W.body:Show()
+	W.grip:Show()
 	W.bar:Hide()
 	W.barProgress.track:Hide()
 	W.barProgress.fill:Hide()
@@ -373,8 +563,7 @@ local function layoutFull()
 		W.card:Hide()
 		W.stats:Hide()
 		for _, b in ipairs(W.blocks) do b:Hide() end
-		body:SetHeight(h)
-		f:SetHeight(T.HEADER_H + Guide.TOOLS_H + T.PROGRESS_H + h)
+		fitBody(h, 0)
 		return
 	end
 
@@ -497,19 +686,25 @@ local function layoutFull()
 		y = y + 10 + height(W.stats)
 	end
 
-	-- Footer: Back left; Skip, Report, Next right.
-	local footY = y + PAD
+	-- Footer: Back left; Skip, Report, Next right. Under the list, or at the
+	-- bottom edge when the window has its own height (the list scrolls above it).
+	local btnH = W.next:GetHeight()
 	W.back:ClearAllPoints()
-	W.back:SetPoint("TOPLEFT", body, "TOPLEFT", PAD, -footY)
 	W.next:ClearAllPoints()
-	W.next:SetPoint("TOPRIGHT", body, "TOPRIGHT", -PAD, -footY)
+	if Guide.FixedHeight() then
+		W.back:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", PAD, PAD)
+		W.next:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD, PAD)
+		fitBody(y + 4, PAD + btnH + PAD)
+	else
+		local footY = y + PAD
+		W.back:SetPoint("TOPLEFT", body, "TOPLEFT", PAD, -footY)
+		W.next:SetPoint("TOPRIGHT", body, "TOPRIGHT", -PAD, -footY)
+		fitBody(footY + btnH + PAD, 0)
+	end
 	W.report:ClearAllPoints()
 	W.report:SetPoint("RIGHT", W.next, "LEFT", -6, 0)
 	W.skip:ClearAllPoints()
 	W.skip:SetPoint("LEFT", W.back, "RIGHT", 8, 0)
-	local h = footY + W.next:GetHeight() + PAD
-	body:SetHeight(h)
-	f:SetHeight(T.HEADER_H + Guide.TOOLS_H + T.PROGRESS_H + h)
 	f:SetWidth(width)
 end
 
@@ -517,7 +712,10 @@ local function layoutCompact()
 	local f, bar = W.frame, W.bar
 	W.head:Hide()
 	W.tools:Hide()
+	W.scroll:Hide()
 	W.body:Hide()
+	W.thumb:Hide()
+	W.grip:Hide() -- the bar is one line: it keeps its size
 	W.progress.track:Hide()
 	W.progress.fill:Hide()
 	for _, b in ipairs({ W.back, W.skip, W.next, W.report }) do b:Hide() end
@@ -547,6 +745,8 @@ end
 
 -- The engine (or /pw demo) hands the window what to show.
 function Guide.SetView(v)
+	-- A new step starts at its top.
+	if W.scroll and not (v and view and v.index == view.index and v.route == view.route) then W.scroll:SetVerticalScroll(0) end
 	view = v
 	Guide.Refresh()
 end
@@ -568,7 +768,11 @@ end
 ns.On("TOGGLE_GUIDE", function() ns.Set("guide.shown", not ns.Get("guide.shown")) end)
 ns.On("SETTING_CHANGED", function(path)
 	if path == "guide.shown" then Guide.Show(ns.Get("guide.shown"))
-	elseif path == "guide.compact" then Guide.Refresh() end
+	elseif path == "guide.compact" or path == "guide.height" then Guide.Refresh()
+	elseif path == "guide.width" and W.frame then
+		W.frame:SetWidth(clampW(ns.Get("guide.width") or 340))
+		Guide.Refresh()
+	end
 end)
 ns.On("READY", function() if ns.Get("guide.shown") then Guide.Show(true) end end)
 ns.On("TRACKER_UPDATED", function() if W.frame and W.frame:IsShown() then Guide.Refresh() end end)
