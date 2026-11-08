@@ -516,6 +516,10 @@ function UnitHealthMax(u) local x = U(u) return x and x.max or 0 end
 function UnitPower(u) local x = U(u) return x and x.power or 0 end
 function UnitPowerMax(u) local x = U(u) return x and x.pmax or 0 end
 function UnitPowerType(u) local x = U(u) return 0, x and x.ptype or "MANA" end
+-- Combo points (on your target, as on Forever): stub.combo, stub.comboMax.
+function GetComboPoints(u, t) if u == "player" and t == "target" and U(t) then return stub.combo or 0 end return 0 end
+local unitPowerMax = UnitPowerMax
+function UnitPowerMax(u, kind) if kind == 4 then return stub.comboMax or 5 end return unitPowerMax(u) end
 function UnitIsDead(u) local x = U(u) return x and x.dead or false end
 function UnitIsConnected(u) local x = U(u) return not (x and x.offline) end
 function UnitIsGroupLeader(u) local x = U(u) return x and x.leader or false end

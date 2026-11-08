@@ -98,6 +98,45 @@ test("unit frames: your own buffs and debuffs on your frame, curses in their col
 	ok(f.auras.icons[1].shown, "only-my-debuffs leaves your own frame alone")
 end)
 
+test("unit frames: combo points over your target's frame, for rogues and cat druids", function()
+	local stub, ns = fresh(function(s) withTarget(s) s.player.class = "ROGUE" s.units.player.ptype = "ENERGY" s.combo = 3 end)
+	local U = ns.Units
+	local t = U.frames.target
+	ok(t.combo and t.combo.shown, "the pips show for a rogue")
+	ok(not U.frames.player.combo, "not on your own frame: on Forever they are on the target")
+	local filled = 0
+	for i = 1, 5 do
+		local p = t.combo.pips[i]
+		ok(p.shown, "pip " .. i)
+		eq(p.min, i - 1) eq(p.max, i)
+		if p.value == i then filled = filled + 1 end
+	end
+	eq(filled, 3, "three points, three pips full")
+	ok(not t.combo.pips[6].shown, "five pips, as the game says")
+	stub.combo = 5
+	stub.fire("COMBO_TARGET_CHANGED")
+	eq(t.combo.pips[5].value, 5, "a new count on the event")
+	-- A secret count still fills them: the bar is given it as it is.
+	stub.combo = stub.Secret(2)
+	stub.fire("UNIT_POWER_UPDATE", "player", "COMBO_POINTS")
+	ok(issecretvalue(t.combo.pips[1].value), "secret count passed on")
+	-- A druid only in cat form.
+	stub.combo = 1
+	stub.player.class = "DRUID" stub.units.player.ptype = "MANA"
+	stub.fire("UNIT_DISPLAYPOWER", "player")
+	ok(not t.combo.shown, "a druid out of cat form: none")
+	stub.units.player.ptype = "ENERGY"
+	stub.fire("UNIT_DISPLAYPOWER", "player")
+	ok(t.combo.shown, "in cat form")
+	-- The option switches them off, and mages have none.
+	ns.Set("units.comboPoints", false)
+	ok(not t.combo.shown, "switched off")
+	ns.Set("units.comboPoints", true)
+	stub.player.class = "MAGE"
+	stub.fire("COMBO_TARGET_CHANGED")
+	ok(not t.combo.shown, "not for a mage")
+end)
+
 test("unit frames: a light class color is drawn a shade deeper, so the text reads", function()
 	local _, ns = fresh()
 	local U = ns.Units

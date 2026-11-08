@@ -8,6 +8,13 @@ that version's section.
 
 ## 0.2.19 (2026-11-08)
 
+### Pathwise UI: combo points for rogues and cat druids
+- Combo points didn't show anywhere: on Forever they sit on the game's
+  target frame, which Pathwise UI hides. Now a row of pips in your accent
+  color sits over the top right of your target's frame, for rogues and
+  for druids in cat form. "Combo points" on the Unit frames page switches
+  them off. Not yet checked in game.
+
 ### Pathwise UI: the main bar swaps with your stance or form again
 - Warrior stances, druid forms and stealth could leave the main bar on
   its normal page. The bar picked its page from its own list of stance

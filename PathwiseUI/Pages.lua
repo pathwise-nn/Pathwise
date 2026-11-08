@@ -37,6 +37,7 @@ C.CATEGORIES = {
 			{ "toggle", "Cast bars", "units.castbars" },
 			{ "choice", "Your cast bar", "units.castbarSpot", { key = "cbs", { "Over the action bars", "bars" }, { "Under your frame", "frame" }, { "The game's", "game" } } },
 			{ "text", "Pathwise's bar shows your casts in place of the game's. The game's comes back after a reload.", "muted" },
+			{ "toggle", "Combo points", "units.comboPoints", "Rogues, and druids in cat form: your points on the target, over its frame." },
 			{ "toggle", "Portraits", "units.portraits" },
 			{ "heading", "Size and place" },
 			{ "slider", "Your width", "units.PlayerW", 140, 360, 2, "count" },
