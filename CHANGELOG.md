@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.20 (2026-11-08)
+
 ### Pathwise UI: enemy cast bars move smoothly
 - An enemy's cast bar moved in jumps. It counted the cast in milliseconds
   of the game's clock, numbers so big that a bar can only show them in
