@@ -155,3 +155,19 @@ function C.MapName(map)
 	local info = map and C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(map)
 	return info and readable(info.name) or nil
 end
+
+-- An item's or spell's icon (a file id or path), or nil when the client has
+-- none for it.
+local function icon(fn, id)
+	if not (fn and id) then return nil end
+	local ok, t = pcall(fn, id)
+	return ok and readable(t) or nil
+end
+
+function C.ItemIcon(id)
+	return icon(C_Item and C_Item.GetItemIconByID, id) or icon(GetItemIcon, id)
+end
+
+function C.SpellIcon(id)
+	return icon(C_Spell and C_Spell.GetSpellTexture, id) or icon(GetSpellTexture, id)
+end
