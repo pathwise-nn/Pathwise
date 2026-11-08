@@ -19,6 +19,7 @@
 --   steps = { { index, title, note, current, lines = { line, ... } }, ... },
 --   objectives = { { text, have, need, done }, ... }, (the compact bar)
 --   detour = { label = "Optional · Tailoring", text, sub } or nil,
+--   nearby = { { text = "Turn in ...", sub = "Name  ·  40 yd" }, ... }, (Engine.Nearby)
 --   next = "Turn in ...",
 -- }
 
@@ -334,6 +335,14 @@ local function build()
 	card.go = T.Button(card, "Go", "default", function() ns.Fire("DETOUR_GO", view and view.detour) end)
 	card.skip = T.IconButton(card, "close", "Skip this detour", function() ns.Fire("DETOUR_SKIP", view and view.detour) end, 20)
 
+	-- From your quest log: held quests near the player.
+	W.nearLabel = T.Text(body, "label", "accent")
+	W.nearLabel:SetText(("From your quest log"):upper())
+	W.nearRows = {}
+	for i = 1, 4 do
+		W.nearRows[i] = { text = T.Text(body, "meta", "text"), sub = T.Text(body, "small", "text2") }
+	end
+
 	-- Footer.
 	W.back = T.Button(f, "Back", "default", function() ns.Fire("GUIDE_BACK") end)
 	W.skip = T.Button(f, "Skip", "default", function() ns.Fire("GUIDE_SKIP") end)
@@ -562,6 +571,8 @@ local function layoutFull()
 		W.divider:Hide()
 		W.card:Hide()
 		W.stats:Hide()
+		W.nearLabel:Hide()
+		for _, row in ipairs(W.nearRows) do row.text:Hide() row.sub:Hide() end
 		for _, b in ipairs(W.blocks) do b:Hide() end
 		fitBody(h, 0)
 		return
@@ -674,6 +685,31 @@ local function layoutFull()
 		y = y + 12 + ch
 	else
 		W.card:Hide()
+	end
+
+	local near = view.nearby or {}
+	W.nearLabel:SetShown(#near > 0)
+	if #near > 0 then
+		W.nearLabel:ClearAllPoints()
+		W.nearLabel:SetPoint("TOPLEFT", body, "TOPLEFT", PAD, -(y + 12))
+		W.nearLabel:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
+		y = y + 12 + height(W.nearLabel)
+	end
+	for i, row in ipairs(W.nearRows) do
+		local n = near[i]
+		row.text:SetShown(n ~= nil)
+		row.sub:SetShown(n ~= nil)
+		if n then
+			row.text:SetText(n.text or "")
+			row.sub:SetText(n.sub or "")
+			row.text:ClearAllPoints()
+			row.text:SetPoint("TOPLEFT", body, "TOPLEFT", PAD, -(y + 6))
+			row.text:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
+			row.sub:ClearAllPoints()
+			row.sub:SetPoint("TOPLEFT", row.text, "BOTTOMLEFT", 0, -2)
+			row.sub:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
+			y = y + 6 + height(row.text) + 2 + height(row.sub)
+		end
 	end
 
 	-- The leveling tracker's line: under the list, or with a height of its
