@@ -108,6 +108,12 @@ local function updateRow(f, a)
 	local shown = 0
 	local filter = a.opts.filter
 	if filter == "HARMFUL" and ns.Get("units.onlyMyDebuffs") and f.unit ~= "player" then filter = "HARMFUL|PLAYER" end
+	-- Debuffs flagged for nameplates only (bleeds, taunts...) too: without
+	-- this the game leaves them out. Its own target frame asks the same way
+	-- (TargetFrameAuraShared: Harmful + IncludeNameplateOnly).
+	if filter:find("^HARMFUL") and not filter:find("INCLUDE_NAME_PLATE_ONLY", 1, true) then
+		filter = filter .. "|INCLUDE_NAME_PLATE_ONLY"
+	end
 	local get = C_UnitAuras and C_UnitAuras.GetAuraDataByIndex
 	for i, b in ipairs(a.icons) do
 		local data = on and get and call(get, f.unit, i, filter)

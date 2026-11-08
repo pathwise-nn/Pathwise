@@ -6,6 +6,19 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise UI: enemy cast bars move smoothly
+- An enemy's cast bar moved in jumps. It counted the cast in milliseconds
+  of the game's clock, numbers so big that a bar can only show them in
+  steps. Now it uses the cast's own length in seconds, which the game
+  gives for the cast, so it fills (or, for a channel, drains) smoothly.
+  Not yet checked in game.
+
+### Pathwise UI: bleeds, taunts and other debuffs on your target
+- Some debuffs never showed on your target or on nameplates: ones the
+  game marks as nameplate debuffs, which may include bleeds and taunts.
+  Pathwise UI now asks for them the way the game's own target frame
+  does. Not yet checked in game.
+
 ## 0.2.19 (2026-11-08)
 
 ### Pathwise UI: combo points for rogues and cat druids

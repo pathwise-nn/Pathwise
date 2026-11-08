@@ -197,6 +197,24 @@ test("unit frames: debuffs on the target, timers only when readable", function()
 	ok(not a.icons[1].shown, "switched off")
 end)
 
+test("unit frames: bleeds and taunts (nameplate-only debuffs) show on the target, as on the game's frame", function()
+	local stub, ns = fresh(function(s)
+		withTarget(s)
+		s.auras.target = { HARMFUL = {
+			{ icon = 132152, auraInstanceID = 41, nameplateOnly = true }, -- Rake
+			{ icon = 132270, auraInstanceID = 42, nameplateOnly = true }, -- Growl
+			{ icon = 136207, auraInstanceID = 43 },
+		} }
+	end)
+	local a = ns.Units.frames.target.auras
+	ok(a.icons[1].shown and a.icons[2].shown and a.icons[3].shown, "all three shown")
+	eq(a.icons[1].icon.texture, 132152, "the bleed first, as the game lists it")
+	ns.Set("units.onlyMyDebuffs", true)
+	ok(a.icons[1].shown, "with only yours too")
+	local last = stub.auraFilters[#stub.auraFilters]
+	ok(last:find("PLAYER", 1, true) and last:find("INCLUDE_NAME_PLATE_ONLY", 1, true), last)
+end)
+
 test("unit frames: the target's buffs in a row, its debuffs under them", function()
 	local stub, ns = fresh(function(s)
 		withTarget(s)

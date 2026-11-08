@@ -535,9 +535,22 @@ function RegisterUnitWatch(f) stub.watched[f] = true end
 function UnregisterUnitWatch(f) stub.watched[f] = nil end
 -- Auras: stub.auras[unit][filter] = { aura data, ... }; casts: stub.casts[unit] = { name, texture, start, finish }
 stub.auras, stub.casts = {}, {}
+-- An aura with nameplateOnly (as bleeds and taunts can be on Forever) comes
+-- back only when the filter has INCLUDE_NAME_PLATE_ONLY, as the client does.
+-- stub.auraFilters lists every filter asked for.
+stub.auraFilters = {}
 C_UnitAuras = { GetAuraDataByIndex = function(u, i, filter)
+	stub.auraFilters[#stub.auraFilters + 1] = filter
 	local list = stub.auras[u] and (stub.auras[u][filter] or stub.auras[u][(filter or ""):match("^(%u+)")])
-	return list and list[i]
+	if not list then return nil end
+	local plates = (filter or ""):find("INCLUDE_NAME_PLATE_ONLY", 1, true)
+	local n = 0
+	for _, a in ipairs(list) do
+		if plates or not a.nameplateOnly then
+			n = n + 1
+			if n == i then return a end
+		end
+	end
 end }
 function UnitCastingInfo(u)
 	local c = stub.casts[u]
