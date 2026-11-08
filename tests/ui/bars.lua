@@ -49,10 +49,13 @@ test("bars: the main bar follows stances, forms and stealth, in combat too", fun
 	local stub, ns = fresh()
 	local main = ns.Bars.bars[1]
 	local d = stub.drivers[main]
-	ok(d, "a state driver on the main bar")
-	eq(d[1], "page")
-	ok(d[2]:find("%[bonusbar:1%] 7") and d[2]:find("%[overridebar%] 14") and d[2]:find("; 1$"), d[2])
-	ok(main:GetAttribute("_onstate-page"):find('SetAttribute%("actionpage"'), "the page set by the game's secure code")
+	ok(d, "state drivers on the main bar")
+	ok(d.page:find("%[bonusbar:1%] b1") and d.page:find("%[overridebar%]") and d.page:find("; 1$"), d.page)
+	ok(d.form:find("%[form:1%] 1") and d.form:find("%[stealth%]") and d.form:find("; 0$"), d.form)
+	for _, id in ipairs({ "page", "form" }) do
+		local code = main:GetAttribute("_onstate-" .. id)
+		ok(code and code:find("GetBonusBarIndex") and code:find('SetAttribute%("actionpage"'), "the page asked of the game on a " .. id .. " change")
+	end
 	ok(not stub.drivers[ns.Bars.bars[2]], "other bars keep their page")
 end)
 
@@ -68,9 +71,26 @@ test("bars: a stance or form change redraws the main bar's buttons at once", fun
 			if code then run(code, { self = b, message = message }) end
 		end
 	end }
-	run(main:GetAttribute("_onstate-page"), { self = main, newstate = "7", control = control, tonumber = tonumber })
+	-- The game, as the secure code sees it: page 1, then battle stance (bonus
+	-- bar 7), bear form (9), then shift+wheel to page 3 with no form.
+	local game = { page = 1 }
+	local env = { self = main, control = control, tonumber = tonumber,
+		GetActionBarPage = function() return game.page end,
+		HasBonusActionBar = function() return game.bonus ~= nil end,
+		GetBonusBarIndex = function() return game.bonus end,
+		HasVehicleActionBar = function() return false end,
+		HasOverrideActionBar = function() return false end,
+		HasTempShapeshiftActionBar = function() return false end }
+	game.bonus = 7
+	run(main:GetAttribute("_onstate-form"), env)
 	eq(main:GetAttribute("actionpage"), 7, "battle stance's page on the bar")
 	for i, b in ipairs(main.buttons) do eq(b:GetAttribute("actionpage"), 7, "and on button " .. i .. ", which redraws it") end
+	game.bonus = 9
+	run(main:GetAttribute("_onstate-page"), env)
+	eq(main.buttons[1]:GetAttribute("actionpage"), 9, "bear form")
+	game.bonus, game.page = nil, 3
+	run(main:GetAttribute("_onstate-page"), env)
+	eq(main.buttons[12]:GetAttribute("actionpage"), 3, "no form: the page you picked")
 	ok(ns.Bars.bars[2].buttons[1]:GetAttribute("_childupdate-actionpage") == nil, "a fixed bar's buttons keep their page")
 end)
 

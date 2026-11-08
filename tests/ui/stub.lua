@@ -585,7 +585,10 @@ stub.bindings, stub.overrides, stub.drivers = {}, {}, {}
 function GetBindingKey(action) return unpack(stub.bindings[action] or {}) end
 function SetOverrideBindingClick(owner, _, key, button, mouse) stub.overrides[key] = button .. ":" .. (mouse or "LeftButton") end
 function ClearOverrideBindings() stub.overrides = {} end
-function RegisterStateDriver(frame, state, rule) stub.drivers[frame] = { state, rule } end
+function RegisterStateDriver(frame, state, rule)
+	stub.drivers[frame] = stub.drivers[frame] or {}
+	stub.drivers[frame][state] = rule
+end
 -- Experience and reputation: stub.xp = { cur, max, rested, disabled }, stub.watched = faction data.
 stub.xp = { cur = 4512, max = 9800, rested = 2100 }
 function UnitXP() return stub.xp.cur end

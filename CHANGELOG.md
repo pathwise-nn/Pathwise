@@ -6,6 +6,13 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise UI: the main bar swaps with your stance or form again
+- Warrior stances, druid forms and stealth could leave the main bar on
+  its normal page. The bar picked its page from its own list of stance
+  numbers, which need not match Forever's. Now it asks the game for the
+  page, the same way the game's own bar does, whenever your stance, form,
+  stealth or page changes. Not yet checked in game.
+
 ## 0.2.18 (2026-11-08)
 
 ### Pathwise: a quest split over several stops moves on after each one

@@ -7,9 +7,12 @@
 --     from its bar's "actionpage" attribute (SecureActionButtonMixin:
 --     CalculateAction). The game's own code then does the rest: casting,
 --     icons, cooldowns, range, charges, glows, dragging spells on and off.
---   * The main bar changes page with your stance, form or stealth through a
---     state driver (SecureHandlerStateTemplate + RegisterStateDriver), which
---     the game runs in combat too. The new page is also handed to each of
+--   * The main bar changes page with your stance, form or stealth: state
+--     drivers (SecureHandlerStateTemplate + RegisterStateDriver), which the
+--     game runs in combat too, notice the change, and the page is then asked
+--     of the game the way its own bar does (ActionBarController_UpdateAll:
+--     GetBonusBarIndex and the rest), so the two always agree. The new page
+--     is also handed to each of
 --     its buttons (ChildUpdate): a button redraws when its own attribute
 --     changes (ActionBarActionButtonMixin:OnAttributeChanged), not its bar's,
 --     and the game's own refresh on a stance change runs before the driver.
@@ -38,12 +41,28 @@ B.DEFS = {
 	{ id = 5, name = "Bar5", label = "Right bar 2", page = 4, binding = "MULTIACTIONBAR4BUTTON", per = 1, point = { "RIGHT", "RIGHT", -50, 0 } },
 }
 
--- The main bar's page: override and vehicle bars, temporary forms, then
--- stances and forms (bonus bars 1-5: warrior stances, druid forms, rogue and
--- druid stealth, priest shadowform), then the page you picked (shift+wheel).
-B.MAIN_PAGING = "[overridebar] 14; [possessbar] 12; [vehicleui] 12; [shapeshift] 13; "
-	.. "[bonusbar:5] 11; [bonusbar:4] 10; [bonusbar:3] 9; [bonusbar:2] 8; [bonusbar:1] 7; "
+-- What makes the main bar look again at its page: override and vehicle
+-- bars, temporary forms, bonus bars (warrior stances, druid forms, stealth,
+-- shadowform), the page you picked (shift+wheel), and, so a stance or form
+-- is never missed, the form you are in and stealth.
+B.MAIN_PAGING = "[overridebar] o; [possessbar] p; [vehicleui] v; [shapeshift] t; "
+	.. "[bonusbar:5] b5; [bonusbar:4] b4; [bonusbar:3] b3; [bonusbar:2] b2; [bonusbar:1] b1; "
 	.. "[bar:2] 2; [bar:3] 3; [bar:4] 4; [bar:5] 5; [bar:6] 6; 1"
+B.MAIN_FORM = "[stealth] s; [form:1] 1; [form:2] 2; [form:3] 3; [form:4] 4; [form:5] 5; [form:6] 6; [form:7] 7; 0"
+
+-- The page itself, chosen as the game's own main bar chooses it
+-- (ActionBarController_UpdateAll on Forever), in its secure code.
+B.MAIN_PAGE = [[
+	local page
+	if HasVehicleActionBar and HasVehicleActionBar() then page = GetVehicleBarIndex()
+	elseif HasOverrideActionBar and HasOverrideActionBar() then page = GetOverrideBarIndex()
+	elseif HasTempShapeshiftActionBar and HasTempShapeshiftActionBar() then page = GetTempShapeshiftBarIndex()
+	elseif HasBonusActionBar and HasBonusActionBar() and GetActionBarPage() == 1 then page = GetBonusBarIndex()
+	else page = GetActionBarPage() end
+	page = tonumber(page) or 1
+	self:SetAttribute("actionpage", page)
+	control:ChildUpdate("actionpage", page)
+]]
 
 do
 	local d = { enabled = true, hideBlizzard = true, size = 36, spacing = 4, fade = false, fadeAlpha = 0.3,
@@ -67,12 +86,12 @@ local function makeBar(def)
 		bar:SetAttribute("actionpage", def.page)
 	else
 		bar:SetAttribute("actionpage", 1)
-		bar:SetAttribute("_onstate-page", [[
-			local page = tonumber(newstate) or 1
-			self:SetAttribute("actionpage", page)
-			control:ChildUpdate("actionpage", page)
-		]])
-		if RegisterStateDriver then RegisterStateDriver(bar, "page", B.MAIN_PAGING) end
+		bar:SetAttribute("_onstate-page", B.MAIN_PAGE)
+		bar:SetAttribute("_onstate-form", B.MAIN_PAGE)
+		if RegisterStateDriver then
+			RegisterStateDriver(bar, "page", B.MAIN_PAGING)
+			RegisterStateDriver(bar, "form", B.MAIN_FORM)
+		end
 	end
 	for i = 1, 12 do
 		local name = ("PathwiseUI_%sButton%d"):format(def.name, i)
