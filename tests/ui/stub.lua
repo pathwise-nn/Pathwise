@@ -544,6 +544,22 @@ function UnitCastingInfo(u)
 	if c then return c.name, c.name, c.texture, c.start, c.finish, false, 1, c.locked end
 end
 function UnitChannelInfo() return nil end
+-- Cast duration objects (Forever's LuaDurationObject), for a unit whose
+-- stub.durations[unit] = { start = seconds, total = seconds, secret = bool,
+-- channel = bool }: its seconds gone, left and in all, secret when asked.
+stub.durations = {}
+local function durationOf(u, channel)
+	local d = stub.durations[u]
+	if not d or (d.channel or false) ~= channel then return nil end
+	local function wrap(v) return d.secret and stub.Secret(v) or v end
+	return {
+		GetTotalDuration = function() return wrap(d.total) end,
+		GetElapsedDuration = function() return wrap(math.max(0, stub.now - d.start)) end,
+		GetRemainingDuration = function() return wrap(math.max(0, d.start + d.total - stub.now)) end,
+	}
+end
+function UnitCastingDuration(u) return durationOf(u, false) end
+function UnitChannelDuration(u) return durationOf(u, true) end
 -- Frames: attributes, per-unit events (checked against Forever's list),
 -- formatted text, bars that take secret values as the client's do.
 function Widget:SetAttribute(k, v)
