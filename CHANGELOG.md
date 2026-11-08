@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.17 (2026-11-08)
+
 ### Pathwise: the level line stays in view in a smaller guide window
 - With the guide window resized shorter, the line with your level, XP per
   hour and time to the next level scrolled away with the steps. Now it
