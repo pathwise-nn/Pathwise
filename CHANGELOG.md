@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.21 (2026-11-08)
+
 ### The guide follows your quest log
 - Starting Pathwise mid-leveling, or going your own way, no longer pushes
   you back onto the start of a route. The route is picked by the quests in
