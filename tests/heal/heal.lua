@@ -41,10 +41,10 @@ test("healing: a healer is asked once; Turn on sets up their class's clicks", fu
 	eq(_G.PathwiseHeal_Header:GetAttribute("template"), "PathwiseHeal_ButtonTemplate")
 	eq(_G.PathwiseHeal_Header:GetAttribute("showSolo"), true)
 	local C = ns.HealClicks
-	eq(C.Get("1"), "Flash Heal", "left: the quick heal")
+	eq(C.Get("1"), C.TARGET, "left click targets, as anywhere in the game")
+	eq(C.Get("ctrl-1"), "Flash Heal", "ctrl + left: the quick heal")
 	eq(C.Get("shift-2"), "Dispel Magic", "shift + right: cleanse")
 	eq(C.Get("2"), "Renew")
-	eq(C.Get("ctrl-1"), C.TARGET)
 	-- Next login on this character: not asked again.
 	ns.Set("heal.enabled", false)
 	ns.Fire("READY")
@@ -122,10 +122,10 @@ test("healing: clicks are the frame's own attributes, and wait for the end of co
 	ns.Set("heal.enabled", true)
 	local C = ns.HealClicks
 	local b = frame(ns, "player")
-	eq(b:GetAttribute("type1"), "spell")
-	eq(b:GetAttribute("spell1"), "Flash Heal")
+	eq(b:GetAttribute("type1"), "target", "left click targets")
+	eq(b:GetAttribute("ctrl-type1"), "spell")
+	eq(b:GetAttribute("ctrl-spell1"), "Flash Heal")
 	eq(b:GetAttribute("type2"), "spell")
-	eq(b:GetAttribute("ctrl-type1"), "target")
 	eq(b:GetAttribute("type3"), "spell")
 	eq(b:GetAttribute("spell3"), "Power Word: Shield")
 	eq(C.Parse("  menu "), C.MENU)
@@ -200,15 +200,16 @@ end)
 
 test("healing presets: each healing class gets its spec's spells", function()
 	local cases = {
-		{ "DRUID", { ["1"] = "Regrowth", ["2"] = "Rejuvenation", ["shift-2"] = "Remove Curse", ["alt-1"] = "Wild Growth", ["alt-2"] = "Abolish Poison" } },
-		{ "SHAMAN", { ["1"] = "Lesser Healing Wave", ["2"] = "Riptide", ["alt-1"] = "Chain Heal", ["shift-2"] = "Cure Poison" } },
-		{ "PALADIN", { ["1"] = "Flash of Light", ["2"] = "Holy Shock", ["shift-2"] = "Cleanse", ["alt-1"] = "Oath of Light", ["4"] = "Lay on Hands" } },
-		{ "PRIEST", { ["1"] = "Flash Heal", ["2"] = "Renew", ["alt-1"] = "Prayer of Healing", ["4"] = "Prayer of Mending", ["5"] = "Binding Heal" } },
+		{ "DRUID", { ["ctrl-1"] = "Regrowth", ["2"] = "Rejuvenation", ["shift-2"] = "Remove Curse", ["alt-1"] = "Wild Growth", ["alt-2"] = "Abolish Poison" } },
+		{ "SHAMAN", { ["ctrl-1"] = "Lesser Healing Wave", ["2"] = "Riptide", ["alt-1"] = "Chain Heal", ["shift-2"] = "Cure Poison" } },
+		{ "PALADIN", { ["ctrl-1"] = "Flash of Light", ["2"] = "Holy Shock", ["shift-2"] = "Cleanse", ["alt-1"] = "Oath of Light", ["4"] = "Lay on Hands" } },
+		{ "PRIEST", { ["ctrl-1"] = "Flash Heal", ["2"] = "Renew", ["alt-1"] = "Prayer of Healing", ["4"] = "Prayer of Mending", ["5"] = "Binding Heal" } },
 	}
 	for _, case in ipairs(cases) do
 		local _, ns = fresh(as(case[1]))
 		ns.Set("heal.enabled", true)
 		for combo, spell in pairs(case[2]) do eq(ns.HealClicks.Get(combo), spell, case[1] .. " " .. combo) end
+		eq(ns.HealClicks.Get("1"), ns.HealClicks.TARGET, case[1] .. ": left click targets")
 	end
 end)
 
@@ -242,7 +243,7 @@ test("healing presets: spells you learn later fill in by themselves; cleared cli
 	ns.Set("heal.enabled", true)
 	local C = ns.HealClicks
 	local b = frame(ns, "player")
-	eq(C.Get("1"), "Lesser Heal", "the heal you know at this level")
+	eq(C.Get("ctrl-1"), "Lesser Heal", "the heal you know at this level")
 	eq(C.Get("4"), nil, "Prayer of Mending not learned yet")
 	eq(C.Get("alt-1"), nil, "nor Prayer of Healing")
 	C.Set("alt-2", nil) -- you empty this one
@@ -250,7 +251,7 @@ test("healing presets: spells you learn later fill in by themselves; cleared cli
 	stub.spellNames["Prayer of Mending"] = true
 	stub.spellNames["Cure Disease"] = true
 	stub.fire("LEARNED_SPELL_IN_SKILL_LINE")
-	eq(C.Get("1"), "Flash Heal", "upgraded to the quick heal")
+	eq(C.Get("ctrl-1"), "Flash Heal", "upgraded to the quick heal")
 	eq(C.Get("4"), "Prayer of Mending", "the talent, once learned")
 	eq(b:GetAttribute("spell4"), "Prayer of Mending", "on the frame too")
 	eq(C.Get("alt-2"), nil, "a click you emptied stays empty")
@@ -283,4 +284,37 @@ test("help and feedback: the website and Discord, in Pathwise Heal's own options
 	end
 	ok(found["https://pathwise.quest/report"], "the report link")
 	ok(found["https://discord.gg/hSDjBrG8EK"], "the Discord invite")
+end)
+
+test("healing: Left click targets; off, left click heals again; your own clicks never move", function()
+	local stub, ns = fresh(priest)
+	ns.Set("heal.enabled", true)
+	local C = ns.HealClicks
+	local b = frame(ns, "player")
+	eq(ns.Get("heal.leftTarget"), true, "on by default")
+	eq(b:GetAttribute("type1"), "target")
+	-- Off: the preset as written.
+	ns.Set("heal.leftTarget", false)
+	eq(C.Get("1"), "Flash Heal")
+	eq(C.Get("ctrl-1"), C.TARGET)
+	eq(b:GetAttribute("spell1"), "Flash Heal", "on the frame too")
+	-- A click you set yourself stays where you put it either way.
+	C.Set("1", "Renew")
+	ns.Set("heal.leftTarget", true)
+	eq(C.Get("1"), "Renew", "yours")
+	eq(C.Get("ctrl-1"), "Flash Heal", "the preset's heal still moves")
+	-- Its option on the page.
+	ns.Config.Show("heal")
+	ok(table.concat(stub.texts(), "|"):find("Left click targets", 1, true), "on the options page")
+end)
+
+test("healing: a character set up before Left click targets moves over by itself", function()
+	local stub, ns = fresh(priest)
+	ns.Set("heal.leftTarget", false)
+	ns.Set("heal.enabled", true) -- set up as it used to be: left click heals
+	local C = ns.HealClicks
+	eq(C.Get("1"), "Flash Heal")
+	ns.Set("heal.leftTarget", nil) -- the new default, as after the update
+	eq(C.Get("1"), C.TARGET, "now targets")
+	eq(C.Get("ctrl-1"), "Flash Heal")
 end)

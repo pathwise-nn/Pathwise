@@ -77,6 +77,12 @@ C.SPECS = {
 }
 local SUPPORT = { { key = "support", label = "Support", binds = { ["1"] = { T_ }, ["2"] = { M_ } } } }
 
+-- "Left click targets" (on by default): a plain left click on a frame
+-- targets that person, as clicking anyone in the game does (to trade,
+-- inspect, follow), and the preset's quick heal moves to Ctrl + left, where
+-- Target was. Off: the presets as written (left click heals).
+ns.Defaults("heal", { leftTarget = true })
+
 -- Where a spell comes from, for the options page (Forever's previews; not
 -- checked in game).
 C.NOTES = {
@@ -161,6 +167,19 @@ local function pick(list)
 	return nil
 end
 
+-- A spec's clicks as they apply now: with "Left click targets" on, its left
+-- click and Ctrl + left swap (a preset that already targets on left click,
+-- Support, stays as it is).
+function C.Binds(spec)
+	local binds = spec.binds
+	local left = binds["1"]
+	if not ns.Get("heal.leftTarget") or (left and left[1] == T_) then return binds end
+	local out = {}
+	for k, v in pairs(binds) do out[k] = v end
+	out["1"], out["ctrl-1"] = binds["ctrl-1"] or { T_ }, left
+	return out
+end
+
 -- Brings the preset up to date without touching your own choices: a combo
 -- still holding what a preset put there (or empty, and not emptied by you)
 -- takes the preset's current pick. So a spell learned later (a talent, a
@@ -168,7 +187,7 @@ end
 function C.Refresh()
 	if inCombat() then C.pending = true return end
 	local d = C.Data()
-	local binds = C.Spec().binds
+	local binds = C.Binds(C.Spec())
 	for _, c in ipairs(C.COMBOS) do
 		local combo = c[1]
 		local now = d.binds[combo]
@@ -265,6 +284,8 @@ for _, ev in ipairs({ "SPELLS_CHANGED", "LEARNED_SPELL_IN_SKILL_LINE", "PLAYER_L
 end
 -- The first time healing frames are on for this character: the class's defaults.
 ns.On("SETTING_CHANGED", function(path)
+	-- Left click targets switched: the preset's own clicks move; yours stay.
+	if (path == "heal.leftTarget" or path == "*") and C.Data().defaulted then C.Refresh() end
 	if path == "heal.enabled" and ns.Get("heal.enabled") and not ns.CharData("heal").defaulted then
 		ns.CharData("heal").defaulted = true
 		C.Defaults(false)

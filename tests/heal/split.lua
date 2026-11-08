@@ -103,12 +103,14 @@ test("split: each minimap button's mark is its own logo's colour, not the shared
 	eq(mark(_G.PathwiseHealMinimapButton), heal.ID.color)
 end)
 
-test("split: both installed: Pathwise UI's party frames step aside while the healing frames show", function()
+test("split: both installed: Pathwise UI's party frames stay with the healing frames, unless you hide them", function()
 	local stub, ui, heal = both(priestInParty)
 	local party = ui.Units.frames.party1
 	ok(party and party.shown and stub.watched[party], "party frames before healing frames")
 	heal.Set("heal.enabled", true)
-	ok(not ui.Units.frames.party1.shown, "stepped aside")
+	ok(stub.watched[party], "both show by default")
+	heal.Set("heal.hideParty", true)
+	ok(not ui.Units.frames.party1.shown, "stepped aside when you ask")
 	ok(not stub.watched[party], "and not watched: the game won't show it")
 	-- Back: watched again (the game shows a watched frame while its unit exists).
 	heal.Set("heal.hideParty", false)
