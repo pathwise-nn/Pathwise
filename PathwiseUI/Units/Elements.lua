@@ -9,6 +9,8 @@
 -- casts), the bar runs from the cast's start to its end as its own range
 -- (SetMinMaxValues takes secrets from addon code) and is given the time
 -- now: the game does the sum, the addon never reads the times.
+-- Combo points: GetComboPoints("player", "target"), as the game's own
+-- ComboFrame on Forever, which this replaces on the target's frame.
 
 local ADDON, ns = ...
 local T = ns.Theme
@@ -268,3 +270,83 @@ function U.EndCast(f, interrupted)
 		if cb.pwEnding then cb:Hide() cb.pwEnding = false end
 	end)
 end
+
+---------------------------------------------------------------------------
+-- Combo points
+---------------------------------------------------------------------------
+
+-- On Forever your combo points are on your target (the game's ComboFrame
+-- and TargetBoundComboPointBar read GetComboPoints("player", "target")).
+-- A row of pips over the right of the target's frame, for rogues and for
+-- druids in cat form. Each pip is a tiny bar over one point (pip 3 runs from
+-- 2 to 3), so a secret count fills them too: SetValue takes it as it is.
+local MAX_PIPS = 7
+local COMBO = Enum and Enum.PowerType and Enum.PowerType.ComboPoints or 4
+local PIP_W, PIP_H, PIP_GAP = 16, 6, 3
+
+function U.MakeCombo(f)
+	local row = CreateFrame("Frame", nil, f)
+	row:SetHeight(PIP_H)
+	row:SetPoint("BOTTOMRIGHT", f, "TOPRIGHT", 0, 4)
+	row.pips = {}
+	for i = 1, MAX_PIPS do
+		local p = CreateFrame("StatusBar", nil, row)
+		p:SetSize(PIP_W, PIP_H)
+		p:SetPoint("LEFT", row, "LEFT", (i - 1) * (PIP_W + PIP_GAP), 0)
+		p:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
+		local bg = p:CreateTexture(nil, "BACKGROUND")
+		bg:SetAllPoints()
+		bg:SetColorTexture(0, 0, 0, 0.5)
+		p.bg = bg
+		p:SetMinMaxValues(i - 1, i)
+		p:SetValue(0)
+		row.pips[i] = p
+	end
+	row:Hide()
+	f.combo = row
+end
+
+-- Rogues always; druids while their power is energy (cat form). When the
+-- game keeps that hidden, the pips show.
+function U.WantsCombo()
+	if not ns.Get("units.comboPoints") then return false end
+	local _, class = call(UnitClass, "player")
+	class = readable(class)
+	if class == "ROGUE" then return true end
+	if class ~= "DRUID" then return false end
+	local _, token = call(UnitPowerType, "player")
+	token = readable(token)
+	return token == nil or token == "ENERGY"
+end
+
+function U.UpdateCombo(f)
+	local row = f.combo
+	if not row then return end
+	local n = U.WantsCombo() and call(GetComboPoints, "player", "target") or nil
+	if n == nil then row:Hide() return end
+	local most = readable(call(UnitPowerMax, "player", COMBO))
+	if type(most) ~= "number" or most < 1 then most = 5 end
+	most = math.min(most, MAX_PIPS)
+	row:SetWidth(most * (PIP_W + PIP_GAP) - PIP_GAP)
+	local c = T.Color("accent")
+	for i, p in ipairs(row.pips) do
+		if i <= most then
+			p:SetStatusBarColor(c[1], c[2], c[3])
+			p:SetValue(n)
+			p:Show()
+		else
+			p:Hide()
+		end
+	end
+	row:Show()
+end
+
+local function comboChanged()
+	local f = U.frames and U.frames.target
+	if f and f.combo then U.UpdateCombo(f) end
+end
+ns.RegisterEvent("COMBO_TARGET_CHANGED", comboChanged)
+ns.RegisterEvent("UNIT_POWER_UPDATE", function(_, unit) if unit == "player" then comboChanged() end end)
+ns.RegisterEvent("UNIT_POWER_FREQUENT", function(_, unit, kind) if unit == "player" and kind == "COMBO_POINTS" then comboChanged() end end)
+ns.RegisterEvent("UNIT_MAXPOWER", function(_, unit) if unit == "player" then comboChanged() end end)
+ns.RegisterEvent("UNIT_DISPLAYPOWER", function(_, unit) if unit == "player" then comboChanged() end end) -- into or out of cat form

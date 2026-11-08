@@ -31,6 +31,7 @@ ns.Defaults("units", {
 	auras = true,
 	onlyMyDebuffs = false,
 	castbars = true,
+	comboPoints = true, -- rogues, and druids in cat form: pips over the target's frame
 	portraits = false,
 	smooth = true, -- bars glide to a new value (the game eases them; secret values too)
 	-- Which frames: player, target, targettarget, pet, focus, party.
@@ -254,6 +255,7 @@ function U.Make(def)
 	if def.unit ~= "player" and RegisterUnitWatch then RegisterUnitWatch(f) end
 	if def.castbar then U.MakeCastbar(f) end
 	if def.auras then U.MakeAuras(f, def.auras, def.buffs) end
+	if def.combo then U.MakeCombo(f) end
 	frames[def.unit] = f
 	U.Layout(f)
 	U.Events(f)
@@ -455,6 +457,7 @@ function U.Update(f)
 	U.UpdateMarks(f)
 	if f.auras then U.UpdateAuras(f) end
 	if f.castbar then U.UpdateCast(f) end
+	if f.combo then U.UpdateCombo(f) end
 end
 
 function U.UpdateAll() for _, f in pairs(frames) do U.Update(f) end end
