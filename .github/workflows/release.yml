@@ -13,6 +13,9 @@
 #
 # Before tagging: node tools/version.js <version> (TOCs, package.json and the
 # changelog section), commit, then tag v<version>. The tag must match the TOC.
+# The tag can also be made by publishing a release on GitHub's site
+# (Releases > Draft a new release > new tag v<version> on main): this
+# workflow then fills that release in rather than making another.
 
 name: Release
 
@@ -76,4 +79,11 @@ jobs:
           ' "$v"
           flag=""
           case "$v" in *-*) flag="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" dist/*-"$v".zip --title "Pathwise $v" --notes-file notes.md $flag
+          # A release made on GitHub's site (which made the tag) gets the zips
+          # and notes added; otherwise it is made here.
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/*-"$v".zip --clobber
+            gh release edit "$GITHUB_REF_NAME" --title "Pathwise $v" --notes-file notes.md $flag
+          else
+            gh release create "$GITHUB_REF_NAME" dist/*-"$v".zip --title "Pathwise $v" --notes-file notes.md $flag
+          fi
