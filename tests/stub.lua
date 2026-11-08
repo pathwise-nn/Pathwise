@@ -70,6 +70,9 @@ function Widget:SetTexture(t) self.texture = t end
 function Widget:SetRotation(r) self.rotation = r end
 function Widget:SetColorTexture(r, g, b, a) self.color = { r, g, b, a } end
 function Widget:SetVertexColor(r, g, b, a) self.vertex = { r, g, b, a } end
+function Widget:SetDesaturated(on) rawset(self, "desaturated", on and true or false) end
+function Widget:SetAlpha(a) rawset(self, "alpha", a) end
+function Widget:GetAlpha() return rawget(self, "alpha") or 1 end
 function Widget:SetTextColor(r, g, b, a) self.textColor = { r, g, b, a } end
 -- Events: like the client, an event Forever does not have is an error
 -- (tests/fixtures/forever-events.txt, from Blizzard's Forever API docs).

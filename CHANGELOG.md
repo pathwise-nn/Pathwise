@@ -6,6 +6,24 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: the recipe book, laid out like the spellbook
+- The recipe book is now one window with a tab for each profession
+  along the top, using the game's own profession icons. Professions you
+  have are in colour; the others are greyed.
+- Each rank (Apprentice, Journeyman, Expert, Artisan) is a chapter. The
+  book opens on the chapter you are in, and every skill range in it is a
+  card with its craft's icon, how many to make and its colour now. Your
+  card is outlined. Click a card for what to make, the materials, a bar
+  from orange to grey with your skill on it, and where the recipe is
+  sold, with the arrow. The arrows at the bottom turn the pages.
+- A rank you still have to train shows what it takes and the trainer,
+  with the arrow. Other ways through some ranges (Strange Dust,
+  Smelting) are at the bottom of the window.
+- Drag any edge or corner, or the grip, to resize it. The tabs shrink to
+  stay in one row and the cards fill the width. The size and place are
+  saved; right-click the grip for the size it opens at.
+- Not yet checked in game.
+
 ## 0.2.15 (2026-11-08)
 
 ### Pathwise: resize the guide window from its corner
