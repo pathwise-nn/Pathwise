@@ -47,10 +47,11 @@ C.CATEGORIES = {
 			{ "button", H.Unlocked() and "Lock it" or "Move the healing frames", function() H.Unlock(not H.Unlocked()) end, H.Unlocked() and "accent" or "default" },
 			{ "button", "Put them back where they were", function() H.ResetPosition() end },
 			{ "toggle", "Hide the game's party and raid frames", "heal.hideGame", "Off brings them back after a reload." },
-			_G.PathwiseUI and { "toggle", "Hide Pathwise UI's party frames", "heal.hideParty", "These show your party already." } or false, -- false, not nil: ipairs stops at nil
+			_G.PathwiseUI and { "toggle", "Hide Pathwise UI's party frames", "heal.hideParty", "Off: Pathwise UI's party frames show alongside these. On: only these." } or false, -- false, not nil: ipairs stops at nil
 
 			{ "heading", "Click-casting" },
 		}) do if r then rows[#rows + 1] = r end end
+		rows[#rows + 1] = { "toggle", "Left click targets", "heal.leftTarget", "Click a frame to target that person (to trade, inspect or follow), as anywhere in the game; your quick heal moves to Ctrl + left. Off: left click heals and Ctrl + left targets." }
 		local C = ns.HealClicks
 		local spec, how = C.Spec()
 		local options = { { "Follow my talents", "auto" } }
@@ -59,7 +60,7 @@ C.CATEGORIES = {
 			("Your clicks follow the %s preset%s. Its spells fill in as you learn them; a click you set yourself is never changed."):format(spec.label,
 				how == "auto" and " (from your talents)" or "") }
 		local talents = {}
-		for _, list in pairs(spec.binds) do
+		for _, list in pairs(C.Binds(spec)) do
 			for _, name in ipairs(list) do
 				if C.NOTES[name] then talents[#talents + 1] = ("%s: %s"):format(name, C.NOTES[name]) end
 			end

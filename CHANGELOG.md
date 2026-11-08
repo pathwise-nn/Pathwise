@@ -6,6 +6,17 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Heal: party frames and targeting
+- With Pathwise UI installed, its party frames now stay on screen alongside
+  the healing frames (before, Pathwise Heal hid them). Healing, Size and
+  place: Hide Pathwise UI's party frames (off by default) puts the old way
+  back.
+- Left click on a healing frame now targets that person, as clicking anyone
+  in the game does, so you can trade, inspect or follow; the preset's quick
+  heal moves to Ctrl + left. Healing, Click-casting: Left click targets (on
+  by default); off, left click heals as before. Clicks you set yourself are
+  never moved; a character set up before moves over by itself.
+
 ## 0.2.21 (2026-11-08)
 
 ### The guide follows your quest log

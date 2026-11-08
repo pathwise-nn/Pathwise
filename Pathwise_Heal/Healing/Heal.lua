@@ -44,7 +44,7 @@ ns.Defaults("heal", {
 	aggro = true,
 	mana = true,
 	hideGame = true, -- the game's own party and raid frames
-	hideParty = true, -- Pathwise UI's party unit frames while these are on (when it is installed)
+	hideParty = false, -- Pathwise UI's party unit frames while these are on (when it is installed): both show by default
 	point = nil,
 })
 H.DEFAULT_POINT = { "TOPLEFT", "TOPLEFT", 30, -200 }
