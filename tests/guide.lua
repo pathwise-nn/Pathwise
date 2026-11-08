@@ -1442,6 +1442,34 @@ test("guide grip: the saved size comes back at login, follows the cursor at any 
 	eq(f.h, 433, "back to the height set")
 end)
 
+test("guide grip: with a height of its own, the level line stays over the buttons, not in the scrolling list", function()
+	local stub, ns = login()
+	ns.Tracker.Line = function() return "Level 2  ·  35%  ·  3.8k XP/h" end
+	local f = _G.PathwiseGuide
+	local function line()
+		for _, w in ipairs(stub.frames) do
+			if w.kind == "FontString" and w.text == "Level 2  ·  35%  ·  3.8k XP/h" then return w end
+		end
+	end
+	ns.Guide.Refresh()
+	local s = line()
+	ok(s and s.shown, "the level line is shown")
+	ok(s.parent ~= f, "fitting each step: it is under the list, in it")
+	ns.Set("guide.height", 230)
+	ns.Guide.Refresh()
+	eq(s.parent, f, "a height of its own: on the window, out of the scroll area")
+	eq(s.points[1][1], "BOTTOMLEFT")
+	ok(s.points[1][5] > 16, "over the buttons, not under them")
+	ok(s.shown, "still shown")
+	ns.Guide.SetCompact(true)
+	ok(not s.shown, "compact: the bar alone")
+	ns.Guide.SetCompact(false)
+	ok(s.shown, "back with the full window")
+	ns.Set("guide.height", nil)
+	ns.Guide.Refresh()
+	ok(s.parent ~= f, "fitting each step again: back in the list")
+end)
+
 test("guide grip: muted at rest, brighter under the cursor, the accent while held", function()
 	local stub, ns = login()
 	local f, T = _G.PathwiseGuide, ns.Theme

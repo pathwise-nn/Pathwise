@@ -6,6 +6,11 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: the level line stays in view in a smaller guide window
+- With the guide window resized shorter, the line with your level, XP per
+  hour and time to the next level scrolled away with the steps. Now it
+  stays just above Back, Skip and Next. Not yet checked in game.
+
 ## 0.2.16 (2026-11-08)
 
 ### Pathwise: the recipe book, laid out like the spellbook
