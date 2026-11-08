@@ -10,7 +10,10 @@
 -- What changes on the way:
 --   * Quest goals: accept and turnin stay; kill, collect, interact, use and
 --     complete for a quest become one "complete" per quest and step (the guide
---     window shows the quest log's own objectives).
+--     window shows the quest log's own objectives). When every goal for the
+--     quest in the step names an objective (Polestar's `oi`, "quest 6543.1"),
+--     the "complete" keeps them (obj = { 1 }): the step is done with those,
+--     not the whole quest, so a quest split over steps moves on.
 --   * Places: Polestar writes coordinates in the Classic map frame; four
 --     Forever maps changed frame (Mulgore, Eastern Plaguelands, Redridge,
 --     Stormwind) and are converted with QuestieDB's coefficients
@@ -132,11 +135,20 @@ local function convertGoal(goal, g, seenComplete)
 		return with(out)
 	end
 	if goal.quest and QUEST_WORK[t] then
-		if seenComplete[goal.quest] then
-			if not goal.optional then seenComplete[goal.quest].optional = nil end
+		local prev = seenComplete[goal.quest]
+		if prev then
+			if not goal.optional then prev.optional = nil end
+			-- A goal for the whole quest makes the step's "complete" whole too.
+			if prev.obj and goal.oi then
+				local seen = false
+				for _, k in ipairs(prev.obj) do if k == goal.oi then seen = true end end
+				if not seen then prev.obj[#prev.obj + 1] = goal.oi table.sort(prev.obj) end
+			else
+				prev.obj = nil
+			end
 			return nil
 		end
-		local out = with({ "complete", goal.quest, at = at(goal) })
+		local out = with({ "complete", goal.quest, at = at(goal), obj = goal.oi and { goal.oi } or nil })
 		if not questKnown(goal.quest) then out.name = goal.title stats.missingQuests = stats.missingQuests + 1 end
 		seenComplete[goal.quest] = out
 		return out
