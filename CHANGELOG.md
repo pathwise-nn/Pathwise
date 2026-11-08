@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.16 (2026-11-08)
+
 ### Pathwise: the recipe book, laid out like the spellbook
 - The recipe book is now one window with a tab for each profession
   along the top, using the game's own profession icons. Professions you
