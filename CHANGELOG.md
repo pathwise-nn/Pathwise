@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.18 (2026-11-08)
+
 ### Pathwise: a quest split over several stops moves on after each one
 - Some quests send you to several places in turn, like The Warsong
   Reports (the Warsong Scout, Runner and Outrider). The guide stayed on
