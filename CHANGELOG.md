@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.15 (2026-11-08)
+
 ### Pathwise: resize the guide window from its corner
 - Drag the grip in the guide window's bottom-right corner to change its
   width and height. The size is saved and comes back at login. A step
