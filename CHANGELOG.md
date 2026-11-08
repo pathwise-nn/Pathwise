@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.19 (2026-11-08)
+
 ### Pathwise UI: the main bar swaps with your stance or form again
 - Warrior stances, druid forms and stealth could leave the main bar on
   its normal page. The bar picked its page from its own list of stance
