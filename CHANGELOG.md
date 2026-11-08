@@ -6,6 +6,14 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: resize the guide window from its corner
+- Drag the grip in the guide window's bottom-right corner to change its
+  width and height. The size is saved and comes back at login. A step
+  taller than the window scrolls with the mouse wheel, with Back, Skip and
+  Next kept at the bottom. Right-click the grip, or Window height > Fit to
+  step in Settings, to let the window fit each step again. Not yet checked
+  in game.
+
 ## 0.2.14 (2026-11-07)
 
 ### Pathwise UI: the main bar changes with your stance or form at once

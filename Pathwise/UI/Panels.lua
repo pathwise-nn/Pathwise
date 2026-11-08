@@ -1432,10 +1432,13 @@ function builders.settings()
 	local E = ns.Engine
 	local route = E.Route()
 	local skippedN = #E.Skipped()
+	local fixedH = type(ns.Get("guide.height")) == "number" and ns.Get("guide.height") or nil
 	local rows = {
 		{ "heading", "Settings" },
 		{ "heading", "Guide window" },
 		{ "slider", "Window size", "ui.scale", 0.5, 1.5, 0.05, pct },
+		{ "setting", "Window height", fixedH and ("%d"):format(fixedH) or "Fits each step", fixedH and { { "Fit to step", function() ns.Set("guide.height", nil) Panels.Refresh() end } } or {} },
+		{ "text", "Drag the guide window's bottom-right corner to change its width and height; a step taller than the window scrolls.", "muted" },
 		{ "slider", "Background opacity", "ui.opacity", 0.4, 1, 0.05, pct },
 		{ "setting", "Compact mode", onOff(ns.Get("guide.compact")), { { ns.Get("guide.compact") and "Turn off" or "Turn on", toggle("guide.compact") } } },
 		{ "slider", "Steps listed", "guide.ahead", 1, 12, 1, function(v) return ("%d"):format(v) end, "count" },

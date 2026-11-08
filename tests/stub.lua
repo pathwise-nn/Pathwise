@@ -41,7 +41,26 @@ function Widget:GetWidth() return self.w end
 function Widget:GetHeight() return self.h end
 function Widget:SetPoint(...) self.points[#self.points + 1] = { ... } end
 function Widget:ClearAllPoints() self.points = {} end
-function Widget:GetPoint() return "CENTER", nil, "CENTER", 0, 0 end
+-- The n-th point set, as the client returns it; a frame with none reads as centred.
+function Widget:GetPoint(n)
+	local p = self.points[n or 1]
+	if p then return p[1], p[2], p[3], p[4], p[5] end
+	return "CENTER", nil, "CENTER", 0, 0
+end
+-- Edges: what a test placed (f.left, f.top), else unknown, as before a frame is laid out.
+function Widget:GetLeft() return rawget(self, "left") end
+function Widget:GetTop() return rawget(self, "top") end
+-- The frame's scale times its parents'.
+function Widget:GetEffectiveScale()
+	local s, f = 1, self
+	while f do s = s * (rawget(f, "scale") or 1) f = rawget(f, "parent") end
+	return s
+end
+function Widget:SetVerticalScroll(v) rawset(self, "scroll", v) end
+function Widget:GetVerticalScroll() return rawget(self, "scroll") or 0 end
+function Widget:EnableMouseWheel(on) rawset(self, "wheel", on and true or false) end
+function Widget:SetResizable(on) rawset(self, "resizable", on and true or false) end
+function Widget:SetResizeBounds(...) rawset(self, "resizeBounds", { ... }) end
 function Widget:SetText(t) self.text = t end
 function Widget:GetText() return self.text end
 function Widget:GetStringWidth() return #(self.text or "") * 6 end

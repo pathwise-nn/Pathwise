@@ -1330,3 +1330,133 @@ test("character: race and side not readable at login: no route is chosen until t
 	ns.Engine.Update()
 	eq(ns.Engine.Route() and ns.Engine.Route().id, "forever/horde/tauren/01-mulgore", "chosen once readable")
 end)
+
+---------------------------------------------------------------------------
+-- The guide window's resize grip
+---------------------------------------------------------------------------
+
+-- The resize grip on window f.
+local function findGrip(stub, f)
+	for _, w in ipairs(stub.frames) do
+		if w.parent == f and w.kind == "Button" and rawget(w, "icon") and tostring(w.icon.texture):find("glyph%-resize$") then return w end
+	end
+end
+
+-- Drag the grip from (x0, y0) to (x1, y1) on screen and let go.
+local function drag(stub, g, x0, y0, x1, y1, keep)
+	stub.cursor = { x0, y0 }
+	g.scripts.OnMouseDown(g, "LeftButton")
+	stub.cursor = { x1, y1 }
+	stub.advance(0.05)
+	if not keep then g.scripts.OnMouseUp(g, "LeftButton") end
+end
+
+test("guide grip: width and height follow the drag, are clamped and saved; the steps scroll inside", function()
+	local stub, ns = login()
+	local f = _G.PathwiseGuide
+	f.left, f.top = 600, 800
+	local grip = findGrip(stub, f)
+	ok(grip and grip.shown, "the grip is on the window")
+	eq(f.resizable, true, "the window is resizable")
+	eq(table.concat(f.resizeBounds, " "), "280 220 600 900", "with its bounds")
+	local fitH = f.h
+	drag(stub, grip, 100, 500, 160, 380, true) -- 60 right, 120 down
+	eq(f.w, 400, "width follows the cursor")
+	eq(f.h, fitH + 120, "height follows the cursor down, from the height on screen")
+	eq(f.points[1][1], "TOPLEFT", "the top-left stays put while dragging")
+	eq(f.points[1][3], "BOTTOMLEFT")
+	eq(ns.Get("guide.height"), nil, "nothing saved before letting go")
+	grip.scripts.OnMouseUp(grip, "LeftButton")
+	eq(ns.Get("guide.width"), 400)
+	eq(ns.Get("guide.height"), fitH + 120)
+	local p = ns.Get("guide.point")
+	eq(table.concat({ p[1], p[2], p[3], p[4] }, " "), "TOPLEFT 600 800 BOTTOMLEFT", "position saved by the corner it is pinned by")
+	eq(grip.scripts.OnUpdate, nil, "no OnUpdate once let go")
+
+	-- Shorter than the step: the footer keeps the bottom edge, the list scrolls.
+	drag(stub, grip, 100, 500, 100, 3000)
+	eq(ns.Get("guide.height"), 220, "clamped to the minimum")
+	eq(f.h, 220)
+	local scroll
+	for _, w in ipairs(stub.frames) do if w.kind == "ScrollFrame" and w.parent == f then scroll = w end end
+	ok(scroll, "the steps sit in a scroll area")
+	eq(scroll.wheel, true, "the wheel scrolls the steps")
+	scroll.scripts.OnMouseWheel(scroll, -1)
+	ok(scroll:GetVerticalScroll() > 0, "scrolled down")
+	-- The same step drawn again keeps its place; a new step starts at the top.
+	ns.Guide.SetView(ns.Guide.View())
+	ok(scroll:GetVerticalScroll() > 0, "a refresh keeps the scroll")
+	local v = {}
+	for k, val in pairs(ns.Guide.View()) do v[k] = val end
+	v.index = (v.index or 0) + 1
+	ns.Guide.SetView(v)
+	eq(scroll:GetVerticalScroll(), 0, "a new step starts at its top")
+
+	-- Taller than any step: room below, nothing to scroll.
+	drag(stub, grip, 100, 500, 100, -5000)
+	eq(ns.Get("guide.height"), 900, "clamped to the maximum")
+	eq(f.h, 900)
+	eq(scroll.wheel, false, "nothing to scroll: the wheel zooms the camera")
+	drag(stub, grip, 100, 500, 5000, 500)
+	eq(ns.Get("guide.width"), 600, "width clamped to the maximum")
+end)
+
+test("guide grip: a sideways drag keeps the height fitting each step; right-click fits it again", function()
+	local stub, ns = login()
+	local f = _G.PathwiseGuide
+	local grip = findGrip(stub, f)
+	drag(stub, grip, 100, 500, 180, 497) -- 3 px of wobble
+	eq(ns.Get("guide.height"), nil, "the height still fits each step")
+	eq(ns.Get("guide.width"), 420)
+	ns.Set("guide.height", 300)
+	eq(f.h, 300)
+	grip.scripts.OnMouseDown(grip, "RightButton")
+	eq(grip.scripts.OnUpdate, nil, "a right-click does not start a drag")
+	grip.scripts.OnMouseUp(grip, "RightButton")
+	eq(ns.Get("guide.height"), nil, "right-click: back to fitting each step")
+	ok(f.h ~= 300, "and the window fits the step again")
+	-- Settings: the row says so, and its button does the same.
+	ns.Set("guide.height", 300)
+	ns.Fire("SHOW_SETTINGS")
+	ok(stub.clickInRow("Window height", "Fit to step"), "the settings row's button")
+	eq(ns.Get("guide.height"), nil)
+end)
+
+test("guide grip: the saved size comes back at login, follows the cursor at any window size, and compact mode is one bar", function()
+	local stub, ns = login(function()
+		PathwiseSettings = { schema = 1, guide = { width = 420, height = 333 }, ui = { scale = 1.5 } }
+	end)
+	local f = _G.PathwiseGuide
+	eq(f.w, 420, "width restored")
+	eq(f.h, 333, "height restored")
+	near(f.scale, 1.5, 1e-9, "the Window size setting still applies")
+	local grip = findGrip(stub, f)
+	drag(stub, grip, 100, 500, 175, 350) -- 75 right, 150 down on screen: 50 and 100 at 150%
+	eq(ns.Get("guide.width"), 470)
+	eq(ns.Get("guide.height"), 433)
+	SlashCmdList.PATHWISE("compact")
+	eq(grip.shown, false, "no grip on the compact bar")
+	ok(f.h < 100, "the compact bar keeps its own height")
+	SlashCmdList.PATHWISE("compact")
+	eq(grip.shown, true)
+	eq(f.h, 433, "back to the height set")
+end)
+
+test("guide grip: muted at rest, brighter under the cursor, the accent while held", function()
+	local stub, ns = login()
+	local f, T = _G.PathwiseGuide, ns.Theme
+	local grip = findGrip(stub, f)
+	local function is(name)
+		local c, v = T.Color(name), grip.icon.vertex
+		return math.abs(c[1] - v[1]) < 1e-9 and math.abs(c[2] - v[2]) < 1e-9 and math.abs(c[3] - v[3]) < 1e-9
+	end
+	ok(is("muted"), "at rest")
+	grip.scripts.OnEnter(grip)
+	ok(is("text"), "under the cursor")
+	grip.scripts.OnMouseDown(grip, "LeftButton")
+	ok(is("accent"), "held")
+	grip.scripts.OnMouseUp(grip, "LeftButton")
+	ok(is("text"), "let go, still under the cursor")
+	grip.scripts.OnLeave(grip)
+	ok(is("muted"), "left")
+end)
