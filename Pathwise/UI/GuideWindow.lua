@@ -676,25 +676,36 @@ local function layoutFull()
 		W.card:Hide()
 	end
 
+	-- The leveling tracker's line: under the list, or with a height of its
+	-- own, pinned over the buttons so scrolling never hides it.
 	local stats = ns.Tracker and ns.Tracker.Line()
+	local fixed = Guide.FixedHeight()
+	local btnH = W.next:GetHeight()
 	W.stats:SetShown(stats ~= nil)
+	W.stats:SetParent(fixed and f or body)
+	W.stats:ClearAllPoints()
+	local statsH = 0
 	if stats then
 		W.stats:SetText(stats)
-		W.stats:ClearAllPoints()
-		W.stats:SetPoint("TOPLEFT", body, "TOPLEFT", PAD, -(y + 10))
-		W.stats:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
-		y = y + 10 + height(W.stats)
+		if fixed then
+			W.stats:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", PAD, PAD + btnH + 10)
+			W.stats:SetPoint("RIGHT", f, "RIGHT", -PAD, 0)
+			statsH = height(W.stats) + 10
+		else
+			W.stats:SetPoint("TOPLEFT", body, "TOPLEFT", PAD, -(y + 10))
+			W.stats:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
+			y = y + 10 + height(W.stats)
+		end
 	end
 
 	-- Footer: Back left; Skip, Report, Next right. Under the list, or at the
 	-- bottom edge when the window has its own height (the list scrolls above it).
-	local btnH = W.next:GetHeight()
 	W.back:ClearAllPoints()
 	W.next:ClearAllPoints()
-	if Guide.FixedHeight() then
+	if fixed then
 		W.back:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", PAD, PAD)
 		W.next:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD, PAD)
-		fitBody(y + 4, PAD + btnH + PAD)
+		fitBody(y + 4, PAD + btnH + PAD + statsH)
 	else
 		local footY = y + PAD
 		W.back:SetPoint("TOPLEFT", body, "TOPLEFT", PAD, -footY)
@@ -716,6 +727,7 @@ local function layoutCompact()
 	W.body:Hide()
 	W.thumb:Hide()
 	W.grip:Hide() -- the bar is one line: it keeps its size
+	W.stats:Hide() -- over the buttons when the window has a height of its own
 	W.progress.track:Hide()
 	W.progress.fill:Hide()
 	for _, b in ipairs({ W.back, W.skip, W.next, W.report }) do b:Hide() end
