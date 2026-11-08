@@ -97,6 +97,18 @@ function Q.Done(id)
 	return f and ns.Compat.Readable(f(id)) and true or false
 end
 
+-- Quest IDs in the log, in log order (headers and hidden entries left out).
+function Q.LogQuests()
+	local L, R, out = C_QuestLog, ns.Compat.Readable, {}
+	if not (L and L.GetNumQuestLogEntries and L.GetInfo) then return out end
+	for i = 1, R(L.GetNumQuestLogEntries()) or 0 do
+		local info = L.GetInfo(i)
+		local id = info and not info.isHeader and not info.isHidden and R(info.questID)
+		if type(id) == "number" and id > 0 then out[#out + 1] = id end
+	end
+	return out
+end
+
 function Q.OnQuest(id)
 	local f = C_QuestLog and C_QuestLog.IsOnQuest
 	return f and ns.Compat.Readable(f(id)) and true or false
@@ -148,14 +160,27 @@ function Q.Closed(id)
 end
 
 -- Quests that need `id` first, as far as the data knows.
+-- prerequisite -> { follow-up, ... }, built once from the data.
+local followIndex
 function Q.FollowUps(id)
-	local out = {}
-	for qid, q in pairs(D.quests) do
-		for _, list in ipairs({ q[PRE_SINGLE] or {}, q[PRE_GROUP] or {} }) do
-			for _, p in ipairs(list) do if p == id then out[#out + 1] = qid end end
+	if not followIndex then
+		followIndex = {}
+		for qid, q in pairs(D.quests) do
+			for _, list in ipairs({ q[PRE_SINGLE] or {}, q[PRE_GROUP] or {} }) do
+				for _, p in ipairs(list) do
+					local f = followIndex[p]
+					if not f then
+						f = {}
+						followIndex[p] = f
+					end
+					f[#f + 1] = qid
+				end
+			end
 		end
+		for _, f in pairs(followIndex) do table.sort(f) end
 	end
-	table.sort(out)
+	local out = {}
+	for i, qid in ipairs(followIndex[id] or {}) do out[i] = qid end
 	return out
 end
 

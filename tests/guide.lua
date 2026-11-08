@@ -1527,3 +1527,124 @@ test("guide grip: muted at rest, brighter under the cursor, the accent while hel
 	grip.scripts.OnLeave(grip)
 	ok(is("muted"), "left")
 end)
+
+---------------------------------------------------------------------------
+-- Routing from the quest log: the route holding the player's quests, quests
+-- they have passed, and "From your quest log"
+---------------------------------------------------------------------------
+
+-- The leveling routes for an Undead mage at `level`, and a quest of the
+-- second one that the first does not have (from the converted routes).
+local function twoRoutes(ns, level)
+	local E = ns.Engine
+	local p = { race = "Scourge", raceID = 5, faction = "Horde", level = level, class = "MAGE" }
+	local first = E.BestRoute(p, nil)
+	local mine = {}
+	for _, step in ipairs(first.steps) do for _, g in ipairs(step) do mine[g[2]] = true end end
+	for _, r in ipairs(E.RoutesFor(p, "Leveling")) do
+		if r ~= first and level >= r.levels[1] and level <= r.levels[2] then
+			local qs = {}
+			for _, step in ipairs(r.steps) do
+				for _, g in ipairs(step) do
+					if g[1] == "accept" and not mine[g[2]] and ns.Quests.Get(g[2]) then qs[#qs + 1] = g[2] end
+				end
+			end
+			if #qs >= 2 then return p, first, r, qs end
+		end
+	end
+	error("no second route at level " .. level)
+end
+
+test("a level-20 newcomer with a mixed quest log gets the route their quests are on", function()
+	local stub, ns = fresh()
+	local p, first, other, qs = twoRoutes(ns, 20)
+	eq(ns.Engine.BestRoute(p, nil).id, first.id, "nothing held: as before")
+	stub.log[qs[1]] = { objectives = {}, ready = true, watched = true }
+	stub.log[qs[2]] = { objectives = { { text = "x: 0/5", numFulfilled = 0, numRequired = 5, finished = false } }, ready = false, watched = true }
+	eq(ns.Engine.BestRoute(p, nil).id, other.id, "one ready, one under way: their route wins")
+end)
+
+test("the route picked at login moves to the one the quest log holds, until something is done on it", function()
+	local stub, ns = fresh()
+	local p, first, other, qs = twoRoutes(ns, 20)
+	stub.player.level = 20
+	stub.login()
+	eq(ns.Engine.Route().id, first.id, "the log empty at login: picked by level")
+	stub.accept(qs[1])
+	stub.advance(1)
+	eq(ns.Engine.Route().id, other.id, "the log fills: the route holding the quest")
+	ok(lastPrint(stub):find(other.title, 1, true), "says so")
+
+	-- Chosen by the player, or with work done on it, a route stays.
+	local stub2, ns2 = fresh()
+	stub2.player.level = 20
+	stub2.login()
+	ns2.Engine.SetRoute(first.id)
+	stub2.accept(qs[1])
+	stub2.advance(1)
+	eq(ns2.Engine.Route().id, first.id, "the player's own choice stands")
+end)
+
+test("quests you have passed: green and grey quests behind the last quest done go, unless turned off", function()
+	local stub, ns = fixture(function(s) s.player.level = 6 s.done[6395] = true end)
+	local Q = ns.Quests
+	ok(Q.Level(363) < 4 and Q.Level(376) < 4 and Q.Level(6395) >= 4, "the data: Deathknell's quests are low at 6, Marla's Last Wish is not")
+	eq(ns.Guide.View().title, "Gear up", "Marla's Last Wish done: the low quests before it are left out")
+	ns.Set("guide.skipPassed", false)
+	ns.Engine.Update()
+	eq(ns.Engine.LiveStep(), 1, "turned off: back to the first quest not done")
+end)
+
+test("quests you have passed: a level-up leaves out what it made too low, without a reload", function()
+	local stub, ns = fixture(function(s) s.done[6395] = true end)
+	eq(ns.Engine.LiveStep(), 1, "at 2 nothing is too low")
+	stub.player.level = 6
+	stub.fire("PLAYER_LEVEL_UP", 6)
+	stub.advance(1)
+	eq(ns.Guide.View().title, "Gear up")
+end)
+
+test("quests you have passed: nothing goes ahead of the last quest done, nor a quest a later one needs", function()
+	local stub, ns = fixture(function(s) s.player.level = 6 end)
+	eq(ns.Engine.LiveStep(), 1, "nothing done: nothing is behind")
+	local E = ns.Engine
+	local route = E.Route()
+	ok(not E.PassedLow(route, 1, 363), "step 1 is not behind progress")
+end)
+
+test("from your quest log: a ready quest near you is listed, takes the arrow and is handed in for you", function()
+	local stub, ns = fixture()
+	local Q = ns.Quests
+	stub.accept(376) -- ready: no objectives
+	local fin = Q.Finisher(376)
+	stub.moveTo(fin.map, fin.x + 0.5, fin.y)
+	ns.Engine.Update()
+	eq(ns.Engine.LiveStep(), 1, "the route's own step stays")
+	local near = ns.Guide.View().nearby
+	eq(#near, 1)
+	eq(near[1].quest, 376)
+	eq(near[1].verb, "turnin")
+	ok(near[1].text:find("Turn in", 1, true), near[1].text)
+	eq(ns.Nav.Target().title, fin.name, "nearer than Undertaker Mordo: the arrow leads to the hand-in")
+	ok(ns.Engine.Wanted("turnin")[376], "the automation hands it in")
+
+	stub.moveTo(1420, 80, 20)
+	ns.Engine.Update()
+	eq(#ns.Guide.View().nearby, 0, "far away: not listed")
+	eq(ns.Nav.Target().title, "Undertaker Mordo", "the arrow is the step's again")
+end)
+
+test("from your quest log: objectives under way are listed by their place; skipped quests are not", function()
+	local stub, ns = fixture()
+	local Q = ns.Quests
+	stub.accept(364, { { text = "Mindless Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false },
+		{ text = "Wretched Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false } })
+	local at = Q.ObjectivePlace(364, 1)
+	stub.moveTo(at.map, at.x, at.y)
+	ns.Engine.Update()
+	local near = ns.Guide.View().nearby
+	eq(near[1] and near[1].quest, 364)
+	eq(near[1].verb, "complete")
+	ns.Engine.SkipQuest(364)
+	eq(#ns.Guide.View().nearby, 0, "skipped: not listed")
+end)

@@ -1234,6 +1234,12 @@ function builders.settings()
 		{ "setting", "Quest markers on the minimap", onOff(ns.Get("pins.questsMinimap")), { { ns.Get("pins.questsMinimap") and "Hide" or "Show", toggle("pins.questsMinimap") } } },
 		{ "heading", "Route" },
 		{ "setting", route and route.title or "No route", "", { { "Routes", function() Panels.Open("routes") end }, { "Zones", function() Panels.Open("zones") end } } },
+		{ "setting", "Skip quests you have passed", onOff(ns.Get("guide.skipPassed")), { { ns.Get("guide.skipPassed") and "Turn off" or "Turn on", function()
+			ns.Set("guide.skipPassed", not ns.Get("guide.skipPassed"))
+			E.Update()
+			Panels.Refresh()
+		end } } },
+		{ "text", "Leaves out green and grey quests behind your progress, and on a route you have outlevelled, unless a later quest needs them.", "muted" },
 		{ "setting", "Side guide", E.Side() and E.Side().title or "None", E.Side() and { { "Stop", function() E.SetSide(nil) Panels.Refresh() end } } or {} },
 		{ "heading", "Profession detours" },
 		{ "setting", "Mode", "", (function()

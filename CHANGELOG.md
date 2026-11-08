@@ -6,6 +6,20 @@ that version's section.
 
 ## Unreleased
 
+### The guide follows your quest log
+- Starting Pathwise mid-leveling, or going your own way, no longer pushes
+  you back onto the start of a route. The route is picked by the quests in
+  your log: hold Westfall quests at level 20 and you get the Westfall route,
+  even if the log was still empty at login.
+- Quests you have passed are left out: green and grey quests behind the
+  last quest you did on the route, and on a route you have outlevelled,
+  unless a later quest needs them. It happens again as you level, without
+  a reload. Settings, Route: Skip quests you have passed (on by default).
+- A new "From your quest log" list under the step shows quests you hold
+  near you: one ready to hand in, or one whose objectives are right here.
+  When a ready hand-in is nearer than the step, the arrow leads there and
+  Pathwise hands it in. Not yet checked in game.
+
 ## 0.2.20 (2026-11-08)
 
 ### Pathwise UI: enemy cast bars move smoothly

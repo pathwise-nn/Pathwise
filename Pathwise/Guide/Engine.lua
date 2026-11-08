@@ -213,9 +213,36 @@ function Engine.RoutesFor(p, category)
 	return out
 end
 
--- The leveling route that suits the character now: one for their level whose
--- zone they stand in, else one for their level (their race's own first),
--- else the nearest above their level.
+-- Each route's quests ({ [q] = true }), cached by route.
+local questSets = setmetatable({}, { __mode = "k" })
+local function questsOf(r)
+	local set = questSets[r]
+	if set then return set end
+	set = {}
+	for _, step in ipairs(r.steps) do
+		for _, goal in ipairs(step) do
+			if QUEST_VERBS[goal[1]] then set[goal[2]] = true end
+		end
+	end
+	questSets[r] = set
+	return set
+end
+
+-- How many of route r's quests are in the player's quest log.
+function Engine.HeldIn(r)
+	if not r then return 0 end
+	local set, n = questsOf(r), 0
+	for _, q in ipairs(Q.LogQuests()) do
+		if set[q] then n = n + 1 end
+	end
+	return n
+end
+
+-- The leveling route that suits the character now: among those for their
+-- level, the one holding the most quests in their quest log (a character who
+-- comes to Pathwise at level 20 with Westfall quests gets Westfall), then
+-- the one whose zone they stand in, else one for their level (their race's
+-- own first), else the nearest above their level.
 function Engine.BestRoute(p, map)
 	p = p or Q.Player()
 	local list = Engine.RoutesFor(p, "Leveling")
@@ -224,7 +251,7 @@ function Engine.BestRoute(p, map)
 		local lo, hi = r.levels[1], r.levels[2]
 		local score
 		if p.level >= lo and p.level <= hi then
-			score = 0
+			score = -1000 * Engine.HeldIn(r)
 			if map and r.map == map then score = score - 100 end
 			if r.races then score = score - 10 end
 			score = score + (p.level - lo) * 0.1
@@ -289,7 +316,7 @@ end
 function Engine.SetRoute(id)
 	if id and not routes[id] then return false end
 	local s = state()
-	s.route, s.pin = id, nil
+	s.route, s.pin, s.picked = id, nil, nil
 	Engine.Update()
 	return true
 end
@@ -419,6 +446,62 @@ local function bindMatches(where)
 	return loc == where or loc:find(where, 1, true) ~= nil or where:find(loc, 1, true) ~= nil
 end
 
+-- Quests you have passed (guide.skipPassed, on by default): on a leveling
+-- route, a quest more than 2 levels below the character (green or grey) in a
+-- step behind the last quest done on the route, or anywhere on a route whose
+-- top level the character is 2 past, is left out ("na"), unless a quest from
+-- 2 levels below up that the route still has to do needs it first (its
+-- follow-ups, as far as the data knows). A quest in the log goes the same
+-- way until it is ready to hand in. Going back for it is a detour.
+ns.Defaults("guide", { skipPassed = true })
+local followCache = {} -- q -> Q.FollowUps(q): static data, read once
+local function followUps(q)
+	local f = followCache[q]
+	if not f then
+		f = Q.FollowUps(q)
+		followCache[q] = f
+	end
+	return f
+end
+local neededCache = {} -- "route:q" -> bool, this update
+local function neededAhead(route, q, level)
+	local key = route.id .. ":" .. q
+	local v = neededCache[key]
+	if v ~= nil then return v end
+	v = false
+	local set = questsOf(route)
+	local seen, queue, n = { [q] = true }, { q }, 0
+	while #queue > 0 and n < 200 and not v do
+		n = n + 1
+		for _, f in ipairs(followUps(table.remove(queue, 1))) do
+			if not seen[f] then
+				seen[f] = true
+				if set[f] and not Q.Done(f) and Q.Level(f) >= level - 2 then
+					v = true
+					break
+				end
+				queue[#queue + 1] = f
+			end
+		end
+	end
+	neededCache[key] = v
+	return v
+end
+local function passedLow(route, s, q)
+	if not ns.Get("guide.skipPassed") or (route.category or "Leveling") ~= "Leveling" then return false end
+	local level = player.level or 1
+	local lvl = Q.Level(q)
+	if not (lvl > 0 and lvl < level - 2) then return false end
+	local outgrown = route.levels and route.levels[2] and level >= route.levels[2] + 2
+	if not (outgrown or s < furthestDone(route)) then return false end
+	if Q.OnQuest(q) and Q.Ready(q) then return false end
+	return not neededAhead(route, q, level)
+end
+Engine.PassedLow = function(route, s, q)
+	player = player or Q.Player()
+	return passedLow(route, s, q)
+end
+
 local function goalStatus(route, s, g, goal)
 	if goal.only and not fits(goal.only, player) then return "na" end
 	if state().stepsDone[route.id .. ":" .. s] and goal[1] ~= "note" then return "done" end
@@ -426,6 +509,7 @@ local function goalStatus(route, s, g, goal)
 	if QUEST_VERBS[verb] then
 		local st = questStatus(verb, goal[2])
 		if st == "open" and verb == "complete" and goal.obj and objectivesDone(goal) then return "done" end
+		if (st == "open" or st == "wait") and passedLow(route, s, goal[2]) then return "na" end
 		return st
 	end
 	if verb == "level" then return (player.level or 1) >= goal[2] and "done" or "open" end
@@ -516,6 +600,7 @@ end
 ---------------------------------------------------------------------------
 
 local live, current, extra, sideLive
+local nearby = {} -- Engine.Nearby(): the quest-log stops of this update
 
 -- Whether race, class and side can be read: until then no route is chosen
 -- or let go (Forever can hide them, and they can be nil early at login).
@@ -535,7 +620,20 @@ local function ownRoutes(s)
 	end
 	if not s.route then
 		local best = Engine.BestRoute(player, (C.PlayerMapPosition()))
-		if best then s.route = best.id end
+		if best then s.route, s.picked = best.id, best.id end
+	end
+	-- Picked for the player before the quest log could say where they are
+	-- (it can be empty for a moment at login): while nothing on the picked
+	-- route is done or held, a route holding quests in their log wins.
+	local picked = s.picked and s.picked == s.route and routes[s.route]
+	if picked and Engine.HeldIn(picked) == 0 and furthestDone(picked) == 0 then
+		local best = Engine.BestRoute(player, (C.PlayerMapPosition()))
+		if best and best.id ~= picked.id and Engine.HeldIn(best) > 0 then
+			s.route, s.picked, s.pin = best.id, best.id, nil
+			ns.Print(("your quests are on %s: following that route."):format(best.title))
+		end
+	elseif s.picked and s.picked ~= s.route then
+		s.picked = nil
 	end
 	local side = Engine.Side()
 	if side and not fits(side, player) then s.side, s.aimSide, s.sideHidden = nil, nil, nil end
@@ -543,7 +641,7 @@ end
 
 local function compute()
 	player = Q.Player()
-	furthest = {}
+	furthest, neededCache = {}, {}
 	extra = openExtra()
 	local s = state()
 	ownRoutes(s)
@@ -601,6 +699,11 @@ function Engine.Wanted(verb)
 		end
 	end
 	if extra and extra.verb == verb then out[extra.quest] = true end
+	if verb == "turnin" then
+		for _, n in ipairs(nearby) do
+			if n.verb == "turnin" then out[n.quest] = true end
+		end
+	end
 	return out
 end
 
@@ -628,6 +731,16 @@ function Engine.SideStep() return sideLive end
 local function here()
 	local map, x, y = C.PlayerMapPosition()
 	return map and { map = map, x = x, y = y } or nil
+end
+
+-- Yards from the player to a place, or nil (no position, other continent).
+local function yardsTo(p)
+	local h = here()
+	if not (h and p) then return nil end
+	local i1, n1, w1 = C.MapToWorld(h.map, h.x, h.y)
+	local i2, n2, w2 = C.MapToWorld(p.map, p.x, p.y)
+	if not (i1 and i2) or i1 ~= i2 then return nil end
+	return math.sqrt((n2 - n1) ^ 2 + (w2 - w1) ^ 2)
 end
 
 -- The best of a goal's candidates: this side's, on the player's map, nearest.
@@ -721,7 +834,19 @@ local function leadGoal()
 		local goal, g = leadIn(Engine.Side(), sideLive)
 		if goal then return goal, g, true end
 	end
-	return leadIn(Engine.Route(), current)
+	local goal, g = leadIn(Engine.Route(), current)
+	-- On the live step, a ready turn-in from the quest log nearer than the
+	-- step's own place takes the arrow: hand it in on the way.
+	if goal and current == live then
+		for _, n in ipairs(nearby) do
+			if n.verb == "turnin" then
+				local d = yardsTo(placeOf(goal))
+				if not d or n.yards < d then return { "turnin", n.quest } end
+				break
+			end
+		end
+	end
+	return goal, g
 end
 
 ---------------------------------------------------------------------------
@@ -890,15 +1015,62 @@ end
 ns.Defaults("professions", { detour = "balanced" })
 Engine.DETOUR_YARDS = { speed = 150, balanced = 600 }
 
--- Yards from the player to a place, or nil (no position, other continent).
-local function yardsTo(p)
-	local h = here()
-	if not (h and p) then return nil end
-	local i1, n1, w1 = C.MapToWorld(h.map, h.x, h.y)
-	local i2, n2, w2 = C.MapToWorld(p.map, p.x, p.y)
-	if not (i1 and i2) or i1 ~= i2 then return nil end
-	return math.sqrt((n2 - n1) ^ 2 + (w2 - w1) ^ 2)
+-- "From your quest log": quests in the log near the player, nearest first,
+-- at most NEAR_MAX: a quest ready to hand in by its finisher, else one with
+-- objectives left by the nearest place of one, within NEAR_YARDS. Quests the
+-- step shown (or the extra quest) deals with, and skipped ones, are left
+-- out. Any quest the data knows, on the route or not: what the player holds
+-- is done on the spot rather than come back for. A ready turn-in nearer than
+-- the live step's own place takes the arrow (leadGoal), and the automation
+-- hands it in (Wanted).
+-- -> { { quest, verb = "turnin" | "complete", text, sub, yards, place }, ... }
+Engine.NEAR_YARDS, Engine.NEAR_MAX = 250, 4
+local function computeNearby()
+	local out = {}
+	local from = here()
+	if not from then return out end
+	local inStep = {}
+	local route = Engine.Route()
+	if route and current and route.steps[current] then
+		for _, goal in ipairs(route.steps[current]) do
+			if QUEST_VERBS[goal[1]] then inStep[goal[2]] = true end
+		end
+	end
+	if extra then inStep[extra.quest] = true end
+	for _, q in ipairs(Q.LogQuests()) do
+		if not inStep[q] and not skipped(q) and not Q.Done(q) and Q.Get(q) then
+			local ready = Q.Ready(q)
+			local p
+			if ready then
+				p = Q.Finisher(q, from)
+			else
+				local log = Q.Objectives(q)
+				for i = 1, Q.ObjectiveCount(q) do
+					if not (log and log[i] and log[i].done) then
+						p = Q.ObjectivePlace(q, i, from)
+						if p then break end
+					end
+				end
+			end
+			local yards = p and yardsTo(p)
+			if yards and yards <= Engine.NEAR_YARDS then
+				local verb = ready and "turnin" or "complete"
+				out[#out + 1] = {
+					quest = q, verb = verb, place = p, yards = yards,
+					text = VERB_TEXT[verb]:format(Q.Name(q)),
+					sub = (p.name and (p.name .. "  ·  ") or "") .. ns.Nav.FormatYards(yards),
+				}
+			end
+		end
+	end
+	table.sort(out, function(a, b)
+		if a.yards ~= b.yards then return a.yards < b.yards end
+		return a.quest < b.quest
+	end)
+	while #out > Engine.NEAR_MAX do table.remove(out) end
+	return out
 end
+function Engine.Nearby() return nearby end
 
 -- The side guide's card: its next goal, or nil (none, hidden by the player,
 -- or not on the way for the detour mode).
@@ -952,6 +1124,7 @@ function Engine.View()
 				return lines
 			end)(),
 			next = route and live and ("Then back to the route: " .. (titleOf(route.steps[live], route, live) or "")) or nil,
+			nearby = nearby,
 		}
 	end
 	if not route then
@@ -964,7 +1137,7 @@ function Engine.View()
 			route = route.title, index = #route.steps, count = #route.steps, progress = 1,
 			title = "Route complete", detour = sideCard(),
 			text = "Pick your next route from Zones for your level, or Routes in Settings.",
-			objectives = {},
+			objectives = {}, nearby = nearby,
 		}
 	end
 	local step = route.steps[current]
@@ -976,6 +1149,7 @@ function Engine.View()
 		objectives = rowsOf(route, current), next = nextSummary(route, current),
 		pinned = current ~= live, detour = sideCard(),
 		card = cardOf(route, current), steps = stepsAhead(route, current),
+		nearby = nearby,
 	}
 end
 
@@ -996,6 +1170,7 @@ end
 
 function Engine.Update()
 	compute()
+	nearby = computeNearby()
 	if ns.Guide and ns.Guide.SetView then ns.Guide.SetView(Engine.View()) end
 	updateWaypoint()
 	ns.Fire("GUIDE_UPDATED")
