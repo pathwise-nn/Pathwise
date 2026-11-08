@@ -535,15 +535,44 @@ function RegisterUnitWatch(f) stub.watched[f] = true end
 function UnregisterUnitWatch(f) stub.watched[f] = nil end
 -- Auras: stub.auras[unit][filter] = { aura data, ... }; casts: stub.casts[unit] = { name, texture, start, finish }
 stub.auras, stub.casts = {}, {}
+-- An aura with nameplateOnly (as bleeds and taunts can be on Forever) comes
+-- back only when the filter has INCLUDE_NAME_PLATE_ONLY, as the client does.
+-- stub.auraFilters lists every filter asked for.
+stub.auraFilters = {}
 C_UnitAuras = { GetAuraDataByIndex = function(u, i, filter)
+	stub.auraFilters[#stub.auraFilters + 1] = filter
 	local list = stub.auras[u] and (stub.auras[u][filter] or stub.auras[u][(filter or ""):match("^(%u+)")])
-	return list and list[i]
+	if not list then return nil end
+	local plates = (filter or ""):find("INCLUDE_NAME_PLATE_ONLY", 1, true)
+	local n = 0
+	for _, a in ipairs(list) do
+		if plates or not a.nameplateOnly then
+			n = n + 1
+			if n == i then return a end
+		end
+	end
 end }
 function UnitCastingInfo(u)
 	local c = stub.casts[u]
 	if c then return c.name, c.name, c.texture, c.start, c.finish, false, 1, c.locked end
 end
 function UnitChannelInfo() return nil end
+-- Cast duration objects (Forever's LuaDurationObject), for a unit whose
+-- stub.durations[unit] = { start = seconds, total = seconds, secret = bool,
+-- channel = bool }: its seconds gone, left and in all, secret when asked.
+stub.durations = {}
+local function durationOf(u, channel)
+	local d = stub.durations[u]
+	if not d or (d.channel or false) ~= channel then return nil end
+	local function wrap(v) return d.secret and stub.Secret(v) or v end
+	return {
+		GetTotalDuration = function() return wrap(d.total) end,
+		GetElapsedDuration = function() return wrap(math.max(0, stub.now - d.start)) end,
+		GetRemainingDuration = function() return wrap(math.max(0, d.start + d.total - stub.now)) end,
+	}
+end
+function UnitCastingDuration(u) return durationOf(u, false) end
+function UnitChannelDuration(u) return durationOf(u, true) end
 -- Frames: attributes, per-unit events (checked against Forever's list),
 -- formatted text, bars that take secret values as the client's do.
 function Widget:SetAttribute(k, v)

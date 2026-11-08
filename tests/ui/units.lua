@@ -197,6 +197,24 @@ test("unit frames: debuffs on the target, timers only when readable", function()
 	ok(not a.icons[1].shown, "switched off")
 end)
 
+test("unit frames: bleeds and taunts (nameplate-only debuffs) show on the target, as on the game's frame", function()
+	local stub, ns = fresh(function(s)
+		withTarget(s)
+		s.auras.target = { HARMFUL = {
+			{ icon = 132152, auraInstanceID = 41, nameplateOnly = true }, -- Rake
+			{ icon = 132270, auraInstanceID = 42, nameplateOnly = true }, -- Growl
+			{ icon = 136207, auraInstanceID = 43 },
+		} }
+	end)
+	local a = ns.Units.frames.target.auras
+	ok(a.icons[1].shown and a.icons[2].shown and a.icons[3].shown, "all three shown")
+	eq(a.icons[1].icon.texture, 132152, "the bleed first, as the game lists it")
+	ns.Set("units.onlyMyDebuffs", true)
+	ok(a.icons[1].shown, "with only yours too")
+	local last = stub.auraFilters[#stub.auraFilters]
+	ok(last:find("PLAYER", 1, true) and last:find("INCLUDE_NAME_PLATE_ONLY", 1, true), last)
+end)
+
 test("unit frames: the target's buffs in a row, its debuffs under them", function()
 	local stub, ns = fresh(function(s)
 		withTarget(s)
@@ -250,6 +268,49 @@ test("unit frames: cast bars fill by time, or stay full when the times are secre
 	stub.advance(1)
 	ok(not tc.shown, "then gone")
 	eq(tc.max, 1, "back to a plain bar")
+end)
+
+test("unit frames: an enemy's cast with secret times runs smoothly in seconds", function()
+	local stub, ns = fresh(function(s)
+		withTarget(s)
+		s.now = 1000
+		s.casts.target = { name = "Bash", texture = 132337, start = s.Secret(1000000), finish = s.Secret(1002500) }
+		s.durations.target = { start = 1000, total = 2.5, secret = true }
+	end)
+	local tc = ns.Units.frames.target.castbar
+	ok(tc.shown and stub.shown(tc.text) == "Bash")
+	ok(tc.secretRange, "the range is the cast's length")
+	eq(tc.secretRange[1], 0, "from nothing")
+	eq(tc.secretRange[2].value, 2.5, "to its length in seconds, not the clock in milliseconds")
+	stub.now = 1001
+	tc.scripts.OnUpdate(tc)
+	ok(issecretvalue(tc.value) and tc.value.value == 1, "each frame, the seconds gone")
+	stub.now = 1001.016
+	tc.scripts.OnUpdate(tc)
+	near(tc.value.value, 1.016, 1e-9, "a frame later, a frame further: no steps")
+	stub.casts.target = nil
+	stub.durations.target = nil
+	ns.Units.UpdateCast(ns.Units.frames.target)
+	stub.advance(1)
+	eq(tc.max, 1, "a plain bar again after")
+	ok(not tc.pwDur)
+end)
+
+test("unit frames: an enemy's channel with secret times drains smoothly", function()
+	local stub, ns = fresh(function(s)
+		withTarget(s)
+		s.now = 50
+		function UnitChannelInfo(u)
+			if u == "target" then return "Drain Life", "Drain Life", 136169, s.Secret(50000), s.Secret(55000), false, false end
+		end
+		s.durations.target = { start = 50, total = 5, secret = true, channel = true }
+	end)
+	local tc = ns.Units.frames.target.castbar
+	eq(tc.secretRange[2].value, 5, "the channel's length in seconds")
+	stub.now = 52
+	tc.scripts.OnUpdate(tc)
+	eq(tc.value.value, 3, "the seconds left, so it drains")
+	ok(tc.fillStyle ~= "REVERSE" and not tc.track.shown, "a plain bar does it")
 end)
 
 test("unit frames: an enemy's channel with secret times drains", function()

@@ -6,9 +6,13 @@
 -- does not take secrets from addon code (Forever's API documentation).
 -- Cast bars: UnitCastingInfo / UnitChannelInfo. The spell's name and icon
 -- always show; the bar fills by time. When the times are secret (enemies'
--- casts), the bar runs from the cast's start to its end as its own range
--- (SetMinMaxValues takes secrets from addon code) and is given the time
--- now: the game does the sum, the addon never reads the times.
+-- casts), the cast's duration object (UnitCastingDuration /
+-- UnitChannelDuration) gives the bar its length in seconds and, each frame,
+-- the seconds gone (or left, for a channel): small numbers, so the bar moves
+-- smoothly, and the game does the sums (SetMinMaxValues and SetValue take
+-- secrets from addon code). Without one, the bar runs from the cast's start
+-- to its end in milliseconds and is given the time now; a bar holds numbers
+-- that big coarsely, so that way it moves in steps.
 -- Combo points: GetComboPoints("player", "target"), as the game's own
 -- ComboFrame on Forever, which this replaces on the target's frame.
 
@@ -104,6 +108,12 @@ local function updateRow(f, a)
 	local shown = 0
 	local filter = a.opts.filter
 	if filter == "HARMFUL" and ns.Get("units.onlyMyDebuffs") and f.unit ~= "player" then filter = "HARMFUL|PLAYER" end
+	-- Debuffs flagged for nameplates only (bleeds, taunts...) too: without
+	-- this the game leaves them out. Its own target frame asks the same way
+	-- (TargetFrameAuraShared: Harmful + IncludeNameplateOnly).
+	if filter:find("^HARMFUL") and not filter:find("INCLUDE_NAME_PLATE_ONLY", 1, true) then
+		filter = filter .. "|INCLUDE_NAME_PLATE_ONLY"
+	end
 	local get = C_UnitAuras and C_UnitAuras.GetAuraDataByIndex
 	for i, b in ipairs(a.icons) do
 		local data = on and get and call(get, f.unit, i, filter)
@@ -181,6 +191,12 @@ function U.MakeCastbar(f)
 	cb:Hide()
 	cb:SetScript("OnUpdate", function(self)
 		if self.pwEnding then return end
+		if self.pwDur then
+			local d = self.pwDur
+			local ok, v = pcall(self.channel and d.GetRemainingDuration or d.GetElapsedDuration, d)
+			if ok and v ~= nil then self:SetValue(v) end
+			return
+		end
 		if self.pwSecret then self:SetValue((GetTime and GetTime() or 0) * 1000) return end
 		if not (self.start and self.finish) then return end
 		local now = (GetTime and GetTime() or 0) * 1000
@@ -214,6 +230,13 @@ function U.UpdateCast(f)
 	if type(s) == "number" and type(e) == "number" then
 		U.PlainCastRange(cb)
 		cb.start, cb.finish, cb.channel = s, e, channel
+	elseif U.CastDuration(cb, f.unit, channel) then
+		-- Secret times: 0 to the cast's length in seconds, filled by the
+		-- seconds gone, or drained by the seconds left for a channel.
+		cb.start, cb.finish, cb.channel = nil, nil, channel
+		local d = cb.pwDur
+		local ok, v = pcall(channel and d.GetRemainingDuration or d.GetElapsedDuration, d)
+		cb:SetValue(ok and v or 0)
 	elseif has(startMS) and has(endMS) and pcall(cb.SetMinMaxValues, cb, startMS, endMS) then
 		-- Secret times: the range is the cast, the value the time now.
 		cb.start, cb.finish, cb.channel = nil, nil, channel
@@ -239,8 +262,22 @@ function U.UpdateCast(f)
 	cb:Show()
 end
 
+-- The cast's duration object, when the game gives one: the bar then runs
+-- from 0 to the cast's length in seconds. True when it was set up so.
+function U.CastDuration(cb, unit, channel)
+	local dur = call(channel and UnitChannelDuration or UnitCastingDuration, unit)
+	if dur == nil then return false end
+	local ok, total = pcall(function() return dur:GetTotalDuration() end)
+	if not (ok and has(total)) then return false end
+	U.PlainCastRange(cb)
+	if not pcall(cb.SetMinMaxValues, cb, 0, total) then return false end
+	cb.pwDur, cb.pwSecret = dur, true
+	return true
+end
+
 -- Back to a 0-1 bar filled from the left (after a cast with secret times).
 function U.PlainCastRange(cb)
+	cb.pwDur = nil
 	if cb.pwSecret then
 		cb.pwSecret = nil
 		cb:SetMinMaxValues(0, 1)
