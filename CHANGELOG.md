@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.22 (2026-11-08)
+
 ### Pathwise Heal: party frames and targeting
 - With Pathwise UI installed, its party frames now stay on screen alongside
   the healing frames (before, Pathwise Heal hid them). Healing, Size and

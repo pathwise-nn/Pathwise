@@ -2,7 +2,7 @@
 ## Title: Pathwise Loot
 ## Notes: What every dungeon and raid boss in WoW: Forever drops: a loot browser with search, a wishlist, the drops you see in game, and upgrade marks with Pathwise Gear. Works on its own.
 ## Author: leight_nn & florp
-## Version: 0.2.21
+## Version: 0.2.22
 ## SavedVariables: PathwiseLootSettings
 ## SavedVariablesPerCharacter: PathwiseLootCharSettings
 ## OptionalDeps: Pathwise, PathwiseUI, Pathwise_Gear
