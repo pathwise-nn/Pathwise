@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.24 (2026-11-09)
+
 ### Pathwise Heal: buffs in a fight
 - A player saw no buffs on the healing frames in fights (fine out of one).
   When the game refuses Pathwise Heal's aura reads in a fight, the game's own
