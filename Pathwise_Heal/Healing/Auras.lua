@@ -14,7 +14,11 @@
 --   * the buff row stays ours: your HoTs (the RAID_IN_COMBAT filter) and big
 --     defensives, icons only, unless the game leaves the time readable. The
 --     game's own container shows buffs by its raid-frame rules
---     (AuraUtil.ShouldDisplayBuff), which leave HoTs out on Forever;
+--     (AuraUtil.ShouldDisplayBuff), which may leave HoTs out on Forever. But
+--     when the game refuses our reads in the fight (a player saw an empty row
+--     in fights on 0.2.23), the game's container draws the buffs too, until
+--     the fight ends: its rules beat nothing. /pwheal auras, in a fight, says
+--     what the game gives us;
 --   * the game draws the debuff row and the dispel edge into the frame: one
 --     private aura container (C_UnitAuras.AddPrivateAuraAnchor,
 --     Blizzard_PrivateAurasUI.lua) laid out like ours (BuffsTopDebuffsBottom:
@@ -177,15 +181,19 @@ end
 
 function H.DetachGame(b)
 	if b.pwAnchor and C_UnitAuras and C_UnitAuras.RemovePrivateAuraAnchor then pcall(C_UnitAuras.RemovePrivateAuraAnchor, b.pwAnchor) end
-	b.pwAnchor, b.pwAnchorUnit = nil, nil
+	b.pwAnchor, b.pwAnchorUnit, b.pwAnchorBuffs = nil, nil, nil
 end
+
+-- The game refused our reads this fight: its container draws the buffs too.
+local gameBuffs = false
+function H.GameBuffs() return gameBuffs end
 
 function H.AttachGame(b)
 	local unit, U = b.pwUnit, C_UnitAuras
-	local buffs = false -- the buff row stays ours (H.FightBuffs)
+	local buffs = gameBuffs and (ns.Get("heal.hots") or ns.Get("heal.buffs")) and true or false
 	local debuffs, dispel = ns.Get("heal.debuffs"), ns.Get("heal.dispel")
-	if not (unit and b.gameAuras and (debuffs or dispel) and U and U.AddPrivateAuraAnchor) then H.DetachGame(b) return false end
-	if b.pwAnchor and b.pwAnchorUnit == unit then return true end
+	if not (unit and b.gameAuras and (buffs or debuffs or dispel) and U and U.AddPrivateAuraAnchor) then H.DetachGame(b) return false end
+	if b.pwAnchor and b.pwAnchorUnit == unit and b.pwAnchorBuffs == buffs then return true end
 	H.DetachGame(b)
 	local g, bs, ds = b.gameAuras, H.BuffSize(), H.DebuffSize()
 	local timers = ns.Get("heal.timers") and true or false
@@ -221,7 +229,7 @@ function H.AttachGame(b)
 				iconWidth = ds, iconHeight = ds, borderScale = 1 },
 		})
 	end)
-	if ok and id then b.pwAnchor, b.pwAnchorUnit = id, unit return true end
+	if ok and id then b.pwAnchor, b.pwAnchorUnit, b.pwAnchorBuffs = id, unit, buffs return true end
 	return false
 end
 
@@ -283,8 +291,10 @@ end
 -- The buff row in a fight, from secret aura data: no two filters that could
 -- list the same aura (their ids can't be compared), no duration check (the
 -- in-combat HoT filter is the game's own choice). A refusal ends a filter
--- without pausing the reads that resume after the fight.
+-- without pausing the reads that resume after the fight. Returns true when
+-- the game refused a read (or the data couldn't be used at all).
 function H.FightBuffs(b, unit)
+	local refused = false
 	local filters = {}
 	if ns.Get("heal.hots") then filters[#filters + 1] = H.HOT_FILTER end
 	if ns.Get("heal.buffs") then
@@ -294,12 +304,14 @@ function H.FightBuffs(b, unit)
 	local seen = {}
 	for _, filter in ipairs(filters) do
 		for i = 1, 40 do
-			if b.pwBuffs >= H.MAX_BUFFS then return end
+			if b.pwBuffs >= H.MAX_BUFFS then return refused end
 			local okCall, d = pcall(C_UnitAuras.GetAuraDataByIndex, unit, i, filter)
-			if not okCall or type(d) ~= "table" then break end
-			addBuff(b, d, seen, "any")
+			if not okCall then refused = true break end
+			if d == nil then break end
+			if not pcall(addBuff, b, d, seen, "any") then refused = true break end
 		end
 	end
+	return refused
 end
 
 local handedOver = false -- the fight's rows are up (H.Fighting)
@@ -320,14 +332,17 @@ function H.Auras(b, unit)
 	live[b] = nil
 	if not H.AurasAllowed() then -- our buff row from secret data; the game draws the debuffs (and the dispel edge)
 		b.dispel:SetShown(false)
+		if H.FightBuffs(b, unit) and not gameBuffs then
+			gameBuffs = true -- every frame's container takes the buffs (H.AttachGame)
+			for _, other in ipairs(H.buttons) do if other ~= b and other.pwUnit then H.AttachGame(other) end end
+		end
 		H.AttachGame(b)
-		H.FightBuffs(b, unit)
 		if counting(b) then live[b] = true end
 		H.Timers(b)
 		H.Ticking()
 		return
 	end
-	handedOver = false
+	handedOver, gameBuffs = false, false
 	H.DetachGame(b)
 	-- The debuffs you can remove: the left of the row, and the frame's edge.
 	local seen, best, n = {}, nil, 0
@@ -492,3 +507,38 @@ function H.AuraSettingChanged(path)
 	end
 	H.Ticking()
 end
+
+---------------------------------------------------------------------------
+-- /pwheal auras: what the game gives us for each frame's unit, for a bug
+-- report. Typed in a fight it shows whether our reads are refused, empty,
+-- or secret.
+---------------------------------------------------------------------------
+
+local function describe(unit, filter)
+	local okCall, d = pcall(C_UnitAuras.GetAuraDataByIndex, unit, 1, filter)
+	if not okCall then return "refused (" .. tostring(d):sub(1, 60) .. ")" end
+	if d == nil then return "none" end
+	local secret = H.IsSecret(d) and "secret table" or type(d)
+	local okIcon, ic = pcall(function() return d.icon end)
+	if not okIcon then return secret .. ", fields unreadable" end
+	return ("%s, icon %s"):format(secret, H.IsSecret(ic) and "secret" or tostring(ic))
+end
+
+function H.AuraReport()
+	local lines = {}
+	local fight = (InCombatLockdown and InCombatLockdown()) and "in a fight" or "out of a fight"
+	lines[#lines + 1] = ("auras %s: readable %s, game draws buffs %s"):format(fight,
+		H.AurasAllowed() and "yes" or "no", gameBuffs and "yes" or "no")
+	local seen = {}
+	for _, b in ipairs(H.buttons) do
+		local unit = b.pwUnit
+		if type(unit) == "string" and not seen[unit] then
+			seen[unit] = true
+			lines[#lines + 1] = ("%s: HoTs %s; buffs %s; game row %s"):format(unit, describe(unit, H.HOT_FILTER),
+				describe(unit, "HELPFUL"), b.pwAnchor and "on" or "off")
+		end
+	end
+	return lines
+end
+ns.Commands = ns.Commands or {}
+ns.Commands.auras = function() for _, line in ipairs(H.AuraReport()) do ns.Print(line) end end
