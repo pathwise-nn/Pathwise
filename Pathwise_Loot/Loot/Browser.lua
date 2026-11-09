@@ -154,13 +154,21 @@ local function bossLabel(inst, eid, e)
 	return e.name
 end
 
--- A boss's face: the icon of its best drop (quality, then item level).
+-- A boss's face: the icon of its best drop, gear before anything else
+-- (a recipe or a quest item looks alike from boss to boss), then quality,
+-- then item level.
 local function bossIcon(e)
-	local best, bq, bl
+	local best, bk
 	for _, entry in ipairs(e and e.loot or {}) do
 		local it = L.Item(entry.id, true)
-		local q, lv = it.quality or 0, it.itemLevel or 0
-		if not best or q > bq or (q == bq and lv > bl) then best, bq, bl = it, q, lv end
+		local key = { L.Kind(it) ~= "other" and 1 or 0, it.quality or 0, it.itemLevel or 0 }
+		local better = not best
+		if best then
+			for i = 1, 3 do
+				if key[i] ~= bk[i] then better = key[i] > bk[i] break end
+			end
+		end
+		if better then best, bk = it, key end
 	end
 	return best and best.icon or nil
 end
