@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.26 (2026-11-09)
+
 ### Pathwise Loot: the browser looks like the recipe book
 - The loot window is laid out like Pathwise's recipe book: a tab per boss
   along the top, the boss's name, buttons for All, Armor, Weapons, Jewelry
