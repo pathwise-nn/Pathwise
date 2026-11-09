@@ -11,15 +11,24 @@ Blizzard's Forever UI source and the tests' client stub only.
 
 ## What it does
 
-- **The loot browser**: instances on the left (your wishlist, then dungeons by
-  level, then raids), the bosses in the middle, the chosen boss's loot on the
-  right. A loot row shows the item's icon, its name in its quality color, its
-  slot and levels, how often you have seen it drop, and an upgrade mark from
-  Pathwise Gear. Hovering shows the game's item tooltip. Shift-click and
-  Ctrl-click are the game's own (link in chat, try it on).
+- **The loot browser**, laid out like Pathwise's recipe book: a tab per boss
+  along the top (its portrait, else the icon of its best gear; hover for its
+  name), the boss's
+  name with its instance and levels, a button per kind of item (All, Armor,
+  Weapons, Jewelry, Other, each with its count), and a card per item in two
+  columns. A card shows the item's icon, its name in its quality color, a dot
+  in that color with its slot and levels, how often you have seen it drop,
+  and a diamond for the wishlist; an upgrade from Pathwise Gear is outlined.
+  Hovering shows the game's item tooltip. Shift-click and Ctrl-click are the
+  game's own (link in chat, try it on). The footer: Show Everything / For my
+  class, and arrows to the boss before or after.
+- **All instances** (top right): a card per dungeon (by level) or raid, with
+  its levels and bosses; "you" marks the ones at your level and YOU ARE HERE
+  the one you are in. Dungeons, Raids and Your wishlist are its buttons.
 - **Search** every boss's loot by item name (`/pwloot search <words>`, or the
   box at the top).
-- **Filters**: by slot, and "Only for my class" (the client's AllowableClass).
+- **Filters**: by kind of item (`loot.slot`), and "For my class" (the
+  client's AllowableClass, `loot.usable`).
 - **A wishlist per character**: right-click an item, or click its diamond.
 - **"Drops from" on item tooltips** (`loot.tooltip`).
 - **The drops you see** are kept per boss for every character (`loot.learn`,
@@ -41,6 +50,7 @@ builds the file). Nothing in it is typed in by hand.
 | Instances, bosses, encounter ids | Forever's client tables `Map`, `Difficulty`, `DungeonEncounter` (wago.tools, product `wowf`) |
 | Which monster a boss is | QuestieDB's Forever NPCs: the boss's name inside the instance; a longer or shorter form of it inside the instance ("Kirtonos" / "Kirtonos the Herald"); or the only NPC of that name, when it has no spawn |
 | What a boss drops | QuestieDB's Forever items (`npcDrops`), corrected as `tools/data/build.lua` corrects them; items dropping from more than 12 monsters (world and trash drops) are left out |
+| A boss's portrait | The client's Encounter Journal art (`Interface/EncounterJournal/UI-EJ-BOSS-<name>`), by the boss's exact name in the game's file list (wago.tools' file search). That list covers every WoW client, so whether Forever ships each file is **unverified**: the tab asks the game (`SetTexture` says whether it loaded) and shows the boss's best item when not. 222 of the 338 bosses have one |
 | The items | Forever's `Item` table (slot, type; items the client lacks are left out) and `ItemSparse` (name, quality, levels, classes). `ItemSparse` holds only some items: for the rest the name and levels are QuestieDB's, and the quality comes from the game client in game |
 
 **No drop chances**: QuestieDB has none, and Blizzard ships no loot tables for

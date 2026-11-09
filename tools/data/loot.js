@@ -6,6 +6,8 @@
 // 1. Downloads the Forever client's tables Map, Difficulty, DungeonEncounter, ItemSparse
 //    and Item as CSV from wago.tools (product "wowf") into
 //    data/sources/wago/<build>/ (not committed), unless already there.
+//    Also the game's file list entries for the Encounter Journal's boss art
+//    (ej-boss-files.json, wago.tools' file search for the build).
 // 2. Runs tools/data/loot.lua with them and QuestieDB's Forever data in
 //    data/sources/questiedb (docs/DATA.md says how to get it).
 
@@ -38,9 +40,22 @@ async function download(build, name) {
 	fs.writeFileSync(file, body);
 }
 
+// The file list's UI-EJ-BOSS-* entries: { "<file id>": "<path>", ... }
+async function downloadPortraits(build) {
+	const file = path.join(ROOT, 'data', 'sources', 'wago', build, 'ej-boss-files.json');
+	if (fs.existsSync(file) && fs.statSync(file).size > 0) return;
+	const url = `https://wago.tools/api/files?search=ui-ej-boss-&version=${build}`;
+	console.log(`downloading ${url}`);
+	const r = await fetch(url);
+	const body = await r.text();
+	if (!r.ok || !body.startsWith('{')) throw new Error(`${url}: HTTP ${r.status} ${body.slice(0, 80)}`);
+	fs.writeFileSync(file, body);
+}
+
 async function main() {
 	const build = process.argv[2] || await newestBuild();
 	for (const t of TABLES) await download(build, t);
+	await downloadPortraits(build);
 	const qdb = path.join(ROOT, 'data', 'sources', 'questiedb');
 	if (!fs.existsSync(qdb)) throw new Error('data/sources/questiedb is missing: see docs/DATA.md');
 	execFileSync('lua5.1', ['tools/data/loot.lua', qdb, path.join(ROOT, 'data', 'sources', 'wago', build)], { cwd: ROOT, stdio: 'inherit' });
