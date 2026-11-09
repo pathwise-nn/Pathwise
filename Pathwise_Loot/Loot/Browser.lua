@@ -1,5 +1,5 @@
 -- Pathwise Loot's window, laid out like Pathwise's recipe book: a tab per
--- boss along the top (the icon of its best drop), the boss's name, a button
+-- boss along the top (its portrait, else the icon of its best drop), the boss's name, a button
 -- per kind of item (all, armor, weapons, jewelry, other), a card per item in
 -- as many columns as fit, and a footer with "Show" (everything, or only what
 -- your class can use) and the arrows to the boss before or after.
@@ -429,6 +429,12 @@ local function tab(i)
 	b = CreateFrame("Button", nil, W.frame)
 	b.icon = iconFrame(b, 34)
 	b.icon:SetAllPoints()
+	-- The boss's portrait (its Encounter Journal art, 128x64 with the bust
+	-- left of centre): a square around the face, over the window's ground.
+	b.face = b.icon:CreateTexture(nil, "ARTWORK", nil, 1)
+	b.face:SetPoint("TOPLEFT", 1, -1)
+	b.face:SetPoint("BOTTOMRIGHT", -1, 1)
+	b.face:SetTexCoord(0.22, 0.72, 0, 1)
 	b.ring = edges(b, "OVERLAY")
 	b.under = b:CreateTexture(nil, "OVERLAY")
 	b.under:SetHeight(2)
@@ -464,6 +470,7 @@ function B.PaintTabs()
 			local on = b.pwBoss == state.boss
 			local lit = on or b.pwHover or b.pwHasLoot
 			b.icon.tex:SetDesaturated(not lit)
+			b.face:SetDesaturated(not lit)
 			b.icon:SetAlpha(lit and 1 or 0.55)
 			if on then paintEdges(b.ring, "accent") else paintEdges(b.ring, b.pwHover and "text2" or "border", b.pwHover and 1 or 0) end
 			b.under:SetShown(on)
@@ -634,7 +641,15 @@ local function drawTabs(y, bosses)
 		b:ClearAllPoints()
 		b:SetSize(s, s)
 		b:SetPoint("TOPLEFT", W.frame, "TOPLEFT", x, -y)
+		-- The portrait when the game has its file (SetTexture says so),
+		-- else the icon of the boss's best drop.
+		local portrait = L.Portrait(eid)
+		local face = portrait and b.face:SetTexture(portrait) ~= false
+		if not face then b.face:SetTexture(nil) end
+		b.face:SetShown(face and true or false)
+		b.icon.tex:SetShown(not face)
 		b.icon.tex:SetTexture(bossIcon(e) or QUESTION)
+		b.pwFace = face and portrait or nil
 		b:Show()
 		x = x + s + TAB_GAP
 	end

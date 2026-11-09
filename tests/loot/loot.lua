@@ -94,6 +94,13 @@ test("data: every boss and item it lists exists, with the right shape", function
 		for _, item in ipairs(e[5]) do ok(D.ITEMS[item], "boss " .. eid .. ": item " .. item .. " is in ITEMS") end
 	end
 	ok(withLoot >= 150, "most bosses have drops in the data")
+	local portraits = 0
+	for eid, fid in pairs(D.PORTRAITS) do
+		ok(D.ENCOUNTERS[eid], "portrait " .. eid .. " is a boss's")
+		ok(type(fid) == "number" and fid > 0, "portrait " .. eid .. " is a file id")
+		portraits = portraits + 1
+	end
+	ok(portraits >= 150, "most bosses have a portrait")
 	for id, it in pairs(D.ITEMS) do
 		ok(type(it[1]) == "string" and it[1] ~= "", "item " .. id .. " has a name")
 		for k = 2, 7 do ok(type(it[k]) == "number", "item " .. id .. " field " .. k) end
@@ -427,6 +434,26 @@ test("browser: a tab per boss; the arrows go to the boss before and after", func
 	local t = tabs[3]
 	t.scripts.OnClick(t)
 	eq(B.State().boss, inst.encounters[3], "a tab opens its boss")
+end)
+
+test("browser: a boss tab shows its portrait, else its best item", function()
+	local _, ns = fresh()
+	local B, L = ns.LootBrowser, ns.Loot
+	eq(L.Portrait(672), 522261, "Ragnaros's Encounter Journal art, by name")
+	B.Show()
+	B.SelectBoss(672)
+	local tab
+	for _, f in ipairs(_G.stub.frames) do
+		if rawget(f, "pwBoss") == 672 and f.shown then tab = f end
+	end
+	ok(tab, "Ragnaros has a tab")
+	eq(tab.pwFace, 522261, "the portrait")
+	ok(tab.face.shown and not tab.icon.tex.shown, "the portrait over the item icon")
+	-- A client without the file: SetTexture says no, and the item shows.
+	tab.face.SetTexture = function(self, t) self.texture = t return t == nil end
+	B.Render()
+	eq(tab.pwFace, nil)
+	ok(not tab.face.shown and tab.icon.tex.shown, "the best item instead")
 end)
 
 test("browser: All instances lists the dungeons and raids; a card opens one", function()
