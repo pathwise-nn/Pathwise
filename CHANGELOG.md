@@ -6,6 +6,19 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Heal: its own frames, apart from Pathwise UI's
+- Left click on a healing frame heals again, as before 0.2.22: the Ctrl +
+  left move and the "Left click targets" option are gone. A character 0.2.22
+  moved over goes back by itself; clicks you set yourself stay. To target
+  someone, click Pathwise UI's party frame for them.
+- With Pathwise UI's party frames showing, the healing frames now start to
+  their right instead of on top of them, so each set can be clicked on its
+  own. A place you moved them to is kept.
+- Right click on the minimap button: a menu of the options pages, each
+  opening straight to it, and Move everything (Lock everything while
+  unlocked) to put the frames where you want them. Pathwise UI, Encounters
+  and Loot's buttons get the same menu.
+
 ## 0.2.22 (2026-11-08)
 
 ### Pathwise Heal: party frames and targeting

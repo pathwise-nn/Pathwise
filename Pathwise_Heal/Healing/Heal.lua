@@ -48,6 +48,14 @@ ns.Defaults("heal", {
 	point = nil,
 })
 H.DEFAULT_POINT = { "TOPLEFT", "TOPLEFT", 30, -200 }
+-- With Pathwise UI's party frames showing (its column at the top left, 190
+-- wide, debuffs to its right), the healing frames start beside it, not on
+-- top of it: two sets you can click apart. A place you chose wins.
+H.BESIDE_UI_POINT = { "TOPLEFT", "TOPLEFT", 320, -200 }
+function H.DefaultPoint()
+	if type(_G.PathwiseUI) == "table" and not ns.Get("heal.hideParty") then return H.BESIDE_UI_POINT end
+	return H.DEFAULT_POINT
+end
 H.HEALERS = { PRIEST = true, DRUID = true, PALADIN = true, SHAMAN = true }
 
 local function inCombat() return InCombatLockdown and InCombatLockdown() end
@@ -434,7 +442,7 @@ function H.Layout()
 	}
 	for k, v in pairs(a) do header:SetAttribute(k, v) end
 	anchor:SetSize(down and w or 5 * (w + gap) - gap, down and 5 * (hgt + gap) - gap or hgt)
-	local p = ns.Get("heal.point") or H.DEFAULT_POINT
+	local p = ns.Get("heal.point") or H.DefaultPoint()
 	anchor:ClearAllPoints()
 	anchor:SetPoint(p[1], UIParent, p[2], p[3], p[4])
 	local on = ns.Get("heal.enabled") and true or false
