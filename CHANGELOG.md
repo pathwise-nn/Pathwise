@@ -6,6 +6,11 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: Back, Skip and Next have their labels from the start
+- After starting the game, the buttons under the guide could be blank until
+  a /reload. Their labels are now drawn again once the game has loaded and
+  each time the step changes. Not checked in game.
+
 ## 0.2.24 (2026-11-09)
 
 ### Pathwise Heal: buffs in a fight
