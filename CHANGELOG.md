@@ -6,6 +6,15 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise UI: the game's unit frames go away
+- A player saw the game's own player frame stay on screen beside Pathwise
+  UI's. If the game will not let Pathwise UI move one of its unit frames
+  out of sight, that frame is now made invisible and unclickable instead,
+  and stays that way when the game shows it again. Pathwise UI also checks
+  again after each loading screen. Not checked in game.
+- New: `/pwui frames` prints what happened to each of the game's unit
+  frames, for a bug report.
+
 ## 0.2.26 (2026-11-09)
 
 ### Pathwise Loot: the browser looks like the recipe book

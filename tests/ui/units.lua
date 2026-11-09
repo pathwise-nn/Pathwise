@@ -368,6 +368,31 @@ test("unit frames: the game's own frames put away, ours switched off", function(
 	for _, f in pairs(U.frames) do ok(not f.shown, "all off") end
 end)
 
+test("unit frames: a game frame that will not move is faded out and stays out", function()
+	local stub, ns = fresh(function()
+		PlayerFrame = CreateFrame("Frame", "PlayerFrame", UIParent)
+		-- The game refuses the new parent (as Forever may).
+		function PlayerFrame:SetParent() end
+		function PlayerFrame:EnableMouse(on) self.mouse = on end
+	end)
+	local U = ns.Units
+	eq(U.Hidden()[PlayerFrame], "faded", "faded, not moved")
+	eq(PlayerFrame.parent, UIParent, "still where the game keeps it")
+	eq(PlayerFrame:GetAlpha(), 0, "invisible")
+	eq(PlayerFrame.mouse, false, "its clicks off")
+	ok(not PlayerFrame.shown, "hidden")
+	PlayerFrame:Show()
+	ok(not PlayerFrame.shown, "the game shows it: hidden again")
+	stub.combat = true
+	PlayerFrame:SetAlpha(1)
+	eq(PlayerFrame:GetAlpha(), 0, "faded in by the game, in combat too: faded again")
+	stub.combat = false
+	SlashCmdList.PATHWISEUI("frames")
+	local all = table.concat(stub.printed, "\n")
+	ok(all:find("PlayerFrame: the game kept it: faded out", 1, true), all)
+	PlayerFrame = nil -- the refusing frame is this test's only
+end)
+
 test("unit frames: their page in the options", function()
 	local stub, ns = fresh()
 	ns.Config.Show("units")

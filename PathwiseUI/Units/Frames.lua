@@ -204,10 +204,42 @@ local GAME = {
 	pet = { "PetFrame" }, focus = { "FocusFrame" },
 	party = { "PartyFrame", "PartyMemberFrame1", "PartyMemberFrame2", "PartyMemberFrame3", "PartyMemberFrame4" },
 }
-local hidden = {}
+local hidden = {} -- frame -> "moved" (under the hidden frame) or "faded"
+local faded = {}  -- frames already hooked to stay faded
+
+local function underHider(f)
+	local okP, p = pcall(f.GetParent, f)
+	return okP and p == hider
+end
+
+-- When the game will not let the frame be moved (Forever checks whether a
+-- frame's parent may change, and a player saw the game's player frame stay):
+-- invisible, its clicks off, hidden; shown again or faded back in by the
+-- game, it goes again (hidden out of combat, faded any time).
+local function fade(f)
+	pcall(f.SetAlpha, f, 0)
+	pcall(f.EnableMouse, f, false)
+	pcall(f.Hide, f)
+	if faded[f] or not hooksecurefunc then return end
+	faded[f] = true
+	local busy = false
+	pcall(hooksecurefunc, f, "SetAlpha", function(self)
+		if busy or underHider(self) then return end
+		busy = true
+		pcall(self.SetAlpha, self, 0)
+		busy = false
+	end)
+	pcall(hooksecurefunc, f, "Show", function(self)
+		if underHider(self) then return end
+		pcall(self.SetAlpha, self, 0)
+		if not inCombat() then pcall(self.Hide, self) end
+	end)
+end
 
 -- Out of sight: their events off, parented to a hidden frame (so the game
--- showing them again changes nothing). Back after a reload when switched off.
+-- showing them again changes nothing); if the game keeps the frame where it
+-- is, faded instead. Checked again on each call (login, each loading
+-- screen, the end of combat). Back after a reload when switched off.
 function U.HideBlizzard()
 	if inCombat() then U.pending = true return end
 	hider = hider or CreateFrame("Frame")
@@ -216,16 +248,54 @@ function U.HideBlizzard()
 		if ns.Get("units." .. key) then
 			for _, name in ipairs(names) do
 				local f = _G[name]
-				if type(f) == "table" and not hidden[f] and f.SetParent then
+				if type(f) == "table" and f.SetParent and not underHider(f) then
 					pcall(f.UnregisterAllEvents, f)
 					pcall(f.SetParent, f, hider)
-					hidden[f] = true
+					if underHider(f) then
+						hidden[f] = "moved"
+					else
+						hidden[f] = "faded"
+						fade(f)
+					end
 				end
 			end
 		end
 	end
 end
 function U.Hidden() return hidden end
+
+-- /pwui frames: what happened to each of the game's unit frames, for a bug report.
+function U.ReportGame()
+	ns.Print("the game's unit frames:")
+	for _, key in ipairs({ "player", "target", "targettarget", "pet", "focus", "party" }) do
+		for _, name in ipairs(GAME[key]) do
+			local f = _G[name]
+			local state
+			if type(f) ~= "table" then state = "not in this game"
+			elseif not (ns.Get("units.enabled") and ns.Get("units." .. key) and ns.Get("units.hideBlizzard")) then state = "left alone (Pathwise's is off)"
+			elseif underHider(f) then state = "put away"
+			elseif hidden[f] == "faded" then state = "the game kept it: faded out"
+			else state = "not put away yet" end
+			local extra = ""
+			if type(f) == "table" then
+				local okS, shown = pcall(f.IsShown, f)
+				local okA, alpha = pcall(f.GetAlpha, f)
+				-- Secret values (Forever) are left out rather than printed.
+				if okS and okA then
+					local okF, s = pcall(function() return (" (shown %s, alpha %.2f)"):format(shown and "yes" or "no", alpha) end)
+					if okF then extra = s end
+				end
+			end
+			ns.Print("  " .. name .. ": " .. state .. extra)
+		end
+	end
+end
+ns.Commands.frames = function() U.ReportGame() end
+
+-- The game may move or show its frames again on a loading screen.
+ns.RegisterEvent("PLAYER_ENTERING_WORLD", function()
+	if ns.Get("units.enabled") and ns.Get("units.hideBlizzard") then U.HideBlizzard() end
+end)
 
 ns.On("READY", function() U.Build() end)
 ns.On("SETTING_CHANGED", function(path)
