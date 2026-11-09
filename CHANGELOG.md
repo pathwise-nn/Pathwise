@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.23 (2026-11-09)
+
 ### Pathwise Heal: its own frames, apart from Pathwise UI's
 - Left click on a healing frame heals again, as before 0.2.22: the Ctrl +
   left move and the "Left click targets" option are gone. A character 0.2.22
