@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.27 (2026-11-09)
+
 ### Pathwise: drag the arrow to move it
 - The waypoint arrow moves with a plain drag; it used to need Shift held,
   which players did not find. Hovering it says so.
