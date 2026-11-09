@@ -9,9 +9,9 @@ that version's section.
 ### Pathwise Loot: the browser looks like the recipe book
 - The loot window is laid out like Pathwise's recipe book: a tab per boss
   along the top, the boss's name, buttons for All, Armor, Weapons, Jewelry
-  and Other with their counts, and a card per item in two columns. Upgrades from Pathwise Gear are outlined. The footer
-  shows everything or only what your class can use, with arrows to the boss
-  before or after.
+  and Other with their counts, and a card per item in two columns.
+  Upgrades from Pathwise Gear are outlined. The footer shows everything or
+  only what your class can use, with arrows to the boss before or after.
 - Each boss tab shows the boss's portrait, the art the game's Encounter
   Journal uses (222 of the 338 bosses). Where the game has no portrait it
   shows the boss's best gear instead.
