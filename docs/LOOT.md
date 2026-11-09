@@ -11,15 +11,23 @@ Blizzard's Forever UI source and the tests' client stub only.
 
 ## What it does
 
-- **The loot browser**: instances on the left (your wishlist, then dungeons by
-  level, then raids), the bosses in the middle, the chosen boss's loot on the
-  right. A loot row shows the item's icon, its name in its quality color, its
-  slot and levels, how often you have seen it drop, and an upgrade mark from
-  Pathwise Gear. Hovering shows the game's item tooltip. Shift-click and
-  Ctrl-click are the game's own (link in chat, try it on).
+- **The loot browser**, laid out like Pathwise's recipe book: a tab per boss
+  along the top (the icon of its best drop; hover for its name), the boss's
+  name with its instance and levels, a button per kind of item (All, Armor,
+  Weapons, Jewelry, Other, each with its count), and a card per item in two
+  columns. A card shows the item's icon, its name in its quality color, a dot
+  in that color with its slot and levels, how often you have seen it drop,
+  and a diamond for the wishlist; an upgrade from Pathwise Gear is outlined.
+  Hovering shows the game's item tooltip. Shift-click and Ctrl-click are the
+  game's own (link in chat, try it on). The footer: Show Everything / For my
+  class, and arrows to the boss before or after.
+- **All instances** (top right): a card per dungeon (by level) or raid, with
+  its levels and bosses; "you" marks the ones at your level and YOU ARE HERE
+  the one you are in. Dungeons, Raids and Your wishlist are its buttons.
 - **Search** every boss's loot by item name (`/pwloot search <words>`, or the
   box at the top).
-- **Filters**: by slot, and "Only for my class" (the client's AllowableClass).
+- **Filters**: by kind of item (`loot.slot`), and "For my class" (the
+  client's AllowableClass, `loot.usable`).
 - **A wishlist per character**: right-click an item, or click its diamond.
 - **"Drops from" on item tooltips** (`loot.tooltip`).
 - **The drops you see** are kept per boss for every character (`loot.learn`,

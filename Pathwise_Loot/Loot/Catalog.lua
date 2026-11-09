@@ -33,21 +33,24 @@ L.SLOTS = {
 	[18] = "Bag", [19] = "Tabard", [20] = "Chest", [21] = "Main hand", [22] = "Off hand",
 	[23] = "Off hand", [24] = "Ammo", [25] = "Ranged", [26] = "Ranged", [27] = "Quiver", [28] = "Relic",
 }
--- The slot filter's choices, in body order; "other" is anything not worn.
-L.SLOT_FILTERS = {
-	{ "Any slot", "any" }, { "Head", "Head" }, { "Neck", "Neck" }, { "Shoulder", "Shoulder" }, { "Back", "Back" },
-	{ "Chest", "Chest" }, { "Wrist", "Wrist" }, { "Hands", "Hands" }, { "Waist", "Waist" }, { "Legs", "Legs" },
-	{ "Feet", "Feet" }, { "Finger", "Finger" }, { "Trinket", "Trinket" }, { "Weapons", "weapon" },
-	{ "Off hand", "Off hand" }, { "Ranged", "Ranged" }, { "Not worn", "other" },
+-- The kinds of item the browser sorts loot into (its buttons under the
+-- boss's name). "other" is anything not worn: bags, ammo, shirts, tabards,
+-- recipes, quest items and the like. A single slot's name ("Two-hand")
+-- filters to that slot.
+L.SLOT_FILTERS = { { "All", "any" }, { "Armor", "armor" }, { "Weapons", "weapon" }, { "Jewelry", "jewelry" }, { "Other", "other" } }
+local KIND = {
+	Head = "armor", Shoulder = "armor", Chest = "armor", Wrist = "armor", Hands = "armor", Waist = "armor",
+	Legs = "armor", Feet = "armor", Back = "armor",
+	["One-hand"] = "weapon", ["Two-hand"] = "weapon", ["Main hand"] = "weapon", ["Off hand"] = "weapon",
+	Ranged = "weapon", Relic = "weapon",
+	Neck = "jewelry", Finger = "jewelry", Trinket = "jewelry",
 }
-local WEAPON = { ["One-hand"] = true, ["Two-hand"] = true, ["Main hand"] = true }
+function L.Kind(item) return KIND[item.slot or ""] or "other" end
 
 function L.SlotMatches(item, filter)
 	if not filter or filter == "any" then return true end
-	local slot = item.slot
-	if filter == "weapon" then return WEAPON[slot] or false end
-	if filter == "other" then return slot == nil or slot == "Bag" or slot == "Ammo" or slot == "Shirt" or slot == "Tabard" end
-	return slot == filter
+	if filter == "armor" or filter == "weapon" or filter == "jewelry" or filter == "other" then return L.Kind(item) == filter end
+	return item.slot == filter
 end
 
 ---------------------------------------------------------------------------

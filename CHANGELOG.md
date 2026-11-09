@@ -6,6 +6,19 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Loot: the browser looks like the recipe book
+- The loot window is laid out like Pathwise's recipe book: a tab per boss
+  along the top (the icon of its best drop), the boss's name, buttons for
+  All, Armor, Weapons, Jewelry and Other with their counts, and a card per
+  item in two columns. Upgrades from Pathwise Gear are outlined. The footer
+  shows everything or only what your class can use, with arrows to the boss
+  before or after.
+- "All instances" opens a card per dungeon and raid, marking the ones at
+  your level and the one you are in. Your wishlist is a button there.
+- The instance, boss and slot names that went blank when picked are gone
+  with the old lists (the new window never changes a font when you pick).
+- Not checked in game.
+
 ## 0.2.24 (2026-11-09)
 
 ### Pathwise Heal: buffs in a fight
