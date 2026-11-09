@@ -13,7 +13,8 @@ local abs, floor = math.abs, math.floor
 ns.Defaults("arrow", {
 	shown = true,
 	scale = 1,
-	point = nil, -- { point, x, y } once moved
+	point = nil, -- { point, x, y[, relativePoint] } once moved
+	locked = false, -- locked: no drag, and clicks go through to the world
 })
 
 local SAMPLE = 0.1 -- seconds between position samples
@@ -31,17 +32,31 @@ local function build()
 	frame:SetFrameStrata("MEDIUM")
 	frame:SetClampedToScreen(true)
 	frame:SetMovable(true)
-	frame:EnableMouse(true)
+	-- A plain drag moves it (it used to need Shift, which players did not
+	-- find). Locked, it takes no mouse at all.
+	frame:EnableMouse(not ns.Get("arrow.locked"))
 	frame:RegisterForDrag("LeftButton")
-	frame:SetScript("OnDragStart", function(self) if IsShiftKeyDown and IsShiftKeyDown() then self:StartMoving() end end)
+	frame:SetScript("OnDragStart", function(self)
+		if GameTooltip then GameTooltip:Hide() end
+		if not ns.Get("arrow.locked") then self:StartMoving() end
+	end)
 	frame:SetScript("OnDragStop", function(self)
 		self:StopMovingOrSizing()
-		local p, _, _, x, y = self:GetPoint(1)
-		ns.Set("arrow.point", { p, floor(x + 0.5), floor(y + 0.5) })
+		local p, _, rel, x, y = self:GetPoint(1)
+		if not (p and x and y) then return end
+		ns.Set("arrow.point", { p, floor(x + 0.5), floor(y + 0.5), rel ~= p and rel or nil })
 	end)
+	frame:SetScript("OnEnter", function(self)
+		if not GameTooltip or ns.Get("arrow.locked") then return end
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+		GameTooltip:SetText("Pathwise arrow", 1, 1, 1)
+		GameTooltip:AddLine("Drag to move it. Lock it in Settings.", nil, nil, nil, true)
+		GameTooltip:Show()
+	end)
+	frame:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
 	local saved = ns.Get("arrow.point")
 	if type(saved) == "table" then
-		frame:SetPoint(saved[1], UIParent, saved[1], saved[2], saved[3])
+		frame:SetPoint(saved[1], UIParent, saved[4] or saved[1], saved[2], saved[3])
 	else
 		frame:SetPoint("TOP", UIParent, "TOP", 0, -140)
 	end
@@ -169,7 +184,8 @@ end
 ns.On("WAYPOINT_CHANGED", refresh)
 ns.On("SETTING_CHANGED", function(path)
 	if path == "arrow.shown" then refresh(Nav.Target())
-	elseif path == "arrow.scale" and frame then frame:SetScale(ns.Get("arrow.scale") or 1) end
+	elseif path == "arrow.scale" and frame then frame:SetScale(ns.Get("arrow.scale") or 1)
+	elseif path == "arrow.locked" and frame then frame:EnableMouse(not ns.Get("arrow.locked")) end
 end)
 -- Leaving an instance or a flight shows the arrow again.
 for _, ev in ipairs({ "PLAYER_ENTERING_WORLD", "ZONE_CHANGED_NEW_AREA", "PLAYER_CONTROL_GAINED" }) do

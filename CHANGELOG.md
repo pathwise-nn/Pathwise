@@ -6,6 +6,13 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: drag the arrow to move it
+- The waypoint arrow moves with a plain drag; it used to need Shift held,
+  which players did not find. Hovering it says so.
+- Settings, Waypoint arrow: Lock the arrow (off by default). Locked, it
+  stays put and clicks on it go through to the world.
+- Not checked in game.
+
 ### Pathwise UI: the game's unit frames go away
 - A player saw the game's own player frame stay on screen beside Pathwise
   UI's. If the game will not let Pathwise UI move one of its unit frames

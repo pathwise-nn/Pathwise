@@ -86,7 +86,7 @@ ns.Command("arrow", function(args)
 		return
 	end
 	ns.Set("arrow.shown", not ns.Get("arrow.shown"))
-	ns.Print(ns.Get("arrow.shown") and "arrow on (Shift-drag to move)." or "arrow off.")
+	ns.Print(ns.Get("arrow.shown") and "arrow on (drag to move)." or "arrow off.")
 end, "show or hide the arrow; /pw arrow scale <50-200> sets its size")
 
 ns.Command("reset", function()

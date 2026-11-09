@@ -94,6 +94,10 @@ function Widget:RegisterEvent(e)
 	table.insert(stub.events[e], self)
 end
 function Widget:SetScale(s) self.scale = s end
+-- Mouse and moving: remembered, so a test can see a frame take clicks or move.
+function Widget:EnableMouse(on) rawset(self, "mouse", on and true or false) end
+function Widget:StartMoving() rawset(self, "moving", true) end
+function Widget:StopMovingOrSizing() rawset(self, "moving", false) end
 function Widget:SetShadowOffset(x, y) self.shadow = { x, y } end
 -- Sliders: SetValue clamps and fires OnValueChanged, as the client does.
 function Widget:SetMinMaxValues(lo, hi) self.min, self.max = lo, hi end

@@ -1217,7 +1217,8 @@ function builders.settings()
 		{ "heading", "Waypoint arrow" },
 		{ "setting", "Show the arrow", onOff(ns.Get("arrow.shown")), { { ns.Get("arrow.shown") and "Hide" or "Show", toggle("arrow.shown") } } },
 		{ "slider", "Arrow size", "arrow.scale", 0.5, 2, 0.1, pct },
-		{ "text", "Shift-drag the arrow to move it.", "muted" },
+		{ "setting", "Lock the arrow", onOff(ns.Get("arrow.locked")), { { ns.Get("arrow.locked") and "Unlock" or "Lock", toggle("arrow.locked") } } },
+		{ "text", ns.Get("arrow.locked") and "Locked: it stays put, and clicks on it go to the world." or "Drag the arrow to move it.", "muted" },
 		{ "setting", "Minimap button", onOff(ns.Get("minimap.shown")), { { ns.Get("minimap.shown") and "Hide" or "Show", toggle("minimap.shown") } } },
 		{ "text", ns.Get("minimap.shown") and "Click it to show the guide, right-click for settings, drag to move it."
 			or "Without it, open Pathwise with a key: Game Menu > Key Bindings > Pathwise.", "muted" },
