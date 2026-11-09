@@ -8,9 +8,8 @@ that version's section.
 
 ### Pathwise Loot: the browser looks like the recipe book
 - The loot window is laid out like Pathwise's recipe book: a tab per boss
-  along the top, the boss's name, buttons for
-  All, Armor, Weapons, Jewelry and Other with their counts, and a card per
-  item in two columns. Upgrades from Pathwise Gear are outlined. The footer
+  along the top, the boss's name, buttons for All, Armor, Weapons, Jewelry
+  and Other with their counts, and a card per item in two columns. Upgrades from Pathwise Gear are outlined. The footer
   shows everything or only what your class can use, with arrows to the boss
   before or after.
 - Each boss tab shows the boss's portrait, the art the game's Encounter
@@ -21,6 +20,13 @@ that version's section.
 - The instance, boss and slot names that went blank when picked are gone
   with the old lists (the new window never changes a font when you pick).
 - Not checked in game.
+
+## 0.2.25 (2026-11-09)
+
+### Pathwise: Back, Skip and Next have their labels from the start
+- After starting the game, the buttons under the guide could be blank until
+  a /reload. Their labels are now drawn again once the game has loaded and
+  each time the step changes. Not checked in game.
 
 ## 0.2.24 (2026-11-09)
 

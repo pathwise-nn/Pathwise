@@ -563,6 +563,9 @@ local function layoutFull()
 	W.skip:SetShown(has)
 	W.next:SetShown(has)
 	W.report:SetShown(has)
+	-- Their labels are drawn again with the step text, so a label lost while
+	-- the font was loading comes back on the next redraw (T.Relabel).
+	if has then for _, b in ipairs({ W.back, W.skip, W.next }) do T.Relabel(b) end end
 
 	if not has then
 		place(W.empty, body, y)

@@ -236,6 +236,9 @@ function T.TextColor(fs, name)
 	fs:SetTextColor(c[1], c[2], c[3], c[4])
 end
 
+-- Every text button, to draw its label again (T.Relabel).
+local labelled = setmetatable({}, { __mode = "k" })
+
 -- A low-profile text button: dark surface, 1 px outline.
 -- kind "default" (Back) or "accent" (Next).
 function T.Button(parent, label, kind, onClick)
@@ -256,6 +259,8 @@ function T.Button(parent, label, kind, onClick)
 	text:SetPoint("CENTER")
 	text:SetText(label)
 	b.pwText = text
+	b.pwLabel = label
+	labelled[b] = true
 	local function paint(hover)
 		for _, t in ipairs(edges) do
 			if accent then setColor(t, hover and "accentHover" or "accent", hover and 1 or 0.4)
@@ -271,6 +276,22 @@ function T.Button(parent, label, kind, onClick)
 	b:SetWidth(math.max(64, (text:GetStringWidth() or 30) + 28))
 	return b
 end
+
+-- A label set while the game is still loading our font file can draw blank
+-- until a /reload (seen on the guide's Back, Skip and Next after a fresh
+-- start). Setting the font and text again once it has loaded draws it.
+function T.Relabel(b)
+	local text, label = b.pwText, b.pwLabel
+	if not text or not label then return end
+	T.Font(text, "button")
+	text:SetText("")
+	text:SetText(label)
+	b:SetWidth(math.max(64, (text:GetStringWidth() or 30) + 28))
+end
+
+ns.RegisterEvent("PLAYER_ENTERING_WORLD", function()
+	for b in pairs(labelled) do T.Relabel(b) end
+end)
 
 -- A small icon-only button: a white glyph texture (Media/glyph-<name>.tga,
 -- drawn by tools/media.js) tinted secondary, primary on hover. `tip` is its

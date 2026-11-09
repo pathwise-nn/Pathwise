@@ -1509,6 +1509,32 @@ test("guide grip: with a height of its own, the level line stays over the button
 	ok(s.parent ~= f, "fitting each step again: back in the list")
 end)
 
+-- The stub cannot load fonts, so a label the game drew blank is stood in for
+-- by emptying its text: the point is that Pathwise sets it again.
+test("guide buttons: Back, Skip and Next draw their labels again on a redraw and on entering the world", function()
+	local stub, ns = fixture()
+	ns.Guide.Refresh()
+	local buttons = {}
+	for _, f in ipairs(stub.frames) do
+		local label = rawget(f, "pwLabel")
+		if label and f.parent == _G.PathwiseGuide then buttons[label] = f end
+	end
+	for _, label in ipairs({ "Back", "Skip", "Next" }) do
+		local b = buttons[label]
+		ok(b and b.shown, label .. " is shown")
+		b.pwText.text = ""
+		b.w = 0
+	end
+	ns.Guide.Refresh()
+	for _, label in ipairs({ "Back", "Skip", "Next" }) do
+		eq(buttons[label].pwText.text, label, label .. ": its label is back after a redraw")
+		ok(buttons[label].w >= 64, label .. ": its width too")
+	end
+	buttons.Next.pwText.text = ""
+	stub.fire("PLAYER_ENTERING_WORLD", true, false)
+	eq(buttons.Next.pwText.text, "Next", "and on entering the world")
+end)
+
 test("guide grip: muted at rest, brighter under the cursor, the accent while held", function()
 	local stub, ns = login()
 	local f, T = _G.PathwiseGuide, ns.Theme
