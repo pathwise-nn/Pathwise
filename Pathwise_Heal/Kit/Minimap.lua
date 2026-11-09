@@ -3,7 +3,8 @@
 -- A Pathwise addon's minimap button (ns.ID: Pathwise UI, Pathwise Heal): a
 -- dark disc with a thin ring and the Pathwise mark in the addon's logo colour
 -- (ns.ID.color), so each addon's button is told apart on the minimap; the
--- accent if it has none. Click: the options; drag: around the rim.
+-- accent if it has none. Click: the options; right click: a menu of the
+-- options pages and Move everything; drag: around the rim.
 -- Shared file (see Core.lua): edit it here, then run npm run kit.
 
 local ADDON, ns = ...
@@ -14,6 +15,89 @@ ns.Minimap = M
 ns.Defaults("minimap", { shown = true, angle = ns.ID.minimapAngle or 135 })
 
 local button
+local menu, catcher
+
+-- The right-click menu: a tree of what you can do from here. The options
+-- pages (each opens straight to that page), then Move everything (Lock
+-- everything while things are unlocked).
+function M.Items()
+	local items = { { label = "Options", heading = true } }
+	local pages = ns.Config and ns.Config.CATEGORIES or {}
+	for _, c in ipairs(pages) do
+		if c.key and c.name then
+			items[#items + 1] = { label = c.name, indent = true, run = function() ns.Config.Show(c.key) end }
+		end
+	end
+	if ns.Movers then
+		local on = ns.Movers.IsActive()
+		items[#items + 1] = { label = on and "Lock everything" or "Move everything", run = function()
+			ns.Movers.All(not on)
+			if not on and ns.Config and ns.Config.Hide then ns.Config.Hide() end
+		end }
+	end
+	return items
+end
+
+function M.CloseMenu()
+	if menu then menu:Hide() end
+	if catcher then catcher:Hide() end
+end
+
+local ROW = 22
+function M.OpenMenu()
+	if not menu then
+		menu = CreateFrame("Frame", ns.ID.global .. "MinimapMenu", UIParent)
+		menu:SetFrameStrata("FULLSCREEN_DIALOG")
+		menu:SetClampedToScreen(true)
+		T.Panel(menu, "bg", "border", 0.98)
+		menu.rows = {}
+		catcher = CreateFrame("Button", nil, UIParent)
+		catcher:SetAllPoints(UIParent)
+		catcher:SetFrameStrata("FULLSCREEN")
+		catcher:RegisterForClicks("AnyUp")
+		catcher:SetScript("OnClick", M.CloseMenu)
+	end
+	local items = M.Items()
+	for i, item in ipairs(items) do
+		local r = menu.rows[i]
+		if not r then
+			r = CreateFrame("Button", nil, menu)
+			r:SetHeight(ROW)
+			r.ground = r:CreateTexture(nil, "BACKGROUND")
+			r.ground:SetAllPoints()
+			r.ground:SetColorTexture(1, 1, 1, 0)
+			r.text = T.Text(r, "button", "text2")
+			r.text:SetJustifyV("MIDDLE")
+			r:SetScript("OnLeave", function(b) b.ground:SetColorTexture(1, 1, 1, 0) end)
+			menu.rows[i] = r
+		end
+		r:ClearAllPoints()
+		r:SetPoint("TOPLEFT", menu, "TOPLEFT", 1, -1 - (i - 1) * ROW)
+		r:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -1, -1 - (i - 1) * ROW)
+		r.text:ClearAllPoints()
+		r.text:SetPoint("LEFT", item.indent and 22 or 10, 0)
+		r.text:SetText(item.label)
+		T.TextColor(r.text, item.heading and "muted" or "text")
+		r.item = item
+		r:SetScript("OnEnter", function(b)
+			if b.item.heading then return end
+			local c = T.Color("hover") b.ground:SetColorTexture(c[1], c[2], c[3], 0.9)
+		end)
+		r:SetScript("OnClick", function(b)
+			if b.item.heading then return end
+			M.CloseMenu()
+			b.item.run()
+		end)
+		r:Show()
+	end
+	for i = #items + 1, #menu.rows do menu.rows[i]:Hide() end
+	menu:SetSize(190, #items * ROW + 2)
+	menu:ClearAllPoints()
+	menu:SetPoint("TOPRIGHT", button, "BOTTOMLEFT", 0, 0)
+	catcher:Show()
+	menu:Show()
+end
+function M.Menu() return menu end
 
 -- The mark's colour: the addon's logo colour, else your accent.
 function M.Color()
@@ -60,7 +144,14 @@ local function build()
 	tint()
 	ns.On("ACCENT_CHANGED", tint)
 	button.icon, button.ring = icon, ring
-	button:SetScript("OnClick", function() ns.Fire("SHOW_CONFIG") end)
+	button:SetScript("OnClick", function(_, which)
+		if which == "RightButton" then
+			if menu and menu:IsShown() then M.CloseMenu() else M.OpenMenu() end
+			return
+		end
+		M.CloseMenu()
+		ns.Fire("SHOW_CONFIG")
+	end)
 	local function look(p)
 		local r, g, b = ns.Anim.Mix(T.Color("border"), M.Color(), p)
 		ring:SetVertexColor(r, g, b)
@@ -72,6 +163,7 @@ local function build()
 			GameTooltip:SetOwner(self, "ANCHOR_LEFT")
 			GameTooltip:SetText(ns.ID.name, 1, 1, 1)
 			GameTooltip:AddLine("Click: options", 0.6, 0.69, 0.75)
+			GameTooltip:AddLine("Right click: pages and Move everything", 0.6, 0.69, 0.75)
 			GameTooltip:AddLine("Drag: move this button", 0.6, 0.69, 0.75)
 			GameTooltip:Show()
 		end

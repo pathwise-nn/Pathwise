@@ -123,3 +123,53 @@ test("split: both installed: Pathwise UI's party frames stay with the healing fr
 	heal.Set("heal.enabled", true)
 	ok(table.concat(stub.texts(), "|"):find("Hide Pathwise UI's party frames", 1, true), "the option shows when Pathwise UI is installed")
 end)
+
+test("split: both installed: the healing frames start beside Pathwise UI's party frames, not on them", function()
+	local stub, ui, heal = both(priestInParty)
+	heal.Set("heal.enabled", true)
+	local p = _G.PathwiseHeal_Frames.points[1]
+	eq(p[4], heal.Heal.BESIDE_UI_POINT[3], "to the right of the party column")
+	ok(p[4] >= 30 + 190 + 4 * 18, "clear of the party frames and their debuffs")
+	heal.Set("heal.hideParty", true)
+	eq(_G.PathwiseHeal_Frames.points[1][4], 30, "only these: back at the left edge")
+	heal.Set("heal.point", { "TOPLEFT", "TOPLEFT", 500, -300 })
+	heal.Set("heal.hideParty", false)
+	eq(_G.PathwiseHeal_Frames.points[1][4], 500, "a place you chose wins")
+end)
+
+test("split: both installed: the healing frames start beside Pathwise UI's party frames, not on them", function()
+	local stub, ui, heal = both(priestInParty)
+	heal.Set("heal.enabled", true)
+	local p = _G.PathwiseHeal_Frames.points[1]
+	eq(p[4], heal.Heal.BESIDE_UI_POINT[3], "to the right of the party column")
+	ok(p[4] >= 30 + 190 + 4 * 18, "clear of the party frames and their debuffs")
+	heal.Set("heal.hideParty", true)
+	eq(_G.PathwiseHeal_Frames.points[1][4], 30, "only these: back at the left edge")
+	heal.Set("heal.point", { "TOPLEFT", "TOPLEFT", 500, -300 })
+	heal.Set("heal.hideParty", false)
+	eq(_G.PathwiseHeal_Frames.points[1][4], 500, "a place you chose wins")
+end)
+
+test("split: right click on Pathwise Heal's minimap button: its pages and Move everything", function()
+	local stub, ns = fresh(priestInParty)
+	ns.Set("heal.enabled", true)
+	local button = _G.PathwiseHealMinimapButton
+	button.scripts.OnClick(button, "RightButton")
+	local menu = _G.PathwiseHealMinimapMenu
+	ok(menu and menu.shown, "the menu opens")
+	ok(not (_G.PathwiseHealConfig and _G.PathwiseHealConfig.shown), "not the options window")
+	local texts = table.concat(stub.texts(), "|")
+	for _, page in ipairs({ "Options", "Healing", "Look and accent", "Profile", "Move everything" }) do
+		ok(texts:find(page, 1, true), page .. " in the menu")
+	end
+	ok(stub.clickLabelText("Move everything"))
+	ok(not menu.shown, "the menu closes")
+	ok(ns.Heal.Unlocked(), "the healing frames can be moved")
+	button.scripts.OnClick(button, "RightButton")
+	ok(stub.clickLabelText("Lock everything"), "then Lock everything")
+	ok(not ns.Heal.Unlocked(), "locked again")
+	button.scripts.OnClick(button, "RightButton")
+	ok(stub.clickLabelText("Colors"))
+	eq(ns.Config.Current(), "colors", "a page opens straight to it")
+	ok(_G.PathwiseHealConfig.shown)
+end)
