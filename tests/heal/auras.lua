@@ -408,3 +408,52 @@ test("settings: the options page has both rows and the cleanse click", function(
 	end
 	done()
 end)
+
+test("in a fight: when the game refuses our reads, its own row draws the buffs too, until the fight ends", function()
+	local stub, ns = fresh(setup({
+		[HOTS] = { { auraInstanceID = 1, icon = 135953, duration = 15, expirationTime = 12 } },
+	}))
+	local H = ns.Heal
+	ns.Set("heal.enabled", true)
+	local b = frame(ns, "party1")
+	local other = frame(ns, "player")
+	local get = C_UnitAuras.GetAuraDataByIndex
+	fight(stub, function()
+		local a = gameAnchor(stub, b)
+		eq(a.attrs["max-buffs"], 0, "ours while we can read")
+		C_UnitAuras.GetAuraDataByIndex = function() error("no aura access") end
+		H.Update(b)
+		a = gameAnchor(stub, b)
+		ok(H.GameBuffs(), "the game takes the buffs")
+		eq(a.attrs["max-buffs"], 3, "its row has the buffs")
+		eq(a.attrs["ignore-buffs"], false)
+		eq(gameAnchor(stub, other).attrs["max-buffs"], 3, "on every frame")
+		ok(not b.buffs[1].shown, "ours empty: no doubles")
+		-- The diagnostic says so.
+		local report = table.concat(H.AuraReport(), "\n")
+		ok(report:find("party1: HoTs refused", 1, true), report)
+		ok(report:find("game draws buffs yes", 1, true), report)
+		C_UnitAuras.GetAuraDataByIndex = get
+	end)
+	ok(not H.GameBuffs(), "back to ours after the fight")
+	ok(b.buffs[1].shown, "our HoT row again")
+	-- The command prints it.
+	local n = #stub.printed
+	SlashCmdList.PATHWISEHEAL("auras")
+	ok(#stub.printed > n and table.concat(stub.printed, "\n"):find("HoTs table, icon 135953", 1, true), "/pwheal auras")
+	done()
+end)
+
+test("in a fight: data that can't be used at all counts as refused", function()
+	local stub, ns = fresh(setup({}))
+	local H = ns.Heal
+	ns.Set("heal.enabled", true)
+	local b = frame(ns, "party1")
+	fight(stub, function()
+		stub.auras.party1 = { [HOTS] = { setmetatable({}, { __index = function() error("secret table") end }) } }
+		H.Update(b)
+		ok(H.GameBuffs(), "the game draws the buffs")
+		eq(gameAnchor(stub, b).attrs["max-buffs"], 3)
+	end)
+	done()
+end)

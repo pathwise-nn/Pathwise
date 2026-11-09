@@ -173,3 +173,27 @@ test("split: right click on Pathwise Heal's minimap button: its pages and Move e
 	eq(ns.Config.Current(), "colors", "a page opens straight to it")
 	ok(_G.PathwiseHealConfig.shown)
 end)
+
+test("split: both installed: HoTs and debuffs still show on the healing frames", function()
+	local HOTS = "HELPFUL|PLAYER|RAID_IN_COMBAT"
+	local stub, ui, heal = both(function(s)
+		priestInParty(s)
+		s.auras.party1 = {
+			[HOTS] = { { auraInstanceID = 1, icon = 135953, duration = 15, expirationTime = 12 } },
+			["HARMFUL|RAID"] = {}, -- none you can remove
+			["HARMFUL"] = { { auraInstanceID = 5, icon = 136207, duration = 10, expirationTime = 8 } },
+		}
+	end)
+	heal.Set("heal.enabled", true)
+	ok(ui.Units.frames.party1.shown, "Pathwise UI's party frame shows too")
+	local b = CreateFrame("Button")
+	heal.Heal.NewButton(b)
+	heal.Heal.SetUnit(b, "party1")
+	ok(b.buffs[1].shown and b.buffs[1].texture == 135953, "the HoT")
+	ok(b.otherDebuffs[1].shown and b.otherDebuffs[1].texture == 136207, "the debuff")
+	stub.fire("UNIT_AURA", "party1")
+	ok(b.buffs[1].shown, "still there after UNIT_AURA")
+	ui.Set("accent", "blue")
+	stub.fire("UNIT_AURA", "party1")
+	ok(b.buffs[1].shown, "and after Pathwise UI changes the accent")
+end)

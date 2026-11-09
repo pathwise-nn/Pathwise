@@ -6,6 +6,14 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Heal: buffs in a fight
+- A player saw no buffs on the healing frames in fights (fine out of one).
+  When the game refuses Pathwise Heal's aura reads in a fight, the game's own
+  icons now draw the buff row too, until the fight ends, instead of leaving
+  it empty. Not checked in game.
+- New: `/pwheal auras` prints what the game gives Pathwise Heal for each
+  frame. Typed in a fight, it shows why buffs are missing, for a bug report.
+
 ## 0.2.23 (2026-11-09)
 
 ### Pathwise Heal: its own frames, apart from Pathwise UI's
