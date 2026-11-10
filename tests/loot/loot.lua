@@ -178,6 +178,76 @@ test("catalog: class-only items are marked for other classes", function()
 	eq(L.Usable({}), true, "no mask: anyone")
 end)
 
+test("catalog: For my class keeps the armour you can wear and the weapons you can wield", function()
+	local stub, ns = fresh()
+	local L = ns.Loot
+	-- class 4 armour (1 cloth .. 4 plate, 6 shield, 7 libram), class 2 weapons
+	-- (7 one-hand sword, 8 two-hand sword, 10 staff, 19 wand); the stub's player is a mage.
+	eq(L.Usable({ class = 4, subClass = 1 }), true, "cloth")
+	eq(L.Usable({ class = 4, subClass = 2 }), false, "leather")
+	eq(L.Usable({ class = 4, subClass = 4 }), false, "plate")
+	eq(L.Usable({ class = 4, subClass = 6 }), false, "shield")
+	eq(L.Usable({ class = 4, subClass = 0 }), true, "a ring or a trinket")
+	eq(L.Usable({ class = 2, subClass = 7 }), true, "one-hand sword")
+	eq(L.Usable({ class = 2, subClass = 8 }), false, "two-hand sword")
+	eq(L.Usable({ class = 2, subClass = 19 }), true, "wand")
+	eq(L.Usable({ class = 9, subClass = 0 }), true, "a recipe is for anyone")
+	eq(L.Usable(L.Item(17076)), false, "Bonereaver's Edge is not a mage's")
+	stub.player.class = "PALADIN"
+	eq(L.Usable({ class = 4, subClass = 4 }), true, "a paladin wears plate")
+	eq(L.Usable({ class = 4, subClass = 7 }), true, "and a libram")
+	eq(L.Usable({ class = 4, subClass = 8 }), false, "not an idol")
+	eq(L.Usable({ class = 2, subClass = 19 }), false, "nor a wand")
+	eq(L.Usable(L.Item(17076)), true, "Bonereaver's Edge is")
+	stub.player.class = "MAGE"
+end)
+
+test("data: a boss is listed once, whatever rows the client keeps for it", function()
+	local stub, ns = fresh()
+	local D, L = ns.LootData, ns.Loot
+	for _, inst in ipairs(D.INSTANCES) do
+		local names = {}
+		for _, eid in ipairs(inst[6]) do
+			local n = D.ENCOUNTERS[eid][1]
+			ok(not names[n], inst[2] .. " lists " .. n .. " once")
+			names[n] = true
+		end
+	end
+	local bfd
+	for _, inst in ipairs(D.INSTANCES) do if inst[1] == 48 then bfd = inst end end
+	eq(#bfd[6], 8, "Blackfathom Deeps: eight bosses")
+	-- 2916 and 2697 are other rows of Ghamoo-ra (2761).
+	eq(D.SAME[2916], 2761)
+	eq(D.ENCOUNTERS[2916], nil)
+	eq(L.Encounter(2697).id, 2761)
+	eq(L.Encounter(2697).name, "Ghamoo-ra")
+	ok(L.Portrait(2697), "its portrait")
+	for old, new in pairs(D.SAME) do ok(D.ENCOUNTERS[new] and not D.ENCOUNTERS[old], "SAME points at a listed boss") end
+	-- A kill the game reports under another row counts for the boss.
+	kill(stub, 2697, "Ghamoo-ra")
+	eq(L.Seen()[2761].kills, 1)
+	eq(L.Seen()[2697], nil)
+	eq(#L.Instance(48).encounters, 8, "no boss added back")
+end)
+
+test("data: drops saved under another row of a boss move to the boss", function()
+	local _, ns = fresh({ setup = function()
+		PathwiseLootDB = PathwiseLootDB or {}
+	end })
+	local L = ns.Loot
+	local seen = ns.Data("seen")
+	seen[2761] = { kills = 1, items = { [6907] = 1 }, npcs = {} }
+	seen[2697] = { kills = 2, items = { [6907] = 2, [6908] = 1 }, npcs = { [4887] = true } }
+	L.Rebuild()
+	-- A fresh catalog read folds them.
+	local folded = L.Seen()
+	eq(folded[2697], nil)
+	eq(folded[2761].kills, 3)
+	eq(folded[2761].items[6907], 3)
+	eq(folded[2761].items[6908], 1)
+	ok(folded[2761].npcs[4887])
+end)
+
 test("catalog: the wishlist is this character's, and says where each item drops", function()
 	local _, ns = fresh()
 	local L = ns.Loot
@@ -396,6 +466,7 @@ test("browser: the slot and class filters", function()
 	eq(#B.Rows(), all)
 	ns.Set("loot.usable", true)
 	for _, r in ipairs(B.Rows()) do ok(L.Usable(L.Item(r.item)), "usable") end
+	ok(#B.Rows() < all, "a mage sees less of Ragnaros's loot")
 end)
 
 test("browser: a kind button keeps only that kind; the old one-slot values still work", function()

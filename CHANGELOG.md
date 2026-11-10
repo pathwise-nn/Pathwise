@@ -6,6 +6,17 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Loot: each boss once, and For my class filters
+- Blackfathom Deeps, Gnomeregan and Sunken Temple listed some bosses two or
+  three times (the client keeps a row per version of a boss). Each is now
+  one boss with all its loot: Blackfathom Deeps has 8, Gnomeregan 6, Sunken
+  Temple 11. A kill the game reports under any version counts for that boss,
+  and drops you saw before move to it. Gelihast now has its loot.
+- "For my class" hides armour your class can't wear (it counts mail and
+  plate from level 40), shields, other classes' librams, idols and totems,
+  and weapons it can't use. Before, it only checked the rare "Classes:" line.
+- Not checked in game yet.
+
 ## 0.2.27 (2026-11-09)
 
 ### Pathwise: drag the arrow to move it
