@@ -16,6 +16,8 @@ that version's section.
   target's debuffs. Typed in a fight, it shows why any are missing, for a
   bug report.
 
+## 0.2.28 (2026-11-10)
+
 ### Pathwise Loot: each boss once, and For my class filters
 - Blackfathom Deeps, Gnomeregan and Sunken Temple listed some bosses two or
   three times (the client keeps a row per version of a boss). Each is now
