@@ -489,7 +489,9 @@ function U.Events(f)
 		if driver.RegisterUnitEvent then pcall(driver.RegisterUnitEvent, driver, ev, f.unit) else pcall(driver.RegisterEvent, driver, ev) end
 	end
 	driver:SetScript("OnEvent", function(_, ev, unit)
-		if unit and unit ~= f.unit then return end
+		-- In a fight the unit can be secret, and comparing it is an error:
+		-- RegisterUnitEvent already sends this frame's unit only.
+		if unit and ns.Readable(unit) ~= nil and unit ~= f.unit then return end
 		local what = UNIT_EVENTS[ev]
 		if what and DO[what] then
 			local ok, err = pcall(DO[what], f)

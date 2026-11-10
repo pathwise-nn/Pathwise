@@ -6,6 +6,16 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise UI: debuffs on your target in a fight
+- Bleeds and other debuffs didn't show on the target you were fighting
+  (or on nameplates). In a fight the game makes debuff details secret, and
+  Pathwise UI stopped when it compared them. Now the icons show in a fight;
+  stack counts and timers show only when the game shares them. Not checked
+  in game.
+- New: `/pwui auras` prints what the game gives Pathwise UI for your
+  target's debuffs. Typed in a fight, it shows why any are missing, for a
+  bug report.
+
 ### Pathwise Loot: each boss once, and For my class filters
 - Blackfathom Deeps, Gnomeregan and Sunken Temple listed some bosses two or
   three times (the client keeps a row per version of a boss). Each is now
