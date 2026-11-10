@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.29 (2026-11-10)
+
 ### Pathwise UI: debuffs on your target in a fight
 - Bleeds and other debuffs didn't show on the target you were fighting
   (or on nameplates). In a fight the game makes debuff details secret, and
