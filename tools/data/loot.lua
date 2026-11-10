@@ -261,6 +261,62 @@ for _, enc in pairs(encounters) do
 end
 
 ---------------------------------------------------------------------------
+-- One boss, many rows: the client keeps a row per version of a boss (the
+-- dungeon's, twice in places, and a 10- or 20-player raid's), all with the
+-- same monster and loot. Rows of one instance that share a name or a monster
+-- are one boss: the dungeon row's id stays (the lowest id of 5 players or
+-- fewer, else the lowest), and the others point at it in SAME, since the
+-- game may report any of them at a kill.
+---------------------------------------------------------------------------
+
+-- Names the client spells two ways for one boss: QuestieDB's spelling.
+local SPELLING = { geilhast = "gelihast" }
+
+local same, nMerged = {}, 0
+for _, inst in pairs(instances) do
+	local groups, ofKey, ofNpc = {}, {}, {}
+	for _, row in ipairs(inst.list) do
+		local enc = encounters[row.id]
+		local key = norm(enc.name)
+		key = SPELLING[key] or key
+		local g = ofKey[key]
+		for _, nid in ipairs(enc.npcs) do g = g or ofNpc[nid] end
+		if not g then g = {} groups[#groups + 1] = g end
+		g[#g + 1] = row
+		ofKey[key] = g
+		for _, nid in ipairs(enc.npcs) do ofNpc[nid] = g end
+	end
+	local list = {}
+	for _, g in ipairs(groups) do
+		table.sort(g, function(a, b)
+			local sa, sb = encounters[a.id].players <= 5, encounters[b.id].players <= 5
+			if sa ~= sb then return sa end
+			return a.id < b.id
+		end)
+		local keep = encounters[g[1].id]
+		if #g > 1 then
+			local npcSet, itemSet = {}, {}
+			for _, n in ipairs(keep.npcs) do npcSet[n] = true end
+			for _, i in ipairs(keep.items) do itemSet[i] = true end
+			for k = 2, #g do
+				local other = encounters[g[k].id]
+				-- The row that found its monster has the right spelling.
+				if #keep.npcs == 0 and #other.npcs > 0 then keep.name = other.name end
+				for _, n in ipairs(other.npcs) do if not npcSet[n] then npcSet[n] = true keep.npcs[#keep.npcs + 1] = n end end
+				for _, i in ipairs(other.items) do if not itemSet[i] then itemSet[i] = true keep.items[#keep.items + 1] = i end end
+				same[g[k].id] = g[1].id
+				encounters[g[k].id] = nil
+				nMerged = nMerged + 1
+			end
+			table.sort(keep.npcs)
+			keep.players = 0 -- every version
+		end
+		list[#list + 1] = g[1]
+	end
+	inst.list = list
+end
+
+---------------------------------------------------------------------------
 -- Writing
 ---------------------------------------------------------------------------
 
@@ -328,6 +384,8 @@ f:write("--   ENCOUNTERS[id]   = { name, map, players (0: the instance's own siz
 f:write("--   ITEMS[id]        = { name, quality, itemLevel, requiredLevel, inventoryType, class, subClass, classMask | nil }\n")
 f:write("--   PORTRAITS[id]    = file id of the boss's Encounter Journal art (UI-EJ-BOSS-<name>), by its name; from\n")
 f:write("--                      the game's file list, which may hold files Forever lacks (the addon checks)\n")
+f:write("--   SAME[id]         = the boss this id is another row of (the client keeps a row per version;\n")
+f:write("--                      the game may report any of them at a kill)\n")
 f:write("\nlocal ADDON, ns = ...\nlocal D = {}\nns.LootData = D\n\n")
 f:write(("D.BUILD = %q\nD.QUESTIEDB = %q\n\n"):format(build, commit))
 
@@ -351,6 +409,10 @@ f:write("D.PORTRAITS = {\n")
 for _, id in ipairs(sortedKeys(portraits)) do f:write(("\t[%d] = %d,\n"):format(id, portraits[id])) end
 f:write("}\n\n")
 
+f:write("D.SAME = {\n")
+for _, id in ipairs(sortedKeys(same)) do f:write(("\t[%d] = %d,\n"):format(id, same[id])) end
+f:write("}\n\n")
+
 f:write("D.ITEMS = {\n")
 for _, id in ipairs(sortedKeys(items)) do
 	local it = items[id]
@@ -365,6 +427,7 @@ for _ in pairs(instances) do nInst = nInst + 1 end
 for _ in pairs(encounters) do nEnc = nEnc + 1 end
 log(("wrote %s: %d instances, %d bosses (%d matched to a monster, %d with loot), %d drops of %d items"):format(
 	OUT, nInst, nEnc, matched, withLoot, drops, (function() local n = 0 for _ in pairs(items) do n = n + 1 end return n end)()))
+log(("rows merged into the boss they repeat: %d"):format(nMerged))
 log(("portraits found by name: %d of %d bosses"):format(nPortraits, nEnc))
 log(("bosses matched by name inside: %d, by a longer or shorter name inside: %d, by a unique name with no spawn: %d"):format(byRule[1], byRule[2], byRule[3]))
 for k in pairs(skippedMaps) do log("left out: " .. k) end

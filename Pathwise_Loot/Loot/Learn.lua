@@ -78,6 +78,7 @@ local function instance()
 end
 
 local function record(eid)
+	eid = L.BossId(eid)
 	local seen = L.Seen()
 	local s = seen[eid]
 	if type(s) ~= "table" then
@@ -102,6 +103,7 @@ function Learn.Record(eid, item, key)
 	if not ns.Get("loot.learn") then return false end
 	eid, item = readable(eid), readable(item)
 	if type(eid) ~= "number" or type(item) ~= "number" or eid <= 0 or item <= 0 then return false end
+	eid = L.BossId(eid)
 	if key and counted[key] then return false end
 	perKill[eid] = perKill[eid] or {}
 	if perKill[eid][item] then return false end
@@ -140,13 +142,14 @@ end
 ns.RegisterEvent("ENCOUNTER_START", function(_, id, name)
 	id, name = readable(id), readable(name)
 	if type(id) ~= "number" then return end
-	fight = { id = id, name = name }
+	fight = { id = L.BossId(id), name = name }
 	bossUnits()
 end)
 ns.RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT", bossUnits)
 ns.RegisterEvent("ENCOUNTER_END", function(_, id, name, _, _, success)
 	id, name, success = readable(id), readable(name), readable(success)
 	if type(id) ~= "number" then return end
+	id = L.BossId(id)
 	bossUnits()
 	fight = nil
 	if success ~= 1 then return end
