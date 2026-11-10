@@ -132,9 +132,16 @@ local function updateRow(f, a)
 				end
 			end
 			local c = a.opts.filter:find("HARMFUL") and DISPEL[readable(data.dispelName) or ""] or nil
-			if b.pwAura ~= data.auraInstanceID then
+			-- In a fight the aura's ID is secret and can't be compared (an
+			-- error there left the row empty): the icon just shows.
+			local id = readable(data.auraInstanceID)
+			if id == nil then
+				b.pwAura = nil
+				ns.Anim.Set(b, "alpha", 1)
+				b:SetAlpha(1)
+			elseif b.pwAura ~= id then
 				-- A new aura in this slot: it fades in.
-				b.pwAura = data.auraInstanceID
+				b.pwAura = id
 				if not b:IsShown() then ns.Anim.Set(b, "alpha", 0) b:SetAlpha(0) end
 				ns.Anim.Fade(b, 1, ns.Anim.NORMAL)
 			end
@@ -148,6 +155,33 @@ local function updateRow(f, a)
 	end
 	return shown
 end
+
+-- /pwui auras: what the game gives Pathwise UI for your target's debuffs.
+-- Typed in a fight it shows whether the reads are refused, secret or empty.
+function U.ReportAuras()
+	local fight = (InCombatLockdown and InCombatLockdown()) and "in a fight" or "out of a fight"
+	local get = C_UnitAuras and C_UnitAuras.GetAuraDataByIndex
+	local filter = "HARMFUL|INCLUDE_NAME_PLATE_ONLY"
+	local state
+	if not get then state = "no aura API"
+	elseif not (UnitExists and UnitExists("target")) then state = "no target"
+	else
+		local n, secret = 0, false
+		for i = 1, 40 do
+			local ok, d = pcall(get, "target", i, filter)
+			if not ok then state = "refused (" .. tostring(d):sub(1, 60) .. ")" break end
+			if type(d) ~= "table" then break end
+			n = n + 1
+			if readable(d.auraInstanceID) == nil then secret = true end
+		end
+		state = state or (n .. " debuff(s)" .. (secret and ", secret" or ""))
+	end
+	local f = U.frames and U.frames.target
+	local shown = 0
+	if f and f.auras then for _, b in ipairs(f.auras.icons) do if b:IsShown() then shown = shown + 1 end end end
+	ns.Print(("target debuffs, %s: the game gives %s; the frame shows %d."):format(fight, state, shown))
+end
+ns.Commands.auras = function() U.ReportAuras() end
 
 function U.UpdateAuras(f)
 	if not f.auras then return end

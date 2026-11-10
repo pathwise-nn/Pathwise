@@ -197,6 +197,28 @@ test("unit frames: debuffs on the target, timers only when readable", function()
 	ok(not a.icons[1].shown, "switched off")
 end)
 
+test("unit frames: debuffs on the target in a fight, when the game makes them secret", function()
+	local stub, ns = fresh(function(s)
+		withTarget(s)
+		s.auras.target = { HARMFUL = {
+			{ icon = s.Secret(132152), applications = s.Secret(1), duration = s.Secret(10), expirationTime = s.Secret(20), auraInstanceID = s.Secret(41) },
+			{ icon = s.Secret(136207), applications = s.Secret(2), duration = s.Secret(18), expirationTime = s.Secret(30), auraInstanceID = s.Secret(42) },
+		} }
+	end)
+	local a = ns.Units.frames.target.auras
+	ok(a.icons[1].shown and a.icons[2].shown, "both shown")
+	eq(a.icons[1]:GetAlpha(), 1, "seen at once")
+	-- The fight goes on: new secret data, and the event's unit is secret too.
+	stub.auras.target.HARMFUL[1] = { icon = stub.Secret(132152), auraInstanceID = stub.Secret(43) }
+	stub.fire("UNIT_AURA", stub.Secret("target"))
+	ok(a.icons[1].shown and a.icons[2].shown, "still shown after an update in the fight")
+	for _, line in ipairs(stub.printed) do ok(not tostring(line):find("error", 1, true), line) end
+	stub.combat = true
+	SlashCmdList.PATHWISEUI("auras")
+	stub.combat = false
+	ok(lastPrint(stub):find("in a fight: the game gives 2 debuff(s), secret; the frame shows 2", 1, true), lastPrint(stub))
+end)
+
 test("unit frames: bleeds and taunts (nameplate-only debuffs) show on the target, as on the game's frame", function()
 	local stub, ns = fresh(function(s)
 		withTarget(s)

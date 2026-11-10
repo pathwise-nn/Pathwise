@@ -307,6 +307,12 @@ for _, ev in ipairs({ "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_STOP", "UNIT_SPELL
 end
 for ev, fn in pairs(UNIT) do
 	ns.RegisterEvent(ev, function(_, unit)
+		if unit ~= nil and ns.Readable(unit) == nil then
+			-- A secret unit (in a fight) can't pick its plate: a debuff
+			-- change redraws every plate's debuffs; the rest wait.
+			if ev == "UNIT_AURA" then for _, f in pairs(P.plates) do fn(f) end end
+			return
+		end
 		local f = unit and P.plates[unit]
 		if f then fn(f) end
 	end)

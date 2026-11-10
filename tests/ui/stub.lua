@@ -491,6 +491,8 @@ local secretMeta = {}
 local function refuse() error("attempt to use a secret value", 2) end
 secretMeta.__add, secretMeta.__sub, secretMeta.__mul, secretMeta.__div = refuse, refuse, refuse, refuse
 secretMeta.__lt, secretMeta.__le, secretMeta.__unm, secretMeta.__concat = refuse, refuse, refuse, refuse
+-- Two secrets compared (Lua 5.1 asks __eq only when both sides are secrets).
+secretMeta.__eq = refuse
 secretMeta.__tostring = function() return "<secret>" end
 function stub.Secret(v) return setmetatable({ value = v }, secretMeta) end
 function issecretvalue(v) return getmetatable(v) == secretMeta end
