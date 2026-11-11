@@ -1220,6 +1220,44 @@ test("zones for the player's level list Tirisfal with its route", function()
 	eq(tirisfal.route.id, "forever/horde/undead/01-tirisfal-glades")
 end)
 
+test("zones at 28 (Undead): a route working in a zone counts, cities and other races' starts say so", function()
+	local stub, ns = login()
+	stub.player.level = 28
+	local by = {}
+	for _, z in ipairs(ns.Engine.Zones()) do by[z.map] = z end
+	ok(by[1441] and by[1441].route, "Thousand Needles has a route")
+	eq(by[1441].route.id, "forever/horde/07-ashenvale", "Ashenvale & Thousand Needles works there")
+	eq(by[1442] and by[1442].route and by[1442].route.id, "forever/horde/05-stonetalon-mountains")
+	ok(by[1454] and by[1454].city and not by[1454].route, "Orgrimmar is a city")
+	eq(by[1412] and by[1412].route and by[1412].route.id, "forever/horde/07-ashenvale", "Mulgore: the route that stops there")
+	ns.Fire("SHOW_ZONES")
+	local texts = stub.texts()
+	ok(contains(texts, "City: the routes stop here for trainers and hand-ins"), "the city note")
+	local coming = 0
+	for _, z in pairs(by) do if not (z.route or z.city or z.raceRoute) then coming = coming + 1 eq(z.map, 1431, "only Duskwood, which has no Horde route") end end
+	eq(coming, 1)
+end)
+
+test("zones: another race's starting zone names its route, and does not offer it", function()
+	local stub, ns = login(function(s) s.player.race, s.player.raceID, s.player.faction = "NightElf", 4, "Alliance" end)
+	stub.player.level = 8
+	local dun
+	for _, z in ipairs(ns.Engine.Zones()) do if z.map == 1426 then dun = z end end
+	ok(dun, "Dun Morogh listed at 8")
+	ok(not dun.route, "no route of a Night Elf's works there")
+	ok(dun.raceRoute and dun.raceRoute.races[1] == "Dwarf", "the Dwarf and Gnome route")
+end)
+
+test("zones: a route you pick stays, even one you have outlevelled", function()
+	local stub, ns = login()
+	stub.player.level = 28
+	local E = ns.Engine
+	E.SetRoute("forever/horde/05-stonetalon-mountains") -- levels 23-25
+	E.Update()
+	eq(E.Route().id, "forever/horde/05-stonetalon-mountains", "not handed on to the next route")
+	ok(E.LiveStep(), "a step to do")
+end)
+
 test("routes panel: leveling near the level, class quests for a mage, professions as side guides", function()
 	local stub, ns = login()
 	ns.Fire("SHOW_ROUTES")
