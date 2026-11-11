@@ -159,6 +159,32 @@ test("routes: every required accept has its prerequisite handed in before it", f
 	eq(#bad, 0, table.concat(bad, "; "))
 end)
 
+-- tools/routes/efficiency.lua: no stop that only does what an earlier
+-- visit to the same person could have done.
+test("routes: no comeback stops (tools/routes/efficiency.lua)", function()
+	EFFICIENCY_LIB = true
+	local Eff = dofile("tools/routes/efficiency.lua")
+	EFFICIENCY_LIB = nil
+	local bad = {}
+	for _, r in ipairs(Eff.routes) do
+		for _, c in ipairs(Eff.route(r).comebacks) do
+			bad[#bad + 1] = ("%s step %d (%s, %.0f yd)"):format(r.id, c.step, c.who, c.saved)
+		end
+	end
+	eq(#bad, 0, table.concat(bad, "; "))
+	-- And it finds one: Torwa's quest taken on a second visit, as before the fix.
+	local route = { id = "test/torwa", levels = { 48, 52 }, steps = {
+		{ { "turnin", 4291, at = { 1449, 71.64, 75.96 }, who = "Torwa Pathfinder" } },
+		{ { "goto", 1449, 77.2, 50, "Eastern Crystal Pylon" } },
+		{ { "accept", 4289, at = { 1449, 71.64, 75.96 }, who = "Torwa Pathfinder" } },
+		{ { "goto", 1449, 48.69, 85.32, "The hive" } },
+	} }
+	local f = Eff.route(route)
+	eq(#f.comebacks, 1, "the second visit to Torwa")
+	eq(f.comebacks[1].to, 1, "done on the first")
+	ok(f.walked > 1000, "yards walked: " .. f.walked)
+end)
+
 test("route fixes: a fix that no longer finds its goal stops the build", function()
 	package.path = "tools/port/?.lua;" .. package.path
 	local Fix = require("fixes")

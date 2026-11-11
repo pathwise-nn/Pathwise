@@ -42,6 +42,12 @@ local FIXES = {
 		{ why = "the Galak Messenger's note can be missed", optional = { "have", 12564 } },
 		{ why = "the plot needs the note", optional = { "accept", 4881 } },
 	},
+	-- The Apes of Un'Goro (4289) has no prerequisite and opens at 47 (the
+	-- data), so Torwa gives it on the first visit; the route came back to
+	-- him for it alone (tools/routes/efficiency.lua: a comeback stop).
+	["forever/alliance/40-50/07-un-goro-crater"] = {
+		{ why = "take The Apes of Un'Goro on the first visit to Torwa", move = { "accept", 4289 }, after = { "turnin", 4291 } },
+	},
 	-- Lightforge Ingots (526) needs Lightforge Iron (321) handed in (the data's
 	-- prerequisite), which comes on the 30-40 Ashenvale route, after this one:
 	-- here it is never offered.
