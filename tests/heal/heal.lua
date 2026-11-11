@@ -318,3 +318,19 @@ test("healing: left click heals; a character 0.2.22 moved to left click targets 
 	ns.Config.Show("heal")
 	ok(not table.concat(stub.texts(), "|"):find("Left click targets", 1, true), "no Left click targets option")
 end)
+
+test("look: the question and the options window are rounded; the healing frames stay square", function()
+	local stub, ns = fresh(priest)
+	local p = _G.PathwiseHeal_Prompt
+	eq(p.pwRadius, 10, "the question: a rounded window")
+	ok(p.pwGround.pieces, "its ground pieced")
+	eq(p.pwBorder.pieces[1].texture, "Interface\\AddOns\\Pathwise_Heal\\Media\\corner-line", "from this addon's own media")
+	ok(stub.clickLabel("Turn on"))
+	local f = frame(ns, "player")
+	ok(not f.pwRadius and not f.pwGround.pieces, "a healing frame: square")
+	ns.Config.Show()
+	local c = _G.PathwiseHealConfig
+	ok(c.pwRadius == 10 and c.pwGrip and c.pwPin, "its options: rounded, a grip and a pin")
+	c.pwPin.scripts.OnClick(c.pwPin)
+	eq(ns.Get("config.locked"), true, "pinned in its own settings")
+end)

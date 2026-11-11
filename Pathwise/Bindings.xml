@@ -1,5 +1,8 @@
 <Bindings>
-	<Binding name="PATHWISE_TOGGLE" header="PATHWISE" category="ADDONS">Pathwise.Binding("toggle")</Binding>
+	<Binding name="PATHWISE_HUB" header="PATHWISE" category="ADDONS">Pathwise.Binding("hub")</Binding>
+	<Binding name="PATHWISE_TOGGLE" category="ADDONS">Pathwise.Binding("toggle")</Binding>
+	<Binding name="PATHWISE_STYLE" category="ADDONS">Pathwise.Binding("style")</Binding>
+	<Binding name="PATHWISE_COMPASS" category="ADDONS">Pathwise.Binding("compass")</Binding>
 	<Binding name="PATHWISE_COMPACT" category="ADDONS">Pathwise.Binding("compact")</Binding>
 	<Binding name="PATHWISE_PROFESSIONS" category="ADDONS">Pathwise.Binding("professions")</Binding>
 	<Binding name="PATHWISE_DUNGEONS" category="ADDONS">Pathwise.Binding("dungeons")</Binding>

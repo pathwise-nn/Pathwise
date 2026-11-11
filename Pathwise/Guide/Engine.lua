@@ -1023,6 +1023,22 @@ local function coordsOf(p)
 	return xy
 end
 
+-- The facts the hub and tracker show beside the step (v2): the route's side,
+-- level range and kind, and where the step is, coordinates and zone apart.
+local function factsOf(view, route, p)
+	if route then
+		view.routeId, view.faction, view.category = route.id, route.faction, route.category
+		view.levels = route.levels
+	end
+	if p and p.x then
+		view.xy = ("%.1f, %.1f"):format(p.x, p.y)
+		view.zone = C.MapName(p.map)
+		view.place = p.name
+	end
+	return view
+end
+Engine.FactsOf = factsOf
+
 local function progressOf(route)
 	local done, total = 0, 0
 	for s = 1, #route.steps do
@@ -1146,7 +1162,7 @@ function Engine.View()
 		else
 			rows[1] = { text = goalText(goal) }
 		end
-		return {
+		return factsOf({
 			route = route and route.title or "Extra quest", extra = true,
 			index = route and live or nil, count = route and #route.steps or nil,
 			progress = route and progressOf(route) or 0,
@@ -1160,7 +1176,7 @@ function Engine.View()
 			end)(),
 			next = route and live and ("Then back to the route: " .. (titleOf(route.steps[live], route, live) or "")) or nil,
 			nearby = nearby,
-		}
+		}, route, p)
 	end
 	if not route then
 		local card = sideCard()
@@ -1168,24 +1184,24 @@ function Engine.View()
 		return { route = "No leveling route", title = "Choose a route", text = "Open Routes in Settings, or Zones for your level.", objectives = {}, detour = card, progress = 0 }
 	end
 	if not current then
-		return {
+		return factsOf({
 			route = route.title, index = #route.steps, count = #route.steps, progress = 1,
 			title = "Route complete", detour = sideCard(),
 			text = "Pick your next route from Zones for your level, or Routes in Settings.",
 			objectives = {}, nearby = nearby,
-		}
+		}, route)
 	end
 	local step = route.steps[current]
 	local lead = leadIn(route, current)
 	local p = lead and placeOf(lead)
-	return {
+	return factsOf({
 		route = route.title, index = current, count = #route.steps, progress = progressOf(route),
 		title = titleOf(step, route, current), text = textOf(step), coords = coordsOf(p),
 		objectives = rowsOf(route, current), next = nextSummary(route, current),
 		pinned = current ~= live, detour = sideCard(),
 		card = cardOf(route, current), steps = stepsAhead(route, current),
 		nearby = nearby,
-	}
+	}, route, p)
 end
 
 ---------------------------------------------------------------------------

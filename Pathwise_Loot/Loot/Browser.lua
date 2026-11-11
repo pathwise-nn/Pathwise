@@ -15,6 +15,9 @@
 -- Ctrl-click: the game's own modified click. Right-click or the diamond:
 -- wishlist.
 --
+-- Drag the window's corner to make it any size (the cards fill as many
+-- columns as fit); the pin on its header keeps it where it is.
+--
 --   B.Show() / B.Hide() / B.Toggle() / B.Frame() / B.IsShown()
 --   B.SelectInstance(map) / B.SelectBoss(id) / B.Contents(group) / B.Wishlist() / B.Search(text)
 --   B.State() -> { mode = "boss" | "contents" | "wishlist" | "search", map, boss, group, text }
@@ -38,6 +41,10 @@ local CHAPTER_H = 40
 local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
 local CHOSEN = { 0x13 / 255, 0x23 / 255, 0x32 / 255, 1 } -- the recipe book's chosen-card ground
 
+-- The window's size (its grip) and its pin.
+ns.Defaults("loot", { width = W_, height = H_, locked = false })
+local MIN_W, MIN_H, MAX_W, MAX_H = 560, 460, 1400, 1100
+
 local state = { mode = "boss" }
 local shown = {} -- the item cards' data, for B.Rows()
 local W = {} -- the window's frames
@@ -47,10 +54,8 @@ local draw
 -- Small builders
 ---------------------------------------------------------------------------
 
-local function paint(tex, c, a)
-	c = type(c) == "table" and c or T.Color(c)
-	tex:SetColorTexture(c[1], c[2], c[3], a or c[4] or 1)
-end
+-- Through T.Paint: a color by name is painted again when the theme changes.
+local function paint(tex, c, a) T.Paint(tex, c, a) end
 
 local function textColor(fs, c)
 	c = type(c) == "table" and c or T.Color(c)
@@ -78,9 +83,23 @@ local function edges(f, layer)
 	return out
 end
 
+-- A rounded border (T.Round) or a list of edges.
 local function paintEdges(list, c, a)
+	if list.SetColor then paint(list, c, a) return end
 	for _, t in ipairs(list) do paint(t, c, a) end
 end
+
+-- The window's size as saved (within the grip's limits), and as it is now.
+local function saved()
+	local function clamp(v, lo, hi, d) v = tonumber(v) or d return max(lo, min(hi, v)) end
+	return clamp(ns.Get("loot.width"), MIN_W, MAX_W, W_), clamp(ns.Get("loot.height"), MIN_H, MAX_H, H_)
+end
+local function size()
+	if W.frame then return W.frame:GetWidth() or W_, W.frame:GetHeight() or H_ end
+	return saved()
+end
+local function width() return (size()) end
+local function height() local _, h = size() return h end
 
 -- An icon square with a thin dark rim, like the game's own icons.
 local function iconFrame(parent, size)
@@ -100,7 +119,7 @@ end
 -- A flat toggle, like the recipe book's "Way" choices: accent when chosen.
 local function segment(parent, label, onClick)
 	local b = CreateFrame("Button", nil, parent)
-	T.Panel(b, "bg2", false)
+	T.Round(b, "bg2", false, T.RADIUS.card)
 	b.pwText = T.Text(b, "button", "text2")
 	b.pwText:SetPoint("CENTER")
 	b.pwText:SetJustifyH("CENTER")
@@ -260,8 +279,8 @@ end
 -- A card's frame: ground, ring, icon, name, dot, line and a corner note.
 local function newCard()
 	local b = CreateFrame("Button", nil, W.child)
-	T.Panel(b, "bg2", false)
-	b.ring = edges(b)
+	T.Round(b, "bg2", "border", T.RADIUS.card)
+	b.ring = b.pwBorder
 	b.icon = iconFrame(b, 34)
 	b.icon:SetPoint("LEFT", 6, 0)
 	b.name = T.Text(b, "body", "text")
@@ -483,8 +502,8 @@ local function chapter(i)
 	local b = W.chapters[i]
 	if b then return b end
 	b = CreateFrame("Button", nil, W.frame)
-	T.Panel(b, "bg2", false)
-	b.ring = edges(b)
+	T.Round(b, "bg2", "border", T.RADIUS.card)
+	b.ring = b.pwBorder
 	b.name = T.Text(b, "meta", "text2")
 	b.name:SetPoint("TOPLEFT", 8, -5)
 	b.name:SetPoint("TOPRIGHT", -6, -5)
@@ -504,7 +523,7 @@ local function build()
 	local f = CreateFrame("Frame", ns.ID.global .. "Browser", nil)
 	f:SetParent(UIParent)
 	W.frame = f
-	f:SetSize(W_, H_)
+	f:SetSize(saved())
 	f:SetPoint("CENTER")
 	f:SetFrameStrata("HIGH")
 	f:SetToplevel(true)
@@ -512,7 +531,8 @@ local function build()
 	f:SetMovable(true)
 	f:EnableMouse(true)
 	f:RegisterForDrag("LeftButton")
-	f:SetScript("OnDragStart", f.StartMoving)
+	-- Pinned: it stays where it is.
+	f:SetScript("OnDragStart", function(self) if T.Movable("loot.locked") then self:StartMoving() end end)
 	f:SetScript("OnDragStop", f.StopMovingOrSizing)
 	T.Panel(f)
 	if UISpecialFrames then table.insert(UISpecialFrames, ns.ID.global .. "Browser") end
@@ -526,13 +546,16 @@ local function build()
 	W.close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -8, -6)
 	W.settings = T.IconButton(f, "settings", "Settings", function() ns.Fire("SHOW_CONFIG") end)
 	W.settings:SetPoint("RIGHT", W.close, "LEFT", -2, 0)
+	W.pin = T.PinButton(f, "loot.locked")
+	f.pwPin = W.pin
+	W.pin:SetPoint("RIGHT", W.settings, "LEFT", -2, 0)
 
 	local box = CreateFrame("EditBox", ns.ID.global .. "Search", f)
 	box:SetSize(220, 22)
-	box:SetPoint("RIGHT", W.settings, "LEFT", -8, 0)
+	box:SetPoint("RIGHT", W.pin, "LEFT", -8, 0)
 	box:SetAutoFocus(false)
 	box:SetTextInsets(8, 8, 0, 0)
-	T.Panel(box, "bg2", "border")
+	T.Panel(box, "bg2", "border", nil, T.RADIUS.card)
 	T.Font(box, "meta")
 	T.Paint(box, "text")
 	local hint = T.Text(box, "small", "muted")
@@ -606,6 +629,16 @@ local function build()
 	W.page:SetJustifyH("RIGHT")
 	W.page:SetPoint("RIGHT", W.prev, "LEFT", -10, 0)
 
+	-- The grip: any size; the cards fill as many columns as fit.
+	f.pwGrip = T.Grip(f, { minW = MIN_W, minH = MIN_H, maxW = MAX_W, maxH = MAX_H, lockPath = "loot.locked",
+		onSize = function() draw() end,
+		onDone = function(w, h) ns.Set("loot.width", w) ns.Set("loot.height", h) end,
+		onReset = function()
+			ns.Set("loot.width", W_) ns.Set("loot.height", H_)
+			f:SetSize(W_, H_)
+			draw()
+		end })
+
 	f:SetScript("OnHide", function(self) A.Set(self, "alpha", 0) end)
 	f:Hide()
 	return f
@@ -632,7 +665,7 @@ local function drawTabs(y, bosses)
 	W.tabLine:Hide()
 	if #bosses == 0 then return y end
 	local n = #bosses
-	local s = max(18, min(34, floor((W_ - 2 * PAD - (n - 1) * TAB_GAP) / n)))
+	local s = max(18, min(34, floor((width() - 2 * PAD - (n - 1) * TAB_GAP) / n)))
 	local x = PAD
 	for i, eid in ipairs(bosses) do
 		local b = tab(i)
@@ -678,11 +711,11 @@ local function drawTitle(y, title, info, back, onBack, sub)
 	if back then W.info:SetPoint("TOPRIGHT", W.back, "TOPLEFT", -12, -1)
 	else W.info:SetPoint("TOPRIGHT", W.frame, "TOPRIGHT", -PAD, -(y + 3)) end
 	local used = (back and (W.back:GetWidth() + 12) or 0) + (W.info:GetStringWidth() or 0) + 16
-	W.title:SetWidth(max(80, W_ - 2 * PAD - used))
+	W.title:SetWidth(max(80, width() - 2 * PAD - used))
 	y = y + 22
 	W.sub:ClearAllPoints()
 	W.sub:SetPoint("TOPLEFT", W.frame, "TOPLEFT", PAD, -y)
-	W.sub:SetWidth(W_ - 2 * PAD)
+	W.sub:SetWidth(width() - 2 * PAD)
 	W.sub:SetText(sub or "")
 	return y + 18
 end
@@ -691,7 +724,7 @@ end
 local function drawChapters(y, list, chosen, onPick)
 	for _, b in ipairs(W.chapters) do b:Hide() end
 	if #list == 0 then return y end
-	local bw = W_ - 2 * PAD
+	local bw = width() - 2 * PAD
 	local cw = (bw - (#list - 1) * 4) / #list
 	for i, c in ipairs(list) do
 		local b = chapter(i)
@@ -718,8 +751,8 @@ local function placeScroll(top)
 	W.scroll:ClearAllPoints()
 	W.scroll:SetPoint("TOPLEFT", f, "TOPLEFT", PAD, -top)
 	W.scroll:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD + 6, FOOT_H + 6)
-	W.viewH = max(0, H_ - top - FOOT_H - 6)
-	W.pageW = W_ - 2 * PAD - 6
+	W.viewH = max(0, height() - top - FOOT_H - 6)
+	W.pageW = width() - 2 * PAD - 6
 	W.pageTop = top
 end
 
@@ -994,5 +1027,7 @@ ns.On("LOOT_SEEN", refresh)
 ns.On("ITEMS_CHANGED", refresh)
 ns.On("WISHLIST_CHANGED", refresh)
 ns.On("SETTING_CHANGED", function(path)
+	-- Back to the defaults, or another profile: its size too.
+	if W.frame and (path == "*" or path == "loot.*" or path == "profile.shared") then W.frame:SetSize(saved()) end
 	if type(path) == "string" and (path:find("^loot%.") or path == "*") then refresh() end
 end)

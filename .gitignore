@@ -5,3 +5,6 @@ CLAUDE.md
 CLAUDE.local.md
 .claude/
 data/sources/
+
+# The preview's pages and pictures (tools/preview)
+/preview/

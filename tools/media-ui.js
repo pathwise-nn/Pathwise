@@ -342,6 +342,43 @@ T['glyph-grid'] = () => { const c = canvas(32); for (const [x, y] of [[7, 7], [1
 T['glyph-help'] = () => { const c = canvas(32); paint(c, stroke(arc(16, 11, 6, Math.PI * 1.0, Math.PI * 2.35), 2.6)); paint(c, stroke([[18.2, 16.6], [16, 19], [16, 21]], 2.6)); paint(c, ring(16, 26, 1.4, 2.8)); return c; };
 T['glyph-menu'] = () => { const c = canvas(32); for (const y of [9, 16, 23]) paint(c, stroke([[7, y], [25, y]], 2.4)); return c; };
 
+// Rounded corners, as Pathwise draws them: the top-left quarter of a disc
+// (fill) and of a ring along its edge (line). Widgets.lua flips them for the
+// other three corners. The line is 1 UI unit wide at the radius it is used
+// for: corner-line for windows (10), corner-line-small for cards and
+// buttons (6), so it meets the straight 1-pixel edges.
+T['corner'] = () => { const c = canvas(32); paint(c, disc(32, 32, 32)); return c; };
+const cornerLine = (radius) => () => {
+	const c = canvas(32);
+	const w = 32 / radius;
+	paint(c, ring(32, 32, 32 - w / 2, w));
+	return c;
+};
+T['corner-line'] = cornerLine(10);
+T['corner-line-small'] = cornerLine(6);
+
+// The resize grip: three diagonal lines in the bottom-right corner.
+T['glyph-resize'] = () => {
+	const c = canvas(32);
+	paint(c, stroke([[27, 11], [11, 27]], 2.2));
+	paint(c, stroke([[27, 18], [18, 27]], 2.2));
+	paint(c, stroke([[27, 25], [25, 27]], 2.2));
+	return c;
+};
+// The pin: a push pin, tilted (the same as Pathwise's).
+T['glyph-pin'] = () => {
+	const c = canvas(32);
+	const rot = (pts) => pts.map(([x, y]) => {
+		const a = Math.PI / 4, cx = 16, cy = 16;
+		const dx = x - cx, dy = y - cy;
+		return [cx + dx * Math.cos(a) - dy * Math.sin(a), cy + dx * Math.sin(a) + dy * Math.cos(a)];
+	});
+	paint(c, stroke(rot([[11, 5], [21, 5]]), 2.6));
+	paint(c, stroke(rot([[13, 5], [13, 13], [9, 18], [23, 18], [19, 13], [19, 5]]), 2.4, true));
+	paint(c, stroke(rot([[16, 18], [16, 28]]), 2.4));
+	return c;
+};
+
 function main() {
 	const only = process.argv.slice(2);
 	fs.mkdirSync(OUT, { recursive: true });

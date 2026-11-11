@@ -138,11 +138,15 @@ end)
 test("arrow: shows with a waypoint, hides in instances, eases toward the bearing", function()
 	local stub, ns = fresh()
 	stub.login()
+	ns.Set("guide.style", "window") ns.Set("compass.shown", false) -- the v1 window and arrow these tests check
 	ns.Nav.SetTarget(1420, 40, 50, "West") -- due west of the player
 	local arrow = _G.PathwiseArrow
 	ok(arrow and arrow.shown, "arrow shown")
 	stub.advance(1)
-	local dart = stub.find("\\arrow$")
+	local dart
+	for _, f in ipairs(stub.frames) do
+		if f.parent == arrow and type(rawget(f, "texture")) == "string" and f.texture:match("\\arrow$") then dart = f end
+	end
 	ok(dart, "dart texture")
 	near(dart.rotation, math.pi / 2, 0.01, "points left (west) when facing north")
 	stub.player.instance = true
@@ -199,6 +203,7 @@ end)
 test("the arrow's distance counts down as the player walks", function()
 	local stub, ns = fresh()
 	stub.login()
+	ns.Set("guide.style", "window") ns.Set("compass.shown", false) -- the v1 window and arrow these tests check
 	ns.Nav.SetTarget(1420, 50, 10, "North") -- 40 map units = 800 yd north
 	stub.advance(0.2)
 	local dist = _G.PathwiseArrow
@@ -271,6 +276,7 @@ test("guide window: empty state, sample step, compact mode keeps the view", func
 	-- A character no route is for (every playable race has one now): the empty state.
 	stub.player.raceID, stub.player.race, stub.player.faction = 99, "Nobody", "Neutral"
 	stub.login()
+	ns.Set("guide.style", "window") ns.Set("compass.shown", false) -- the v1 window and arrow these tests check
 	local f = _G.PathwiseGuide
 	ok(f and f.shown, "guide window shown at login")
 	local emptyH = f.h
@@ -291,6 +297,7 @@ end)
 test("guide window toggles with /pw and remembers it", function()
 	local stub, ns = fresh()
 	stub.login()
+	ns.Set("guide.style", "window") ns.Set("compass.shown", false) -- the v1 window and arrow these tests check
 	SlashCmdList.PATHWISE("")
 	eq(ns.Get("guide.shown"), false)
 	eq(_G.PathwiseGuide.shown, false)
@@ -310,8 +317,12 @@ end)
 test("opacity setting re-tints the window ground", function()
 	local stub, ns = fresh()
 	stub.login()
+	ns.Set("guide.style", "window") ns.Set("compass.shown", false) -- the v1 window and arrow these tests check
 	SlashCmdList.PATHWISE("opacity 60")
-	near(_G.PathwiseGuide.pwGround.color[4], 0.6, 1e-9, "alpha")
+	-- The window's ground is rounded: its middle piece carries the alpha.
+	local mid = _G.PathwiseGuide.pwRound.fills[5]
+	near(mid.color[4], 0.6, 1e-9, "alpha")
+	near(mid.color[1], ns.Theme.COLORS.bg[1], 1e-9, "the ground colour")
 end)
 
 -- WCAG contrast of the theme's text on its grounds.
@@ -363,6 +374,7 @@ assert(loadfile(ROOT .. "/tests/bags.lua"))({ test = test, eq = eq, near = near,
 assert(loadfile(ROOT .. "/tests/automate.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
 assert(loadfile(ROOT .. "/tests/gathering.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
 assert(loadfile(ROOT .. "/tests/recipebook.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
+assert(loadfile(ROOT .. "/tests/v2.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
 
 ---------------------------------------------------------------------------
 

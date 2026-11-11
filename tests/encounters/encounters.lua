@@ -460,3 +460,15 @@ test("options: test bars, moving them, and the saved place", function()
 	stub.fire("ENCOUNTER_START", 663, "Lucifron", 9, 40)
 	ok(not _G.PathwiseEncounters_Bars.shown, "bars off")
 end)
+
+test("look: the range window is rounded, the timer bars square", function()
+	local stub, ns = fresh({ group = true, distances = { party1 = 25 }, setup = function(s)
+		s.units.party1 = { name = "Florp", player = true }
+	end })
+	SlashCmdList.PATHWISEENCOUNTERS("range 10")
+	local r = _G.PathwiseEncounters_Range
+	eq(r.pwRadius, 10, "a rounded window")
+	ok(r.pwGround.pieces and #r.pwBorder.edges == 4, "pieced ground and border")
+	ns.Theme.UseScheme("sand")
+	near(r.pwGround.color[1], 0xFB / 255, 1e-6, "a light theme repaints it")
+end)

@@ -1,4 +1,12 @@
--- Pathwise guide window, Signature style. Two layouts of one window:
+-- Pathwise guide window, Signature style: the "Window" guide style (v2).
+-- The guide on screen has three styles (guide.style), one shown at a time:
+--   "tracker"  a compact card beside the screen's edge (UI/TrackerCard.lua)
+--   "window"   this window: a header with the route's crest, tabs, the step
+--   "minimal"  floating text over the game, no window (UI/Hud.lua)
+-- The Signature Hub (UI/Hub.lua) is the full window, opened on demand.
+-- Every style draws the same view; Guide.SetView fires GUIDE_VIEW for them.
+--
+-- Two layouts of this window:
 --   full     header (zone, step counter), a toolbar row, 2 px progress line, the step card (what to do right
 --            now: "Step 28", the action with its person or quest picked out,
 --            objective counts, coordinates), the steps from here as a
@@ -30,8 +38,10 @@ local floor, max, min, abs = math.floor, math.max, math.min, math.abs
 ns.Defaults("guide", {
 	shown = true,
 	compact = false,
+	style = "tracker", -- "tracker" | "window" | "minimal"
+	locked = false, -- pinned in place (the pin in its header)
 	point = nil, -- { point, x, y [, relativePoint] }
-	width = 340,
+	width = 400, -- room for the tabs and the buttons beside them
 	height = nil, -- nil: the window fits each step; a number: the height dragged with the grip
 })
 
@@ -40,14 +50,58 @@ local PAD = T.SPACE.l
 local W = {} -- widgets
 local view -- what the window shows
 local Guide = ns.Guide or {}
-Guide.TOOLS_H = 30 -- the toolbar row under the title
+Guide.TOOLS_H = 34 -- the tab row under the title
+Guide.HEAD_H = 56 -- the header: crest, eyebrow, route
+Guide.PROGRESS_GAP = 8 -- between the tabs' underline and the progress line
+Guide.STYLES = { "tracker", "window", "minimal" }
+Guide.STYLE_NAMES = { tracker = "Tracker", window = "Window", minimal = "Minimal" }
 -- The resize grip's bounds (and the client's, SetResizeBounds).
-Guide.MIN_W, Guide.MAX_W = 280, 600
+Guide.MIN_W, Guide.MAX_W = 360, 600
 Guide.MIN_H, Guide.MAX_H = 220, 900
 ns.Guide = Guide
 Pathwise.Guide = Guide
 
 local liveHeight -- the height while the grip is dragged, before guide.height saves it
+
+-- The guide style chosen (an unknown saved value reads as the tracker).
+function Guide.Style()
+	local s = ns.Get("guide.style")
+	return Guide.STYLE_NAMES[s] and s or "tracker"
+end
+
+-- Hides the on-screen guide (any style's close button), saying once how to
+-- bring it back.
+local hinted
+function Guide.Hide()
+	ns.Set("guide.shown", false)
+	if hinted then return end
+	hinted = true
+	ns.Print(ns.Get("minimap.shown") and "the guide is hidden: click Pathwise's minimap button for the hub, and pick a style under On screen."
+		or "the guide is hidden: bring it back with your key (Key Bindings > Pathwise), or show the minimap button in Settings.")
+end
+
+-- The next style in turn (a key binding, /pw style), showing the guide.
+function Guide.CycleStyle()
+	local now = Guide.Style()
+	local at = 1
+	for i, s in ipairs(Guide.STYLES) do if s == now then at = i end end
+	ns.Set("guide.style", Guide.STYLES[at % #Guide.STYLES + 1])
+	ns.Set("guide.shown", true)
+end
+
+-- The frame of the guide on screen now (any style), if it is shown.
+local STYLE_FRAMES = { tracker = "PathwiseTracker", window = "PathwiseGuide", minimal = "PathwiseHud" }
+function Guide.Frame()
+	local f = _G[STYLE_FRAMES[Guide.Style()]]
+	if f and f.IsShown and f:IsShown() then return f end
+	return nil
+end
+
+-- Whether the on-screen guide in `style` should show now.
+function Guide.StyleShown(style)
+	if ns.Hub and ns.Hub.Shown() then return false end -- the hub shows the step
+	return ns.Get("guide.shown") and Guide.Style() == style and true or false
+end
 
 local function clampW(w) return min(Guide.MAX_W, max(Guide.MIN_W, w)) end
 local function clampH(h) return min(Guide.MAX_H, max(Guide.MIN_H, h)) end
@@ -112,6 +166,7 @@ end
 
 local function resizeStart(g, button)
 	if button and button ~= "LeftButton" then return end
+	if ns.Get("guide.locked") then return end -- pinned: no resizing
 	local f = W.frame
 	-- The top-left corner stays where it is; the right and bottom edges follow the grip.
 	local l, t = f:GetLeft(), f:GetTop()
@@ -207,13 +262,12 @@ end
 local function build()
 	local f = CreateFrame("Frame", "PathwiseGuide", UIParent)
 	W.frame = f
-	f:SetWidth(clampW(ns.Get("guide.width") or 340))
+	f:SetWidth(clampW(ns.Get("guide.width") or 400))
 	f:SetFrameStrata("MEDIUM")
 	f:SetClampedToScreen(true)
 	f:SetMovable(true)
 	f:EnableMouse(true)
-	T.Panel(f)
-	T.TrackGround(f)
+	T.RoundWindow(f, 10)
 	T.TrackScale(f)
 	local saved = ns.Get("guide.point")
 	if type(saved) == "table" then
@@ -222,35 +276,43 @@ local function build()
 		f:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -60, -220)
 	end
 
-	-- Header: icon, the route (zone) and the step counter; the buttons below.
+	-- Header: the route's crest, "LEVELING ROUTE · ALLIANCE", the route and
+	-- its levels, the step counter; the tabs below.
 	local head = CreateFrame("Frame", nil, f)
 	W.head = head
 	head:SetPoint("TOPLEFT")
 	head:SetPoint("TOPRIGHT")
-	head:SetHeight(T.HEADER_H)
+	head:SetHeight(Guide.HEAD_H)
 	head:EnableMouse(true)
 	head:RegisterForDrag("LeftButton")
-	head:SetScript("OnDragStart", function() f:StartMoving() end)
+	head:SetScript("OnDragStart", function() if T.Movable("guide.locked") then f:StartMoving() end end)
 	head:SetScript("OnDragStop", function() f:StopMovingOrSizing() savePoint(f) end)
 
-	W.icon = T.Icon(head, 16)
-	W.icon:SetPoint("LEFT", 12, 0)
-	W.name = T.Text(head, "window", "text")
-	W.name:SetPoint("LEFT", W.icon, "RIGHT", 8, 0)
+	W.crest = T.Crest(head, 34)
+	W.crest:SetPoint("LEFT", 14, -2)
+	W.icon = W.crest
+	W.eyebrow = T.Text(head, "label", "accent")
+	W.eyebrow:SetPoint("TOPLEFT", W.crest, "TOPRIGHT", 12, 0)
+	W.eyebrow:SetWordWrap(false)
+	W.name = T.TextAt(head, "semibold", 16, "text")
+	W.name:SetPoint("TOPLEFT", W.eyebrow, "BOTTOMLEFT", 0, -4)
 	W.name:SetText("Pathwise")
 	W.name:SetWordWrap(false)
 
 	-- Top row: the zone (route) and the step counter. The buttons have a
 	-- row of their own under it, so the name has the whole width.
-	W.counter = T.Text(head, "small", "text2")
-	W.counter:SetPoint("RIGHT", -12, 0)
+	W.pin = T.PinButton(head, "guide.locked", 24)
+	W.pin:SetPoint("TOPRIGHT", -8, -8)
+	W.counter = T.Text(head, "meta", "text2")
+	W.counter:SetPoint("RIGHT", W.pin, "LEFT", -6, 0)
 	W.counter:SetJustifyH("RIGHT")
 	W.counter:SetWordWrap(false)
 	W.name:SetPoint("RIGHT", W.counter, "LEFT", -8, 0)
+	W.eyebrow:SetPoint("RIGHT", W.counter, "LEFT", -8, 0)
 	W.route = W.name
 
-	-- The toolbar: sync, dungeons, professions, zones and settings on the
-	-- left; compact and close on the right.
+	-- The tabs: Guide (this), Routes, Professions, Dungeons; then the hub,
+	-- sync, settings, compact and close on the right.
 	local tools = CreateFrame("Frame", nil, f)
 	W.tools = tools
 	tools:SetPoint("TOPLEFT", head, "BOTTOMLEFT", 0, 0)
@@ -258,40 +320,58 @@ local function build()
 	tools:SetHeight(Guide.TOOLS_H)
 	tools:EnableMouse(true)
 	tools:RegisterForDrag("LeftButton")
-	tools:SetScript("OnDragStart", function() f:StartMoving() end)
+	tools:SetScript("OnDragStart", function() if T.Movable("guide.locked") then f:StartMoving() end end)
 	tools:SetScript("OnDragStop", function() f:StopMovingOrSizing() savePoint(f) end)
-	W.sync = T.IconButton(tools, "sync", "Sync with your quest log", function() ns.Fire("GUIDE_SYNC") end)
-	W.sync:SetPoint("LEFT", 6, 0)
-	W.dungeons = T.IconButton(tools, "dungeon", "Dungeons for your level", function() ns.Fire("SHOW_DUNGEONS") end)
-	W.dungeons:SetPoint("LEFT", W.sync, "RIGHT", 2, 0)
-	W.prof = T.IconButton(tools, "prof", "Professions", function() ns.Fire("SHOW_PROFESSIONS") end)
-	W.prof:SetPoint("LEFT", W.dungeons, "RIGHT", 2, 0)
-	W.zones = T.IconButton(tools, "zones", "Zones for your level", function() ns.Fire("SHOW_ZONES") end)
-	W.zones:SetPoint("LEFT", W.prof, "RIGHT", 2, 0)
-	W.settings = T.IconButton(tools, "settings", "Settings", function() ns.Fire("SHOW_SETTINGS") end)
-	W.settings:SetPoint("LEFT", W.zones, "RIGHT", 2, 0)
-	W.close = T.IconButton(tools, "close", "Close", function()
-		ns.Set("guide.shown", false)
-		if not W.hinted then
-			W.hinted = true
-			ns.Print(ns.Get("minimap.shown") and "the guide is hidden: click Pathwise's minimap button to bring it back."
-				or "the guide is hidden: bring it back with your key (Key Bindings > Pathwise), or show the minimap button in Settings.")
+	W.tabs = {}
+	local prevTab
+	for i, spec in ipairs({ { "Guide", nil }, { "Routes", "SHOW_ZONES" }, { "Professions", "SHOW_PROFESSIONS" }, { "Dungeons", "SHOW_DUNGEONS" } }) do
+		local tab = CreateFrame("Button", nil, tools)
+		tab:SetHeight(Guide.TOOLS_H)
+		tab.text = T.Text(tab, "button", i == 1 and "text" or "text2")
+		tab.text:SetPoint("CENTER", 0, 1)
+		tab.text:SetText(spec[1])
+		tab:SetWidth((tab.text:GetStringWidth() or 40) + 16)
+		tab.line = tab:CreateTexture(nil, "ARTWORK")
+		tab.line:SetHeight(2)
+		tab.line:SetPoint("BOTTOMLEFT", 6, 0)
+		tab.line:SetPoint("BOTTOMRIGHT", -6, 0)
+		T.SetColor(tab.line, "accent")
+		tab.line:SetShown(i == 1)
+		if spec[2] then
+			tab:SetScript("OnClick", function() ns.Fire(spec[2]) end)
+			tab:SetScript("OnEnter", function() T.TextColor(tab.text, "text") end)
+			tab:SetScript("OnLeave", function() T.TextColor(tab.text, "text2") end)
 		end
-	end)
+		tab:SetPoint("LEFT", prevTab or tools, prevTab and "RIGHT" or "LEFT", prevTab and 0 or 6, 0)
+		prevTab = tab
+		W.tabs[i] = tab
+	end
+	W.tabLine = tools:CreateTexture(nil, "BORDER")
+	W.tabLine:SetHeight(1)
+	W.tabLine:SetPoint("BOTTOMLEFT", 12, 0)
+	W.tabLine:SetPoint("BOTTOMRIGHT", -12, 0)
+	T.SetColor(W.tabLine, "border")
+	W.hub = T.IconButton(tools, "grid", "Open the hub", function() ns.Fire("TOGGLE_HUB") end)
+	W.sync = T.IconButton(tools, "sync", "Sync with your quest log", function() ns.Fire("GUIDE_SYNC") end)
+	W.settings = T.IconButton(tools, "settings", "Settings", function() ns.Fire("SHOW_SETTINGS") end)
+	W.close = T.IconButton(tools, "close", "Close", function() Guide.Hide() end)
 	W.close:SetPoint("RIGHT", -6, 0)
 	W.mode = T.IconButton(tools, "collapse", "Compact mode", function() Guide.SetCompact(not ns.Get("guide.compact")) end)
 	W.mode:SetPoint("RIGHT", W.close, "LEFT", -2, 0)
+	W.settings:SetPoint("RIGHT", W.mode, "LEFT", -2, 0)
+	W.sync:SetPoint("RIGHT", W.settings, "LEFT", -2, 0)
+	W.hub:SetPoint("RIGHT", W.sync, "LEFT", -2, 0)
 
 	W.progress = T.ProgressLine(f)
-	W.progress.track:SetPoint("TOPLEFT", tools, "BOTTOMLEFT", 1, 0)
-	W.progress.track:SetPoint("TOPRIGHT", tools, "BOTTOMRIGHT", -1, 0)
+	W.progress.track:SetPoint("TOPLEFT", tools, "BOTTOMLEFT", 12, -Guide.PROGRESS_GAP)
+	W.progress.track:SetPoint("TOPRIGHT", tools, "BOTTOMRIGHT", -12, -Guide.PROGRESS_GAP)
 
 	-- Body (full layout): the child of a scroll area under the progress line.
 	-- It fits the step, or scrolls when the window has a height of its own.
 	local scroll = CreateFrame("ScrollFrame", nil, f)
 	W.scroll = scroll
-	scroll:SetPoint("TOPLEFT", tools, "BOTTOMLEFT", 0, -T.PROGRESS_H)
-	scroll:SetPoint("TOPRIGHT", tools, "BOTTOMRIGHT", 0, -T.PROGRESS_H)
+	scroll:SetPoint("TOPLEFT", tools, "BOTTOMLEFT", 0, -(T.PROGRESS_H + Guide.PROGRESS_GAP))
+	scroll:SetPoint("TOPRIGHT", tools, "BOTTOMRIGHT", 0, -(T.PROGRESS_H + Guide.PROGRESS_GAP))
 	scroll:EnableMouseWheel(false)
 	scroll:SetScript("OnMouseWheel", scrollBy)
 	local body = CreateFrame("Frame", nil, scroll)
@@ -307,7 +387,7 @@ local function build()
 	-- The step card: what to do right now.
 	local now = CreateFrame("Frame", nil, body)
 	W.now = now
-	T.Panel(now, "bg2", false)
+	T.Round(now, "bg2", false, 6)
 	now.accent = now:CreateTexture(nil, "ARTWORK")
 	now.accent:SetWidth(2)
 	now.accent:SetPoint("TOPLEFT", 0, 0)
@@ -328,7 +408,12 @@ local function build()
 	-- Detour card.
 	local card = CreateFrame("Frame", nil, body)
 	W.card = card
-	T.Panel(card, "bg2", false)
+	do
+		local a = T.Color("accent")
+		T.Round(card, { a[1], a[2], a[3], 0.06 }, { a[1], a[2], a[3], 0.45 }, 6)
+	end
+	card.star = T.Glyph(card, "glyph-star", 16, "accent")
+	card.star:SetPoint("TOPLEFT", 12, -12)
 	card.label = T.Text(card, "label", "accent")
 	card.text = T.Text(card, "meta", "text")
 	card.sub = T.Text(card, "small", "text2")
@@ -344,10 +429,10 @@ local function build()
 	end
 
 	-- Footer.
-	W.back = T.Button(f, "Back", "default", function() ns.Fire("GUIDE_BACK") end)
-	W.skip = T.Button(f, "Skip", "default", function() ns.Fire("GUIDE_SKIP") end)
-	W.report = T.IconButton(f, "flag", "Report this step", function() ns.Fire("REPORT_STEP", view) end, 28)
-	W.next = T.Button(f, "Next", "accent", function() ns.Fire("GUIDE_NEXT") end)
+	W.back = T.RoundButton(f, "Back", "default", function() ns.Fire("GUIDE_BACK") end, 32)
+	W.skip = T.RoundButton(f, "Skip", "default", function() ns.Fire("GUIDE_SKIP") end, 32)
+	W.report = T.IconButton(f, "flag", "Report this step", function() ns.Fire("REPORT_STEP", view) end, 32)
+	W.next = T.RoundButton(f, "Next", "primary", function() ns.Fire("GUIDE_NEXT") end, 32)
 
 	-- Empty state.
 	W.empty = T.Text(body, "meta", "text2")
@@ -363,7 +448,7 @@ local function build()
 	bar:SetPoint("TOPRIGHT")
 	bar:SetHeight(48)
 	bar:RegisterForDrag("LeftButton")
-	bar:SetScript("OnDragStart", function() f:StartMoving() end)
+	bar:SetScript("OnDragStart", function() if T.Movable("guide.locked") then f:StartMoving() end end)
 	bar:SetScript("OnDragStop", function() f:StopMovingOrSizing() savePoint(f) end)
 	bar:SetScript("OnClick", function() Guide.SetCompact(false) end)
 	bar.icon = T.Icon(bar, 16)
@@ -521,7 +606,7 @@ end
 local CHROME_H -- header, toolbar and progress line
 local function fitBody(contentH, footH)
 	local f, scroll = W.frame, W.scroll
-	CHROME_H = T.HEADER_H + Guide.TOOLS_H + T.PROGRESS_H
+	CHROME_H = Guide.HEAD_H + Guide.TOOLS_H + T.PROGRESS_H + Guide.PROGRESS_GAP
 	local fixed = Guide.FixedHeight()
 	local viewH = fixed and max(1, fixed - CHROME_H - footH) or contentH
 	W.body:SetWidth(f:GetWidth())
@@ -553,6 +638,8 @@ local function layoutFull()
 
 	local has = view ~= nil
 	W.route:SetText(has and view.route or "Pathwise")
+	W.eyebrow:SetText(Guide.Eyebrow(view))
+	W.crest:SetFaction(has and view.faction or nil)
 	W.counter:SetText(has and view.count and ("%d / %d"):format(view.index or 0, view.count) or "")
 	W.progress:SetProgress(has and view.progress or 0)
 
@@ -675,7 +762,7 @@ local function layoutFull()
 		card.text:SetText(d.text or "")
 		card.sub:SetText(d.sub or "")
 		card.label:ClearAllPoints()
-		card.label:SetPoint("TOPLEFT", 12, -10)
+		card.label:SetPoint("TOPLEFT", 36, -10)
 		card.label:SetPoint("RIGHT", card.go, "LEFT", -8, 0)
 		card.text:ClearAllPoints()
 		card.text:SetPoint("TOPLEFT", card.label, "BOTTOMLEFT", 0, -3)
@@ -800,6 +887,35 @@ function Guide.SetView(v)
 	if W.scroll and not (v and view and v.index == view.index and v.route == view.route) then W.scroll:SetVerticalScroll(0) end
 	view = v
 	Guide.Refresh()
+	ns.Fire("GUIDE_VIEW", v)
+end
+
+-- "LEVELING ROUTE · ALLIANCE": what kind of route, and whose.
+local KIND = { Leveling = "Leveling route", Class = "Class route", Professions = "Profession route" }
+function Guide.Eyebrow(v)
+	if not v then return "PATHWISE" end
+	if v.extra then return "EXTRA QUEST" end
+	local bits = { KIND[v.category] or "Route" }
+	if v.faction then bits[#bits + 1] = v.faction end
+	return table.concat(bits, "  ·  "):upper()
+end
+
+-- "Alliance  ·  Levels 12-17"
+function Guide.RouteLine(v)
+	if not v then return "" end
+	local bits = {}
+	if v.faction then bits[#bits + 1] = v.faction end
+	if v.levels and v.levels[1] then
+		bits[#bits + 1] = v.levels[2] and v.levels[2] ~= v.levels[1] and ("Levels %d-%d"):format(v.levels[1], v.levels[2]) or ("Level %d"):format(v.levels[1])
+	end
+	return table.concat(bits, "  ·  ")
+end
+
+-- "56.6, 52.6  ·  Westfall"
+function Guide.PlaceLine(v)
+	if not v then return "" end
+	if v.xy then return v.zone and (v.xy .. "  ·  " .. v.zone) or v.xy end
+	return v.coords or ""
 end
 
 function Guide.View() return view end
@@ -810,6 +926,9 @@ end
 
 function Guide.Show(on)
 	if on == nil then on = true end
+	-- This window is the "window" style; the others draw their own. None
+	-- while the hub is open.
+	if not Guide.StyleShown("window") then on = false end
 	if on and not W.frame then build() end
 	if not W.frame then return end
 	W.frame:SetShown(on)
@@ -818,14 +937,15 @@ end
 
 ns.On("TOGGLE_GUIDE", function() ns.Set("guide.shown", not ns.Get("guide.shown")) end)
 ns.On("SETTING_CHANGED", function(path)
-	if path == "guide.shown" then Guide.Show(ns.Get("guide.shown"))
+	if path == "guide.shown" or path == "guide.style" then Guide.Show(ns.Get("guide.shown"))
 	elseif path == "guide.compact" or path == "guide.height" then Guide.Refresh()
 	elseif path == "guide.width" and W.frame then
-		W.frame:SetWidth(clampW(ns.Get("guide.width") or 340))
+		W.frame:SetWidth(clampW(ns.Get("guide.width") or 400))
 		Guide.Refresh()
 	end
 end)
 ns.On("READY", function() if ns.Get("guide.shown") then Guide.Show(true) end end)
+ns.On("HUB_TOGGLED", function() Guide.Show(ns.Get("guide.shown")) end)
 ns.On("TRACKER_UPDATED", function() if W.frame and W.frame:IsShown() then Guide.Refresh() end end)
 
 -- The compact bar shows the arrow's distance when there is one.

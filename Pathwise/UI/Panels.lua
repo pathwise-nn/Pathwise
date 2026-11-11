@@ -18,6 +18,7 @@
 --   { "input", key, lines }                 a box to type or paste into; Panels.InputText(key)
 --   { "divider" }
 --   { "buttons", { { label, kind, onClick }, ... } }   right-aligned footer
+--   { "themes", selectedKey, onPick(key) }  a tile per theme, in its colours
 
 local ADDON, ns = ...
 local T = ns.Theme
@@ -25,9 +26,19 @@ local Panels = {}
 ns.Panels = Panels
 
 local WIDTH, PAD = 300, 16
+
+-- Settings and the pages it leads to open as a window of their own (v2):
+-- not beside the guide, dragged anywhere, its place kept (settings.point),
+-- a pin to keep it there, over the hub. The other panels (Skip,
+-- Professions, Dungeons ...) still open beside the guide.
+ns.Defaults("settings", { point = nil, locked = false })
+local WINDOW_KINDS = { settings = true, about = true, tools = true, leveling = true }
+function Panels.IsWindow(kind)
+	return kind ~= nil and (WINDOW_KINDS[kind] or (Panels.IsSuiteKind and Panels.IsSuiteKind(kind))) or false
+end
 local panel, openKind
 local scroll, host -- the rows live on `host`, scrolled inside the panel when taller than the screen
-local pool = { heading = {}, title = {}, text = {}, choice = {}, setting = {}, divider = {}, buttons = {}, slider = {}, progress = {}, copy = {}, icon = {}, coords = {}, input = {} }
+local pool = { heading = {}, title = {}, text = {}, choice = {}, setting = {}, divider = {}, buttons = {}, slider = {}, progress = {}, copy = {}, icon = {}, coords = {}, input = {}, themes = {} }
 local inputs = {} -- key -> the text typed into that input row
 local used
 
@@ -37,8 +48,23 @@ local function build(name)
 	panel:SetFrameStrata("MEDIUM")
 	panel:SetClampedToScreen(true)
 	panel:EnableMouse(true)
+	panel:SetMovable(true)
+	panel:SetToplevel(true)
+	panel:RegisterForDrag("LeftButton")
+	-- As a window (Settings): drag it anywhere; its place is kept.
+	panel:SetScript("OnDragStart", function(self)
+		if Panels.IsWindow(openKind) and T.Movable("settings.locked") then self:StartMoving() end
+	end)
+	panel:SetScript("OnDragStop", function(self)
+		self:StopMovingOrSizing()
+		if not Panels.IsWindow(openKind) then return end
+		local p, _, rel, x, y = self:GetPoint(1)
+		if p and x and y then ns.Set("settings.point", { p, math.floor(x + 0.5), math.floor(y + 0.5), rel ~= p and rel or nil }) end
+	end)
 	T.Panel(panel)
 	T.TrackGround(panel)
+	-- Escape closes it, as the game's own windows.
+	if type(UISpecialFrames) == "table" then table.insert(UISpecialFrames, panel:GetName() or "PathwisePanel") end
 	-- The panel takes the window size when it opens, not while a slider in it
 	-- is being dragged (it would move under the pointer).
 	scroll = CreateFrame("ScrollFrame", nil, panel)
@@ -58,9 +84,14 @@ local function build(name)
 	panel.close = T.IconButton(panel, "close", "Close", function() Panels.Close() end)
 	panel.close:SetPoint("TOPRIGHT", -6, -6)
 	panel.close:SetFrameLevel((scroll:GetFrameLevel() or 1) + 5)
+	-- The pin (Settings as a window): it stays where it is.
+	panel.pin = T.PinButton(panel, "settings.locked", 22)
+	panel.pin:SetPoint("RIGHT", panel.close, "LEFT", -2, 0)
+	panel.pin:SetFrameLevel((scroll:GetFrameLevel() or 1) + 5)
+	panel.pin:Hide()
 	-- Back: to the panel this one was opened from (Settings > a suite addon).
 	panel.back = T.IconButton(panel, "back", "Back", function() Panels.Back() end)
-	panel.back:SetPoint("RIGHT", panel.close, "LEFT", -2, 0)
+	panel.back:SetPoint("RIGHT", panel.pin, "LEFT", -2, 0)
 	panel.back:SetFrameLevel((scroll:GetFrameLevel() or 1) + 5)
 	panel.back:Hide()
 	panel:Hide()
@@ -229,6 +260,35 @@ function makers.icon()
 	return T.Icon(host, 40)
 end
 
+-- Theme tiles, two to a row: each drawn in its own theme's colours (its
+-- ground, its text, an accent dot), the one in use outlined in its accent.
+local TILE_H, TILE_GAP = 46, 8
+function makers.themes()
+	local f = CreateFrame("Frame", nil, host)
+	f.tiles = {}
+	for i, th in ipairs(T.THEMES) do
+		local b = CreateFrame("Button", nil, f)
+		b:SetHeight(TILE_H)
+		local hx = T.Hex
+		T.Round(b, hx(th.bg2), hx(th.border), 8)
+		b.dot = CreateFrame("Frame", nil, b)
+		b.dot:SetSize(14, 14)
+		b.dot:SetPoint("LEFT", 12, 0)
+		T.Round(b.dot, hx(th.accent), false, 7)
+		b.name = T.Text(b, "body", hx(th.text))
+		b.name:SetPoint("TOPLEFT", 34, -8)
+		b.name:SetPoint("RIGHT", -8, 0)
+		b.name:SetWordWrap(false)
+		b.name:SetText(th.name)
+		b.sub = T.Text(b, "small", hx(th.text2))
+		b.sub:SetPoint("TOPLEFT", b.name, "BOTTOMLEFT", 0, -2)
+		b.sub:SetText(th.mode == "light" and "Light" or "Dark")
+		b.theme = th
+		f.tiles[i] = b
+	end
+	return f
+end
+
 function makers.buttons()
 	local f = CreateFrame("Frame", nil, host)
 	f:SetHeight(28)
@@ -271,7 +331,7 @@ local function render(rows)
 		if kind == "heading" then
 			local fs = take("heading", makers.heading)
 			fs:SetText(tostring(r[2]):upper())
-			fs:SetWidth(inner - (first and 28 or 0))
+			fs:SetWidth(inner - (first and 76 or 0)) -- clear of back, pin and close
 			place(fs, fs:GetStringHeight() or 10, first and 0 or 14)
 		elseif kind == "title" then
 			local fs = take("title", makers.title)
@@ -405,6 +465,25 @@ local function render(rows)
 			s:SetQuietly(v)
 			f.box:SetNumber(percent(v))
 			place(f, 48, 8)
+		elseif kind == "themes" then
+			local f = take("themes", makers.themes)
+			local cols = 2
+			local tw = (inner - TILE_GAP) / cols
+			for i, b in ipairs(f.tiles) do
+				local th = b.theme
+				local col, row = (i - 1) % cols, math.floor((i - 1) / cols)
+				b:ClearAllPoints()
+				b:SetPoint("TOPLEFT", f, "TOPLEFT", col * (tw + TILE_GAP), -row * (TILE_H + TILE_GAP))
+				b:SetWidth(tw)
+				local on = th.key == r[2]
+				T.PaintRound(b, nil, T.Hex(on and th.accent or th.border))
+				b.selected = on
+				b:SetScript("OnClick", function() r[3](th.key) end)
+			end
+			local rowsN = math.ceil(#f.tiles / cols)
+			local h = rowsN * TILE_H + (rowsN - 1) * TILE_GAP
+			f:SetHeight(h)
+			place(f, h, 8)
 		elseif kind == "buttons" then
 			local f = take("buttons", makers.buttons)
 			for _, b in ipairs(f.buttons) do b:Hide() end
@@ -477,7 +556,20 @@ local function anchor()
 	local home = openKind and homes[openKind] and homes[openKind]()
 	if home and home.IsShown and home:IsShown() and Panels.PlaceBy(home) then return end
 	panel:ClearAllPoints()
-	local g = _G.PathwiseGuide
+	-- Settings: a window of its own, where it was left (else mid-screen).
+	if Panels.IsWindow(openKind) then
+		local p = ns.Get("settings.point")
+		if type(p) == "table" then
+			panel:SetPoint(p[1], UIParent, p[4] or p[1], p[2], p[3])
+		else
+			panel:SetPoint("CENTER", UIParent, "CENTER", 0, 40)
+		end
+		return
+	end
+	-- Beside the hub when it is open, else beside the guide on screen.
+	local g = _G.PathwiseHub
+	if not (g and g:IsShown()) then g = _G.PathwiseGuide end
+	if not (g and g:IsShown()) then g = _G.PathwiseTracker end
 	if g and g:IsShown() then
 		local left = g.GetLeft and g:GetLeft()
 		local ok
@@ -525,17 +617,22 @@ function Panels.Open(kind)
 		return
 	end
 	panel.back:SetShown(Panels.CanGoBack())
+	local window = Panels.IsWindow(kind)
+	panel.pin:SetShown(window)
+	panel:SetFrameStrata(window and "HIGH" or "MEDIUM")
 	panel:SetScale(ns.Get("ui.scale") or 1)
 	scroll:SetVerticalScroll(0)
 	render(rows)
 	anchor()
 	panel:Show()
+	panel:Raise()
 end
 
 -- Another Pathwise addon's panel (Pathwise.Suite.Panel).
 -- The suite addons' panels: Back always leads somewhere from them (at least
 -- to Pathwise's settings, where the suite is listed).
 local suiteKinds = {}
+function Panels.IsSuiteKind(kind) return suiteKinds[kind] == true end
 function Panels.Register(kind, builder)
 	if type(kind) == "string" and type(builder) == "function" then
 		builders[kind] = builder
@@ -836,6 +933,12 @@ function builders.professions()
 	rows[#rows + 1] = { "choice", "Recipe books", "Every profession's plan by skill range, learned or not", function() Panels.OpenRecipeBook(nil) end }
 	rows[#rows + 1] = { "buttons", { { "Profession guides", "default", function() Panels.Open("routes") end }, { "Close", "default", Panels.Close } } }
 	return rows
+end
+
+-- Straight to one profession's page (the hub's profession rows).
+function Panels.OpenProfession(key)
+	profKey = key
+	if Panels.IsOpen("profession") then Panels.Refresh() else Panels.Open("profession") end
 end
 
 -- One profession's page: skill, the guide's step, the best craft now, every
@@ -1168,8 +1271,20 @@ function builders.settings()
 	local route = E.Route()
 	local skippedN = #E.Skipped()
 	local fixedH = type(ns.Get("guide.height")) == "number" and ns.Get("guide.height") or nil
+	local style = ns.Guide.Style()
+	local function pickStyle(v) return function() ns.Set("guide.style", v) ns.Set("guide.shown", true) Panels.Refresh() end end
 	local rows = {
 		{ "heading", "Settings" },
+		{ "heading", "Guide on screen" },
+		{ "setting", "Style", "", {
+			{ "Tracker", pickStyle("tracker"), style == "tracker" and "accent" or "default" },
+			{ "Window", pickStyle("window"), style == "window" and "accent" or "default" },
+			{ "Minimal", pickStyle("minimal"), style == "minimal" and "accent" or "default" } } },
+		{ "text", ({ tracker = "A compact card: the step, its objectives as checkboxes, the profession task and your level.",
+			window = "A window with tabs: the step, the steps after it, and what is near you in your quest log.",
+			minimal = "No window: the step and its objectives as text over the game." })[style], "muted" },
+		{ "setting", "Show it", onOff(ns.Get("guide.shown")), { { ns.Get("guide.shown") and "Hide" or "Show", toggle("guide.shown") } } },
+		{ "choice", "Open the hub", "Your routes, professions and the whole step, in one window", function() ns.Fire("TOGGLE_HUB", true) end },
 		{ "heading", "Guide window" },
 		{ "slider", "Window size", "ui.scale", 0.5, 1.5, 0.05, pct },
 		{ "setting", "Window height", fixedH and ("%d"):format(fixedH) or "Fits each step", fixedH and { { "Fit to step", function() ns.Set("guide.height", nil) Panels.Refresh() end } } or {} },
@@ -1190,12 +1305,19 @@ function builders.settings()
 		{ "setting", "Train at trainers", onOff(ns.Get("auto.train")), { { ns.Get("auto.train") and "Turn off" or "Turn on", toggle("auto.train") } } },
 		{ "text", "When the step is training: learns everything the trainer has that you can afford.", "muted" },
 	}
-	-- Colour: the accent, for Pathwise and (if chosen) the whole suite.
+	-- Theme: the whole palette, then the accent on top of it.
+	rows[#rows + 1] = { "heading", "Theme" }
+	rows[#rows + 1] = { "themes", ns.Theme.Theme().key, function(key)
+		if key == ns.Theme.Theme().key then return end
+		ns.Set("ui.theme", key)
+		ns.Print(("theme: %s. Windows already open take it after a reload (Settings > Reload now, or /reload)."):format(ns.Theme.Theme().name))
+		Panels.Refresh()
+	end }
+	rows[#rows + 1] = { "text", "Light themes keep the compass and the minimal guide light, so they read over the game.", "muted" }
 	local mode = ns.Get("ui.accentMode") or "pathwise"
 	local function pickMode(v) return function() ns.Set("ui.accentMode", v) Panels.Refresh() end end
-	rows[#rows + 1] = { "heading", "Colour" }
 	rows[#rows + 1] = { "setting", "Accent", "", {
-		{ "Pathwise", pickMode("pathwise"), mode == "pathwise" and "accent" or "default" },
+		{ "Theme", pickMode("pathwise"), mode == "pathwise" and "accent" or "default" },
 		{ "Class", pickMode("class"), mode == "class" and "accent" or "default" },
 		{ "Custom", pickMode("custom"), mode == "custom" and "accent" or "default" } } }
 	if mode == "custom" then
@@ -1221,13 +1343,22 @@ function builders.settings()
 		if ReloadUI then ReloadUI() end
 	end }
 	for _, r in ipairs({
+		{ "heading", "Compass" },
+		{ "setting", "Compass", onOff(ns.Get("compass.shown")), { { ns.Get("compass.shown") and "Hide" or "Show", toggle("compass.shown") } } },
+		{ "text", "Across the top of the screen: where you face, where the step is and how far. Drag it to move it.", "muted" },
+		{ "setting", "Your coordinates", onOff(ns.Get("compass.coords")), { { ns.Get("compass.coords") and "Hide" or "Show", toggle("compass.coords") } } },
+		{ "text", "Where you stand on the map, under the compass and in the guide.", "muted" },
+		{ "slider", "Compass size", "compass.scale", 0.5, 2, 0.1, pct },
+		{ "setting", "Pin the compass", onOff(ns.Get("compass.locked")), { { ns.Get("compass.locked") and "Unpin" or "Pin", toggle("compass.locked") } } },
+		{ "text", ns.Get("compass.locked") and "Pinned: it stays put, and clicks on it go to the world." or "The hub, the tracker and the guide window have a pin in their corner too.", "muted" },
 		{ "heading", "Waypoint arrow" },
 		{ "setting", "Show the arrow", onOff(ns.Get("arrow.shown")), { { ns.Get("arrow.shown") and "Hide" or "Show", toggle("arrow.shown") } } },
+		{ "text", "The arrow shows while the compass is off.", "muted" },
 		{ "slider", "Arrow size", "arrow.scale", 0.5, 2, 0.1, pct },
 		{ "setting", "Lock the arrow", onOff(ns.Get("arrow.locked")), { { ns.Get("arrow.locked") and "Unlock" or "Lock", toggle("arrow.locked") } } },
 		{ "text", ns.Get("arrow.locked") and "Locked: it stays put, and clicks on it go to the world." or "Drag the arrow to move it.", "muted" },
 		{ "setting", "Minimap button", onOff(ns.Get("minimap.shown")), { { ns.Get("minimap.shown") and "Hide" or "Show", toggle("minimap.shown") } } },
-		{ "text", ns.Get("minimap.shown") and "Click it to show the guide, right-click for settings, drag to move it."
+		{ "text", ns.Get("minimap.shown") and "Click it to open the hub, right-click for settings, drag to move it."
 			or "Without it, open Pathwise with a key: Game Menu > Key Bindings > Pathwise.", "muted" },
 		{ "heading", "Map pins" },
 		{ "setting", "On the world map", onOff(ns.Get("pins.map")), { { ns.Get("pins.map") and "Hide" or "Show", toggle("pins.map") } } },
@@ -1273,8 +1404,7 @@ function builders.settings()
 		end } } or {} },
 		{ "divider" },
 		{ "setting", "Window positions", "", { { "Reset", function()
-			ns.Set("guide.point", nil)
-			ns.Set("arrow.point", nil)
+			for _, path in ipairs({ "guide.point", "arrow.point", "compass.point", "card.point", "hud.point", "hub.point", "settings.point" }) do ns.Set(path, nil) end
 			local g, a = _G.PathwiseGuide, _G.PathwiseArrow
 			if g then g:ClearAllPoints() g:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -60, -220) end
 			if a then a:ClearAllPoints() a:SetPoint("TOP", UIParent, "TOP", 0, -140) end

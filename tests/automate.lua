@@ -21,6 +21,7 @@ local function start(setup)
 	if setup then setup(stub) end
 	stub.moveTo(1420, 30.2, 71.6)
 	stub.login()
+	ns.Set("guide.style", "window") ns.Set("compass.shown", false) -- the v1 window and arrow these tests check
 	ok(Pathwise.RegisterRoute(ROUTE), "route registers")
 	ns.Engine.SetRoute(ROUTE.id)
 	return stub, ns

@@ -1,4 +1,5 @@
--- Pathwise arrow: the Signature waypoint indicator. A faceted, compass-needle
+-- Pathwise arrow: the Signature waypoint indicator, shown when the compass
+-- (Nav/Compass.lua) is off. A faceted, compass-needle
 -- dart (Media/arrow.tga) in icy blue, amber when the target is behind, a
 -- compass mark when arrived; distance under it, the destination's name under
 -- that. Shown only while there is a waypoint; hidden in instances and on
@@ -170,7 +171,9 @@ end
 
 local function refresh(target)
 	if not frame then build() end
-	if not target or not ns.Get("arrow.shown") then
+	-- The compass (Nav/Compass.lua) has an arrow of its own: this one shows
+	-- when the compass is off.
+	if not target or not ns.Get("arrow.shown") or ns.Get("compass.shown") then
 		frame:SetScript("OnUpdate", nil)
 		frame:Hide()
 		return
@@ -183,7 +186,7 @@ end
 
 ns.On("WAYPOINT_CHANGED", refresh)
 ns.On("SETTING_CHANGED", function(path)
-	if path == "arrow.shown" then refresh(Nav.Target())
+	if path == "arrow.shown" or path == "compass.shown" then refresh(Nav.Target())
 	elseif path == "arrow.scale" and frame then frame:SetScale(ns.Get("arrow.scale") or 1)
 	elseif path == "arrow.locked" and frame then frame:EnableMouse(not ns.Get("arrow.locked")) end
 end)

@@ -61,10 +61,17 @@ the two share one accent color and Pathwise UI appears in Pathwise's suite.
 
 ## Polish: smoother and fully yours
 
-- **Your colors, all of them:** pick a scheme (Pathwise, Blossom, Lavender,
-  Forest, Ember, Mono), then change any color on the game's color wheel:
-  backgrounds, borders, text, accent, good/warning/bad, and the unit frames'
-  reaction, power and debuff colors. Share a scheme as a code.
+- **Your colors, all of them:** pick one of Pathwise's 17 themes, dark and
+  light (Pathwise Blue, Midnight, Graphite, Rose, Amethyst, Emerald, Ocean,
+  Gold, Sunset, Crimson, High Contrast, Snow, Sky, Blossom, Lavender, Mint,
+  Sand), then change any color on the game's color wheel: backgrounds,
+  borders, text, accent, good/warning/bad, and the unit frames' reaction,
+  power and debuff colors. Share a scheme as a code. With Pathwise
+  installed, the two keep one theme and one accent.
+- **Rounded, like Pathwise:** windows, cards, menus and buttons have round
+  corners (unit frames, bars and nameplates stay square). The options
+  window has a resize grip in its corner and a pin on its header that keeps
+  it in place.
 - **Motion:** buttons, the menu and switches ease into their hover color,
   switches slide, pages and windows fade, the options list
   scrolls smoothly, bars fade in and out, cast bars fade (red when

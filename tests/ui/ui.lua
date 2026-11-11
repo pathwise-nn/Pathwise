@@ -190,11 +190,12 @@ test("colors: a scheme changes everything at once", function()
 	local T = ns.Theme
 	local f = CreateFrame("Frame")
 	local ground = T.Panel(f, "bg", "border", 1)
-	T.UseScheme("blossom")
-	eq(T.ToHex(T.Color("bg")), "#22121C", "the ground")
-	eq(T.ToHex(T.Color("accent")), "#FF7EB9", "the accent with it")
-	near(ground.color[1], 0x22 / 255, 1e-6, "painted things repainted")
-	near(f.pwBorder.color[1], 0x5A / 255, 1e-6, "borders too")
+	T.UseScheme("rose")
+	eq(T.ToHex(T.Color("bg")), "#1C1218", "the ground")
+	eq(T.ToHex(T.Color("accent")), "#FF7EB6", "the accent with it")
+	eq(ns.Get("look.accentMode"), "pathwise", "the theme's own accent")
+	near(ground.color[1], 0x1C / 255, 1e-6, "painted things repainted")
+	near(f.pwBorder.color[1], 0x4C / 255, 1e-6, "borders too")
 	near(ns.Units.REACTION.hostile[1], 1, 1e-6, "unit frame colors follow the scheme")
 	T.UseScheme("pathwise")
 	eq(T.ToHex(T.Color("bg")), "#10161E")
@@ -234,15 +235,15 @@ end)
 test("colors: a scheme code to share, and back", function()
 	local stub, ns = fresh()
 	local T = ns.Theme
-	T.UseScheme("lavender")
+	T.UseScheme("amethyst")
 	T.SetColor("text", "#FFE0F0")
 	local code = T.ExportColors()
-	ok(code:find("^PWUI1:lavender:B79CFF:"), code)
+	ok(code:find("^PWUI1:amethyst:B69CFF:"), code)
 	T.UseScheme("pathwise")
 	ok(not T.ImportColors("nonsense"), "not a code")
 	ok(T.ImportColors(code), "a code")
 	eq(T.ToHex(T.Color("text")), "#FFE0F0")
-	eq(T.ToHex(T.Color("accent")), "#B79CFF")
+	eq(T.ToHex(T.Color("accent")), "#B69CFF")
 	-- Through the options: show my code, paste one.
 	ns.Config.Show("colors")
 	ok(stub.clickLabel("Show my code"))
@@ -329,7 +330,7 @@ test("Wayfarer: trim color from a dropdown: Class, Default (gold) or Custom on t
 	eq(T.ToHex(T.Color("flair")), "#E8C26A", "reads as Default")
 	T.UseScheme("blossom")
 	ns.Set("look.trim", "default")
-	eq(T.ToHex(T.Color("flair")), "#FFD27F", "each scheme's own gold")
+	eq(T.ToHex(T.Color("flair")), "#7A5600", "a light theme's darker gold")
 end)
 
 test("Wayfarer: serif headings in the trim color, capsule switches", function()
@@ -362,4 +363,205 @@ test("help and feedback: the website and Discord as links to copy, read-only", f
 	box:SetText("typed over")
 	box.scripts.OnTextChanged(box, true)
 	eq(box:GetText(), "https://pathwise.quest/report", "typing puts the link back")
+end)
+
+---------------------------------------------------------------------------
+-- The Pathwise v2 look: rounded windows and buttons, the 17 themes shared
+-- with Pathwise, the options window's grip and pin
+---------------------------------------------------------------------------
+
+-- Pathwise's own themes, read from its file: { key, name, mode, colors }.
+local function pathwiseThemes()
+	local f = assert(io.open("Pathwise/Theme/Signature.lua", "r"))
+	local src = f:read("*a")
+	f:close()
+	local out = {}
+	for body in src:match("T%.THEMES = (%b{})"):sub(2, -2):gmatch("(%b{})") do
+		local th = { colors = {} }
+		th.key, th.name, th.mode = body:match('key = "(%w+)"'), body:match('name = "([^"]+)"'), body:match('mode = "(%w+)"')
+		for k, v in body:gmatch('(%w+) = "(#%x+)"') do th.colors[k] = v end
+		out[#out + 1] = th
+	end
+	return out
+end
+
+test("themes: Pathwise's 17, the same keys, names and colors", function()
+	local stub, ns = fresh()
+	local T = ns.Theme
+	local theirs = pathwiseThemes()
+	eq(#theirs, 17, "Pathwise has 17")
+	eq(#T.THEMES, 17)
+	eq(#T.SCHEMES, 17, "a scheme for each")
+	for i, th in ipairs(theirs) do
+		local mine = T.THEMES[i]
+		eq(mine.key, th.key, "theme " .. i)
+		eq(mine.name, th.name, th.key)
+		eq(mine.mode, th.mode, th.key)
+		for k, v in pairs(th.colors) do eq(mine[k], v, th.key .. "." .. k) end
+		local s = T.Scheme(th.key)
+		for _, k in ipairs({ "bg", "bg2", "hover", "border", "divider", "text", "text2", "muted", "accent", "success", "warning", "error" }) do
+			eq(s.colors[k], th.colors[k], th.key .. " scheme " .. k)
+		end
+		for _, g in ipairs(T.COLOR_GROUPS) do
+			for _, k in ipairs(g.keys) do ok(T.ValidHex(s.colors[k[1]]), th.key .. " has " .. k[1]) end
+		end
+	end
+	eq(T.Scheme("forest").key, "emerald", "an old scheme's key: the theme it became")
+	eq(T.Scheme("nonsense").key, "pathwise")
+end)
+
+test("themes: light ones stay legible, a class accent too", function()
+	local stub, ns = fresh()
+	local T = ns.Theme
+	local light = 0
+	for _, s in ipairs(T.SCHEMES) do
+		if s.mode == "light" then
+			light = light + 1
+			for _, ground in ipairs({ "bg", "bg2" }) do
+				for _, k in ipairs({ "text", "text2", "muted", "accent", "gold", "silver", "copper", "flair", "success", "warning", "error" }) do
+					local c = T.Contrast(T.Hex(s.colors[k]), T.Hex(s.colors[ground]))
+					ok(c >= 4.5, ("%s: %s on %s only %.2f:1"):format(s.key, k, ground, c))
+				end
+			end
+		end
+	end
+	eq(light, 6, "six light themes")
+	-- A light theme: the accent is the theme's; a pale class color is darkened.
+	stub.player.class = "ROGUE"
+	T.UseScheme("snow")
+	eq(T.ToHex(T.Color("accent")), "#111418", "Snow's own accent")
+	ns.Set("look.accentMode", "class")
+	ok(T.Contrast(T.Color("accent"), T.Color("bg2")) >= 4.5, "rogue yellow darkened to read on white")
+	ok(T.Color("accentHover")[1] < T.Color("accent")[1], "hover darker on a light theme")
+	ns.Set("look.trim", "class")
+	ok(T.Contrast(T.Color("flair"), T.Color("bg")) >= 4.5, "the trim too")
+	-- A dark theme leaves it as it is.
+	T.UseScheme("pathwise")
+	ns.Set("look.accentMode", "class")
+	near(T.Color("accent")[2], 0.96, 1e-6, "rogue yellow on a dark theme")
+end)
+
+test("themes: one theme with Pathwise, both ways", function()
+	local pathwise = { settings = { ["ui.theme"] = "rose", ["ui.accentMode"] = "pathwise", ["ui.accentColor"] = "#66D7FF" }, listeners = {} }
+	local stub, ns = fresh(function()
+		Pathwise = { Suite = {
+			Get = function(p) return pathwise.settings[p] end,
+			Set = function(p, v)
+				pathwise.settings[p] = v
+				for _, fn in ipairs(pathwise.listeners) do fn(p, v) end
+			end,
+			On = function(msg, fn) if msg == "SETTING_CHANGED" then table.insert(pathwise.listeners, fn) end end,
+			RegisterModule = function() end,
+		} }
+	end)
+	local T = ns.Theme
+	eq(ns.Get("look.scheme"), "rose", "a first start takes Pathwise's theme")
+	eq(T.ToHex(T.Color("bg")), "#1C1218")
+	T.UseScheme("sky")
+	eq(pathwise.settings["ui.theme"], "sky", "a theme picked here goes to Pathwise")
+	eq(pathwise.settings["ui.accentMode"], "pathwise", "with its own accent")
+	Pathwise.Suite.Set("ui.theme", "ocean")
+	eq(ns.Get("look.scheme"), "ocean", "and one picked in Pathwise comes back")
+	eq(T.ToHex(T.Color("accent")), "#4FD8D0", "its accent with it")
+	Pathwise.Suite.Set("ui.theme", "nonsense")
+	eq(ns.Get("look.scheme"), "ocean", "an unknown one is left alone")
+	ns.Set("look.sharePathwise", false)
+	T.UseScheme("gold")
+	eq(pathwise.settings["ui.theme"], "nonsense", "unlinked: each its own")
+	Pathwise = nil
+end)
+
+test("rounded: windows and buttons are pieced, recolour as one; unit frames stay square", function()
+	local stub, ns = fresh()
+	local T = ns.Theme
+	local win = CreateFrame("Frame")
+	local ground = T.Panel(win)
+	eq(win.pwRadius, T.RADIUS.window, "a window: radius 10")
+	eq(#ground.pieces, 7, "four corners, a middle and two strips")
+	local corners = 0
+	for _, t in ipairs(ground.pieces) do if t.texture and t.texture:find("corner$") then corners = corners + 1 end end
+	eq(corners, 4)
+	near(ground.color[4], ns.Get("look.opacity"), 1e-6, "follows the opacity")
+	ns.Set("look.opacity", 0.6)
+	for _, t in ipairs(ground.pieces) do
+		local c = ground.corners[t] and t.vertex or t.color
+		near(c[4], 0.6, 1e-6, "every piece at the new opacity")
+	end
+	eq(#win.pwBorder.edges, 4, "the border's straight edges")
+	near(win.pwBorder.edges[1].h, T.Pixel(), 1e-9, "one pixel")
+	T.SetBorder(win, "accent")
+	for _, t in ipairs(win.pwBorder.pieces) do
+		local c = win.pwBorder.corners[t] and t.vertex or t.color
+		near(c[1], T.Color("accent")[1], 1e-6, "every border piece in the accent")
+	end
+	ok(win.pwBorder.pieces[1].texture:find("corner%-line$"), "a window's corner line")
+	-- Repainted by name with the rest.
+	T.UseScheme("crimson")
+	near(ground.color[1], 0x1C / 255, 1e-6, "a new theme repaints the pieces")
+	-- Buttons, dropdowns, menus: radius 6.
+	local b = T.Button(UIParent, "Go", "default")
+	eq(b.pwRadius, 6, "a button: radius 6")
+	ok(b.pwGround.pieces and b.pwBorder.pieces[1].texture:find("corner%-line%-small$"), "rounded, its smaller corner line")
+	b.scripts.OnEnter(b)
+	stub.advance(0.3)
+	near(b.pwGround.color[1], T.Color("hover")[1], 1e-6, "hover eases the whole ground")
+	local d = T.Dropdown(UIParent, 120)
+	eq(d.pwRadius, 6)
+	eq(d.pwMenu.pwRadius, 6, "its menu too")
+	-- Unit frames and other bars: square.
+	local sq = CreateFrame("Frame")
+	local t = T.Panel(sq, "bg", "border", 0.9)
+	ok(not t.pieces and not sq.pwRadius, "square")
+	eq(#sq.pwBorder.edges, 4)
+end)
+
+test("options window: a resize grip, a pin on its header", function()
+	local stub, ns = fresh()
+	ns.Config.Show("look")
+	local f = _G.PathwiseUIConfig
+	eq(f.pwRadius, 10, "rounded")
+	eq(f.w, 700)
+	local g = f.pwGrip
+	ok(g, "a grip")
+	-- Drag it 100 right and 100 down.
+	stub.cursor = { 1000, 600 }
+	g.scripts.OnMouseDown(g, "LeftButton")
+	stub.cursor = { 1100, 500 }
+	g.scripts.OnUpdate(g)
+	eq(f.w, 800, "wider")
+	eq(f.h, 640, "taller")
+	local body
+	for _, fr in ipairs(stub.frames) do if fr.kind == "Frame" and fr.parent and fr.parent.kind == "ScrollFrame" and fr.parent.parent == f then body = fr end end
+	eq(body.w, 800 - 172 - 36 - 14, "the page laid out again at the new width")
+	g.scripts.OnMouseUp(g, "LeftButton")
+	eq(ns.Get("config.width"), 800, "the size is kept")
+	eq(ns.Get("config.height"), 640)
+	stub.cursor = { 1000, 600 }
+	g.scripts.OnMouseDown(g, "LeftButton")
+	stub.cursor = { 3000, -2000 }
+	g.scripts.OnUpdate(g)
+	g.scripts.OnMouseUp(g, "LeftButton")
+	eq(f.w, 1200, "no wider than its limit")
+	g.scripts.OnMouseUp(g, "RightButton")
+	eq(f.w, 700, "right-click: back to the usual size")
+	-- The pin: no dragging, no resizing.
+	local pin = f.pwPin
+	ok(pin, "a pin")
+	pin.scripts.OnClick(pin)
+	eq(ns.Get("config.locked"), true, "pinned")
+	near(pin.pwIcon.vertex[1], ns.Theme.Color("accent")[1], 1e-6, "in the accent")
+	local moved = false
+	rawset(f, "StartMoving", function() moved = true end)
+	f.scripts.OnDragStart(f)
+	ok(not moved, "a pinned window stays put")
+	stub.cursor = { 1000, 600 }
+	g.scripts.OnMouseDown(g, "LeftButton")
+	ok(not g.pwState.held, "and keeps its size")
+	pin.scripts.OnClick(pin)
+	f.scripts.OnDragStart(f)
+	ok(moved, "unpinned: it moves again")
+	-- Back to the defaults: the usual size.
+	ns.Set("config.width", 900)
+	ns.Reset()
+	eq(f.w, 700)
 end)

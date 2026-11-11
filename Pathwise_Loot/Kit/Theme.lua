@@ -1,10 +1,10 @@
 -- COPIED from PathwiseUI/Theme.lua by tools/kit.js: do not edit here.
 -- Edit PathwiseUI/Theme.lua, then run npm run kit.
--- Pathwise UI's look: a color scheme (Pathwise Signature by default, or
--- another, or entirely your own), the Inter typeface, and the accent:
--- Pathwise blue, your class color, or one you pick.
--- When Pathwise is installed too, the two keep one accent: a change in either
--- is copied to the other.
+-- Pathwise UI's look: a theme (Pathwise's 17, dark and light: Pathwise Blue
+-- by default), your own colors on top of it, the Inter typeface, and the
+-- accent: the theme's, your class color, or one you pick.
+-- When Pathwise is installed too, the two keep one theme and one accent: a
+-- change in either is copied to the other.
 
 -- Shared file (see Core.lua): edit it here, then run npm run kit.
 local ADDON, ns = ...
@@ -42,64 +42,93 @@ T.COLOR_GROUPS = {
 		{ "magic", "Magic debuff" }, { "curse", "Curse debuff" }, { "disease", "Disease debuff" }, { "poison", "Poison debuff" } } },
 }
 
--- The schemes: a full set each. Their accent is used when you pick one.
-T.SCHEMES = {
-	{ key = "pathwise", name = "Pathwise", colors = {
-		gold = "#E8C26A", silver = "#C9D3DC", copper = "#D08A5C",
-		bg = "#10161E", bg2 = "#17212C", hover = "#223241", border = "#293B4B", divider = "#1F2D3A",
-		text = "#F0F5FA", text2 = "#9AAFC0", muted = "#7A90A2", accent = "#66D7FF",
-		success = "#59D9B2", warning = "#E4B96D", error = "#E66B78",
-		hostile = "#E66B78", neutral = "#E4B96D", friendly = "#59D9B2", healthDark = "#2E4152",
-		mana = "#4F8FE8", rage = "#E66B78", energy = "#E4D46D", focus = "#E0956A",
-		magic = "#4F8FE8", curse = "#B69CFF", disease = "#C9A04F", poison = "#59D9B2" } },
-	{ key = "blossom", name = "Blossom", colors = {
-		gold = "#FFD27F", silver = "#E8D8E2", copper = "#F0A07A",
-		bg = "#22121C", bg2 = "#2E1826", hover = "#422236", border = "#5A2E49", divider = "#3A1E30",
-		text = "#FFF0F7", text2 = "#F0B8D4", muted = "#C48AA8", accent = "#FF7EB9",
-		success = "#8EE3C8", warning = "#FFC98B", error = "#FF6F91",
-		hostile = "#FF6F91", neutral = "#FFC98B", friendly = "#A8E6CF", healthDark = "#4A2A3C",
-		mana = "#B39DFF", rage = "#FF6F91", energy = "#FFE29A", focus = "#FFB38A",
-		magic = "#9DB8FF", curse = "#D49CFF", disease = "#E0B97A", poison = "#8EE3C8" } },
-	{ key = "lavender", name = "Lavender", colors = {
-		gold = "#F2D27E", silver = "#D8D4EC", copper = "#E0A07E",
-		bg = "#17142A", bg2 = "#201C38", hover = "#2E2850", border = "#3E3666", divider = "#28234A",
-		text = "#F4F0FF", text2 = "#C3B8F0", muted = "#968CC0", accent = "#B79CFF",
-		success = "#7FE0C2", warning = "#F2C47E", error = "#F27A9B",
-		hostile = "#F27A9B", neutral = "#F2C47E", friendly = "#7FE0C2", healthDark = "#3A3360",
-		mana = "#7FA6FF", rage = "#F27A9B", energy = "#F2E27E", focus = "#F2A37E",
-		magic = "#7FA6FF", curse = "#C99CFF", disease = "#D6B27A", poison = "#7FE0C2" } },
-	{ key = "forest", name = "Forest", colors = {
-		gold = "#E3C86A", silver = "#CCD6CE", copper = "#D0925C",
-		bg = "#0F1712", bg2 = "#16221A", hover = "#203226", border = "#2C4433", divider = "#1C2C21",
-		text = "#EEF6EF", text2 = "#A9C4AF", muted = "#7F9C86", accent = "#7FD98F",
-		success = "#7FD98F", warning = "#E3C26A", error = "#E07A6A",
-		hostile = "#E07A6A", neutral = "#E3C26A", friendly = "#7FD98F", healthDark = "#2C4433",
-		mana = "#5F9FE0", rage = "#E07A6A", energy = "#E3D46A", focus = "#E0A06A",
-		magic = "#5F9FE0", curse = "#B08CE0", disease = "#C9A04F", poison = "#7FD98F" } },
-	{ key = "ember", name = "Ember", colors = {
-		gold = "#FFD06B", silver = "#E6D6CF", copper = "#E8925C",
-		bg = "#1A1210", bg2 = "#251916", hover = "#36231E", border = "#4A3029", divider = "#2E1F1A",
-		text = "#FFF3EE", text2 = "#E0B9A8", muted = "#B08A7A", accent = "#FF9A5C",
-		success = "#7FD9A8", warning = "#FFD06B", error = "#FF6B5C",
-		hostile = "#FF6B5C", neutral = "#FFD06B", friendly = "#7FD9A8", healthDark = "#4A3029",
-		mana = "#5C9CFF", rage = "#FF6B5C", energy = "#FFE06B", focus = "#FF9A5C",
-		magic = "#5C9CFF", curse = "#C08CFF", disease = "#D6A85C", poison = "#7FD9A8" } },
-	{ key = "mono", name = "Mono", colors = {
-		gold = "#E0C98A", silver = "#D0D0D0", copper = "#C09A80",
-		bg = "#111111", bg2 = "#1A1A1A", hover = "#262626", border = "#333333", divider = "#222222",
-		text = "#F2F2F2", text2 = "#B0B0B0", muted = "#808080", accent = "#FFFFFF",
-		success = "#9ED99E", warning = "#E0C98A", error = "#E08A8A",
-		hostile = "#E08A8A", neutral = "#E0C98A", friendly = "#9ED99E", healthDark = "#3A3A3A",
-		mana = "#8AA8E0", rage = "#E08A8A", energy = "#E0D68A", focus = "#E0AE8A",
-		magic = "#8AA8E0", curse = "#B89AE0", disease = "#C9AE7A", poison = "#9ED99E" } },
+-- The themes: Pathwise's 17 (the same keys, names and colors as its
+-- Theme/Signature.lua T.THEMES, copied here so this addon stands alone),
+-- dark or light. Pathwise and Pathwise UI keep one theme when both are
+-- installed (Pathwise's setting "ui.theme" is our "look.scheme").
+-- world: a light theme's accent for things drawn on the game world.
+T.THEMES = {
+	{ key = "pathwise", name = "Pathwise Blue", mode = "dark",
+		bg = "#10161E", bg2 = "#17212C", hover = "#223241", border = "#293B4B", divider = "#1F2D3A", text = "#F0F5FA", text2 = "#9AAFC0", muted = "#7A90A2", accent = "#66D7FF", success = "#59D9B2", warning = "#E4B96D", error = "#E66B78" },
+	{ key = "midnight", name = "Midnight", mode = "dark",
+		bg = "#0B0B0D", bg2 = "#161618", hover = "#222226", border = "#36363D", divider = "#1E1E22", text = "#F5F5F7", text2 = "#B4B4BC", muted = "#8E8E98", accent = "#FFFFFF", success = "#5ED7B0", warning = "#E8BF6E", error = "#F07580" },
+	{ key = "graphite", name = "Graphite", mode = "dark",
+		bg = "#17191C", bg2 = "#202327", hover = "#2B2F34", border = "#3C4148", divider = "#262A2F", text = "#F2F4F6", text2 = "#B0B6BE", muted = "#8D949D", accent = "#9FB4C8", success = "#5ED7B0", warning = "#E4B96D", error = "#EE7580" },
+	{ key = "rose", name = "Rose", mode = "dark",
+		bg = "#1C1218", bg2 = "#26171F", hover = "#33202A", border = "#4C3040", divider = "#2E1C26", text = "#FBEFF4", text2 = "#D9AFC2", muted = "#BA8EA2", accent = "#FF7EB6", success = "#62D9B2", warning = "#EBC07A", error = "#FF7B86" },
+	{ key = "amethyst", name = "Amethyst", mode = "dark",
+		bg = "#16121F", bg2 = "#1F192B", hover = "#2A2239", border = "#40355A", divider = "#262033", text = "#F3EEFC", text2 = "#BDB0D6", muted = "#9D90B8", accent = "#B69CFF", success = "#5ED7B0", warning = "#E8BF6E", error = "#F07580" },
+	{ key = "emerald", name = "Emerald", mode = "dark",
+		bg = "#0F1A16", bg2 = "#16241F", hover = "#1F322B", border = "#2D4B3F", divider = "#1C2C26", text = "#EEF8F3", text2 = "#A7C7B9", muted = "#86A799", accent = "#5FE0A6", success = "#7BD8E6", warning = "#E8BF6E", error = "#F07580" },
+	{ key = "ocean", name = "Ocean", mode = "dark",
+		bg = "#0D1A1C", bg2 = "#132427", hover = "#1B3135", border = "#294B50", divider = "#18292C", text = "#EAF8F8", text2 = "#A4C8CA", muted = "#83A7A9", accent = "#4FD8D0", success = "#7FE0A8", warning = "#E8BF6E", error = "#F07580" },
+	{ key = "gold", name = "Gold", mode = "dark",
+		bg = "#1A1610", bg2 = "#241F16", hover = "#312A1E", border = "#4B402D", divider = "#2B251B", text = "#FBF5EA", text2 = "#CDBFA4", muted = "#AB9D82", accent = "#F2C14E", success = "#62D9B2", warning = "#F0A36E", error = "#F07580" },
+	{ key = "sunset", name = "Sunset", mode = "dark",
+		bg = "#1C130E", bg2 = "#271B14", hover = "#34241B", border = "#4F3728", divider = "#2E2018", text = "#FCF2EB", text2 = "#D8BBA8", muted = "#B69886", accent = "#FF9A5A", success = "#62D9B2", warning = "#F2C46E", error = "#FF7B86" },
+	{ key = "crimson", name = "Crimson", mode = "dark",
+		bg = "#1C1012", bg2 = "#26161A", hover = "#331E23", border = "#4E2E35", divider = "#2E1A1F", text = "#FCEFF1", text2 = "#D8B0B6", muted = "#B78F96", accent = "#FF6B7A", success = "#62D9B2", warning = "#EBC07A", error = "#FF8A6B" },
+	{ key = "contrast", name = "High Contrast", mode = "dark",
+		bg = "#000000", bg2 = "#0E0E0E", hover = "#1C1C1C", border = "#5A5A5A", divider = "#2A2A2A", text = "#FFFFFF", text2 = "#E0E0E0", muted = "#C4C4C4", accent = "#FFD400", success = "#5CF2B8", warning = "#FFB84D", error = "#FF6F6F" },
+	{ key = "snow", name = "Snow", mode = "light", world = "#FFFFFF",
+		bg = "#F6F7F9", bg2 = "#FFFFFF", hover = "#ECEFF3", border = "#D0D6DE", divider = "#E4E8ED", text = "#12161C", text2 = "#475261", muted = "#5A6573", accent = "#111418", success = "#0F7556", warning = "#875800", error = "#B3261E" },
+	{ key = "sky", name = "Sky", mode = "light", world = "#66D7FF",
+		bg = "#F2F8FC", bg2 = "#FFFFFF", hover = "#E3EEF7", border = "#C5DAEA", divider = "#DCE8F2", text = "#0F1D29", text2 = "#3D5467", muted = "#4F6577", accent = "#0A6699", success = "#0F7556", warning = "#875800", error = "#B3261E" },
+	{ key = "blossom", name = "Blossom", mode = "light", world = "#FF8CC0",
+		bg = "#FFF4F8", bg2 = "#FFFFFF", hover = "#FBE4ED", border = "#EEC4D5", divider = "#F6DCE6", text = "#2A1620", text2 = "#6B4458", muted = "#7C5567", accent = "#B8175A", success = "#0F7556", warning = "#875800", error = "#B3261E" },
+	{ key = "lavender", name = "Lavender", mode = "light", world = "#C4ADFF",
+		bg = "#F7F3FD", bg2 = "#FFFFFF", hover = "#ECE5FA", border = "#D6C9F0", divider = "#E6DDF6", text = "#1F1630", text2 = "#54476E", muted = "#655980", accent = "#6235C9", success = "#0F7556", warning = "#875800", error = "#B3261E" },
+	{ key = "mint", name = "Mint", mode = "light", world = "#6FE6B0",
+		bg = "#F1FAF6", bg2 = "#FFFFFF", hover = "#E1F2EA", border = "#C0E2D2", divider = "#D7EEE3", text = "#10241B", text2 = "#3E5C4F", muted = "#4F6E60", accent = "#0B7048", success = "#0A6B7A", warning = "#875800", error = "#B3261E" },
+	{ key = "sand", name = "Sand", mode = "light", world = "#F2C14E",
+		bg = "#FBF7EF", bg2 = "#FFFFFF", hover = "#F2EADB", border = "#E0D2B6", divider = "#ECE2CF", text = "#251C0F", text2 = "#5E5038", muted = "#6E6046", accent = "#8C4F00", success = "#0F7556", warning = "#7A4E00", error = "#B3261E" },
 }
+
+T.THEME_BY = {}
+for _, th in ipairs(T.THEMES) do T.THEME_BY[th.key] = th end
+
+-- Pathwise UI paints more than Pathwise's palette: money, the trim and
+-- the unit frames. Dark themes share one set; light ones take darker
+-- colors, so text in them reads on a light ground (4.5:1 or more).
+-- Reaction colors follow the theme's status colors.
+local EXTRA = {
+	dark = { gold = "#E8C26A", silver = "#C9D3DC", copper = "#D08A5C", flair = "#E8C26A",
+		mana = "#4F8FE8", energy = "#E4D46D", focus = "#E0956A", poison = "#59D9B2",
+		magic = "#4F8FE8", curse = "#B69CFF", disease = "#C9A04F" },
+	light = { gold = "#7A5600", silver = "#5A6573", copper = "#9A4A1C", flair = "#7A5600",
+		mana = "#2F6FD0", energy = "#9A7F00", focus = "#B4602A", poison = "#0F7556",
+		magic = "#2F6FD0", curse = "#6E45C8", disease = "#86651C" },
+}
+local PALETTE = { "bg", "bg2", "hover", "border", "divider", "text", "text2", "muted", "accent", "success", "warning", "error" }
+
+local function lift(h, by)
+	local c = hex(h)
+	return T.ToHex({ c[1] + (1 - c[1]) * by, c[2] + (1 - c[2]) * by, c[3] + (1 - c[3]) * by })
+end
+
+-- The schemes: a full set of colors per theme. Their accent is used when
+-- you pick one.
+T.SCHEMES = {}
+for _, th in ipairs(T.THEMES) do
+	local c = {}
+	for k, v in pairs(EXTRA[th.mode] or EXTRA.dark) do c[k] = v end
+	for _, k in ipairs(PALETTE) do c[k] = th[k] end
+	c.hostile, c.neutral, c.friendly, c.rage = th.error, th.warning, th.success, th.error
+	-- Dark health: a little above the border (the secondary text on a light theme).
+	c.healthDark = th.mode == "light" and th.text2 or lift(th.border, 0.04)
+	T.SCHEMES[#T.SCHEMES + 1] = { key = th.key, name = th.name, mode = th.mode, world = th.world, colors = c }
+end
+T.SCHEMES[1].colors.healthDark = "#2E4152" -- Pathwise UI's own, from before the themes
+
+-- Schemes from before the themes, and the theme each became.
+local RENAMED = { forest = "emerald", ember = "sunset", mono = "midnight" }
 function T.Scheme(key)
+	key = RENAMED[key] or key
 	for _, s in ipairs(T.SCHEMES) do if s.key == key then return s end end
 	return T.SCHEMES[1]
 end
-
--- The trim (window title, headings, their lines) starts as each scheme's gold.
-for _, s in ipairs(T.SCHEMES) do s.colors.flair = s.colors.flair or s.colors.gold end
+-- Is the theme in use a light one?
+function T.IsLight() return T.Scheme(ns.Get("look.scheme")).mode == "light" end
 
 -- The trim's choices: your class color, the scheme's gold, or your own.
 T.TRIMS = { { "Class", "class" }, { "Default", "default" }, { "Custom", "custom" } }
@@ -108,6 +137,17 @@ T.COLORS = {}
 for k, v in pairs(T.SCHEMES[1].colors) do T.COLORS[k] = hex(v) end
 T.COLORS.accentHover = hex("#90E4FF")
 T.PATHWISE_ACCENT = hex("#66D7FF")
+
+-- Contrast between two colors (WCAG: 1 to 21).
+local function luminance(c)
+	local function ch(v) return v <= 0.03928 and v / 12.92 or ((v + 0.055) / 1.055) ^ 2.4 end
+	return 0.2126 * ch(c[1]) + 0.7152 * ch(c[2]) + 0.0722 * ch(c[3])
+end
+function T.Contrast(a, b)
+	local x, y = luminance(a), luminance(b)
+	if x < y then x, y = y, x end
+	return (x + 0.05) / (y + 0.05)
+end
 
 T.FONTS = {
 	regular = MEDIA .. "Fonts\\Inter-Regular.ttf",
@@ -128,8 +168,8 @@ ns.Defaults("look", {
 	accentMode = "class", -- "pathwise" | "class" | "custom": Pathwise UI starts in your class color
 	accentColor = "#66D7FF",
 	opacity = 0.92, -- window and tooltip ground
-	sharePathwise = true, -- keep one accent with Pathwise when it is installed
-	scheme = "pathwise", -- the color set (T.SCHEMES)
+	sharePathwise = true, -- keep one theme and accent with Pathwise when it is installed
+	scheme = "pathwise", -- the theme (T.THEMES; the same keys as Pathwise's "ui.theme")
 	trim = "default", -- "class" | "default" (the scheme's gold) | "custom" (T.TRIMS)
 	colors = nil, -- your own colors on top of it: { name = "#RRGGBB" }
 })
@@ -137,13 +177,26 @@ ns.Defaults("look", {
 local function valid(h) return type(h) == "string" and h:match("^#?%x%x%x%x%x%x$") ~= nil end
 T.ValidHex = valid
 
+-- On a light theme, a color picked for text (your class color, one off
+-- the wheel) is darkened until it reads on the grounds: 4.5:1 or more.
+function T.Legible(c)
+	if not T.IsLight() then return c end
+	local bg, bg2 = T.WantedColor("bg"), T.WantedColor("bg2")
+	local out = { c[1], c[2], c[3], c[4] or 1 }
+	for _ = 1, 20 do
+		if math.min(T.Contrast(out, bg), T.Contrast(out, bg2)) >= 4.5 then break end
+		out[1], out[2], out[3] = out[1] * 0.9, out[2] * 0.9, out[3] * 0.9
+	end
+	return out
+end
+
 -- A color as the scheme and your picks say (not the accent: see below).
 function T.WantedColor(name)
 	if name == "flair" then
 		local t = ns.Get("look.trim")
 		if t == "class" then
 			local c = T.ClassColor()
-			if c then return c end
+			if c then return T.Legible(c) end
 		end
 		if t ~= "custom" then
 			local s = T.Scheme(ns.Get("look.scheme"))
@@ -169,13 +222,13 @@ function T.SetColor(name, h)
 	ns.Set("look.colors", next(own) and own or nil)
 end
 
--- A whole scheme: its colors, and its accent as your accent.
+-- A whole theme: its colors, and its own accent as your accent.
 function T.UseScheme(key)
 	local s = T.Scheme(key)
 	ns.Set("look.colors", nil)
 	ns.Set("look.scheme", s.key)
 	ns.Set("look.accentColor", s.colors.accent)
-	ns.Set("look.accentMode", s.key == "pathwise" and "pathwise" or "custom")
+	ns.Set("look.accentMode", "pathwise")
 end
 
 -- Every color into T.COLORS (in place), then the accent.
@@ -305,70 +358,106 @@ end
 local function lighten(c, by)
 	return { c[1] + (1 - c[1]) * by, c[2] + (1 - c[2]) * by, c[3] + (1 - c[3]) * by, 1 }
 end
+-- A little darker (hover on a light theme, and on a white accent).
+local function darken(c, by)
+	return { c[1] * (1 - by), c[2] * (1 - by), c[3] * (1 - by), 1 }
+end
 
+-- "pathwise" is the theme's own accent (Pathwise Blue's is Pathwise blue),
+-- as in Pathwise. On a light theme, a class or custom accent is darkened
+-- until it reads (T.Legible).
 function T.WantedAccent()
 	local mode = ns.Get("look.accentMode")
-	if mode == "class" then return T.ClassColor() or T.PATHWISE_ACCENT end
+	local own = hex(T.Scheme(ns.Get("look.scheme")).colors.accent)
+	if mode == "class" then return T.Legible(T.ClassColor() or own) end
 	if mode == "custom" then
 		local h = ns.Get("look.accentColor")
-		if type(h) == "string" and h:match("^#?%x%x%x%x%x%x$") then return hex(h) end
+		if type(h) == "string" and h:match("^#?%x%x%x%x%x%x$") then return T.Legible(hex(h)) end
 	end
-	return T.PATHWISE_ACCENT
+	return own
 end
 
 function T.ApplyAccent()
 	local c = T.WantedAccent()
-	local hov = lighten(c, 0.3)
+	local light = T.IsLight() or (c[1] + c[2] + c[3]) > 2.85
+	local hov = light and darken(c, 0.18) or lighten(c, 0.3)
 	for i = 1, 4 do T.COLORS.accent[i] = c[i] T.COLORS.accentHover[i] = hov[i] end
 	ns.Fire("ACCENT_CHANGED", c)
 	return c
 end
 
--- Keeping one accent with Pathwise (its settings "ui.accentMode" and
--- "ui.accentColor" mean the same as ours).
+-- Keeping one theme and one accent with Pathwise: its settings "ui.theme",
+-- "ui.accentMode" and "ui.accentColor" mean the same as our "look.scheme",
+-- "look.accentMode" and "look.accentColor".
 local syncing = false
 local function toPathwise()
 	local S = ns.Suite()
 	if not (S and ns.Get("look.sharePathwise")) or syncing then return end
 	syncing = true
+	pcall(S.Set, "ui.theme", T.Scheme(ns.Get("look.scheme")).key)
 	pcall(S.Set, "ui.accentMode", ns.Get("look.accentMode"))
 	pcall(S.Set, "ui.accentColor", ns.Get("look.accentColor"))
 	syncing = false
 end
+-- Pathwise's theme, when it is one we know.
+local function pathwiseTheme(S)
+	local ok, key = pcall(S.Get, "ui.theme")
+	return ok and T.THEME_BY[key] and key or nil
+end
 local function fromPathwise(path)
 	local S = ns.Suite()
 	if not (S and ns.Get("look.sharePathwise")) or syncing then return end
-	if path ~= "ui.accentMode" and path ~= "ui.accentColor" then return end
+	if path ~= "ui.theme" and path ~= "ui.accentMode" and path ~= "ui.accentColor" then return end
 	syncing = true
-	ns.Set("look.accentMode", S.Get("ui.accentMode"))
-	ns.Set("look.accentColor", S.Get("ui.accentColor"))
+	if path == "ui.theme" then
+		local key = pathwiseTheme(S)
+		if key then ns.Set("look.scheme", key) end
+	else
+		ns.Set("look.accentMode", S.Get("ui.accentMode"))
+		ns.Set("look.accentColor", S.Get("ui.accentColor"))
+	end
 	syncing = false
 end
+-- At login: still on the first theme while Pathwise has picked another?
+-- Take Pathwise's (else ours goes to Pathwise, like the accent).
+local function themeFromPathwise()
+	local S = ns.Suite()
+	if not (S and ns.Get("look.sharePathwise")) then return end
+	local key = pathwiseTheme(S)
+	if key and key ~= "pathwise" and T.Scheme(ns.Get("look.scheme")).key == "pathwise" then
+		syncing = true
+		ns.Set("look.scheme", key)
+		syncing = false
+	end
+end
 
--- One accent with the other Pathwise addons built on these files (Pathwise
--- UI, Pathwise Heal; ns.Peers). Same setting names, so a value is simply
--- copied; copying stops when the two agree, so nothing loops.
-local ACCENT = { "look.accentMode", "look.accentColor" }
+-- One theme and accent with the other Pathwise addons built on these files
+-- (Pathwise UI, Heal, Encounters, Loot; ns.Peers). Same setting names, so a
+-- value is simply copied; copying stops when the two agree, so nothing loops.
+local SHARED = { "look.scheme", "look.accentMode", "look.accentColor" }
 local function toPeers()
 	if not ns.Get("look.sharePathwise") then return end
 	for _, P in ipairs(ns.Peers()) do
 		if P.Get("look.sharePathwise") then
-			for _, k in ipairs(ACCENT) do
+			for _, k in ipairs(SHARED) do
 				if P.Get(k) ~= ns.Get(k) then P.Set(k, ns.Get(k)) end
 			end
 		end
 	end
 end
--- At login: take the accent of a peer listed before this addon (Pathwise UI's
--- wins), so two addons never start in two colors.
+-- At login: take the theme and accent of a peer listed before this addon
+-- (Pathwise UI's wins), so two addons never start in two colors.
 local function fromEarlierPeer()
 	if not ns.Get("look.sharePathwise") then return end
 	for _, g in ipairs(ns.PEERS) do
 		if g == ns.ID.global then return end
 		local P = _G[g]
 		if type(P) == "table" and P.Get and P.Get("look.sharePathwise") then
-			for _, k in ipairs(ACCENT) do
-				if P.Get(k) ~= ns.Get(k) then ns.Set(k, P.Get(k)) end
+			-- Read them all first: each change here is copied on to the peers.
+			local want = {}
+			for i, k in ipairs(SHARED) do want[i] = P.Get(k) end
+			for i, k in ipairs(SHARED) do
+				if want[i] ~= ns.Get(k) then ns.Set(k, want[i]) end
 			end
 			return
 		end
@@ -382,6 +471,7 @@ ns.On("READY", function()
 	fromEarlierPeer()
 	local S = ns.Suite()
 	if S then
+		themeFromPathwise()
 		toPathwise()
 		S.On("SETTING_CHANGED", fromPathwise)
 	end
@@ -391,7 +481,11 @@ ns.On("SETTING_CHANGED", function(path)
 		T.ApplyAccent()
 		toPathwise()
 		toPeers()
-	elseif path == "look.scheme" or path == "look.colors" or path == "look.trim" or path == "*" or path == "look.*" or path == "profile.shared" then
+	elseif path == "look.scheme" then
+		T.ApplyColors()
+		toPathwise()
+		toPeers()
+	elseif path == "look.colors" or path == "look.trim" or path == "*" or path == "look.*" or path == "profile.shared" then
 		T.ApplyColors()
 	elseif path == "look.sharePathwise" then
 		T.ApplyAccent()

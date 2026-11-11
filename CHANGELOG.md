@@ -6,6 +6,84 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.1 (2026-11-11)
+
+The start of the 0.3 line: the whole Pathwise suite in the new look.
+
+### Pathwise UI, Heal, Encounters and Loot: the new look
+- Rounded windows, cards, menus and buttons (the options window, the move
+  bar, the minimap menu, Heal's prompt, Encounters' range window, the Loot
+  browser); unit frames, bars, nameplates and action buttons stay square.
+- The same 17 themes as Pathwise, kept in step with it both ways (and
+  between these addons). Light themes darken a class or custom accent until
+  it reads. The kit's old Blossom and Lavender are now Pathwise's light
+  ones; Forest, Ember and Mono become Emerald, Sunset and Midnight.
+- The options window and the Loot browser resize from their corner grip
+  and have a pin; the Loot browser's cards reflow into more columns.
+
+### Pathwise v2: the Signature Hub, three guide styles and a compass
+- The Signature Hub: one window with Pathwise's menu, your routes (Leveling,
+  Class, Professions tabs: the route you follow and the ones after it),
+  your professions with their skill bars and the recipe book, and the
+  whole step: the route's crest and levels, its progress, the next steps
+  down the side, the place, the note, the objectives as checkboxes, the
+  optional profession task, your level, XP per hour and coordinates, and
+  Back, Skip, Report and Next. The minimap button opens it (right-click is
+  still Settings); also /pw hub and a key. Escape closes it.
+- The guide on screen comes in three styles, picked in the hub (On screen),
+  in Settings, with /pw style or a key that steps through them:
+  Tracker (new default): a compact card with the step, its objectives as
+  checkboxes, the profession task and your level.
+  Window: the guide window, now with the route's crest and tabs (Guide,
+  Routes, Professions, Dungeons).
+  Minimal: no window; the step and its objectives as text over the game.
+- The compass: a heading strip across the top of the screen that turns as
+  you turn, with the step's place marked on it, the arrow, the distance and
+  the place's coordinates. On by default; off (Settings, the tracker's or
+  hub's compass button, /pw compass, a key) brings back the old arrow.
+- Your coordinates: under the compass, in the tracker, the minimal guide
+  and the hub. Off in Settings or with /pw compass coords.
+- Rounded corners on the new windows (the client has no rounded clipping:
+  they are drawn from corner textures).
+- Themes: 17 palettes, each the whole look (grounds, text, borders and
+  accent): Pathwise Blue, Midnight, Graphite, Rose, Amethyst, Emerald,
+  Ocean, Gold, Sunset, Crimson and High Contrast (dark); Snow, Sky,
+  Blossom, Lavender, Mint and Sand (light). Pick one in Settings > Theme
+  (a tile in each theme's colours) or with /pw theme. All pass the same
+  contrast checks; the compass and minimal guide stay light over the game.
+  Your class colour or your own accent still go on top.
+- Resize any of them: drag the corner grip. The hub to any width and
+  height (narrow, its routes column steps aside and the guide takes the
+  room; shorter, it lists fewer professions); the tracker, the minimal
+  guide and the compass to any width. Right-click the grip for the usual
+  size again.
+- Pins: the hub, the tracker, the guide window and the minimal guide have a
+  pin; Settings has Pin the compass. A pinned window neither moves nor
+  resizes; the minimal guide and the compass then let clicks through.
+- The Pathwise emblem, drawn from the addon's logo (the compass star with
+  its ring, the star at its heart and the winding path), in the hub, the
+  tracker, the minimap button and the addon list; in the hub and tracker
+  it takes the theme's colours.
+- Faction crests, Pathwise's own after the factions' emblems: a blue shield
+  in a flaming gold border (Alliance), a red spiked arch on two blades
+  (Horde), each with the Pathwise star and path; on the hub, the tracker
+  and the guide window, by the route's side.
+- The hub's route cards show the zone's map (the game's own art) with the
+  route drawn across it, start to finish; the Class tab your class's icon;
+  professions their icons. Where the game has no such art, Pathwise draws
+  its own (21 marks, one per class and profession).
+- Every Pathwise window in the new look: Settings, the route book, the
+  recipe book, the side panels, the quest item button, Pathwise Bags and
+  Pathwise Gear have rounded corners, rounded buttons and rows, and follow
+  the theme (a chosen card or row is the ground leaning toward the accent).
+- Settings is a window of its own: it no longer opens beside the guide.
+  Drag it anywhere (it opens there again), pin it, close it with Escape; it
+  stays above the hub. Its pages (About, Waypoint & tools, the suite's)
+  open in it too. Skip, Professions and Dungeons still open by the guide.
+- npm run preview draws the interface from the addon's own code, without
+  the game (tools/preview).
+- Not checked in game.
+
 ## 0.2.34 (2026-11-11)
 
 ### Pathwise: the route book

@@ -15,6 +15,28 @@ Forever. Created by leight_nn & florp. `_nn`
 > Routes are adapted from Polestar (GPL-3.0); quest data comes from
 > QuestieDB (see `docs/DATA.md` and `THIRD_PARTY.md`).
 
+## New in 0.3
+
+- **The Signature Hub**: Pathwise's full window. Your routes (with each
+  zone's map and your route across it), your professions and the whole
+  step in one place. Opens from the minimap button, `/pw hub` or a key.
+- **Three guide styles** while you play: **Tracker** (a compact card, the
+  default), **Window** (the guide window with tabs) and **Minimal** (text
+  over the game, no window). Switch in the hub under *On screen*, in
+  Settings, with `/pw style tracker|window|minimal`, or with a key.
+- **The compass**: a heading strip across the top of the screen with the
+  step's place, its distance and coordinates, and **your own coordinates**
+  under it. Turn it off and the old arrow comes back: Settings,
+  `/pw compass`, `/pw compass coords`, or a key.
+- **Themes**: 17 of them, dark and light (Pathwise Blue, Midnight,
+  Graphite, Rose, Amethyst, Emerald, Ocean, Gold, Sunset, Crimson, High
+  Contrast; Snow, Sky, Blossom, Lavender, Mint, Sand), shared by every
+  Pathwise addon. Settings > Theme or `/pw theme <name>`.
+- **Rounded, resizable, pinnable**: every Pathwise window has rounded
+  corners; drag a window's corner grip to any size; the pin keeps a window
+  where it is. Settings is a window of its own.
+- **Faction crests** (Alliance and Horde) and class and profession icons.
+
 ## The Pathwise addons
 
 This repository holds seven addons, each its own download:
@@ -35,10 +57,14 @@ This repository holds seven addons, each its own download:
    `setx WOW_FOREVER_ADDONS "G:\World of Warcraft\_classic_beta_\Interface\AddOns"`
 2. Link the addons into the game: `npm run link`
 3. In game, everything is in Pathwise's menus; no commands needed:
-   - **Minimap button**: click to show or hide the guide, right-click for
-     Settings, drag to move it.
-   - **Guide window header**: Dungeons (gate), Professions (hammer), Zones
-     (map), Settings (gear), compact mode, close.
+   - **Minimap button**: click to open the hub, right-click for Settings,
+     drag to move it.
+   - **The hub**: Leveling, Professions, Routes and Dungeons on the left,
+     and *On screen*: the guide style (Tracker, Window, Minimal or hidden),
+     the compass and your coordinates.
+   - **The guide on screen**: the hub, compass, collapse and close buttons
+     on the tracker; tabs (Guide, Routes, Professions, Dungeons) on the
+     window.
    - **Footer**: Back, Skip (with quests nearby instead), Report this step
      (flag), Next.
    - **Settings**: window size and opacity, the arrow, map pins, the minimap
@@ -62,6 +88,13 @@ Needs Lua 5.1 (`lua5.1`) and Node 24 or newer.
 - `npm run media` redraws the textures in `Pathwise/Media/`;
   `npm run media:ui` those in `PathwiseUI/Media/`
 - `node tools/pack.js` builds one release zip per addon in `dist/`
+- `npm run preview` draws the interface without the game: it runs
+  Pathwise's Lua against the test client, lays the frames out as the game
+  does and photographs them in Chromium (`preview/*.png`: the hub, each
+  guide style, every window, the other addons' windows, in any theme).
+  Needs `pip install lupa pillow` and Playwright. A picture of what
+  Pathwise asks the game to draw, not the game itself: game art is stood
+  in for.
 
 ## Licence
 
