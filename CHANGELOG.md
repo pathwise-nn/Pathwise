@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.34 (2026-11-11)
+
 ### Pathwise: the route book
 - Zones for your level is now the route book, a window of its own laid out
   like the recipe book. It has six chapters by level (1-10 to 50-60) and a
