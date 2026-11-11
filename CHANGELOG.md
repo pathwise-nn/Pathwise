@@ -15,9 +15,16 @@ that version's section.
   steps faded and yours marked. Follow this route switches the guide to
   it. Click any step to start the route from there; Settings, Marked done
   by you, Bring back undoes that.
+- Zones on a route's page: Go to Thousand Needles (say) and the guide
+  moves to that zone's steps at once, then carries on with the route. A
+  zone in the old Zones list does the same.
 - Then: pick which route comes after this one. The guide hands over to
   your pick when the route ends.
 - /pw zones opens it too. Drag it anywhere; Escape closes it.
+- Synced with your quest log: on a route you pick part-done, the guide
+  starts after what you did. A hearth or "reach level" step behind your
+  furthest finished quest no longer holds you back, so it can't send you
+  back to set a home you have left.
 - Not checked in game.
 
 ## 0.2.33 (2026-11-11)

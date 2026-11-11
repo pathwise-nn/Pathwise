@@ -653,8 +653,9 @@ function builders.zones()
 		else note = "Route coming" end
 		rows[#rows + 1] = { "choice", ("%s   %d-%d"):format(z.name, z.low, z.high), note, function()
 			if z.route then
-				E.SetRoute(z.route.id)
-				ns.Print(("route: %s."):format(z.route.title))
+				-- To the route's steps in this zone, now; else the route.
+				if not E.GoToZone(z.route.id, z.map) then E.SetRoute(z.route.id) end
+				ns.Print(("route: %s, in %s."):format(z.route.title, z.name))
 				Panels.Close()
 			elseif z.city then
 				ns.Print(("%s is a city: the routes stop there on the way."):format(z.name))

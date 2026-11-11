@@ -120,7 +120,7 @@ function Book.Zones(r)
 		return count[a] > count[b]
 	end)
 	for _, map in ipairs(maps) do names[#names + 1] = C.MapName(map) or ("Map " .. map) end
-	return names
+	return names, maps
 end
 
 -- A step in a line: what you do there, whatever your level (only goals for
@@ -429,7 +429,7 @@ local function drawRoute(r)
 	local mine = E.Route() == r
 	local standing, p = Book.Standing(r)
 	local y = line(0, 0, pw, r.title, "quest", "text")
-	local zones = Book.Zones(r)
+	local zones, maps = Book.Zones(r)
 	y = line(y + 2, 0, pw, ("Levels %d-%d  ·  %d steps  ·  %s"):format(r.levels[1], r.levels[2], p.count, table.concat(zones, ", ")), "meta", "text2")
 	y = y + 8
 	if mine then
@@ -440,6 +440,24 @@ local function drawRoute(r)
 			ns.Print(("route: %s."):format(r.title))
 			draw()
 		end)
+	end
+
+	-- Its zones: go to one and the guide does the route's steps there now.
+	if #maps > 1 or not mine then
+		y = line(y + 8, 0, pw, "ZONES  ·  GO TO ONE AND THE GUIDE LEADS YOU THERE NOW", "label", "text2") + 6
+		local focus = E.State().focus
+		for i, map in ipairs(maps) do
+			local at = E.FirstOpenIn(r, map)
+			local on = mine and focus and focus.route == r.id and focus.map == map
+			y = row(y, pw, "Go to " .. zones[i], on and "you are going here" or (at and ("from step " .. at) or "nothing left here"), function()
+				if E.GoToZone(r.id, map) then
+					ns.Print(("route: %s, in %s first."):format(r.title, zones[i]))
+				else
+					ns.Print(("nothing left to do in %s on %s."):format(zones[i], r.title))
+				end
+				draw()
+			end, on, not at)
+		end
 	end
 
 	y = line(y + 8, 0, pw, "STEPS  ·  CLICK ONE TO START FROM IT", "label", "text2") + 6
