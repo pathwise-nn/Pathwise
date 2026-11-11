@@ -318,7 +318,7 @@ function Engine.SetRoute(id)
 	local s = state()
 	-- Picked by the player (the zones and routes panels, /pw route): its
 	-- quests stay in even when the character has outlevelled the route.
-	s.route, s.pin, s.picked, s.chosen = id, nil, nil, id
+	s.route, s.pin, s.picked, s.chosen, s.focus = id, nil, nil, id, nil
 	Engine.Update()
 	return true
 end
@@ -515,14 +515,16 @@ local function goalStatus(route, s, g, goal)
 		if (st == "open" or st == "wait") and passedLow(route, s, goal[2]) then return "na" end
 		return st
 	end
-	if verb == "level" then return (player.level or 1) >= goal[2] and "done" or "open" end
+	if verb == "level" then return ((player.level or 1) >= goal[2] or s < furthestDone(route)) and "done" or "open" end
 	if verb == "goto" then return (state().reached[goalKey(route, s, g)] or passed(route, s)) and "done" or "open" end
 	-- An item to fetch: had, or behind you (a quest further on done: the item
 	-- may have gone into it, as Samuel's Remains do into Marla's Last Wish).
 	if verb == "have" then
 		return (C.ItemCount(goal[2]) >= (goal[3] or 1) or s < furthestDone(route) or s < furthestSkill(route)) and "done" or "open"
 	end
-	if verb == "bind" then return bindMatches(goal[2]) and "done" or "open" end
+	-- A home behind you (a quest further on done) is done too: you have moved
+	-- on, and may have set your hearth elsewhere since.
+	if verb == "bind" then return (bindMatches(goal[2]) or s < furthestDone(route)) and "done" or "open" end
 	if verb == "skill" then
 		local rank = C.SkillRank(goal[2])
 		return rank and rank >= goal[3] and "done" or "open"
@@ -650,11 +652,20 @@ local function compute()
 	ownRoutes(s)
 	local route = Engine.Route()
 	live = firstOpen(route)
+	-- A zone picked in the route book: that zone's open steps first, in the
+	-- route's order; once none is left, the route goes on as before.
+	local focus = s.focus
+	if focus and route and focus.route == route.id then
+		local f = Engine.FirstOpenIn(route, focus.map)
+		if f then live = f else s.focus = nil end
+	elseif focus then
+		s.focus = nil
+	end
 	-- A finished route hands over to the next one, when it is for this character.
 	local hops = 0
-	while route and not live and route.next and routes[route.next] and fits(routes[route.next], player) and hops < 5 do
+	while route and not live and Engine.NextOf(route) and hops < 5 do
 		hops = hops + 1
-		route = routes[route.next]
+		route = Engine.NextOf(route)
 		s.route, s.pin = route.id, nil
 		live = firstOpen(route)
 		ns.Print(("on to the next route: %s."):format(route.title))
@@ -1486,6 +1497,98 @@ function Engine.MarkStepDone()
 	state().pin = nil
 	Engine.Update()
 	return s
+end
+
+-- The route book (UI/RouteBook.lua): how far a route is, starting one at a
+-- step, going to one of its zones, and the route to go on to.
+
+-- The map a step is on: its first goal with a place.
+function Engine.StepMap(r, s)
+	for _, g in ipairs(r.steps[s]) do
+		if g.at then return g.at[1] end
+		if g[1] == "goto" then return g[2] end
+	end
+	return nil
+end
+
+-- The first open step of route `r` on `map`, or nil.
+function Engine.FirstOpenIn(r, map)
+	player = player or Q.Player()
+	for s = 1, #r.steps do
+		if Engine.StepMap(r, s) == map and stepOpen(r, s) then return s end
+	end
+	return nil
+end
+
+-- Go to `map` on route `id`: follow the route (if not already) and do its
+-- open steps there first. False when it has none there for you.
+function Engine.GoToZone(id, map)
+	local r = routes[id]
+	if not r then return false end
+	local st = state()
+	local chosen = st.chosen
+	st.chosen = id -- picked by you: its quests stay in (see passedLow)
+	if not Engine.FirstOpenIn(r, map) then st.chosen = chosen return false end
+	if st.route ~= id then st.route, st.picked = id, nil end
+	st.pin, st.focus = nil, { route = id, map = map }
+	Engine.Update()
+	return true
+end
+
+-- { at = first open step or nil, count = steps, done = steps behind } for
+-- any route, the way the guide would see it now.
+function Engine.Progress(r)
+	player = player or Q.Player()
+	local at = firstOpen(r)
+	return { at = at, count = #r.steps, done = at and (at - 1) or #r.steps }
+end
+
+-- Follow route `id` from step `s`: the steps before it count as done (marked
+-- by you: Settings, Marked done by you, Bring back undoes it).
+function Engine.StartAt(id, s)
+	local r = routes[id]
+	if not (r and r.steps[s]) then return false end
+	local st = state()
+	for k = 1, s - 1 do st.stepsDone[id .. ":" .. k] = true end
+	for k = s, #r.steps do st.stepsDone[id .. ":" .. k] = nil end
+	return Engine.SetRoute(id)
+end
+
+-- The route that follows `r`: the one you picked in the route book, else the
+-- route's own; nil when none is for this character.
+function Engine.NextOf(r)
+	player = player or Q.Player()
+	local st = state()
+	local id = st.nexts and st.nexts[r.id] or r.next
+	local n = id and routes[id]
+	if n and fits(n, player) then return n end
+	if id ~= r.next and r.next and routes[r.next] and fits(routes[r.next], player) then return routes[r.next] end
+	return nil
+end
+
+-- Pick the route that follows `id` (nil: the route's own).
+function Engine.SetNext(id, nextId)
+	local st = state()
+	st.nexts = st.nexts or {}
+	st.nexts[id] = nextId
+	Engine.Update()
+end
+
+-- Routes to go on to after `r`: the leveling routes for this character that
+-- start within a few levels of where `r` ends, its own next first.
+function Engine.NextChoices(r)
+	player = player or Q.Player()
+	local out, seen = {}, {}
+	local own = r.next and routes[r.next]
+	if own and fits(own, player) then out[1] = own seen[own.id] = true end
+	local top = r.levels and r.levels[2] or 60
+	for _, n in ipairs(Engine.RoutesFor(player, "Leveling")) do
+		if not seen[n.id] and n.id ~= r.id and n.levels[1] >= top - 4 and n.levels[1] <= top + 2 then
+			out[#out + 1] = n
+			seen[n.id] = true
+		end
+	end
+	return out
 end
 
 -- Everything the player marked done, back to what the game says.

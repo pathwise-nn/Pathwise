@@ -1256,7 +1256,7 @@ test("zones at 28 (Undead): a route working in a zone counts, cities and other r
 	eq(by[1442] and by[1442].route and by[1442].route.id, "forever/horde/05-stonetalon-mountains")
 	ok(by[1454] and by[1454].city and not by[1454].route, "Orgrimmar is a city")
 	eq(by[1412] and by[1412].route and by[1412].route.id, "forever/horde/07-ashenvale", "Mulgore: the route that stops there")
-	ns.Fire("SHOW_ZONES")
+	ns.Panels.Open("zones")
 	local texts = stub.texts()
 	ok(contains(texts, "City: the routes stop here for trainers and hand-ins"), "the city note")
 	local coming = 0
@@ -1282,6 +1282,104 @@ test("zones: a route you pick stays, even one you have outlevelled", function()
 	E.Update()
 	eq(E.Route().id, "forever/horde/05-stonetalon-mountains", "not handed on to the next route")
 	ok(E.LiveStep(), "a step to do")
+end)
+
+-- The route book (UI/RouteBook.lua): a button in it by the start of its text.
+local function bookRow(stub, prefix)
+	for _, f in ipairs(stub.frames) do
+		local l = rawget(f, "label") or rawget(f, "name")
+		if f.kind == "Button" and f.shown and type(l) == "table" and type(l.text) == "string"
+			and l.text:sub(1, #prefix) == prefix and f.scripts.OnClick then return f end
+	end
+end
+
+test("route book: Zones opens it on your level, a window of its own, with a card per route", function()
+	local stub, ns = login()
+	stub.player.level = 28
+	ns.Fire("SHOW_ZONES")
+	local f = _G.PathwiseRouteBook
+	ok(f and f.shown, "the route book opens")
+	eq(f.points[1][1], "CENTER", "on its own, not on the guide window")
+	eq(f.points[1][2], UIParent)
+	local B = ns.RouteBookWindow
+	eq(B.state.chapter, 3, "levels 20-30")
+	local titles = {}
+	for _, r in ipairs(B.RoutesIn(3)) do titles[r.id] = true end
+	ok(titles["forever/horde/07-ashenvale"] and titles["forever/horde/05-stonetalon-mountains"], "the 20s' routes")
+	ok(bookRow(stub, "Ashenvale & Thousand Needles"), "a card for Ashenvale & Thousand Needles")
+end)
+
+test("route book: a route's page follows it, starts it from a step, and picks the route after it", function()
+	local stub, ns = login()
+	stub.player.level = 28
+	local E, B = ns.Engine, ns.RouteBookWindow
+	B.Open(3)
+	local r = E.routes["forever/horde/05-stonetalon-mountains"]
+	bookRow(stub, r.title).scripts.OnClick()
+	eq(B.state.route, r.id, "its page")
+	ok(bookRow(stub, "1.  "), "the steps, numbered")
+	bookRow(stub, "Follow this route").scripts.OnClick()
+	eq(E.Route().id, r.id, "followed")
+	ok(bookRow(stub, "You are following this route"), "and it says so")
+	bookRow(stub, "5.  ").scripts.OnClick()
+	eq(E.Route().id, r.id)
+	ok(E.State().stepsDone[r.id .. ":4"] and not E.State().stepsDone[r.id .. ":5"], "the steps before 5 count as done")
+	eq(E.Progress(r).at >= 5, true, "the guide is at step 5 or past it")
+	local choices = E.NextChoices(r)
+	ok(#choices >= 2, "more than one way on")
+	eq(choices[1].id, r.next, "its own next first")
+	eq(E.NextOf(r), choices[1])
+	bookRow(stub, choices[2].title).scripts.OnClick()
+	eq(E.NextOf(r), choices[2], "the route after it, as picked")
+	bookRow(stub, choices[1].title).scripts.OnClick()
+	eq(E.State().nexts[r.id], nil, "back to its own")
+end)
+
+test("route book: going to a zone moves the guide there at once, on the route you follow", function()
+	local stub, ns = login()
+	stub.player.level = 28
+	local E, B = ns.Engine, ns.RouteBookWindow
+	stub.maps[1440] = { inst = 1, name = "Ashenvale", n0 = 0, ny = -20, w0 = 0, wx = -30 }
+	stub.maps[1441] = { inst = 1, name = "Thousand Needles", n0 = 0, ny = -20, w0 = 0, wx = -30 }
+	local r = E.routes["forever/horde/07-ashenvale"]
+	E.SetRoute(r.id)
+	local before = E.CurrentStep()
+	eq(E.StepMap(r, before), 1440, "starts in Ashenvale")
+	B.Open(3)
+	bookRow(stub, r.title).scripts.OnClick()
+	bookRow(stub, "Go to Thousand Needles").scripts.OnClick()
+	local now = E.CurrentStep()
+	eq(E.StepMap(r, now), 1441, "the guide's step is in Thousand Needles now")
+	ok(now > before, "further on the route")
+	eq(ns.Guide.View().index, now, "the guide window shows it")
+	eq(E.Route().id, r.id, "the same route")
+	ok(bookRow(stub, "Go to Thousand Needles"), "still listed")
+	-- Following a route again goes back to its own order.
+	E.SetRoute(r.id)
+	eq(E.CurrentStep(), before, "back to the route's order")
+end)
+
+-- Synced with the quest log: picking a route you have partly done starts
+-- after what you did, a home you set back then included.
+test("quest log sync: a route picked part-done starts after what you did, hearth steps behind you too", function()
+	local stub, ns = login()
+	stub.player.level = 28
+	local E = ns.Engine
+	local r = E.routes["forever/horde/05-stonetalon-mountains"]
+	local last = 0
+	for s = 1, 10 do
+		for _, g in ipairs(r.steps[s]) do
+			if type(g[2]) == "number" and (g[1] == "turnin" or g[1] == "accept" or g[1] == "complete") then stub.done[g[2]] = true last = s end
+		end
+	end
+	E.SetRoute(r.id)
+	ok(E.LiveStep() > last, ("starts after step %d, at %s"):format(last, tostring(E.LiveStep())))
+	local bindStep
+	for s = 1, last do for _, g in ipairs(r.steps[s]) do if g[1] == "bind" then bindStep = s end end end
+	ok(bindStep, "a hearth step among them")
+	for g, goal in ipairs(r.steps[bindStep]) do
+		if goal[1] == "bind" then eq(E.GoalStatus(r, bindStep, g, goal), "done", "the home behind you is done, set elsewhere now") end
+	end
 end)
 
 test("routes panel: leveling near the level, class quests for a mage, professions as side guides", function()

@@ -25,6 +25,7 @@ UI\GuideWindow.lua
 UI\ItemButton.lua
 UI\Panels.lua
 UI\RecipeBook.lua
+UI\RouteBook.lua
 UI\MinimapButton.lua
 Routes\Leveling.lua
 Routes\Class.lua
