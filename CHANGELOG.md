@@ -6,6 +6,14 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: quests that start from an item
+- A step to accept a quest no one gives, like The Befouled Element (from
+  Tideress's Befouled Water Globe), had no arrow and no map pin. It now
+  reads "Use Befouled Water Globe: accept The Befouled Element". Until you
+  have the item, the arrow leads to what drops it. Once it's in your bags,
+  the step item button offers it, and one click accepts the quest. About
+  30 quests on the routes start this way. Not checked in game.
+
 ## 0.2.29 (2026-11-10)
 
 ### Pathwise UI: debuffs on your target in a fight

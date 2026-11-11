@@ -1513,6 +1513,41 @@ test("guide grip: with a height of its own, the level line stays over the button
 	ok(s.parent ~= f, "fitting each step again: back in the list")
 end)
 
+-- The Befouled Element (1918): no one gives it; the Befouled Water Globe
+-- (16408), from Tideress in Ashenvale, starts it (both from the data).
+test("a quest started by an item: the arrow leads to what drops it, then the item button offers it", function()
+	local stub, ns = login(function(s) s.player.level = 25 end)
+	local Q, E = ns.Quests, ns.Engine
+	eq(Q.StartItem(363), nil, "a quest someone gives has no start item")
+	local item = Q.StartItem(1918)
+	eq(item and item.id, 16408)
+	eq(item and item.name, "Befouled Water Globe")
+	ok(Pathwise.RegisterRoute({
+		id = "test/globe", title = "Globe (test)", category = "Leveling", map = 1440,
+		levels = { 23, 30 }, faction = "Horde",
+		steps = { { title = "Tideress", { "accept", 1918 } } },
+	}), "route registers")
+	stub.moveTo(1440, 50, 60)
+	E.SetRoute("test/globe")
+	local goal = E.Route().steps[1][1]
+	eq(E.GoalText(goal), "Use Befouled Water Globe: accept The Befouled Element")
+	local p = E.PlaceOf(goal)
+	ok(p, "without the globe: a place")
+	eq(p and p.name, "Tideress", "where the globe drops")
+	eq(ns.Nav.Target() and ns.Nav.Target().title, "Tideress", "and the arrow leads there")
+	local line = E.LinesOf(E.Route(), 1, true)[1]
+	eq(line.lead .. line.name .. line.tail, "Use Befouled Water Globe: accept The Befouled Element")
+	stub.items[16408] = 1
+	eq(E.PlaceOf(goal), nil, "with the globe: nowhere to go")
+	E.Update()
+	local b = _G.PathwiseItemButton
+	ok(b and b.shown, "the item button shows")
+	eq(b and b:GetAttribute("item"), "Befouled Water Globe", "with the globe, one click to accept")
+	stub.items[16408] = nil
+	E.Update()
+	ok(not b.shown, "the globe gone: the button hides")
+end)
+
 -- The stub cannot load fonts, so a label the game drew blank is stood in for
 -- by emptying its text: the point is that Pathwise sets it again.
 test("guide buttons: Back, Skip and Next draw their labels again on a redraw and on entering the world", function()

@@ -245,6 +245,28 @@ function Q.Giver(id, from)
 	return firstPlace(q[START_NPC], q[START_OBJ], from, q[MAP])
 end
 
+-- A quest no one gives, started by using an item from your bags (The
+-- Befouled Element: the Befouled Water Globe): { id, name } of the item, or
+-- nil when the quest has a giver or no start item.
+function Q.StartItem(id)
+	local q = D.quests[id]
+	if not q or Q.Giver(id) then return nil end
+	for _, item in ipairs(q[START_ITEM] or {}) do
+		local it = D.items[item]
+		if it then return { id = item, name = it[1] } end
+	end
+	return nil
+end
+
+-- Where item `id` drops: the nearest monster or object that has it.
+function Q.ItemPlace(id, from, prefer)
+	local it = D.items[id]
+	if not it then return nil end
+	local p = firstPlace(it[2], it[3], from, prefer)
+	if p then p.item = it[1] end
+	return p
+end
+
 function Q.Finisher(id, from)
 	local q = D.quests[id]
 	if not q then return nil end

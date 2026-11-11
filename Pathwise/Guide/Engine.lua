@@ -768,7 +768,15 @@ local function placeOf(goal)
 		local a = goal.at
 		return a and { map = a[1], x = a[2], y = a[3], name = name } or nil
 	end
-	if verb == "accept" then return atPlace(goal.who) or Q.Giver(q, from) end
+	if verb == "accept" then
+		local p = atPlace(goal.who) or Q.Giver(q, from)
+		if p then return p end
+		-- Started by an item: where it drops until you have it; then nowhere
+		-- to go, you use it from your bags (the step item button offers it).
+		local item = Q.StartItem(q)
+		if item and C.ItemCount(item.id) == 0 then return Q.ItemPlace(item.id, from, Q.Map(q)) end
+		return nil
+	end
 	if verb == "turnin" then return atPlace(goal.who) or Q.Finisher(q, from) end
 	if verb == "complete" then
 		local log = Q.Objectives(q)
@@ -792,11 +800,21 @@ local function placeOf(goal)
 end
 Engine.PlaceOf = placeOf
 
+-- The item an accept goal's quest starts from, when no one gives it and the
+-- route names no one either: { id, name } or nil.
+local function startItemOf(goal)
+	if goal[1] ~= "accept" or goal.who or goal.at or type(goal[2]) ~= "number" then return nil end
+	return Q.StartItem(goal[2])
+end
+Engine.StartItem = startItemOf
+
 local RANKS = { [75] = "Apprentice", [150] = "Journeyman", [225] = "Expert", [300] = "Artisan" }
 local VERB_TEXT = { accept = "Accept %s", turnin = "Turn in %s", complete = "Complete %s" }
 
 local function goalText(goal)
 	local verb = goal[1]
+	local item = startItemOf(goal)
+	if item then return ("Use %s: accept %s"):format(item.name, qname(goal)) end
 	if VERB_TEXT[verb] then return VERB_TEXT[verb]:format(qname(goal)) end
 	if verb == "goto" then return goal[5] or "Go to the marked spot" end
 	if verb == "level" then return ("Reach level %d"):format(goal[2]) end
@@ -901,7 +919,10 @@ local LINE = {
 local function goalLine(route, s, g, goal, st, withObjectives, out)
 	local verb = goal[1]
 	local line = { kind = verb, done = st == "done", info = st == "info", optional = goal.optional }
-	if QUEST_VERBS[verb] then
+	local item = startItemOf(goal)
+	if item then
+		line.lead, line.name, line.tail = "Use ", item.name, ": accept " .. qname(goal)
+	elseif QUEST_VERBS[verb] then
 		line.lead, line.name = LINE[verb], qname(goal)
 	elseif verb == "have" then
 		local name = goal.name or (Q.Data.items[goal[2]] and Q.Data.items[goal[2]][1]) or ("item " .. goal[2])
