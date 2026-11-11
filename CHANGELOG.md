@@ -6,6 +6,13 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: quest data from after launch
+- The guide's quest data is rebuilt from QuestieDB's latest Forever data,
+  which now comes from the live game: quest levels, givers, objectives and
+  chains corrected in the first weeks (Silverpine, the sleeping bag chains,
+  The Sleeper Has Awakened and more). Some quests now open at the level the
+  live game asks, so the guide waits for it. Not checked in game.
+
 ## 0.2.30 (2026-11-11)
 
 ### Pathwise: quests that start from an item

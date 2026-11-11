@@ -10,7 +10,7 @@ data, never typed in.
 ## Rebuilding the data
 
 1. Get QuestieDB's Forever sources into `data/sources/questiedb` (not
-   committed). The version Pathwise was built from is commit `1f538335`;
+   committed). The version Pathwise was built from is commit `e19dfdf` (2026-11-11; Pathwise Loot's data is still from `1f538335`);
    only these folders are needed: `data/Forever`, `src/corrections/Forever`,
    `src/corrections/enum`, `src/meta`, `support/Forever`.
 2. `npm run data` (that is `lua5.1 tools/data/build.lua`) writes
