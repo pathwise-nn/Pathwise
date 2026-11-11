@@ -88,6 +88,87 @@ test("routes: every converted route loads (57 leveling, 66 class, 12 professions
 	end
 end)
 
+-- Pathwise's own route fixes (tools/port/fixes.lua), as written into the routes.
+test("route fixes: Ashenvale's hunt trophies wait for The Ashenvale Hunt, which Splintertree offers", function()
+	local _, ns = fresh()
+	local route = ns.Engine.routes["forever/horde/07-ashenvale"]
+	local held, splinter = 0, nil
+	for _, step in ipairs(route.steps) do
+		for g, goal in ipairs(step) do
+			if goal[1] == "have" and (goal[2] == 16303 or goal[2] == 16304 or goal[2] == 16305) then
+				local w = step.when and step.when[1]
+				ok(w and w.k == "turnedin" and w.q == 6383, "the hunt for item " .. goal[2] .. " waits for 6383")
+				held = held + 1
+			end
+			if goal[1] == "accept" and goal[2] == 6383 and not splinter then
+				splinter = step
+				eq(step[g + 1][1], "turnin", "taken and handed straight back")
+				eq(step[g + 2][2], 23, "before the first trophy hand-in")
+			end
+		end
+	end
+	eq(held, 3, "all three hunts")
+	ok(splinter, "Senani offers The Ashenvale Hunt on this route")
+end)
+
+-- The bug class behind the Ashenvale hunt: a route that offers a quest
+-- whose prerequisite nothing before it hands in.
+test("routes: every required accept has its prerequisite handed in before it", function()
+	local _, ns = fresh()
+	local D, routes = ns.Quests.Data, ns.Engine.routes
+	local prev = {}
+	for id, r in pairs(routes) do
+		if r.category == "Leveling" and r.next then prev[r.next] = prev[r.next] or {} table.insert(prev[r.next], id) end
+	end
+	local function earlier(id, seen, out)
+		for _, p in ipairs(prev[id] or {}) do
+			if not seen[p] then
+				seen[p] = true
+				for _, step in ipairs(routes[p].steps) do
+					for _, g in ipairs(step) do if g[1] == "turnin" then out[g[2]] = true end end
+				end
+				earlier(p, seen, out)
+			end
+		end
+		return out
+	end
+	local bad = {}
+	for id, r in pairs(routes) do
+		if r.category == "Leveling" then
+			local done = earlier(id, {}, {})
+			for s, step in ipairs(r.steps) do
+				local held = {}
+				for _, w in ipairs(step.when or {}) do
+					for _, q in ipairs(type(w.q) == "table" and w.q or { w.q }) do held[q] = true end
+				end
+				for _, g in ipairs(step) do
+					local q = g[1] == "accept" and not g.optional and not step.only and not step.when and D.quests[g[2]]
+					if q then
+						local pre = q[13] -- any one of them
+						local any = not pre or #pre == 0
+						for _, p in ipairs(pre or {}) do if done[p] or held[p] then any = true end end
+						for _, p in ipairs(q[14] or {}) do if not done[p] then any = false end end -- all of them
+						if not any then bad[#bad + 1] = ("%s step %d: %s"):format(id, s, q[1]) end
+					end
+					if g[1] == "turnin" then done[g[2]] = true end
+				end
+			end
+		end
+	end
+	table.sort(bad)
+	eq(#bad, 0, table.concat(bad, "; "))
+end)
+
+test("route fixes: a fix that no longer finds its goal stops the build", function()
+	package.path = "tools/port/?.lua;" .. package.path
+	local Fix = require("fixes")
+	local saved = Fix.FIXES["test/route"]
+	Fix.FIXES["test/route"] = { { why = "test", drop = { "accept", 1 } } }
+	local okay, err = pcall(Fix.apply, { id = "test/route", steps = { { { "accept", 2 } } } })
+	Fix.FIXES["test/route"] = saved
+	ok(not okay and tostring(err):find("nothing to drop"), "stale fix: " .. tostring(err))
+end)
+
 test("routes: every next route exists, and coordinates are on the map", function()
 	local _, ns = fresh()
 	local routes = ns.Engine.routes

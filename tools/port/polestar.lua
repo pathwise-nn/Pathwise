@@ -295,14 +295,19 @@ local function writeFile(name, list, what)
 	io.stderr:write(("wrote %s: %d routes, %d steps\n"):format(path, #list, steps))
 end
 
+-- Pathwise's own route fixes (tools/port/fixes.lua), applied after the
+-- conversion. A fix that no longer finds what it changes stops the build.
+local Fix = require("fixes")
+local function convert(g) return Fix.apply(convertGuide(g), D) end
+
 local leveling, class, professions, other = {}, {}, {}, {}
 for _, id in ipairs(order) do
 	local g = guides[id]
-	if g.category == "Leveling" then leveling[#leveling + 1] = convertGuide(g)
-	elseif g.category == "Class" then class[#class + 1] = convertGuide(g)
-	elseif g.category == "Professions" then professions[#professions + 1] = convertGuide(g)
+	if g.category == "Leveling" then leveling[#leveling + 1] = convert(g)
+	elseif g.category == "Class" then class[#class + 1] = convert(g)
+	elseif g.category == "Professions" then professions[#professions + 1] = convert(g)
 	elseif g.category == "Reputation" or g.category == "Collectibles" or g.category == "Exploration" or g.category == "Miscellaneous" then
-		other[#other + 1] = convertGuide(g)
+		other[#other + 1] = convert(g)
 	end
 end
 
@@ -312,3 +317,5 @@ writeFile("Professions.lua", professions, "profession routes, 1-300")
 writeFile("Other.lua", other, "reputation, mount and pet, exploration and miscellaneous routes")
 io.stderr:write(("goals %d, notes %d, quests not in Pathwise's data %d, unresolved names %d\n"):format(
 	stats.goals, stats.notes, stats.missingQuests, unresolved))
+local unused = Fix.Unused()
+if #unused > 0 then error("tools/port/fixes.lua: no such route: " .. table.concat(unused, ", "), 0) end
