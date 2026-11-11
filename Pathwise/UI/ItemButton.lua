@@ -4,7 +4,8 @@
 -- Which item: the quest item of a quest the step is working on (the one
 -- the game's own objective tracker offers: GetQuestLogSpecialItemInfo, by
 -- C_QuestLog.GetLogIndexForQuestID), else an item a note names ("Use
--- Shrine Bauble") when it is in your bags.
+-- Shrine Bauble") when it is in your bags, or the item a quest to accept
+-- starts from (the Befouled Water Globe).
 --
 -- The button is the game's SecureActionButtonTemplate with type "item": the
 -- game uses the item, Pathwise only sets which. Attributes, showing and
@@ -48,6 +49,13 @@ function B.ForStep()
 				local name = nameOf(link)
 				if name then return { name = name, icon = icon, quest = q, link = link } end
 			end
+		end
+	end
+	-- A quest started by an item in your bags: using it offers the quest.
+	for _, goal in ipairs(goals) do
+		local item = E.StartItem and E.StartItem(goal)
+		if item and C.ItemCount(item.id) > 0 then
+			return { name = item.name, icon = iconByName(item.name), quest = goal[2] }
 		end
 	end
 	for _, goal in ipairs(goals) do
