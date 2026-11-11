@@ -316,7 +316,9 @@ end
 function Engine.SetRoute(id)
 	if id and not routes[id] then return false end
 	local s = state()
-	s.route, s.pin, s.picked = id, nil, nil
+	-- Picked by the player (the zones and routes panels, /pw route): its
+	-- quests stay in even when the character has outlevelled the route.
+	s.route, s.pin, s.picked, s.chosen = id, nil, nil, id
 	Engine.Update()
 	return true
 end
@@ -493,6 +495,7 @@ local function passedLow(route, s, q)
 	local lvl = Q.Level(q)
 	if not (lvl > 0 and lvl < level - 2) then return false end
 	local outgrown = route.levels and route.levels[2] and level >= route.levels[2] + 2
+		and state().chosen ~= route.id
 	if not (outgrown or s < furthestDone(route)) then return false end
 	if Q.OnQuest(q) and Q.Ready(q) then return false end
 	return not neededAhead(route, q, level)
@@ -1559,20 +1562,67 @@ function Engine.AddExtra(q)
 	Engine.Update()
 end
 
--- Zones for the player's level: { { map, name, low, high, route }, ... }.
--- `route` is the leveling route for that zone that suits the character.
+-- The capitals (UiMap ids): the routes stop there for trainers and hand-ins,
+-- nobody levels there.
+local CITIES = { [1453] = true, [1454] = true, [1455] = true, [1456] = true, [1457] = true, [1458] = true }
+Engine.CITIES = CITIES
+
+-- The maps a route works in: its own, and every map with at least 6 quest
+-- goals on it ("Ashenvale & Thousand Needles" covers both), with how many.
+local mapSets = setmetatable({}, { __mode = "k" })
+local function mapsOf(r)
+	local set = mapSets[r]
+	if set then return set end
+	local count = {}
+	for _, step in ipairs(r.steps) do
+		for _, goal in ipairs(step) do
+			if QUEST_VERBS[goal[1]] and goal.at then count[goal.at[1]] = (count[goal.at[1]] or 0) + 1 end
+		end
+	end
+	set = {}
+	for map, n in pairs(count) do if n >= 6 then set[map] = n end end
+	if r.map then set[r.map] = math.max(set[r.map] or 0, 1000) end
+	mapSets[r] = set
+	return set
+end
+
+-- Zones for the player's level: { { map, name, low, high, route, city,
+-- raceRoute }, ... }. `route` is the leveling route working in that zone
+-- that suits the character: the one followed if it does, else one for the
+-- level, else the one most at home there. `raceRoute` is a starting zone's
+-- route for other races (Mulgore for Tauren), shown, not offered.
 function Engine.Zones()
 	player = Q.Player()
-	local out = {}
-	local byMap = {}
-	for _, r in ipairs(Engine.RoutesFor(player, "Leveling")) do
-		local cur = byMap[r.map]
+	local current = Engine.Route()
+	local function rank(r, map)
 		local fitsLevel = player.level >= r.levels[1] - 2 and player.level <= r.levels[2] + 1
-		if r.map and (not cur or (fitsLevel and not cur.fitsLevel)) then byMap[r.map] = { route = r, fitsLevel = fitsLevel } end
+		return (current and r.id == current.id and 4 or 0) + (fitsLevel and 2 or 0), mapsOf(r)[map] or 0
 	end
+	local mine = Engine.RoutesFor(player, "Leveling")
+	local out = {}
 	for _, z in ipairs(Q.ZonesFor(player.level, player.faction)) do
 		z.name = C.MapName(z.map) or ("Map " .. z.map)
-		z.route = byMap[z.map] and byMap[z.map].route
+		z.city = CITIES[z.map] or nil
+		if not z.city then
+			local best, bestA, bestB
+			for _, r in ipairs(mine) do
+				if mapsOf(r)[z.map] then
+					local a, b = rank(r, z.map)
+					if not best or a > bestA or (a == bestA and b > bestB) then best, bestA, bestB = r, a, b end
+				end
+			end
+			z.route = best
+			if not best then
+				for _, id in ipairs(routeOrder) do
+					local r = routes[id]
+					if (r.category or "Leveling") == "Leveling" and r.map == z.map and r.races
+						and (not r.faction or r.faction == player.faction) then
+						z.raceRoute = r
+						break
+					end
+				end
+			end
+		end
 		out[#out + 1] = z
 	end
 	return out

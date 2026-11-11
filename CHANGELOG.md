@@ -6,6 +6,16 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: Zones for your level
+- A zone a route works in now shows that route, not "Route coming":
+  Thousand Needles shows Ashenvale & Thousand Needles, for example.
+  Cities say the routes stop there for trainers and hand-ins, and another
+  race's starting zone names its route.
+- Picking a zone or route you have outlevelled now switches to it. Before,
+  its quests counted as passed, and the guide went straight back to the
+  route you were on. A route you pick keeps its quests.
+- Not checked in game.
+
 ## 0.2.31 (2026-11-11)
 
 ### Pathwise: quest data from after launch

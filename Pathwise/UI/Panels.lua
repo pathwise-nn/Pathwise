@@ -647,13 +647,19 @@ function builders.zones()
 	for _, z in ipairs(zones) do
 		local note
 		if z.route and current and z.route.id == current.id then note = "Your route"
-		elseif z.route then note = "Pathwise route  ·  click to switch"
+		elseif z.route then note = ("%s  ·  click to switch"):format(z.route.title)
+		elseif z.city then note = "City: the routes stop here for trainers and hand-ins"
+		elseif z.raceRoute then note = ("Starting zone: the %s route"):format(table.concat(z.raceRoute.races, ", "))
 		else note = "Route coming" end
 		rows[#rows + 1] = { "choice", ("%s   %d-%d"):format(z.name, z.low, z.high), note, function()
 			if z.route then
 				E.SetRoute(z.route.id)
 				ns.Print(("route: %s."):format(z.route.title))
 				Panels.Close()
+			elseif z.city then
+				ns.Print(("%s is a city: the routes stop there on the way."):format(z.name))
+			elseif z.raceRoute then
+				ns.Print(("%s's route is for %s characters."):format(z.name, table.concat(z.raceRoute.races, ", ")))
 			else
 				ns.Print(("there is no Pathwise route for %s yet."):format(z.name))
 			end
