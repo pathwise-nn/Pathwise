@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.31 (2026-11-11)
+
 ### Pathwise: quest data from after launch
 - The guide's quest data is rebuilt from QuestieDB's latest Forever data,
   which now comes from the live game: quest levels, givers, objectives and
