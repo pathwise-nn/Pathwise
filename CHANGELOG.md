@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.32 (2026-11-11)
+
 ### Pathwise: Zones for your level
 - A zone a route works in now shows that route, not "Route coming":
   Thousand Needles shows Ashenvale & Thousand Needles, for example.
