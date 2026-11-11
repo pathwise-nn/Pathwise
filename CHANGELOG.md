@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.33 (2026-11-11)
+
 ### Pathwise: Un'Goro without a trip back to Torwa
 - Alliance Un'Goro: The Apes of Un'Goro is taken on the first visit to
   Torwa Pathfinder. The route used to come back to him for it alone. Not
