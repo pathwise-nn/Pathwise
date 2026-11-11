@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.2.30 (2026-11-11)
+
 ### Pathwise: quests that start from an item
 - A step to accept a quest no one gives, like The Befouled Element (from
   Tideress's Befouled Water Globe), had no arrow and no map pin. It now
