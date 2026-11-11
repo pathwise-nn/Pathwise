@@ -126,7 +126,7 @@ end, "version and credits")
 ns.Command("report", function() ns.Fire("REPORT_STEP") end, "a report of this step to paste into Discord")
 
 ns.Command("settings", function() ns.Fire("SHOW_SETTINGS") end, "open the settings panel")
-ns.Command("zones", function() ns.Fire("SHOW_ZONES") end, "zones for your level (and switching routes)")
+ns.Command("zones", function() ns.Fire("SHOW_ZONES") end, "the route book: every leveling route by level, its steps, and switching")
 ns.Command("routes", function() ns.Fire("SHOW_ROUTES") end, "every route for you: leveling, class quests, professions")
 ns.Command("prof", function() ns.Fire("SHOW_PROFESSIONS") end, "your professions: skill, best craft, materials")
 ns.Command("dungeons", function() ns.Fire("SHOW_DUNGEONS") end, "dungeons and raids for your level, their quests and entrances")

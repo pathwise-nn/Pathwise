@@ -6,6 +6,20 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise: the route book
+- Zones for your level is now the route book, a window of its own laid out
+  like the recipe book. It has six chapters by level (1-10 to 50-60) and a
+  card per zone route for your character, showing its levels, whether it
+  fits your level and how far you are. Your route is outlined.
+- Click a route for its page: every step with what you do there, done
+  steps faded and yours marked. Follow this route switches the guide to
+  it. Click any step to start the route from there; Settings, Marked done
+  by you, Bring back undoes that.
+- Then: pick which route comes after this one. The guide hands over to
+  your pick when the route ends.
+- /pw zones opens it too. Drag it anywhere; Escape closes it.
+- Not checked in game.
+
 ## 0.2.33 (2026-11-11)
 
 ### Pathwise: Un'Goro without a trip back to Torwa

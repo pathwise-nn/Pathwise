@@ -652,9 +652,9 @@ local function compute()
 	live = firstOpen(route)
 	-- A finished route hands over to the next one, when it is for this character.
 	local hops = 0
-	while route and not live and route.next and routes[route.next] and fits(routes[route.next], player) and hops < 5 do
+	while route and not live and Engine.NextOf(route) and hops < 5 do
 		hops = hops + 1
-		route = routes[route.next]
+		route = Engine.NextOf(route)
 		s.route, s.pin = route.id, nil
 		live = firstOpen(route)
 		ns.Print(("on to the next route: %s."):format(route.title))
@@ -1486,6 +1486,65 @@ function Engine.MarkStepDone()
 	state().pin = nil
 	Engine.Update()
 	return s
+end
+
+-- The route book (UI/RouteBook.lua): how far a route is, starting one at a
+-- step, and the route to go on to.
+
+-- { at = first open step or nil, count = steps, done = steps behind } for
+-- any route, the way the guide would see it now.
+function Engine.Progress(r)
+	player = player or Q.Player()
+	local at = firstOpen(r)
+	return { at = at, count = #r.steps, done = at and (at - 1) or #r.steps }
+end
+
+-- Follow route `id` from step `s`: the steps before it count as done (marked
+-- by you: Settings, Marked done by you, Bring back undoes it).
+function Engine.StartAt(id, s)
+	local r = routes[id]
+	if not (r and r.steps[s]) then return false end
+	local st = state()
+	for k = 1, s - 1 do st.stepsDone[id .. ":" .. k] = true end
+	for k = s, #r.steps do st.stepsDone[id .. ":" .. k] = nil end
+	return Engine.SetRoute(id)
+end
+
+-- The route that follows `r`: the one you picked in the route book, else the
+-- route's own; nil when none is for this character.
+function Engine.NextOf(r)
+	player = player or Q.Player()
+	local st = state()
+	local id = st.nexts and st.nexts[r.id] or r.next
+	local n = id and routes[id]
+	if n and fits(n, player) then return n end
+	if id ~= r.next and r.next and routes[r.next] and fits(routes[r.next], player) then return routes[r.next] end
+	return nil
+end
+
+-- Pick the route that follows `id` (nil: the route's own).
+function Engine.SetNext(id, nextId)
+	local st = state()
+	st.nexts = st.nexts or {}
+	st.nexts[id] = nextId
+	Engine.Update()
+end
+
+-- Routes to go on to after `r`: the leveling routes for this character that
+-- start within a few levels of where `r` ends, its own next first.
+function Engine.NextChoices(r)
+	player = player or Q.Player()
+	local out, seen = {}, {}
+	local own = r.next and routes[r.next]
+	if own and fits(own, player) then out[1] = own seen[own.id] = true end
+	local top = r.levels and r.levels[2] or 60
+	for _, n in ipairs(Engine.RoutesFor(player, "Leveling")) do
+		if not seen[n.id] and n.id ~= r.id and n.levels[1] >= top - 4 and n.levels[1] <= top + 2 then
+			out[#out + 1] = n
+			seen[n.id] = true
+		end
+	end
+	return out
 end
 
 -- Everything the player marked done, back to what the game says.

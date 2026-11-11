@@ -1292,7 +1292,9 @@ function builders.settings()
 end
 
 ns.On("GUIDE_SKIP", function() Panels.Open("skip") end)
-ns.On("SHOW_ZONES", function() Panels.Open("zones") end)
+-- The Zones button opens the route book (UI/RouteBook.lua); the zones list
+-- stays as Panels.Open("zones").
+ns.On("SHOW_ZONES", function() Panels.OpenRouteBook() end)
 ns.On("SHOW_SETTINGS", function() Panels.Open("settings") end)
 ns.On("SHOW_ROUTES", function() Panels.Open("routes") end)
 ns.On("SHOW_PROFESSIONS", function() Panels.Open("professions") end)
