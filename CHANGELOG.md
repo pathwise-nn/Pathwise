@@ -13,6 +13,17 @@ that version's section.
   The Sleeper Has Awakened and more). Some quests now open at the level the
   live game asks, so the guide waits for it. Not checked in game.
 
+### Pathwise: route fixes of our own
+- Ashenvale (Horde): Ursangous's Paw, Sharptalon's Claw and Shadumbra's
+  Head only drop once The Ashenvale Hunt is handed in. The hunts now wait
+  for it, and Senani offers it on the first Splintertree stop to a player
+  who never took it.
+- Ashenvale & Thousand Needles (Horde): the Galak Messenger's note is
+  optional, so missing him no longer holds the step.
+- Thousand Needles (Alliance): Lightforge Ingots is gone from the Menethil
+  stop. It can't be taken that early.
+- Not checked in game.
+
 ## 0.2.30 (2026-11-11)
 
 ### Pathwise: quests that start from an item
