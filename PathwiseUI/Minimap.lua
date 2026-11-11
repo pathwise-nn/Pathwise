@@ -47,7 +47,7 @@ function M.OpenMenu()
 		menu = CreateFrame("Frame", ns.ID.global .. "MinimapMenu", UIParent)
 		menu:SetFrameStrata("FULLSCREEN_DIALOG")
 		menu:SetClampedToScreen(true)
-		T.Panel(menu, "bg", "border", 0.98)
+		T.Panel(menu, "bg", "border", 0.98, T.RADIUS.card)
 		menu.rows = {}
 		catcher = CreateFrame("Button", nil, UIParent)
 		catcher:SetAllPoints(UIParent)
@@ -61,17 +61,15 @@ function M.OpenMenu()
 		if not r then
 			r = CreateFrame("Button", nil, menu)
 			r:SetHeight(ROW)
-			r.ground = r:CreateTexture(nil, "BACKGROUND")
-			r.ground:SetAllPoints()
-			r.ground:SetColorTexture(1, 1, 1, 0)
+			r.ground = T.Round(r, { 1, 1, 1, 0 }, false, 4) -- the hover, rounded inside the menu's corners
 			r.text = T.Text(r, "button", "text2")
 			r.text:SetJustifyV("MIDDLE")
 			r:SetScript("OnLeave", function(b) b.ground:SetColorTexture(1, 1, 1, 0) end)
 			menu.rows[i] = r
 		end
 		r:ClearAllPoints()
-		r:SetPoint("TOPLEFT", menu, "TOPLEFT", 1, -1 - (i - 1) * ROW)
-		r:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -1, -1 - (i - 1) * ROW)
+		r:SetPoint("TOPLEFT", menu, "TOPLEFT", 4, -4 - (i - 1) * ROW)
+		r:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -4, -4 - (i - 1) * ROW)
 		r.text:ClearAllPoints()
 		r.text:SetPoint("LEFT", item.indent and 22 or 10, 0)
 		r.text:SetText(item.label)
@@ -89,7 +87,7 @@ function M.OpenMenu()
 		r:Show()
 	end
 	for i = #items + 1, #menu.rows do menu.rows[i]:Hide() end
-	menu:SetSize(190, #items * ROW + 2)
+	menu:SetSize(190, #items * ROW + 8)
 	menu:ClearAllPoints()
 	menu:SetPoint("TOPRIGHT", button, "BOTTOMLEFT", 0, 0)
 	catcher:Show()

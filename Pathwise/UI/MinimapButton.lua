@@ -1,5 +1,5 @@
 -- Pathwise's minimap button: the way into Pathwise without typing.
---   left-click   show or hide the guide window
+--   left-click   open or close the Signature Hub (v2)
 --   right-click  Settings
 --   drag         move it around the minimap's edge (remembered)
 -- Made with no parent and then set under the minimap (as every Pathwise frame
@@ -123,9 +123,9 @@ function MB.Refresh()
 	if not button then
 		button = MB.Make({
 			key = "", name = "Pathwise", shownPath = "minimap.shown", anglePath = "minimap.angle",
-			lines = { "Click: show or hide the guide", "Right-click: settings" },
+			lines = { "Click: open the hub", "Right-click: settings" },
 			onClick = function(which)
-				if which == "RightButton" then ns.Fire("SHOW_SETTINGS") else ns.Fire("TOGGLE_GUIDE") end
+				if which == "RightButton" then ns.Fire("SHOW_SETTINGS") else ns.Fire("TOGGLE_HUB") end
 			end,
 		})
 	end
@@ -145,7 +145,10 @@ end)
 ---------------------------------------------------------------------------
 
 BINDING_HEADER_PATHWISE = "Pathwise"
+BINDING_NAME_PATHWISE_HUB = "Open or close the hub"
 BINDING_NAME_PATHWISE_TOGGLE = "Show or hide the guide"
+BINDING_NAME_PATHWISE_STYLE = "Next guide style (Tracker, Window, Minimal)"
+BINDING_NAME_PATHWISE_COMPASS = "Compass on or off"
 BINDING_NAME_PATHWISE_COMPACT = "Full or compact guide"
 BINDING_NAME_PATHWISE_PROFESSIONS = "Professions"
 BINDING_NAME_PATHWISE_DUNGEONS = "Dungeons for your level"
@@ -154,6 +157,9 @@ BINDING_NAME_PATHWISE_REPORT = "Report this step"
 
 function Pathwise.Binding(what)
 	if what == "toggle" then ns.Fire("TOGGLE_GUIDE")
+	elseif what == "hub" then ns.Fire("TOGGLE_HUB")
+	elseif what == "style" then ns.Guide.CycleStyle()
+	elseif what == "compass" then ns.Fire("TOGGLE_COMPASS")
 	elseif what == "compact" then ns.Guide.SetCompact(not ns.Get("guide.compact"))
 	elseif what == "professions" then ns.Fire("SHOW_PROFESSIONS")
 	elseif what == "dungeons" then ns.Fire("SHOW_DUNGEONS")

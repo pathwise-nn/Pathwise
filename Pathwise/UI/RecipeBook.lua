@@ -79,16 +79,8 @@ end
 
 -- Four 1 px edges around a frame; returns them to recolour.
 local function edges(f, layer)
-	local out = {}
-	for _, spec in ipairs({ { "TOPLEFT", "TOPRIGHT", nil, 1 }, { "BOTTOMLEFT", "BOTTOMRIGHT", nil, 1 },
-		{ "TOPLEFT", "BOTTOMLEFT", 1, nil }, { "TOPRIGHT", "BOTTOMRIGHT", 1, nil } }) do
-		local t = f:CreateTexture(nil, layer or "BORDER")
-		t:SetPoint(spec[1])
-		t:SetPoint(spec[2])
-		if spec[3] then t:SetWidth(spec[3]) else t:SetHeight(spec[4]) end
-		out[#out + 1] = t
-	end
-	return out
+	-- A rounded 1 px border (v2), recoloured like the old four lines.
+	return T.RoundEdges(f, 8, layer)
 end
 
 local function paintEdges(list, c, a)
@@ -721,7 +713,7 @@ local function drawChapters(chapters, rank)
 			b.range:SetText(range)
 			textColor(b.name, on and "text" or (done and "success" or "text2"))
 			textColor(b.range, here == i and "accent" or "muted")
-			paint(b.pwGround, on and T.Hex("#132332") or "bg2")
+			paint(b.pwGround, on and "selected" or "bg2")
 			paintEdges(b.ring, "accent", on and 1 or 0)
 		end
 	end
@@ -810,7 +802,7 @@ local function card(x, y, w, i, step, rank, side)
 	if col then b.dot:SetVertexColor(DIFF[col][1], DIFF[col][2], DIFF[col][3], 1) b.dot:Show()
 	else b.dot:SetVertexColor(0, 0, 0, 0) end
 	b.here:SetShown(now and true or false)
-	paint(b.pwGround, now and T.Hex("#132332") or "bg2", now and 1 or 0)
+	paint(b.pwGround, now and "selected" or "bg2", now and 1 or 0)
 	paintEdges(b.ring, now and "accent" or "border", now and 1 or 0)
 	b:SetAlpha(done and 0.55 or 1)
 	b:SetScript("OnClick", function()

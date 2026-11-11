@@ -50,16 +50,8 @@ local function textColor(fs, c)
 end
 
 local function edges(f)
-	local list = {}
-	for _, spec in ipairs({ { "TOPLEFT", "TOPRIGHT", nil, 1 }, { "BOTTOMLEFT", "BOTTOMRIGHT", nil, 1 },
-		{ "TOPLEFT", "BOTTOMLEFT", 1, nil }, { "TOPRIGHT", "BOTTOMRIGHT", 1, nil } }) do
-		local t = f:CreateTexture(nil, "BORDER")
-		t:SetPoint(spec[1])
-		t:SetPoint(spec[2])
-		if spec[3] then t:SetWidth(spec[3]) else t:SetHeight(spec[4]) end
-		list[#list + 1] = t
-	end
-	return list
+	-- A rounded 1 px border (v2), recoloured like the old four lines.
+	return T.RoundEdges(f, 8)
 end
 
 local function paintEdges(list, c, a)
@@ -184,7 +176,7 @@ local function row(y, width, text, hint, onClick, on, faded)
 		b.hint:SetPoint("RIGHT", -8, 0)
 		b.hint:SetJustifyH("RIGHT")
 		b:SetScript("OnEnter", function(self) paint(self.pwGround, "hover") end)
-		b:SetScript("OnLeave", function(self) paint(self.pwGround, self.on and T.Hex("#132332") or "bg2") end)
+		b:SetScript("OnLeave", function(self) paint(self.pwGround, self.on and "selected" or "bg2") end)
 		return b
 	end)
 	b.on = on and true or false
@@ -194,7 +186,7 @@ local function row(y, width, text, hint, onClick, on, faded)
 	b.hint:SetText(hint or "")
 	b.label:SetWidth(max(40, width - 24 - (b.hint:GetStringWidth() or 0)))
 	b.label:SetText(text)
-	paint(b.pwGround, on and T.Hex("#132332") or "bg2")
+	paint(b.pwGround, on and "selected" or "bg2")
 	paintEdges(b.ring, "accent", on and 1 or 0)
 	b:SetAlpha(faded and 0.55 or 1)
 	b:SetScript("OnClick", onClick)
@@ -348,7 +340,7 @@ local function drawChapters()
 		b.sub:SetText((here == i and "you  ·  " or "") .. (n == 1 and "1 route" or (n .. " routes")))
 		textColor(b.name, on and "text" or "text2")
 		textColor(b.sub, here == i and "accent" or "muted")
-		paint(b.pwGround, on and T.Hex("#132332") or "bg2")
+		paint(b.pwGround, on and "selected" or "bg2")
 		paintEdges(b.ring, "accent", on and 1 or 0)
 	end
 end
@@ -394,7 +386,7 @@ local function card(x, y, w, r)
 	local c = T.Color(mine and "accent" or st[2])
 	b.icon:SetVertexColor(c[1], c[2], c[3], 1)
 	b.here:SetShown(mine)
-	paint(b.pwGround, mine and T.Hex("#132332") or "bg2")
+	paint(b.pwGround, mine and "selected" or "bg2")
 	paintEdges(b.ring, mine and "accent" or "border", mine and 1 or 0)
 	b:SetAlpha(standing == "done" and 0.55 or 1)
 	b:SetScript("OnClick", function()
@@ -539,6 +531,18 @@ function Book.Open(chapter)
 	if not W.frame then build() end
 	state.chapter = chapter or Book.ChapterAt(player().level or 1)
 	state.route = nil
+	W.frame:Show()
+	W.scroll:SetVerticalScroll(0)
+	draw()
+end
+
+-- Opens at a route's own page (the hub's route cards).
+function Book.OpenRoute(r)
+	if type(r) == "string" then r = ns.Engine.routes[r] end
+	if not r then return Book.Open() end
+	if not W.frame then build() end
+	state.chapter = chapterOf(r)
+	state.route = r.id
 	W.frame:Show()
 	W.scroll:SetVerticalScroll(0)
 	draw()

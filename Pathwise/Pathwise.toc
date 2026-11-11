@@ -2,7 +2,7 @@
 ## Title: Pathwise
 ## Notes: Every quest. Every craft. Every level.
 ## Author: leight_nn & florp
-## Version: 0.2.34
+## Version: 0.3.1
 ## IconTexture: Interface\AddOns\Pathwise\Media\icon
 ## SavedVariables: PathwiseSettings
 ## SavedVariablesPerCharacter: PathwiseCharSettings
@@ -14,6 +14,7 @@ Core\Compat.lua
 Theme\Signature.lua
 Nav\Waypoint.lua
 Nav\Arrow.lua
+Nav\Compass.lua
 Guide\Quests.lua
 Guide\Engine.lua
 Guide\Automate.lua
@@ -22,6 +23,9 @@ Guide\Dungeons.lua
 Nav\QuestMarkers.lua
 Nav\Pins.lua
 UI\GuideWindow.lua
+UI\TrackerCard.lua
+UI\Hud.lua
+UI\Hub.lua
 UI\ItemButton.lua
 UI\Panels.lua
 UI\RecipeBook.lua

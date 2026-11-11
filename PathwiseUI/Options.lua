@@ -16,7 +16,12 @@ ns.Config = C
 local W, H, NAV = 700, 540, 172
 local PAD = 18
 local HEAD = 52
+local R = T.RADIUS.window
 local frame, nav, body, scroll
+
+-- The window's size (its grip) and its pin.
+ns.Defaults("config", { width = W, height = H, locked = false })
+local MIN_W, MIN_H, MAX_W, MAX_H = 600, 420, 1200, 1000
 local current -- the open category (the first one until you pick)
 C.CATEGORIES = {} -- filled by the addon's Pages.lua
 
@@ -32,7 +37,7 @@ C.CATEGORIES = {} -- filled by the addon's Pages.lua
 --       { "copy", label, text, note }       read-only text to copy (Ctrl+C): a link
 --       { "color", label, name }            one of the theme's colors
 --       { "accent" }                        your accent, on the wheel
---       { "schemes" }                       the color schemes, to pick one
+--       { "schemes" }                       the themes (color schemes), to pick one
 --       { "bind", label, combo }            a click-casting box for one mouse combo
 --       { "dropdown", label, path, { { label, value }, ... }, note }
 --                                           (path may be { get = fn, set = fn } for
@@ -42,8 +47,8 @@ C.CATEGORIES = {} -- filled by the addon's Pages.lua
 function C.AccentRows()
 	local rows = {
 		{ "heading", "Accent" },
-		{ "choice", "Accent", "look.accentMode", { key = "accent", { "Pathwise", "pathwise" }, { "Class", "class" }, { "Custom", "custom" } },
-			"Your class color follows each character: a mage blue, a rogue yellow." },
+		{ "choice", "Accent", "look.accentMode", { key = "accent", { "Theme", "pathwise" }, { "Class", "class" }, { "Custom", "custom" } },
+			"Theme: the theme's own (Pathwise blue on Pathwise Blue). Your class color follows each character: a mage blue, a rogue yellow." },
 		{ "accent" },
 		{ "heading", "Trim" },
 		{ "dropdown", "Trim color", "look.trim", T.TRIMS,
@@ -51,7 +56,7 @@ function C.AccentRows()
 	}
 	if ns.Get("look.trim") == "custom" then rows[#rows + 1] = { "color", "Your trim color", "flair" } end
 	if ns.Suite() or #ns.Peers() > 0 then
-		rows[#rows + 1] = { "toggle", "Same color as Pathwise", "look.sharePathwise", "One accent for the Pathwise addons you have installed." }
+		rows[#rows + 1] = { "toggle", "Same colors as Pathwise", "look.sharePathwise", "One theme and one accent for the Pathwise addons you have installed." }
 	end
 	rows[#rows + 1] = { "heading", "Look" }
 	rows[#rows + 1] = { "slider", "Background opacity", "look.opacity", 0.4, 1, 0.02, "percent" }
@@ -62,8 +67,8 @@ end
 
 function C.ColorRows()
 	local rows = {
-		{ "heading", "Schemes" },
-		{ "text", "A whole set at once. Pick one, then change any color below to make it yours.", "muted" },
+		{ "heading", "Themes" },
+		{ "text", "Pathwise's themes, dark and light: a whole set at once. Pick one, then change any color below to make it yours.", "muted" },
 		{ "schemes" },
 		{ "heading", "Accent" },
 		{ "accent" },
@@ -79,8 +84,8 @@ function C.ColorRows()
 		return false
 	end, C.exportText }
 	rows[#rows + 1] = { "button", "Show my code", function() C.exportText = T.ExportColors() end }
-	rows[#rows + 1] = { "button", "Back to the scheme's colors", function() ns.Set("look.colors", nil) end }
-	rows[#rows + 1] = { "text", "Click a color to open the color wheel; right-click puts the scheme's back.", "muted" }
+	rows[#rows + 1] = { "button", "Back to the theme's colors", function() ns.Set("look.colors", nil) end }
+	rows[#rows + 1] = { "text", "Click a color to open the color wheel; right-click puts the theme's back.", "muted" }
 	return rows
 end
 
@@ -210,7 +215,7 @@ function makers.input()
 	local e = CreateFrame("EditBox", nil, f)
 	e:SetAutoFocus(false)
 	e:SetSize(220, 26)
-	T.Panel(e, "bg2")
+	T.Panel(e, "bg2", nil, nil, T.RADIUS.card)
 	T.Font(e, "body")
 	e:SetTextInsets(8, 8, 0, 0)
 	e:SetScript("OnEditFocusGained", function(self) T.SetBorder(self, "accent") if self.HighlightText then self:HighlightText() end end)
@@ -230,7 +235,7 @@ function makers.copy()
 	local e = CreateFrame("EditBox", nil, f)
 	e:SetAutoFocus(false)
 	e:SetHeight(26)
-	T.Panel(e, "bg2")
+	T.Panel(e, "bg2", nil, nil, T.RADIUS.card)
 	T.Font(e, "body")
 	e:SetTextInsets(8, 8, 0, 0)
 	e:SetScript("OnEditFocusGained", function(self) T.SetBorder(self, "accent") if self.HighlightText then self:HighlightText() end end)
@@ -253,7 +258,7 @@ function makers.bind()
 	e:SetAutoFocus(false)
 	e:SetSize(190, 24)
 	e:SetPoint("TOPRIGHT", 0, -7)
-	T.Panel(e, "bg2")
+	T.Panel(e, "bg2", nil, nil, T.RADIUS.card)
 	T.Font(e, "body")
 	e:SetTextInsets(8, 8, 0, 0)
 	local function commit(self)
@@ -280,15 +285,16 @@ function makers.schemes()
 	return f
 end
 
--- A scheme card: its ground, a strip of its main colors, its name.
+-- A theme card: rounded, in its own ground, a strip of its main colors,
+-- its name. Painted with color tables (not names), so a change of theme
+-- leaves each card in its own colors.
 local function schemeCard(f, i, s, picked)
 	local b = f.cards[i]
 	if not b then
 		b = CreateFrame("Button", nil, f)
 		b:SetSize(96, 58)
-		b.ground = b:CreateTexture(nil, "BACKGROUND")
-		b.ground:SetAllPoints()
-		b.border = T.Border(b, "BORDER")
+		b.ground = T.Round(b, { 0, 0, 0, 1 }, { 0, 0, 0, 1 }, T.RADIUS.card)
+		b.border = b.pwBorder
 		b.strip = {}
 		for j = 1, 4 do
 			local t = b:CreateTexture(nil, "ARTWORK")
@@ -298,11 +304,10 @@ local function schemeCard(f, i, s, picked)
 		end
 		b.pwText = T.Text(b, "button", "text")
 		b.pwText:SetPoint("BOTTOMLEFT", 8, 9)
-		b:SetScript("OnEnter", function(self) if not self.pwPicked then self.border:SetColor(self.pwHover[1], self.pwHover[2], self.pwHover[3], 1) end end)
+		b:SetScript("OnEnter", function(self) if not self.pwPicked then T.Paint(self.border, self.pwHover) end end)
 		b:SetScript("OnLeave", function(self) self:Paint() end)
 		function b:Paint()
-			local c = self.pwColors
-			if self.pwPicked then T.Paint(self.border, "accent") else self.border:SetColor(c.border[1], c.border[2], c.border[3], 1) end
+			if self.pwPicked then T.Paint(self.border, "accent") else T.Paint(self.border, self.pwColors.border) end
 		end
 		f.cards[i] = b
 	end
@@ -310,8 +315,7 @@ local function schemeCard(f, i, s, picked)
 	b.pwColors = { border = hex(s.colors.border) }
 	b.pwHover = hex(s.colors.text2)
 	b.pwPicked = picked
-	local g = hex(s.colors.bg)
-	b.ground:SetColorTexture(g[1], g[2], g[3], 1)
+	T.Paint(b.ground, hex(s.colors.bg))
 	for j, k in ipairs({ "accent", "text", "bg2", "success" }) do
 		local c = hex(s.colors[k])
 		b.strip[j]:SetColorTexture(c[1], c[2], c[3], 1)
@@ -334,7 +338,7 @@ function C.Render()
 	local cat
 	for _, c in ipairs(C.CATEGORIES) do if c.key == current then cat = c end end
 	cat = cat or C.CATEGORIES[1]
-	local inner = W - NAV - PAD * 2 - 14
+	local inner = (frame and frame:GetWidth() or W) - NAV - PAD * 2 - 14
 	body:SetWidth(inner)
 	local y = 0
 	local function place(w, h, gap)
@@ -475,7 +479,7 @@ function C.Render()
 			f.own:SetPoint("RIGHT", f.hex, "LEFT", -10, 0)
 			local own = isAccent and ns.Get("look.accentMode") ~= "pathwise" or (not isAccent and T.IsOwnColor(name))
 			f.own:SetText(own and (isAccent and (ns.Get("look.accentMode") == "class" and "CLASS" or "YOURS") or "YOURS") or "")
-			local h = 38 + noteHeight(f, isAccent and "Click to pick any color on the wheel; right-click for Pathwise blue." or nil, 120)
+			local h = 38 + noteHeight(f, isAccent and "Click to pick any color on the wheel; right-click for the theme's own." or nil, 120)
 			f:SetHeight(h)
 			place(f, h)
 		elseif kind == "schemes" then
@@ -575,7 +579,7 @@ function C.PaintNav(animate)
 	above.edge:SetPoint("TOPRIGHT", nav, "TOPRIGHT")
 	above.edge:SetPoint("BOTTOMRIGHT", nav.pick, "TOPRIGHT")
 	below.ground:SetPoint("TOPLEFT", nav.pick, "BOTTOMLEFT")
-	below.ground:SetPoint("BOTTOMRIGHT", nav, "BOTTOMRIGHT")
+	below.ground:SetPoint("BOTTOMRIGHT", nav, "BOTTOMRIGHT", 0, R - 1)
 	below.edge:SetPoint("TOPRIGHT", nav.pick, "BOTTOMRIGHT")
 	below.edge:SetPoint("BOTTOMRIGHT", nav, "BOTTOMRIGHT")
 end
@@ -588,7 +592,7 @@ local function build()
 	if frame then return frame end
 	frame = CreateFrame("Frame", ns.ID.global .. "Config", nil)
 	frame:SetParent(UIParent)
-	frame:SetSize(W, H)
+	frame:SetSize(C.Size())
 	frame:SetPoint("CENTER")
 	frame:SetFrameStrata("DIALOG")
 	frame:SetToplevel(true)
@@ -596,7 +600,8 @@ local function build()
 	frame:SetMovable(true)
 	frame:EnableMouse(true)
 	frame:RegisterForDrag("LeftButton")
-	frame:SetScript("OnDragStart", frame.StartMoving)
+	-- Pinned: it stays where it is.
+	frame:SetScript("OnDragStart", function(self) if T.Movable("config.locked") then self:StartMoving() end end)
 	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 	T.Panel(frame)
 	T.TrimLine(frame)
@@ -619,12 +624,15 @@ local function build()
 	version:SetText(ns.VERSION .. "  ·  leight_nn & florp   _nn")
 	local close = T.IconButton(frame, "close", "Close", function() C.Hide() end)
 	close:SetPoint("TOPRIGHT", -10, -12)
+	local pin = T.PinButton(frame, "config.locked")
+	pin:SetPoint("RIGHT", close, "LEFT", -2, 0)
+	frame.pwPin = pin
 	local move = T.Button(frame, "Move everything", "default", function()
 		local on = not (ns.Movers and ns.Movers.IsActive())
 		if ns.Movers then ns.Movers.All(on) end
 		if on then C.Hide() end
 	end)
-	move:SetPoint("RIGHT", close, "LEFT", -8, 0)
+	move:SetPoint("RIGHT", pin, "LEFT", -8, 0)
 	frame.pwMove = move
 	local headLine = frame:CreateTexture(nil, "BORDER")
 	headLine:SetPoint("TOPLEFT", 1, -HEAD)
@@ -651,6 +659,20 @@ local function build()
 		T.Paint(e, "border")
 		nav.parts[i] = { ground = g, edge = e }
 	end
+	-- The nav's foot follows the window's round corner: a strip and a corner.
+	nav.foot = nav:CreateTexture(nil, "BACKGROUND")
+	nav.foot:SetPoint("BOTTOMLEFT", R - 1, 0)
+	nav.foot:SetPoint("BOTTOMRIGHT", 0, 0)
+	nav.foot:SetHeight(R - 1)
+	T.Paint(nav.foot, "bg2")
+	nav.corner = nav:CreateTexture(nil, "BACKGROUND")
+	nav.corner:SetTexture(T.MEDIA .. "corner")
+	nav.corner:SetTexCoord(0, 1, 1, 0)
+	nav.corner:SetSize(R - 1, R - 1)
+	nav.corner:SetPoint("BOTTOMLEFT")
+	local function tintCorner() local c = T.Color("bg2") nav.corner:SetVertexColor(c[1], c[2], c[3], 1) end
+	tintCorner()
+	ns.On("ACCENT_CHANGED", tintCorner)
 	nav.pick = CreateFrame("Frame", nil, nav) -- the gap (nothing drawn)
 	nav.pick:SetHeight(32)
 	nav.items = {}
@@ -678,7 +700,17 @@ local function build()
 	scroll, body = T.Scroll(frame, 64)
 	scroll:SetPoint("TOPLEFT", NAV + PAD + 1, -HEAD - 14)
 	scroll:SetPoint("BOTTOMRIGHT", -PAD - 8, PAD)
-	body:SetSize(W - NAV - PAD * 2 - 14, 1)
+	body:SetSize(frame:GetWidth() - NAV - PAD * 2 - 14, 1)
+
+	-- The grip: any size; the page lays itself out again as you drag.
+	frame.pwGrip = T.Grip(frame, { minW = MIN_W, minH = MIN_H, maxW = MAX_W, maxH = MAX_H, lockPath = "config.locked",
+		onSize = function() C.Render() end,
+		onDone = function(w, h) ns.Set("config.width", w) ns.Set("config.height", h) end,
+		onReset = function()
+			ns.Set("config.width", W) ns.Set("config.height", H)
+			frame:SetSize(W, H)
+			C.Render()
+		end })
 	frame:SetScript("OnHide", function(self) A.Set(self, "alpha", 0) end)
 	frame:Hide()
 	return frame
@@ -712,10 +744,20 @@ function C.Hide()
 end
 function C.Toggle() if frame and frame:IsShown() then C.Hide() else C.Show() end end
 function C.Frame() return frame end
+-- The window's size as saved (within the grip's limits).
+function C.Size()
+	local function clamp(v, lo, hi, d) v = tonumber(v) or d return math.max(lo, math.min(hi, v)) end
+	return clamp(ns.Get("config.width"), MIN_W, MAX_W, W), clamp(ns.Get("config.height"), MIN_H, MAX_H, H)
+end
 function C.Current() return current end
 
 ns.On("SHOW_CONFIG", function() C.Toggle() end)
-ns.On("SETTING_CHANGED", function() if frame and frame:IsShown() then C.Render() end end)
+ns.On("SETTING_CHANGED", function(path)
+	if not frame then return end
+	-- Back to the defaults, or another profile: its size too.
+	if path == "*" or path == "config.*" or path == "profile.shared" then frame:SetSize(C.Size()) end
+	if frame:IsShown() then C.Render() end
+end)
 ns.On("MOVE_MODE", function(on)
 	if frame and frame.pwMove then
 		frame.pwMove.pwText:SetText(on and "Done moving" or "Move everything")

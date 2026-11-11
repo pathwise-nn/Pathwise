@@ -642,3 +642,49 @@ test("help and feedback: the website and Discord, in Pathwise Loot's own options
 	ok(found["https://pathwise.quest/report"], "the report link")
 	ok(found["https://discord.gg/hSDjBrG8EK"], "the Discord invite")
 end)
+
+test("browser: rounded, its cards too; a grip makes it any size, the pin keeps it there", function()
+	local stub, ns = fresh()
+	local B = ns.LootBrowser
+	B.Show()
+	B.SelectBoss(672)
+	local f = B.Frame()
+	eq(f.pwRadius, 10, "a rounded window")
+	local card
+	for _, fr in ipairs(stub.frames) do if fr.kind == "Button" and rawget(fr, "ring") and rawget(fr, "icon") and fr.shown and fr.parent ~= f then card = fr end end
+	ok(card and card.pwRadius == 6 and card.ring.pieces, "an item card: rounded, its ring pieced")
+	-- Wider: more columns of cards.
+	local function cols()
+		local xs = {}
+		for _, fr in ipairs(stub.frames) do
+			if fr.kind == "Button" and rawget(fr, "ring") and rawget(fr, "icon") and fr.shown and fr.parent ~= f and fr.points[1] then xs[fr.points[1][4]] = true end
+		end
+		local n = 0
+		for _ in pairs(xs) do n = n + 1 end
+		return n
+	end
+	local before = cols()
+	local g = f.pwGrip
+	ok(g, "a grip")
+	stub.cursor = { 1000, 600 }
+	g.scripts.OnMouseDown(g, "LeftButton")
+	stub.cursor = { 1500, 500 }
+	g.scripts.OnUpdate(g)
+	g.scripts.OnMouseUp(g, "LeftButton")
+	eq(f.w, 1180, "wider")
+	eq(ns.Get("loot.width"), 1180, "kept")
+	ok(cols() > before, ("more columns: %d, then %d"):format(before, cols()))
+	g.scripts.OnMouseUp(g, "RightButton")
+	eq(f.w, 680, "right-click: the usual size")
+	-- The pin.
+	local pin = f.pwPin
+	ok(pin and pin.pwPath == "loot.locked", "a pin on the header")
+	pin.scripts.OnClick(pin)
+	eq(ns.Get("loot.locked"), true)
+	local moved = false
+	rawset(f, "StartMoving", function() moved = true end)
+	f.scripts.OnDragStart(f)
+	ok(not moved, "pinned: it stays put")
+	g.scripts.OnMouseDown(g, "LeftButton")
+	ok(not g.pwState.held, "and keeps its size")
+end)

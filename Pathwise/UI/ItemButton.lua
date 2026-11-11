@@ -106,8 +106,9 @@ local function build()
 	local saved = ns.Get("itemButton.point")
 	if type(saved) == "table" then
 		b:SetPoint(saved[1], UIParent, saved[1], saved[2], saved[3])
-	elseif _G.PathwiseGuide then
-		b:SetPoint("TOPRIGHT", _G.PathwiseGuide, "TOPLEFT", -8, 0)
+	elseif ns.Guide and ns.Guide.Frame and ns.Guide.Frame() then
+		-- Beside the guide on screen, whichever style it is.
+		b:SetPoint("TOPRIGHT", ns.Guide.Frame(), "TOPLEFT", -8, 0)
 	else
 		b:SetPoint("CENTER", UIParent, "CENTER", 0, -180)
 	end

@@ -29,6 +29,7 @@ local function login(setup)
 	if setup then setup(stub) end
 	stub.moveTo(1420, 30.2, 71.6) -- Undertaker Mordo's crypt, where Undead start
 	stub.login()
+	ns.Set("guide.style", "window") ns.Set("compass.shown", false) -- the v1 window and arrow these tests check
 	return stub, ns
 end
 
@@ -1025,15 +1026,16 @@ end)
 -- Everything without commands: minimap button, key bindings, tools
 ---------------------------------------------------------------------------
 
-test("minimap button: click shows and hides the guide, right-click opens Settings", function()
+test("minimap button: click opens and closes the hub, right-click opens Settings", function()
 	local stub, ns = login()
 	local b = _G.PathwiseMinimapButton
 	ok(b and b.shown, "the button is on the minimap")
 	eq(b.parent, Minimap)
 	b.scripts.OnClick(b, "LeftButton")
-	eq(ns.Get("guide.shown"), false, "hidden")
+	ok(_G.PathwiseHub and _G.PathwiseHub.shown, "the hub opens")
+	eq(ns.Get("guide.shown"), true, "the guide on screen stays")
 	b.scripts.OnClick(b, "LeftButton")
-	eq(ns.Get("guide.shown"), true, "shown again")
+	eq(_G.PathwiseHub.shown, false, "and closes")
 	b.scripts.OnClick(b, "RightButton")
 	ok(contains(stub.texts(), "SETTINGS"), "settings open")
 	ns.Set("minimap.shown", false)
@@ -1644,16 +1646,16 @@ test("guide grip: width and height follow the drag, are clamped and saved; the s
 	local grip = findGrip(stub, f)
 	ok(grip and grip.shown, "the grip is on the window")
 	eq(f.resizable, true, "the window is resizable")
-	eq(table.concat(f.resizeBounds, " "), "280 220 600 900", "with its bounds")
+	eq(table.concat(f.resizeBounds, " "), "360 220 600 900", "with its bounds")
 	local fitH = f.h
 	drag(stub, grip, 100, 500, 160, 380, true) -- 60 right, 120 down
-	eq(f.w, 400, "width follows the cursor")
+	eq(f.w, 460, "width follows the cursor")
 	eq(f.h, fitH + 120, "height follows the cursor down, from the height on screen")
 	eq(f.points[1][1], "TOPLEFT", "the top-left stays put while dragging")
 	eq(f.points[1][3], "BOTTOMLEFT")
 	eq(ns.Get("guide.height"), nil, "nothing saved before letting go")
 	grip.scripts.OnMouseUp(grip, "LeftButton")
-	eq(ns.Get("guide.width"), 400)
+	eq(ns.Get("guide.width"), 460)
 	eq(ns.Get("guide.height"), fitH + 120)
 	local p = ns.Get("guide.point")
 	eq(table.concat({ p[1], p[2], p[3], p[4] }, " "), "TOPLEFT 600 800 BOTTOMLEFT", "position saved by the corner it is pinned by")
@@ -1693,7 +1695,7 @@ test("guide grip: a sideways drag keeps the height fitting each step; right-clic
 	local grip = findGrip(stub, f)
 	drag(stub, grip, 100, 500, 180, 497) -- 3 px of wobble
 	eq(ns.Get("guide.height"), nil, "the height still fits each step")
-	eq(ns.Get("guide.width"), 420)
+	eq(ns.Get("guide.width"), 480)
 	ns.Set("guide.height", 300)
 	eq(f.h, 300)
 	grip.scripts.OnMouseDown(grip, "RightButton")

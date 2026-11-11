@@ -50,6 +50,55 @@ ns.Command("debug", function()
 end, "what the arrow sees (also in Settings > Waypoint & tools)")
 ns.Command("tools", function() ns.Panels.Open("tools") end, "Waypoint & tools")
 
+ns.Command("hub", function() ns.Fire("TOGGLE_HUB") end, "open or close the Signature Hub")
+
+ns.Command("theme", function(args)
+	local T = ns.Theme
+	local want = (args or ""):lower():gsub("%s+", "")
+	if want ~= "" then
+		for _, th in ipairs(T.THEMES) do
+			if th.key == want or th.name:lower():gsub("%s+", "") == want then
+				ns.Set("ui.theme", th.key)
+				ns.Print(("theme: %s. /reload to see it on every window."):format(th.name))
+				return
+			end
+		end
+		ns.Print("no theme called '" .. args .. "'.")
+	end
+	local names = {}
+	for _, th in ipairs(T.THEMES) do names[#names + 1] = th.key end
+	ns.Print(("theme now: %s. Themes: %s."):format(T.Theme().name, table.concat(names, ", ")))
+end, "the colour theme: /pw theme <name> (none: list them)")
+
+ns.Command("style", function(args)
+	local want = (args or ""):lower()
+	if Guide.STYLE_NAMES[want] then
+		ns.Set("guide.style", want)
+		ns.Set("guide.shown", true)
+	elseif want == "" then
+		Guide.CycleStyle()
+	else
+		ns.Print("usage: /pw style tracker | window | minimal   (now " .. Guide.Style() .. ")")
+		return
+	end
+	ns.Print("guide style: " .. Guide.STYLE_NAMES[Guide.Style()] .. ".")
+end, "the guide on screen: /pw style tracker | window | minimal (none: the next one)")
+
+ns.Command("compass", function(args)
+	if args == "lock" or args == "pin" then
+		ns.Set("compass.locked", not ns.Get("compass.locked"))
+		ns.Print(ns.Get("compass.locked") and "compass pinned in place." or "compass unpinned: drag to move it.")
+		return
+	end
+	if args == "coords" then
+		ns.Set("compass.coords", not ns.Get("compass.coords"))
+		ns.Print(ns.Get("compass.coords") and "your coordinates on." or "your coordinates off.")
+		return
+	end
+	ns.Fire("TOGGLE_COMPASS")
+	ns.Print(ns.Get("compass.shown") and "compass on (drag to move)." or "compass off: the arrow shows instead.")
+end, "compass on or off; /pw compass coords: your coordinates; /pw compass pin: pin it in place")
+
 ns.Command("compact", function()
 	Guide.SetCompact(not ns.Get("guide.compact"))
 end, "switch the guide between full and compact")
@@ -90,8 +139,7 @@ ns.Command("arrow", function(args)
 end, "show or hide the arrow; /pw arrow scale <50-200> sets its size")
 
 ns.Command("reset", function()
-	ns.Set("guide.point", nil)
-	ns.Set("arrow.point", nil)
+	for _, path in ipairs({ "guide.point", "arrow.point", "compass.point", "card.point", "hud.point", "hub.point", "settings.point" }) do ns.Set(path, nil) end
 	ns.Print("window positions reset; /reload to apply.")
 end, "reset window positions")
 

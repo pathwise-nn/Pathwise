@@ -1,6 +1,6 @@
 {
   "name": "pathwise",
-  "version": "0.2.34",
+  "version": "0.3.1",
   "private": true,
   "description": "Pathwise: a leveling and profession companion for World of Warcraft: Forever",
   "license": "GPL-3.0-only",
@@ -25,6 +25,7 @@
     "test:loot": "lua5.1 tests/loot/run.lua",
     "loot": "node tools/data/loot.js",
     "recipebook": "node tools/data/recipebook.js",
-    "efficiency": "lua5.1 tools/routes/efficiency.lua"
+    "efficiency": "lua5.1 tools/routes/efficiency.lua",
+    "preview": "python3 tools/preview/preview.py && node tools/preview/shot.js"
   }
 }

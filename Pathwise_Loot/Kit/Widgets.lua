@@ -1,7 +1,7 @@
 -- COPIED from PathwiseUI/Widgets.lua by tools/kit.js: do not edit here.
 -- Edit PathwiseUI/Widgets.lua, then run npm run kit.
--- Pathwise UI's widgets, drawn the Signature way: flat grounds with crisp
--- 1-pixel borders, Inter text, quiet buttons that ease into their hover
+-- Pathwise UI's widgets, drawn the Signature way (Pathwise v2): rounded
+-- grounds with crisp 1-pixel borders, Inter text, quiet buttons that ease into their hover
 -- color, switches that slide, segmented choices with a moving highlight,
 -- smooth sliders and smooth scrolling. Anything painted in the accent is
 -- remembered and repainted when the accent changes, so a new color shows at
@@ -87,8 +87,131 @@ function T.Text(parent, role, color, layer)
 	return fs
 end
 
--- A ground with a 1-pixel border. -> ground texture (frame.pwGround), border (frame.pwBorder)
-local grounds = setmetatable({}, { __mode = "k" })
+local grounds = setmetatable({}, { __mode = "k" }) -- windows whose ground follows the opacity setting
+
+---------------------------------------------------------------------------
+-- Rounded grounds and borders, as Pathwise draws them (v2)
+---------------------------------------------------------------------------
+-- The client has no rounded clipping, so the shape is pieced together: four
+-- corners (Media/corner and corner-line, flipped by texture coordinates),
+-- the strips between them and a middle. Windows take radius 10, cards,
+-- menus and buttons 6. Unit frames, bars and nameplates stay square.
+-- A proxy stands for the pieces, so a caller recolours it as it did the one
+-- texture (ground:SetColorTexture) or border (border:SetColor) it held.
+
+T.RADIUS = { window = 10, card = 6 }
+
+local CORNERS = {
+	-- point, texcoord left, right, top, bottom
+	{ "TOPLEFT", 0, 1, 0, 1 }, { "TOPRIGHT", 1, 0, 0, 1 },
+	{ "BOTTOMLEFT", 0, 1, 1, 0 }, { "BOTTOMRIGHT", 1, 0, 1, 0 },
+}
+
+local Pieces = {}
+Pieces.__index = Pieces
+-- Corners are white art, tinted; the rest are solid colors.
+function Pieces:SetColorTexture(r, g, b, a)
+	a = a or 1
+	for _, t in ipairs(self.pieces) do
+		if self.corners[t] then t:SetVertexColor(r, g, b, a) else t:SetColorTexture(r, g, b, a) end
+	end
+	self.color = { r, g, b, a }
+end
+Pieces.SetColor = Pieces.SetColorTexture
+Pieces.SetVertexColor = Pieces.SetColorTexture
+function Pieces:SetShown(on)
+	self.shown = on and true or false
+	for _, t in ipairs(self.pieces) do t:SetShown(self.shown) end
+end
+function Pieces:Show() self:SetShown(true) end
+function Pieces:Hide() self:SetShown(false) end
+function Pieces:IsShown() return self.shown end
+function Pieces:SetAlpha(a) for _, t in ipairs(self.pieces) do t:SetAlpha(a) end end
+
+local rounds = setmetatable({}, { __mode = "k" }) -- borders whose straight edges follow the pixel size
+
+-- The pieces of a rounded shape on frame: kind "fill" or "line".
+local function pieces(frame, kind, r)
+	local p = setmetatable({ pieces = {}, corners = {}, shown = true, radius = r }, Pieces)
+	local line = kind == "line"
+	local function tex()
+		local t = frame:CreateTexture(nil, line and "BORDER" or "BACKGROUND", nil, line and 0 or -8)
+		T.NoSnap(t)
+		p.pieces[#p.pieces + 1] = t
+		return t
+	end
+	for _, c in ipairs(CORNERS) do
+		local t = tex()
+		t:SetTexture(T.MEDIA .. (not line and "corner" or (r >= 8 and "corner-line" or "corner-line-small")))
+		t:SetTexCoord(c[2], c[3], c[4], c[5])
+		t:SetSize(r, r)
+		t:SetPoint(c[1])
+		p.corners[t] = true
+	end
+	if line then
+		-- The four straight edges, one pixel wide (top, bottom, left, right).
+		p.edges = {}
+		for _, spec in ipairs({
+			{ "TOPLEFT", r, 0, "TOPRIGHT", -r, 0 }, { "BOTTOMLEFT", r, 0, "BOTTOMRIGHT", -r, 0 },
+			{ "TOPLEFT", 0, -r, "BOTTOMLEFT", 0, r }, { "TOPRIGHT", 0, -r, "BOTTOMRIGHT", 0, r },
+		}) do
+			local t = tex()
+			t:SetPoint(spec[1], spec[2], spec[3])
+			t:SetPoint(spec[4], spec[5], spec[6])
+			p.edges[#p.edges + 1] = t
+		end
+		function p:Layout()
+			local px = T.Pixel()
+			self.edges[1]:SetHeight(px) self.edges[2]:SetHeight(px)
+			self.edges[3]:SetWidth(px) self.edges[4]:SetWidth(px)
+		end
+		p:Layout()
+		rounds[p] = true
+	else
+		-- The middle (full width, between the corners' rows), and the strips
+		-- between the corners, top and bottom.
+		local mid = tex()
+		mid:SetPoint("TOPLEFT", 0, -r)
+		mid:SetPoint("BOTTOMRIGHT", 0, r)
+		local top = tex()
+		top:SetPoint("TOPLEFT", r, 0)
+		top:SetPoint("TOPRIGHT", -r, 0)
+		top:SetHeight(r)
+		local bottom = tex()
+		bottom:SetPoint("BOTTOMLEFT", r, 0)
+		bottom:SetPoint("BOTTOMRIGHT", -r, 0)
+		bottom:SetHeight(r)
+	end
+	return p
+end
+ns.On("PIXEL_CHANGED", function() for p in pairs(rounds) do p:Layout() end end)
+
+-- A rounded ground and 1-pixel border on frame, with no shading.
+-- ground/border: color names or { r, g, b, a }; false: none (border nil:
+-- "border"). radius: T.RADIUS.card when nil. alpha: the ground's.
+-- -> the ground (frame.pwGround); the border is frame.pwBorder.
+function T.Round(frame, ground, border, radius, alpha)
+	local r = radius or T.RADIUS.card
+	frame.pwRadius = r
+	local bg
+	if ground ~= false then
+		bg = pieces(frame, "fill", r)
+		paint(bg, ground or "bg", alpha)
+		frame.pwGround = bg
+	end
+	if border ~= false then
+		local b = pieces(frame, "line", r)
+		paint(b, border or "border")
+		frame.pwBorder = b
+	end
+	return bg
+end
+
+-- Recolour a rounded (or square) frame, as Pathwise's T.PaintRound does.
+function T.PaintRound(frame, ground, border, alpha, borderAlpha)
+	if ground and frame.pwGround then paint(frame.pwGround, ground, alpha) end
+	if border and frame.pwBorder then paint(frame.pwBorder, border, borderAlpha) end
+end
 ---------------------------------------------------------------------------
 -- Wayfarer's shading: a gradient on a texture, an etched edge, a bar's sheen
 ---------------------------------------------------------------------------
@@ -113,21 +236,27 @@ end
 local etched = setmetatable({}, { __mode = "k" })
 -- Etched: a faint highlight along the top inside edge, a shadow along the
 -- bottom, and a soft sheen down the ground (lighter at the top).
+-- On a rounded frame the sheen is left out (it would show square corners)
+-- and the two lines stop where the corners start.
 function T.Etch(frame)
 	if frame.pwEtch then return frame.pwEtch end
 	local e = {}
-	e.sheen = frame:CreateTexture(nil, "BACKGROUND", nil, -7)
-	e.sheen:SetPoint("TOPLEFT", 1, -1)
-	e.sheen:SetPoint("BOTTOMRIGHT", -1, 1)
-	T.Gradient(e.sheen, "VERTICAL", { 0, 0, 0, 0.10 }, { 1, 1, 1, 0.035 })
+	local r = frame.pwRadius or 0
+	local x = r > 0 and r or 1
+	if r == 0 then
+		e.sheen = frame:CreateTexture(nil, "BACKGROUND", nil, -7)
+		e.sheen:SetPoint("TOPLEFT", 1, -1)
+		e.sheen:SetPoint("BOTTOMRIGHT", -1, 1)
+		T.Gradient(e.sheen, "VERTICAL", { 0, 0, 0, 0.10 }, { 1, 1, 1, 0.035 })
+	end
 	e.top = frame:CreateTexture(nil, "BORDER", nil, 1)
-	e.top:SetPoint("TOPLEFT", 1, -1)
-	e.top:SetPoint("TOPRIGHT", -1, -1)
+	e.top:SetPoint("TOPLEFT", x, -1)
+	e.top:SetPoint("TOPRIGHT", -x, -1)
 	e.top:SetHeight(T.Pixel())
 	e.top:SetColorTexture(1, 1, 1, 0.06)
 	e.bottom = frame:CreateTexture(nil, "BORDER", nil, 1)
-	e.bottom:SetPoint("BOTTOMLEFT", 1, 1)
-	e.bottom:SetPoint("BOTTOMRIGHT", -1, 1)
+	e.bottom:SetPoint("BOTTOMLEFT", x, 1)
+	e.bottom:SetPoint("BOTTOMRIGHT", -x, 1)
 	e.bottom:SetHeight(T.Pixel())
 	e.bottom:SetColorTexture(0, 0, 0, 0.35)
 	for _, t in pairs(e) do T.NoSnap(t) end
@@ -162,12 +291,13 @@ local function paintTrimLine(l)
 end
 function T.TrimLine(frame, alpha)
 	local l = { alpha = alpha or 0.7 }
+	local x = math.max(1, frame.pwRadius or 0) -- clear of round corners
 	l.left = frame:CreateTexture(nil, "ARTWORK", nil, 3)
-	l.left:SetPoint("TOPLEFT", 1, -1)
+	l.left:SetPoint("TOPLEFT", x, -1)
 	l.left:SetPoint("BOTTOMRIGHT", frame, "TOP", 0, -1 - T.Pixel())
 	l.right = frame:CreateTexture(nil, "ARTWORK", nil, 3)
 	l.right:SetPoint("TOPLEFT", frame, "TOP", 0, -1)
-	l.right:SetPoint("BOTTOMRIGHT", frame, "TOPRIGHT", -1, -1 - T.Pixel())
+	l.right:SetPoint("BOTTOMRIGHT", frame, "TOPRIGHT", -x, -1 - T.Pixel())
 	trimLines[l] = true
 	paintTrimLine(l)
 	return l
@@ -185,7 +315,20 @@ ns.On("ACCENT_CHANGED", function()
 	for t, a in pairs(fades) do T.FadeRule(t, a) end
 end)
 
-function T.Panel(frame, ground, border, alpha)
+-- A ground with a 1-pixel border and the etched shading.
+-- -> the ground (frame.pwGround); the border is frame.pwBorder.
+-- radius: rounded corners (T.Round); nil: T.RADIUS.window for a window's
+-- ground (ground nil, which follows the opacity setting), else square (0).
+-- Unit frames, bars and nameplates leave it square.
+function T.Panel(frame, ground, border, alpha, radius)
+	local r = radius
+	if r == nil then r = ground == nil and T.RADIUS.window or 0 end
+	if r > 0 then
+		local bg = T.Round(frame, ground or "bg", border, r, alpha or (ground == nil and ns.Get("look.opacity")) or nil)
+		if ground == nil then grounds[frame] = true end
+		if border ~= false then T.Etch(frame) end
+		return bg
+	end
 	local bg = frame:CreateTexture(nil, "BACKGROUND", nil, -8)
 	bg:SetAllPoints()
 	paint(bg, ground or "bg", alpha or (ground == nil and ns.Get("look.opacity")) or nil)
@@ -208,11 +351,12 @@ ns.On("SETTING_CHANGED", function(path)
 	end
 end)
 
--- A thin accent line along the top of a window.
+-- A thin accent line along the top of a window (clear of round corners).
 function T.AccentLine(frame)
+	local x = math.max(1, frame.pwRadius or 0)
 	local t = frame:CreateTexture(nil, "ARTWORK")
-	t:SetPoint("TOPLEFT", 1, -1)
-	t:SetPoint("TOPRIGHT", -1, -1)
+	t:SetPoint("TOPLEFT", x, -1)
+	t:SetPoint("TOPRIGHT", -x, -1)
 	t:SetHeight(2)
 	paint(t, "accent")
 	return t
@@ -227,7 +371,7 @@ end
 function T.Button(parent, label, kind, onClick)
 	local b = CreateFrame("Button", nil, parent)
 	b:SetHeight(26)
-	T.Panel(b, "bg2", "border")
+	T.Panel(b, "bg2", "border", nil, T.RADIUS.card)
 	local text = T.Text(b, "button", kind == "accent" and "accent" or "text2")
 	text:SetPoint("CENTER")
 	text:SetJustifyH("CENTER")
@@ -264,20 +408,22 @@ end
 function T.IconButton(parent, glyph, tip, onClick, size)
 	local b = CreateFrame("Button", nil, parent)
 	b:SetSize(size or 24, size or 24)
-	local hover = b:CreateTexture(nil, "BACKGROUND")
-	hover:SetAllPoints()
-	paint(hover, "hover", 0)
+	local hover = T.Round(b, "hover", false, T.RADIUS.card, 0)
 	local icon = b:CreateTexture(nil, "ARTWORK")
 	icon:SetTexture(T.MEDIA .. "glyph-" .. glyph)
 	icon:SetSize(16, 16)
 	icon:SetPoint("CENTER")
 	b.pwIcon = icon
+	-- b.pwTint(p) -> a color of its own for the glyph (the pin's accent).
 	local function look(p)
 		local h = T.Color("hover")
 		hover:SetColorTexture(h[1], h[2], h[3], p)
+		local tint = b.pwTint and b.pwTint(p)
+		if tint then icon:SetVertexColor(tint[1], tint[2], tint[3]) return end
 		local r, g, bl = A.Mix(T.Color("text2"), T.Color("text"), p)
 		icon:SetVertexColor(r, g, bl)
 	end
+	b.pwLook = look
 	look(0)
 	b:SetScript("OnEnter", function(self)
 		A.Hover(self, true, look)
@@ -289,6 +435,135 @@ function T.IconButton(parent, glyph, tip, onClick, size)
 	end)
 	if onClick then b:SetScript("OnClick", onClick) end
 	return b
+end
+
+-- The pin (as Pathwise's v2): anchors a window where it is. Click to pin or
+-- unpin; pinned, it is tinted in the accent, and the window ignores drags
+-- and its grip. `path` is the window's setting ("config.locked"); the
+-- window checks it when dragged (T.Movable).
+local pins = setmetatable({}, { __mode = "k" })
+function T.PinButton(parent, path, size)
+	local b = T.IconButton(parent, "pin", nil, function() ns.Set(path, not ns.Get(path)) end, size)
+	b.pwPath = path
+	b.pwTint = function(p)
+		if ns.Get(path) then return T.Color("accent") end
+		return { A.Mix(T.Color("text2"), T.Color("text"), p) }
+	end
+	local enter = b:GetScript("OnEnter")
+	b:SetScript("OnEnter", function(self)
+		enter(self)
+		if GameTooltip then
+			GameTooltip:SetOwner(self, "ANCHOR_TOP")
+			GameTooltip:SetText(ns.Get(path) and "Pinned in place" or "Pin in place", 1, 1, 1)
+			GameTooltip:AddLine(ns.Get(path) and "Click to unpin, to drag and resize it again." or "Click so it cannot be dragged or resized by accident.", nil, nil, nil, true)
+			GameTooltip:Show()
+		end
+	end)
+	pins[b] = true
+	return b
+end
+-- Whether a window pinned with `path` may move now.
+function T.Movable(path) return not ns.Get(path) end
+local function repaintPins(path)
+	for b in pairs(pins) do
+		if path == b.pwPath or path == "*" or path == "profile.shared" or (path and path:match("%.%*$")) then b.pwLook(A.Get(b, "hover") or 0) end
+	end
+end
+ns.On("SETTING_CHANGED", repaintPins)
+ns.On("ACCENT_CHANGED", function() repaintPins("*") end)
+
+-- The resize grip (as Pathwise's v2): the corner you drag to make a window
+-- any size. The top-left corner stays put while the grip follows the cursor.
+--   o = { minW, maxW, minH, maxH, lockPath,
+--         onSize(w, h) while dragging, onDone(w, h) let go, onReset() right-click }
+-- A pinned window (o.lockPath) does not resize. Returns the grip.
+function T.Grip(frame, o)
+	if frame.SetResizable then frame:SetResizable(true) end
+	if frame.SetResizeBounds then frame:SetResizeBounds(o.minW, o.minH, o.maxW, o.maxH) end
+	local g = CreateFrame("Button", nil, frame)
+	g:SetSize(16, 16)
+	g:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -3, 3)
+	g:SetFrameLevel((frame:GetFrameLevel() or 0) + 20)
+	g.icon = g:CreateTexture(nil, "OVERLAY")
+	g.icon:SetTexture(T.MEDIA .. "glyph-resize")
+	g.icon:SetSize(12, 12)
+	g.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+	local st = {}
+	g.pwState = st
+	local function look()
+		local c = T.Color(st.held and "accent" or (st.over and "text" or "muted"))
+		g.icon:SetVertexColor(c[1], c[2], c[3], 1)
+	end
+	g.pwLook = look
+	local function clamp(v, lo, hi) return math.min(hi or v, math.max(lo or v, v)) end
+	local function cursor()
+		local x, y = GetCursorPosition()
+		local sc = frame:GetEffectiveScale() or 1
+		return x / sc, y / sc
+	end
+	local function update()
+		local x, y = cursor()
+		local w = math.floor(clamp(st.w0 + (x - st.x0), o.minW, o.maxW) + 0.5)
+		local h = math.floor(clamp(st.h0 + (st.y0 - y), o.minH, o.maxH) + 0.5)
+		if w == st.w and h == st.h then return end
+		st.w, st.h = w, h
+		frame:SetSize(w, h)
+		if o.onSize then o.onSize(w, h) end
+	end
+	g.pwUpdate = update
+	local function stop()
+		if not st.held then return end
+		st.held = nil
+		look()
+		g:SetScript("OnUpdate", nil)
+		if o.onDone then o.onDone(st.w or frame:GetWidth(), st.h or frame:GetHeight()) end
+	end
+	g:SetScript("OnMouseDown", function(_, button)
+		if button and button ~= "LeftButton" then return end
+		if o.lockPath and ns.Get(o.lockPath) then return end
+		local l, t = frame:GetLeft(), frame:GetTop()
+		if l and t then
+			frame:ClearAllPoints()
+			frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", l, t)
+		end
+		st.x0, st.y0 = cursor()
+		st.w0, st.h0 = frame:GetWidth(), frame:GetHeight()
+		st.w, st.h, st.held = nil, nil, true
+		look()
+		if GameTooltip then GameTooltip:Hide() end
+		g:SetScript("OnUpdate", update)
+	end)
+	g:SetScript("OnMouseUp", function(_, button)
+		if button == "RightButton" and not st.held then
+			if o.onReset and not (o.lockPath and ns.Get(o.lockPath)) then o.onReset() end
+			return
+		end
+		stop()
+	end)
+	g:SetScript("OnHide", stop)
+	g:SetScript("OnEnter", function(self)
+		st.over = true
+		look()
+		if GameTooltip and not st.held then
+			GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+			GameTooltip:SetText("Resize", 1, 1, 1)
+			if o.lockPath and ns.Get(o.lockPath) then
+				GameTooltip:AddLine("Pinned: unpin it to resize.", nil, nil, nil, true)
+			else
+				GameTooltip:AddLine("Drag to change the width and height.", nil, nil, nil, true)
+				GameTooltip:AddLine("Right-click: back to the usual size.", nil, nil, nil, true)
+			end
+			GameTooltip:Show()
+		end
+	end)
+	g:SetScript("OnLeave", function()
+		st.over = nil
+		look()
+		if GameTooltip then GameTooltip:Hide() end
+	end)
+	ns.On("ACCENT_CHANGED", look)
+	look()
+	return g
 end
 
 ---------------------------------------------------------------------------
@@ -376,7 +651,7 @@ T.CloseMenu = closeMenu
 function T.Dropdown(parent, width, onPick)
 	local d = CreateFrame("Button", nil, parent)
 	d:SetSize(width or 160, 26)
-	T.Panel(d, "bg2", "border")
+	T.Panel(d, "bg2", "border", nil, T.RADIUS.card)
 	local text = T.Text(d, "button", "text")
 	text:SetPoint("LEFT", 10, 0)
 	text:SetPoint("RIGHT", -24, 0)
@@ -402,7 +677,7 @@ function T.Dropdown(parent, width, onPick)
 	local menu = CreateFrame("Frame", nil, UIParent)
 	menu:SetFrameStrata("FULLSCREEN_DIALOG")
 	menu:SetClampedToScreen(true)
-	T.Panel(menu, "bg", "border", 0.98)
+	T.Panel(menu, "bg", "border", 0.98, T.RADIUS.card)
 	menu:Hide()
 	menu.pwOwner, menu.items = d, {}
 	d.pwMenu = menu
@@ -418,9 +693,7 @@ function T.Dropdown(parent, width, onPick)
 			if not it then
 				it = CreateFrame("Button", nil, menu)
 				it:SetHeight(24)
-				it.ground = it:CreateTexture(nil, "BACKGROUND")
-				it.ground:SetAllPoints()
-				it.ground:SetColorTexture(1, 1, 1, 0)
+				it.ground = T.Round(it, { 1, 1, 1, 0 }, false, 4)
 				it.pwText = T.Text(it, "button", "text2")
 				it.pwText:SetPoint("LEFT", 10, 0)
 				it.pwText:SetJustifyV("MIDDLE")
@@ -429,8 +702,8 @@ function T.Dropdown(parent, width, onPick)
 				menu.items[i] = it
 			end
 			it:ClearAllPoints()
-			it:SetPoint("TOPLEFT", menu, "TOPLEFT", 1, -1 - (i - 1) * 24)
-			it:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -1, -1 - (i - 1) * 24)
+			it:SetPoint("TOPLEFT", menu, "TOPLEFT", 4, -4 - (i - 1) * 24)
+			it:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -4, -4 - (i - 1) * 24)
 			it.pwText:SetText(o[1])
 			local on = o[2] == picked
 			T.Font(it.pwText, on and "window" or "button", 12)
@@ -443,7 +716,7 @@ function T.Dropdown(parent, width, onPick)
 			it:Show()
 		end
 		for i = #options + 1, #menu.items do menu.items[i]:Hide() end
-		menu:SetSize(self:GetWidth() or 160, #options * 24 + 2)
+		menu:SetSize(self:GetWidth() or 160, #options * 24 + 8)
 	end
 
 	d:SetScript("OnClick", function(self)
@@ -479,7 +752,7 @@ end
 function T.Segmented(parent, onPick)
 	local g = CreateFrame("Frame", nil, parent)
 	g:SetHeight(26)
-	T.Panel(g, "bg2", "border")
+	T.Panel(g, "bg2", "border", nil, T.RADIUS.card)
 	g.segments, g.dividers = {}, {}
 
 	-- options = { { label, value }, ... }; picked = the current value.
@@ -489,12 +762,12 @@ function T.Segmented(parent, onPick)
 			local seg = self.segments[i]
 			if not seg then
 				seg = CreateFrame("Button", nil, self)
-				seg.pwGround = seg:CreateTexture(nil, "BACKGROUND")
-				seg.pwGround:SetAllPoints()
+				-- The picked one's ground: rounded, inside the group's corners.
+				T.Round(seg, { 0, 0, 0, 0 }, false, 5)
 				-- Pressed in: a shadow just under the top edge.
 				seg.pwShade = seg:CreateTexture(nil, "BORDER")
-				seg.pwShade:SetPoint("TOPLEFT")
-				seg.pwShade:SetPoint("TOPRIGHT")
+				seg.pwShade:SetPoint("TOPLEFT", 5, 0)
+				seg.pwShade:SetPoint("TOPRIGHT", -5, 0)
 				seg.pwShade:SetHeight(3)
 				T.Gradient(seg.pwShade, "VERTICAL", { 0, 0, 0, 0 }, { 0, 0, 0, 0.55 })
 				seg.pwText = T.Text(seg, "button", "text2")
@@ -581,12 +854,14 @@ function T.Swatch(parent, get, set, reset, snapshot)
 	local b = CreateFrame("Button", nil, parent)
 	b:SetSize(36, 20)
 	b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-	local chip = b:CreateTexture(nil, "ARTWORK")
-	chip:SetPoint("TOPLEFT", 2, -2)
-	chip:SetPoint("BOTTOMRIGHT", -2, 2)
-	local border = T.Border(b, "BORDER")
-	paint(border, "border")
-	b.pwChip, b.pwBorder = chip, border
+	-- The chip: a rounded square of the color inside a rounded border.
+	local inner = CreateFrame("Frame", nil, b)
+	inner:SetPoint("TOPLEFT", 2, -2)
+	inner:SetPoint("BOTTOMRIGHT", -2, 2)
+	local chip = T.Round(inner, { 0, 0, 0, 1 }, false, 3)
+	T.Round(b, false, "border", 4)
+	local border = b.pwBorder
+	b.pwChip = chip
 	function b:Refresh()
 		local c = get()
 		chip:SetColorTexture(c[1], c[2], c[3], 1)
