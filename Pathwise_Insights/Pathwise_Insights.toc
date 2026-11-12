@@ -1,14 +1,28 @@
 ## Interface: 16001
 ## Title: Pathwise Insights
-## Notes: Your leveling numbers with Pathwise, for every character: time, XP an hour, quests, kills, records, when you play, and a heat map of where you went. Kept on your computer. Part of Pathwise.
+## Notes: Your leveling numbers in WoW: Forever, for every character: time, XP an hour, quests, kills, records, when you play, and a heat map of where you went. Works on its own; with Pathwise it also times each guide step. Kept on your computer.
 ## Author: leight_nn & florp
 ## Version: 0.3.2
-## Dependencies: Pathwise
-## SavedVariables: PathwiseInsightsData
-## IconTexture: Interface\AddOns\Pathwise\Media\icon
+## SavedVariables: PathwiseInsightsData, PathwiseInsightsSettings
+## SavedVariablesPerCharacter: PathwiseInsightsCharSettings
+## OptionalDeps: Pathwise, PathwiseUI
+## IconTexture: Interface\AddOns\Pathwise_Insights\Media\icon
 ## X-License: GPL-3.0-only
 
+Identity.lua
+Kit\Core.lua
+Kit\Theme.lua
+Kit\Anim.lua
+Kit\Widgets.lua
+Kit\Movers.lua
+Base.lua
+Data\Routes.lua
 Recorder.lua
+Track.lua
 Stats.lua
 Share.lua
 Window.lua
+Kit\Options.lua
+Pages.lua
+Kit\Minimap.lua
+Entry.lua

@@ -50,7 +50,7 @@ This repository holds eight addons, each its own download:
 | Pathwise Heal | `Pathwise_Heal/` | Click-to-heal party and raid frames with a preset for every healing spec; works on its own ([docs/HEAL.md](docs/HEAL.md)) |
 | Pathwise Encounters | `Pathwise_Encounters/` | A boss mod: boss timers and warnings, pull and break timers; works on its own ([docs/ENCOUNTERS.md](docs/ENCOUNTERS.md)) |
 | Pathwise Loot | `Pathwise_Loot/` | What every dungeon and raid boss drops: a loot browser, search, a wishlist; works on its own, upgrade marks with Pathwise Gear ([docs/LOOT.md](docs/LOOT.md)) |
-| Pathwise Insights | `Pathwise_Insights/` | Your leveling numbers for every character: totals, records, when you play, routes, zones and levels, and a heat map of where you went; kept on your computer (needs Pathwise) |
+| Pathwise Insights | `Pathwise_Insights/` | Your leveling numbers for every character: totals, records, when you play, routes, zones and levels, and a heat map of where you went; kept on your computer; works on its own ([docs/INSIGHTS.md](docs/INSIGHTS.md)) |
 
 ## Try it
 

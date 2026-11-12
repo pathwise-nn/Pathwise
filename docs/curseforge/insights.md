@@ -3,8 +3,10 @@
 **How is your leveling really going?**
 
 Your leveling numbers for World of Warcraft: Forever, with a tab for every
-character on your account. An add-on for
-[Pathwise](https://github.com/pathwise-nn/pathwise): install Pathwise too.
+character on your account. **Works on its own**: no other addon needed. With
+[Pathwise](https://github.com/pathwise-nn/pathwise) installed, it times each
+step of the leveling guide straight from it; without Pathwise, it works out
+the same steps from your quest log.
 
 **Beta.** This is Pathwise Insights' first release, and it has not yet been
 played in Forever.
@@ -21,7 +23,8 @@ played in Forever.
 - **When you play:** the hours of the day and the days of the week.
 - **Your leveling:**
   - time and XP an hour for each route, zone and level
-  - your slowest guide steps
+  - your slowest guide steps, with or without Pathwise: it carries the
+    leveling routes and follows your quest log against them
   - profession skill-ups
 
 ## Map
@@ -51,20 +54,22 @@ anything about other players. Nothing is ever sent from the game.
 
 The same window as the Pathwise hub, with the Pathwise logo and your
 faction's crest. It takes your theme (all 17 Pathwise themes, light and
-dark) and your accent: Pathwise blue, your class color or any color. Drag
-the corner grip to make it any size, and pin it in place.
+dark) and your accent: Pathwise blue, your class color or any color. With
+the other Pathwise addons, it keeps the same theme and accent. Drag the
+corner grip to make it any size, and pin it in place.
 
 Only the time you play counts: time AFK and loading screens are left out.
 Recording can be turned off, and any character can be hidden or its numbers
 deleted. Everything is saved on your own computer.
 
 `/pwinsights` opens it, and so does the minimap button (right-click for the
-map). `/pwinsights map` opens the map. It is also listed under Settings >
-Pathwise suite.
+options). `/pwinsights map` opens the map, `/pwinsights share` the Share tab.
+With Pathwise, it is also listed under Settings > Pathwise suite.
 
 ## Credits
 
-Created by leight_nn & florp. Map art and names come from the game itself.
+Created by leight_nn & florp. Inter by Rasmus Andersson (SIL Open Font
+License). Map art and names come from the game itself.
 Free software under the GNU General Public License, version 3. Not
 affiliated with Blizzard Entertainment.
 
