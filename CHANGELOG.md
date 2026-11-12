@@ -7,14 +7,23 @@ that version's section.
 ## Unreleased
 
 ### Pathwise Insights (new, needs Pathwise)
-- Your own leveling numbers: time played, XP an hour, deaths, and the same
-  for each route, zone and level; your slowest steps, steps skipped, and
-  profession skill-ups. Open it from its minimap button, Settings > Pathwise
-  suite, or `/pwinsights`.
+- A window of its own with a tab for each character on your account (hide
+  or delete one). Overview: time played, XP an hour, quests turned in,
+  monsters killed, deaths, distance travelled, sessions and days played;
+  records (fastest and longest level, best and longest session, biggest
+  day, days in a row, fastest, longest and best-paying quest); the hours
+  and days you play; time and XP an hour per route, zone and level; your
+  slowest steps; profession skill-ups.
+- Map: a heat map of each continent you levelled on (time spent, or XP an
+  hour) with the path you walked and your flights, zoomed to where you
+  went or the whole continent.
+- Open it from its minimap button (right-click: the map), Settings >
+  Pathwise suite, or `/pwinsights` (`/pwinsights map`).
 - Time counts only while you play: AFK and loading screens are left out.
-  Recording can be turned off, and a character's numbers cleared.
-- Saved per character on your computer (`PathwiseInsightsLog`); nothing is
-  sent anywhere. Sharing your numbers comes later. Not yet checked in game.
+  Recording can be turned off.
+- Saved on your computer (`PathwiseInsightsData`); nothing is sent
+  anywhere. Comparing with other players comes once sharing exists. Not
+  yet checked in game.
 
 ### Pathwise
 - Suite addons can now hear when the guide's live step moves, and why

@@ -1,8 +1,12 @@
--- Pathwise Insights: the recorder. While you level with Pathwise it writes
--- down, for this character only, how long each guide step took, the XP it
--- gave, deaths, skips, time and XP per zone and per level, and profession
--- skill-ups. Everything stays in PathwiseInsightsLog (saved per character,
--- in WTF\Account\...\SavedVariables): nothing leaves your computer.
+-- Pathwise Insights: the recorder. While you play it writes down, for each
+-- of your characters, how long each guide step took and the XP it gave, time
+-- and XP per route, zone and level, quests turned in (how long each took and
+-- what it paid), monsters killed, deaths, distance travelled, sessions and
+-- days, the hours of the day you play, profession skill-ups, and where you
+-- went on each continent (a heat map and a trail).
+--
+-- Everything stays in PathwiseInsightsData (saved for the account, in
+-- WTF\Account\...\SavedVariables): nothing leaves your computer.
 --
 -- Time is the time you are playing: AFK, loading screens and long hitches
 -- are not counted.
@@ -12,38 +16,110 @@ local S = Pathwise.Suite
 local R = {}
 ns.Recorder = R
 
-local SCHEMA = 1
+local SCHEMA = 2
 local MAX_STEPS = 1000 -- the oldest step records go first
+local MAX_SESSIONS = 300
+local MAX_TRAIL = 12000 -- points per continent; past it, every other one goes
 local HITCH = 2 -- a frame longer than this (a loading screen) is not counted
+local GRID = 100 -- heat map cells across a continent
+local TRAIL_STEP = 0.002 -- a trail point at least this far (of the continent) from the last
+local SAMPLE = 1 -- seconds between looks at where you are
+
+R.GRID = GRID
 
 S.Defaults("insights", { record = true, minimap = true, minimapAngle = 165 })
 
 local function now() return time and time() or 0 end
+local dateFn = date or (os and os.date)
 
--- The saved log, made fresh when missing or of another layout.
-function R.Log()
-	local log = PathwiseInsightsLog
-	if type(log) ~= "table" or log.schema ~= SCHEMA then
-		log = { schema = SCHEMA }
-		PathwiseInsightsLog = log
+-- "2026-10-09"; the hour (0-23) and weekday (1 = Monday) of a time.
+local function dayKey(t) return dateFn and dateFn("%Y-%m-%d", t) or "?" end
+local function hourOf(t) return dateFn and tonumber(dateFn("%H", t)) or 0 end
+local function weekdayOf(t)
+	local w = dateFn and tonumber(dateFn("%w", t)) or 1 -- 0 = Sunday
+	return w == 0 and 7 or w
+end
+R.DayKey = dayKey
+
+---------------------------------------------------------------------------
+-- The saved data: one log per character
+---------------------------------------------------------------------------
+
+local function charKey()
+	local name = UnitName and UnitName("player") or "Player"
+	local realm = GetRealmName and GetRealmName() or ""
+	return realm ~= "" and (name .. "-" .. realm) or name
+end
+R.CharKey = charKey
+
+function R.Data()
+	local d = PathwiseInsightsData
+	if type(d) ~= "table" or d.schema ~= SCHEMA then
+		d = { schema = SCHEMA, chars = {} }
+		PathwiseInsightsData = d
 	end
+	d.chars = type(d.chars) == "table" and d.chars or {}
+	return d
+end
+
+local function list(t, k) t[k] = type(t[k]) == "table" and t[k] or {} return t[k] end
+
+local function fill(log)
 	log.since = log.since or now()
 	log.played = log.played or 0 -- seconds counted
 	log.xp = log.xp or 0
 	log.deaths = log.deaths or 0
-	log.steps = type(log.steps) == "table" and log.steps or {} -- { r, s, t, xp, d, lvl, how }, oldest first
-	log.routes = type(log.routes) == "table" and log.routes or {} -- id -> { t, xp, d, steps, skips, done }
-	log.zones = type(log.zones) == "table" and log.zones or {} -- map -> { t, xp, d, lvl }
-	log.levels = type(log.levels) == "table" and log.levels or {} -- level -> { t, xp, d }
-	log.skills = type(log.skills) == "table" and log.skills or {} -- line -> { from, to, ups }
+	log.quests = log.quests or 0
+	log.kills = log.kills or 0
+	log.dist = log.dist or 0 -- yards
+	for _, k in ipairs({ "steps", "routes", "zones", "levels", "skills", "sessions", "days", "hours", "weekdays",
+		"open", "records", "heat", "trail", "conts" }) do list(log, k) end
+	-- steps: { r, s, t, xp, d, lvl, how }, oldest first
+	-- routes: id -> { t, xp, d, steps, skips, done }; zones: map -> { t, xp, d, lvl }
+	-- levels: level -> { t, xp, d, full } (full: seen from its start)
+	-- skills: line -> { from, to, ups }; sessions: { start, t, xp, q }
+	-- days: "2026-10-09" -> seconds; hours: 0-23 -> seconds; weekdays: 1-7 -> seconds
+	-- open: quest -> played seconds when taken; records: fastest/longest/best quest
+	-- heat: continent -> { [cell] = { t, xp } }; trail: continent -> { x, y, flag, ... }
+	-- conts: continent -> its name
 	return log
 end
 
-function R.Clear()
-	PathwiseInsightsLog = nil
-	R.Start(true)
+-- A character's log (this character's when no key is given).
+function R.Log(key)
+	local d = R.Data()
+	key = key or charKey()
+	local log = d.chars[key]
+	if type(log) ~= "table" then
+		log = {}
+		d.chars[key] = log
+	end
+	return fill(log)
+end
+
+-- Every character with a log: { { key, log }, ... }, the last played first.
+function R.Characters()
+	local out = {}
+	for key, log in pairs(R.Data().chars) do
+		if type(log) == "table" then out[#out + 1] = { key = key, log = fill(log) } end
+	end
+	table.sort(out, function(a, b) return (a.log.last or 0) > (b.log.last or 0) end)
+	return out
+end
+
+function R.Hide(key, hidden)
+	local log = R.Data().chars[key]
+	if log then log.hidden = hidden and true or nil end
 	S.Fire("INSIGHTS_UPDATED")
 end
+
+function R.Delete(key)
+	R.Data().chars[key] = nil
+	if key == charKey() then R.Start(true) end
+	S.Fire("INSIGHTS_UPDATED")
+end
+
+function R.Clear() R.Delete(charKey()) end
 
 local function recording() return S.Get("insights.record") end
 
@@ -59,8 +135,54 @@ end
 local function level() return UnitLevel and UnitLevel("player") or 1 end
 local function mapNow() return C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player") end
 
--- Where the counted time and XP go: the step, its route, the zone, the level.
-local zone
+---------------------------------------------------------------------------
+-- Where you are on the continent
+---------------------------------------------------------------------------
+
+-- The continent a map is in (walking up its parents), or nil.
+local CONTINENT = 2 -- Enum.UIMapType.Continent
+local continentCache = {}
+function R.ContinentOf(map)
+	if not map then return nil end
+	if continentCache[map] ~= nil then return continentCache[map] or nil end
+	local found, m, hops = false, map, 0
+	while m and hops < 8 do
+		local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(m)
+		if not info then break end
+		if info.mapType == CONTINENT then found = m break end
+		m, hops = info.parentMapID, hops + 1
+	end
+	continentCache[map] = found
+	return found or nil
+end
+
+-- Where you stand on your continent: continent, x, y (0-1), or nil.
+local function onContinent()
+	local cont = R.ContinentOf(mapNow())
+	if not (cont and C_Map and C_Map.GetPlayerMapPosition) then return nil end
+	local pos = C_Map.GetPlayerMapPosition(cont, "player")
+	if not pos then return nil end
+	local x, y
+	if pos.GetXY then x, y = pos:GetXY() else x, y = pos.x, pos.y end
+	if not (x and y) or (x == 0 and y == 0) then return nil end
+	return cont, x, y
+end
+R.OnContinent = onContinent
+
+local function cellOf(x, y)
+	local cx = math.min(GRID - 1, math.max(0, math.floor(x * GRID)))
+	local cy = math.min(GRID - 1, math.max(0, math.floor(y * GRID)))
+	return cy * GRID + cx
+end
+R.CellOf = cellOf
+
+---------------------------------------------------------------------------
+-- Counting
+---------------------------------------------------------------------------
+
+-- Where the counted time and XP go: the step, its route, the zone, the
+-- level, the session and the heat map cell you stand in.
+local zone, here, session
 local function targets(log)
 	local out = {}
 	local cur = log.cur
@@ -70,6 +192,11 @@ local function targets(log)
 	end
 	if zone then out[#out + 1] = bucket(log.zones, zone) end
 	out[#out + 1] = bucket(log.levels, level())
+	if session then out[#out + 1] = session end
+	if here and not here.taxi then
+		local heat = list(log.heat, here.cont)
+		out[#out + 1] = bucket(heat, here.cell)
+	end
 	return out
 end
 
@@ -79,6 +206,16 @@ local function add(field, n)
 	local log = R.Log()
 	log[TOTAL[field]] = log[TOTAL[field]] + n
 	for _, b in ipairs(targets(log)) do b[field] = (b[field] or 0) + n end
+	if field == "t" then
+		local t = now()
+		local day = dayKey(t)
+		log.days[day] = (log.days[day] or 0) + n
+		local h = hourOf(t)
+		log.hours[h] = (log.hours[h] or 0) + n
+		local w = weekdayOf(t)
+		log.weekdays[w] = (log.weekdays[w] or 0) + n
+		log.last = t
+	end
 end
 R.Add = add
 
@@ -91,9 +228,9 @@ local function close(log, how)
 	local cur = log.cur
 	log.cur = nil
 	if not cur or (cur.t or 0) < 1 then return end
-	local list = log.steps
-	list[#list + 1] = { r = cur.r, s = cur.s, t = math.floor(cur.t + 0.5), xp = cur.xp or 0, d = cur.d or 0, lvl = cur.lvl, how = how }
-	while #list > MAX_STEPS do table.remove(list, 1) end
+	local steps = log.steps
+	steps[#steps + 1] = { r = cur.r, s = cur.s, t = math.floor(cur.t + 0.5), xp = cur.xp or 0, d = cur.d or 0, lvl = cur.lvl, how = how }
+	while #steps > MAX_STEPS do table.remove(steps, 1) end
 	local route = bucket(log.routes, cur.r)
 	if how == "skip" then route.skips = (route.skips or 0) + 1
 	elseif how == "done" then route.steps = (route.steps or 0) + 1 end
@@ -125,7 +262,43 @@ end
 S.On("GUIDE_STEP", R.OnStep)
 
 ---------------------------------------------------------------------------
--- The game: time, XP, deaths, zones, skills
+-- Quests: how long each took (played time) and what it paid
+---------------------------------------------------------------------------
+
+local function questName(q)
+	return S.Quests and S.Quests.Name and S.Quests.Name(q) or ("Quest " .. tostring(q))
+end
+
+function R.OnAccepted(q)
+	if not (recording() and type(q) == "number") then return end
+	local log = R.Log()
+	log.open[q] = log.open[q] or log.played
+end
+
+-- QUEST_TURNED_IN: questID, xpReward, moneyReward.
+function R.OnTurnedIn(q, xp)
+	if not (recording() and type(q) == "number") then return end
+	local log = R.Log()
+	log.quests = log.quests + 1
+	if session then session.q = (session.q or 0) + 1 end
+	local rec = log.records
+	local taken = log.open[q]
+	log.open[q] = nil
+	if taken then
+		local t = math.floor(log.played - taken + 0.5)
+		-- Taken and handed in on the spot is not a "fastest" quest.
+		if t >= 10 and (not rec.fastQuest or t < rec.fastQuest.t) then rec.fastQuest = { q = q, name = questName(q), t = t } end
+		if not rec.slowQuest or t > rec.slowQuest.t then rec.slowQuest = { q = q, name = questName(q), t = t } end
+	end
+	xp = tonumber(xp)
+	if xp and xp > 0 and (not rec.bestQuest or xp > rec.bestQuest.xp) then
+		rec.bestQuest = { q = q, name = questName(q), xp = xp }
+	end
+	S.Fire("INSIGHTS_UPDATED")
+end
+
+---------------------------------------------------------------------------
+-- The game: time, XP, deaths, kills, zones, skills, distance
 ---------------------------------------------------------------------------
 
 local lastXP, lastMax, lastLevel
@@ -141,7 +314,9 @@ function R.OnXP()
 	if lastXP then
 		local gain
 		if lvl == lastLevel then gain = xp - lastXP
-		elseif lvl == lastLevel + 1 then gain = (lastMax - lastXP) + xp
+		elseif lvl == lastLevel + 1 then
+			gain = (lastMax - lastXP) + xp
+			if recording() then bucket(R.Log().levels, lvl).full = true end -- seen from its start
 		end
 		if gain and gain > 0 then add("xp", gain) end
 	end
@@ -149,6 +324,42 @@ function R.OnXP()
 end
 
 local function afk() return UnitIsAFK and UnitIsAFK("player") end
+
+-- Where you are, every SAMPLE seconds: the heat map cell, the trail, and
+-- the distance walked (or flown).
+local since = 0
+function R.Sample()
+	local cont, x, y = onContinent()
+	if not cont then here = nil return end
+	local taxi = UnitOnTaxi and UnitOnTaxi("player") or false
+	local log = R.Log()
+	if not log.conts[cont] then
+		local info = C_Map.GetMapInfo(cont)
+		log.conts[cont] = info and info.name or ("Map " .. cont)
+	end
+	local trail = list(log.trail, cont)
+	local n = #trail
+	local lx, ly = n >= 3 and trail[n - 2] / 10000, n >= 3 and trail[n - 1] / 10000
+	local moved = lx and math.sqrt((x - lx) ^ 2 + (y - ly) ^ 2) or 1
+	if moved >= TRAIL_STEP then
+		trail[n + 1] = math.floor(x * 10000 + 0.5)
+		trail[n + 2] = math.floor(y * 10000 + 0.5)
+		trail[n + 3] = taxi and 1 or 0
+		if #trail > MAX_TRAIL * 3 then
+			local kept = {}
+			for i = 1, #trail, 6 do kept[#kept + 1], kept[#kept + 2], kept[#kept + 3] = trail[i], trail[i + 1], trail[i + 2] end
+			log.trail[cont] = kept
+		end
+	end
+	-- Yards: from the world position, when the last look was close by.
+	local inst, north, west
+	if S.Compat and S.Compat.PlayerWorldPosition then inst, north, west = S.Compat.PlayerWorldPosition() end
+	if here and here.inst == inst and north and here.north then
+		local d = math.sqrt((north - here.north) ^ 2 + (west - here.west) ^ 2)
+		if d < 300 then log.dist = log.dist + d end
+	end
+	here = { cont = cont, cell = cellOf(x, y), taxi = taxi, inst = inst, north = north, west = west }
+end
 
 -- Counts `sec` seconds of play, unless you are AFK.
 function R.Play(sec)
@@ -159,6 +370,11 @@ end
 -- Every frame: a frame longer than HITCH (a loading screen) is not play.
 function R.Tick(elapsed)
 	if not elapsed or elapsed <= 0 or elapsed > HITCH then return end
+	since = since + elapsed
+	if since >= SAMPLE and recording() then
+		since = 0
+		R.Sample()
+	end
 	R.Play(elapsed)
 end
 
@@ -186,17 +402,45 @@ function R.OnSkills()
 	end
 end
 
--- Starts (or, after Clear, restarts) the recorder at login.
+-- Who this character is, for the tabs.
+local function describe(log)
+	local race = UnitRace and UnitRace("player")
+	local class = UnitClass and UnitClass("player")
+	local _, classKey = UnitClass and UnitClass("player")
+	log.name = UnitName and UnitName("player") or log.name
+	log.race, log.class, log.classKey = race or log.race, class or log.class, classKey or log.classKey
+	log.faction = UnitFactionGroup and UnitFactionGroup("player") or log.faction
+	log.level = level()
+end
+
+-- A kill of yours (or your pet's): the combat log's PARTY_KILL.
+function R.OnCombatLog()
+	if not (recording() and CombatLogGetCurrentEventInfo) then return end
+	local _, sub, _, source = CombatLogGetCurrentEventInfo()
+	if sub ~= "PARTY_KILL" then return end
+	if source == (UnitGUID and UnitGUID("player")) or source == (UnitGUID and UnitGUID("pet")) then
+		R.Log().kills = R.Log().kills + 1
+	end
+end
+
+-- Starts (or, after a clear, restarts) the recorder: a new session.
 function R.Start(cleared)
-	R.Log()
+	local log = R.Log()
+	describe(log)
+	log.last = log.last or now()
 	lastXP = nil
 	R.OnXP()
 	R.OnZone()
 	R.OnSkills()
+	session = { start = now(), t = 0, xp = 0, q = 0 }
+	if recording() then
+		log.sessions[#log.sessions + 1] = session
+		while #log.sessions > MAX_SESSIONS do table.remove(log.sessions, 1) end
+	end
 	if cleared then
 		local id = S.Guide.Route()
 		local step = S.Guide.Step()
-		if id and step and recording() then open(R.Log(), id, step) end
+		if id and step and recording() then open(log, id, step) end
 	end
 end
 
@@ -204,8 +448,11 @@ local clock = CreateFrame("Frame")
 clock:SetScript("OnUpdate", function(_, elapsed) R.Tick(elapsed) end)
 
 S.RegisterEvent("PLAYER_XP_UPDATE", function() R.OnXP() end)
-S.RegisterEvent("PLAYER_LEVEL_UP", function() R.OnXP() end)
+S.RegisterEvent("PLAYER_LEVEL_UP", function() R.OnXP() R.Log().level = level() end)
 S.RegisterEvent("PLAYER_DEAD", function() add("d", 1) S.Fire("INSIGHTS_UPDATED") end)
 S.RegisterEvent("ZONE_CHANGED_NEW_AREA", function() R.OnZone() end)
 S.RegisterEvent("SKILL_LINES_CHANGED", function() R.OnSkills() end)
+S.RegisterEvent("QUEST_ACCEPTED", function(_, q) R.OnAccepted(q) end)
+S.RegisterEvent("QUEST_TURNED_IN", function(_, q, xp) R.OnTurnedIn(q, xp) end)
+S.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function() R.OnCombatLog() end)
 S.On("READY", function() R.Start() end)
