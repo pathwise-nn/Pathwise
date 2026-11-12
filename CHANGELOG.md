@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.2 (2026-11-12)
+
 ### Pathwise Insights (new, needs Pathwise)
 - A window of its own with a tab for each character on your account (hide
   or delete one). Overview: time played, XP an hour, quests turned in,
