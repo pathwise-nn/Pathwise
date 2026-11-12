@@ -497,8 +497,11 @@ local function drawOverview(log, key)
 		end
 	end
 
-	y = heading(c, y, width, "Where you stand")
-	y = text(c, 0, y, width, "Comparing you with other players comes once characters can share their numbers. Nothing is shared yet.", "meta", "muted")
+	y = heading(c, y, width, "Share with Pathwise")
+	y = text(c, 0, y, width, "Send this character's numbers to help tune the guides: real step and quest times, the steps people skip, where they get stuck or die, and NPCs that are not where the guide says. You see what is in the code first; no name or realm is in it.", "meta", "text2") + 8
+	chip(c, 0, y, "Make a share code", false, function() ns.Share.Open(key) end)
+	y = y + 34
+	y = text(c, 0, y, width, "Where you stand among other players comes once enough characters are shared.", "small", "muted")
 
 	y = heading(c, y, width, "Options")
 	local x = 0

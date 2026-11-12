@@ -363,3 +363,222 @@ test("insights: the window: tabs per character, tiles, records, the map; delete 
 	for _, m in ipairs(Pathwise.Suite.Modules()) do if m.key == "insights" then listed = true end end
 	ok(listed, "in Settings > Pathwise suite")
 end)
+
+test("insights: the share code: what goes in, what never does, and reading it back", function()
+	local stub, _, ins = setup()
+	local R, Sh = ins.Recorder, ins.Share
+	eq(Sh.Decode64(Sh.Encode64("Pathwise!")), "Pathwise!")
+	eq(Sh.Decode64(Sh.Encode64("ab")), "ab")
+	eq(Sh.Decode64(Sh.Encode64("a")), "a")
+	R.Play(90)
+	levelTo(stub, 3, 50)
+	R.Play(30)
+	local code, L = Sh.CodeFor()
+	ok(code:match("^PWI1:[%w%+/=]+:%x+$"), "one line: " .. code:sub(1, 30))
+	ok(L.shareId and #L.shareId == 10, "a random id for the character")
+	eq(select(2, Sh.CodeFor()), L)
+	eq(Sh.CodeFor(), code, "the same id each time")
+	local text = Sh.Decode64(code:match("^PWI1:([^:]+):"))
+	ok(not text:find("Testchar"), "no name")
+	ok(not text:find("Test Realm"), "no realm")
+	local p = assert(Sh.Read(code))
+	eq(p.id, L.shareId)
+	eq(p.race, "Undead")
+	eq(p.class, "Mage")
+	eq(p.faction, "Horde")
+	eq(p.level, 3)
+	eq(p.played, 120)
+	eq(#p.steps, 1)
+	eq(p.steps[1].route, ROUTE.id)
+	eq(p.steps[1].step, 1)
+	eq(p.steps[1].t, 90)
+	eq(p.steps[1].how, "done")
+	eq(p.routes[ROUTE.id].steps, 1)
+	ok(p.levels[3].full, "level 3 seen from its start")
+	eq(p.zones[1420].t, 120)
+	-- A code cut short, changed, or not a code at all.
+	local cut = code:sub(1, #code - 20) .. code:sub(-5)
+	ok(not Sh.Read(cut), "cut short")
+	local body = code:match("^PWI1:([^:]+):")
+	local changed = code:gsub(body:sub(5, 8), body:sub(5, 8) == "AAAA" and "BBBB" or "AAAA", 1)
+	ok(not Sh.Read(changed), "changed by hand")
+	ok(not Sh.Read("hello"), "not a code")
+	-- Spaces and line breaks from a paste do not matter.
+	ok(Sh.Read(code:sub(1, 40) .. "\n  " .. code:sub(41)), "a pasted code with a line break")
+end)
+
+test("insights: the share page shows the code, what is in it, and where to send it", function()
+	local stub, ns, ins = setup()
+	ins.Recorder.Play(120)
+	ins.Window.Open()
+	ok(stub.clickLabelText("Make a share code"), "the button")
+	ok(ns.Panels.IsOpen("insightsshare"), "the share page")
+	local texts = stub.texts()
+	ok(contains(texts, "SHARE WITH PATHWISE"), "its title")
+	ok(contains(texts, "Not in it: your character's name, realm or guild"), "what is left out")
+	local found
+	for _, f in ipairs(stub.frames) do
+		local t = rawget(f, "text")
+		if type(t) == "string" and t:match("^PWI1:") and f.shown then found = t end
+	end
+	ok(found, "the code in a copy box")
+	ok(Pathwise.Suite.DISCORD, "the Discord invite")
+end)
+
+test("insights: the import tool reads codes, keeps the newest per character, and flags steps", function()
+	local stub, _, ins = setup()
+	local Sh = ins.Share
+	-- Three players on the route: step 2 slow for all, step 3 skipped by two.
+	local function player(id, played, t2, skip3)
+		return Sh.Make({ shareId = id, race = "Gnome", class = "Mage", faction = "Alliance", level = 10, played = played, xp = 5000,
+			steps = { { r = ROUTE.id, s = 1, t = 60, xp = 100, d = 0, lvl = 2, how = "done" },
+				{ r = ROUTE.id, s = 2, t = t2, xp = 100, d = 1, lvl = 3, how = "done" },
+				{ r = ROUTE.id, s = 3, t = 30, xp = 0, d = 0, lvl = 4, how = skip3 and "skip" or "done" },
+				{ r = ROUTE.id, s = 4, t = 70, xp = 100, d = 0, lvl = 4, how = "done" } },
+			routes = { [ROUTE.id] = { t = 3000, xp = 4000, d = 1, steps = 3, skips = skip3 and 1 or 0, done = true } },
+			levels = { [3] = { t = 900, full = true } }, zones = {} })
+	end
+	local dir = (os.getenv("TEMP") or os.getenv("TMPDIR") or "/tmp") .. "/pathwise-insights-test.txt"
+	local f = assert(io.open(dir, "wb"))
+	f:write("issue one\n", player("aaaaaaaaaa", 100, 600, true), "\n")
+	f:write("issue two\n", player("bbbbbbbbbb", 100, 700, true), "\n")
+	f:write("an older code\n", player("cccccccccc", 50, 50, false), "\n")
+	f:write("the newer one\n", player("cccccccccc", 200, 800, false), "\n")
+	f:write("broken: PWI1:QUJD:ffff\n")
+	f:close()
+	local p = io.popen('lua5.1 tools/insights/import.lua "' .. dir .. '"')
+	local report = p:read("*a")
+	p:close()
+	os.remove(dir)
+	ok(report:find("3 characters %(5 codes read, 1 could not be read%)"), report:sub(1, 200))
+	ok(report:find("test/insights  %(3 players, 3 finished%)"), "the route")
+	ok(report:find("step   2  median 11m40s"), "step 2's median: the newer code's 800 s, with 600 and 700")
+	ok(report:find("step   2[^\n]*SLOW"), "step 2 is slow")
+	ok(report:find("step   2[^\n]*DEADLY"), "a death each time")
+	ok(report:find("step   3[^\n]*OFTEN SKIPPED"), "step 3 skipped by two of three")
+	ok(not report:find("step   1[^\n]*<%-"), "step 1 is fine")
+	ok(report:find("level  3  median 15m00s"), "time per level")
+end)
+
+test("insights: for the guides: each step's version, kills, yards, flying, group and end; quests and deaths with places", function()
+	local stub, ns, ins = setup({ before = continent })
+	local R, Sh = ins.Recorder, ins.Share
+	local L = log()
+	eq(L.cur.v, "0.1.0-test", "the step is timed on this Pathwise version")
+	-- Kills, yards, a group, a flight, a death, on step 1.
+	local ev
+	function CombatLogGetCurrentEventInfo() return unpack(ev) end
+	function UnitGUID(u) return u == "player" and "P-1" or nil end
+	ev = { 0, "PARTY_KILL", false, "P-1" }
+	stub.fire("COMBAT_LOG_EVENT_UNFILTERED")
+	stub.fire("COMBAT_LOG_EVENT_UNFILTERED")
+	stub.moveTo(1420, 50, 50)
+	R.Tick(1)
+	stub.moveTo(1420, 51, 50) -- 30 yards west
+	R.Tick(1)
+	function IsInGroup() return true end
+	R.Play(20)
+	IsInGroup = nil
+	stub.player.taxi = true
+	R.Tick(1)
+	R.Play(10)
+	stub.player.taxi = false
+	R.Tick(1)
+	stub.fire("PLAYER_DEAD")
+	-- A quest taken here and handed in there; another abandoned.
+	stub.moveTo(1420, 30, 70)
+	stub.accept(364)
+	R.Play(100)
+	stub.moveTo(1420, 32, 66)
+	stub.log[364] = nil
+	stub.done[364] = true
+	stub.fire("QUEST_TURNED_IN", 364, 450, 0)
+	stub.fire("QUEST_REMOVED", 364)
+	stub.accept(376)
+	R.Play(40)
+	stub.log[376] = nil
+	stub.fire("QUEST_REMOVED", 376)
+	levelTo(stub, 3) -- step 1 ends
+	local st = L.steps[1]
+	eq(st.v, "0.1.0-test")
+	eq(st.k, 2, "kills")
+	ok(math.abs(st.yd - 30) < 0.6, "yards walked: " .. st.yd)
+	eq(st.grp, 20, "in a group")
+	eq(st.fly, 11, "on a flight: the second it was seen, and ten more")
+	eq(st.m, 1420, "where it ended")
+	eq(st.x, 320)
+	eq(st.y, 660)
+	eq(#L.questLog, 2, "the handed-in quest and the abandoned one")
+	local q = L.questLog[1]
+	eq(q.q, 364)
+	eq(q.t, 100)
+	eq(q.xp, 450)
+	eq(q.am, 1420)
+	eq(q.ax, 300)
+	eq(q.ay, 700)
+	eq(q.tx, 320)
+	eq(q.ty, 660)
+	ok(not q.ab, "handed in, not abandoned")
+	eq(L.questLog[2].q, 376)
+	ok(L.questLog[2].ab, "abandoned")
+	eq(L.questLog[2].t, 40)
+	eq(#L.deathLog, 1)
+	eq(L.deathLog[1].m, 1420)
+	eq(L.deathLog[1].x, 510)
+	eq(L.deathLog[1].r, ROUTE.id)
+	eq(L.deathLog[1].s, 1)
+	-- All of it in the code, and back.
+	local p = assert(Sh.Read((Sh.CodeFor())))
+	eq(p.version, "0.1.0-test")
+	local s1 = p.steps[1]
+	eq(s1.version, "0.1.0-test")
+	eq(s1.kills, 2)
+	eq(s1.grouped, 20)
+	eq(s1.flying, 11)
+	eq(s1.map, 1420)
+	ok(math.abs(s1.x - 0.32) < 1e-9, "x")
+	eq(#p.quests, 2)
+	eq(p.quests[1].quest, 364)
+	eq(p.quests[1].xp, 450)
+	ok(math.abs(p.quests[1].inX - 0.32) < 1e-9, "where it was handed in")
+	ok(p.quests[2].abandoned, "abandoned")
+	eq(#p.deaths, 1)
+	eq(p.deaths[1].route, ROUTE.id)
+	eq(p.deaths[1].step, 1)
+end)
+
+test("insights: the import tool: quests slow for their XP, abandoned, handed in away from the data; death spots", function()
+	local _, ns, ins = setup()
+	local Sh = ins.Share
+	local fin = ns.Quests.Finisher(364) -- where the data puts the hand-in
+	ok(fin and fin.map == 1420, "364 is handed in in Tirisfal")
+	local function player(id, off)
+		local quests = {
+			-- 364: handed in `off` map units east of where the data says.
+			{ q = 364, t = 300, xp = 450, lvl = 3, tm = 1420, tx = math.floor((fin.x + off) * 10), ty = math.floor(fin.y * 10) },
+			-- 376: abandoned by everyone but one.
+			{ q = 376, t = 100, xp = 0, lvl = 3, ab = id ~= "aaaaaaaaaa" },
+			-- 3901: slow for what it pays.
+			{ q = 3901, t = 3000, xp = 100, lvl = 4 },
+			{ q = 3095, t = 120, xp = 400, lvl = 4 },
+			{ q = 3098, t = 120, xp = 400, lvl = 4 },
+		}
+		return Sh.Make({ shareId = id, race = "Undead", class = "Mage", faction = "Horde", level = 5, played = 1000, xp = 2000,
+			steps = {}, routes = {}, levels = {}, zones = {}, questLog = quests,
+			deathLog = { { m = 1420, x = 455, y = 655, lvl = 4, r = ROUTE.id, s = 2 } } })
+	end
+	local file = (os.getenv("TEMP") or os.getenv("TMPDIR") or "/tmp") .. "/pathwise-insights-test2.txt"
+	local f = assert(io.open(file, "wb"))
+	f:write(player("aaaaaaaaaa", 8), "\n", player("bbbbbbbbbb", 8), "\n", player("cccccccccc", 8), "\n")
+	f:close()
+	local p = io.popen('lua5.1 tools/insights/import.lua "' .. file .. '"')
+	local report = p:read("*a")
+	p:close()
+	os.remove(file)
+	ok(report:find("== Quests =="), report:sub(1, 300))
+	ok(report:find("364 The Mindless Ones[^\n]*handed in at 1420 [%d%.]+, [%d%.]+: the data says"), "364's hand-in is away from the data")
+	ok(report:find("376 [^\n]*OFTEN ABANDONED"), "376 abandoned")
+	ok(report:find("3901 [^\n]*SLOW FOR ITS XP"), "3901 slow for its XP")
+	ok(not report:find("3095 [^\n]*<%-"), "3095 is fine")
+	ok(report:find("map 1420  45, 65  3 deaths, 3 players, median level 4  %(mostly test/insights step 2%)"), "the death spot")
+end)

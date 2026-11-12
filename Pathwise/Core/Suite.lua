@@ -36,6 +36,8 @@ S.Quests = ns.Quests
 S.Dungeons = ns.Dungeons
 S.Professions = ns.Professions -- Known(), Recipes(line), BY_LINE
 function S.SetWaypoint(map, x, y, title) return ns.Nav.SetTarget(map, x, y, title) end
+-- Pathwise's links, for copy boxes (the game opens none).
+S.DISCORD, S.WEBSITE = ns.Panels and ns.Panels.DISCORD, ns.Panels and ns.Panels.WEBSITE
 
 -- The leveling guide, read only (Pathwise Insights). Listen for GUIDE_STEP
 -- (Guide/Engine.lua) to hear when the live step moves.

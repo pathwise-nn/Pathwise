@@ -25,9 +25,24 @@ that version's section.
   Pathwise suite, or `/pwinsights` (`/pwinsights map`).
 - Time counts only while you play: AFK and loading screens are left out.
   Recording can be turned off.
-- Saved on your computer (`PathwiseInsightsData`); nothing is sent
-  anywhere. Comparing with other players comes once sharing exists. Not
-  yet checked in game.
+- Share with Pathwise: a share code for a character, to paste in a GitHub
+  form or the Pathwise Discord, so we can tune the routes. It holds each
+  guide step's time, XP, kills, deaths, yards walked, time flying and in a
+  group, and where it ended (with the Pathwise version), each quest's time
+  from taking to handing in, its XP and where it was taken and handed in
+  (or that it was abandoned), and where you died. The page shows what is in
+  it first; never your name, realm, guild or path on the map.
+- Saved on your computer (`PathwiseInsightsData`); nothing is sent from
+  the game. Comparing with other players comes once enough characters are
+  shared. Not yet checked in game.
+
+### For the guides (in the repository)
+- `npm run insights` reads players' share codes (kept in `data/insights/`,
+  never committed) and reports slow, long-walk, often-skipped and deadly
+  steps per route and version; quests slow for their XP or often
+  abandoned; hand-in and pick-up spots away from where Pathwise's data puts
+  the people; where players die; and the time per level
+  ([docs/INSIGHTS.md](docs/INSIGHTS.md)).
 
 ### Pathwise
 - Suite addons can now hear when the guide's live step moves, and why

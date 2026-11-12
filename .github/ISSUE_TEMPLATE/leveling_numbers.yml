@@ -1,0 +1,29 @@
+name: Share leveling numbers
+description: Send your Pathwise Insights share code to help tune the leveling guides
+title: "Leveling numbers"
+labels: ["insights"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! In game, open Pathwise Insights (its minimap button, or `/pwinsights`), click
+        **Make a share code** under *Share with Pathwise*, click the box, press Ctrl+A then Ctrl+C,
+        and paste it below.
+
+        The code holds your character's race, class, faction and level, its time and XP, and the
+        guide steps it timed. It does not hold its name, realm or guild, or where it walked.
+        This issue is public: only paste a code you are happy to share.
+  - type: textarea
+    id: code
+    attributes:
+      label: Share code
+      description: Starts with PWI1
+      placeholder: PWI1:...
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything you noticed (optional)
+      description: A step that took long, a route that felt slow, a place you got stuck.

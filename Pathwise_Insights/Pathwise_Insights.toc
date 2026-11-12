@@ -10,4 +10,5 @@
 
 Recorder.lua
 Stats.lua
+Share.lua
 Window.lua

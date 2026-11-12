@@ -123,6 +123,8 @@ local function insightsLog()
 			end
 		end
 	end
+	local questLog = {}
+	for i = 1, 94 do questLog[i] = { q = 100 + i, t = 120 + i * 7, xp = 300 + i * 10, lvl = 5 + math.floor(i / 10) } end
 	local hours, week = {}, {}
 	for hr = 0, 23 do hours[hr] = (hr >= 9 and hr <= 23) and math.floor(600 + 3000 * math.abs(math.sin(hr))) or (hr == 0 and 900 or 0) end
 	week = { 5200, 1400, 3700, 0, 4300, 3100, 3600 }
@@ -146,6 +148,8 @@ local function insightsLog()
 		records = { fastQuest = { q = 109, name = "Report to Gryan Stoutmantle", t = 42 },
 			slowQuest = { q = 155, name = "The Defias Brotherhood", t = 22000 },
 			bestQuest = { q = 166, name = "The Defias Brotherhood", xp = 3900 } },
+		questLog = questLog, deathLog = { { m = 1436, x = 450, y = 700, lvl = 12 }, { m = 1436, x = 380, y = 520, lvl = 13 },
+			{ m = 1429, x = 700, y = 800, lvl = 9 } },
 		heat = { [1415] = heat, [1436] = zoneHeat }, trail = { [1415] = trail, [1436] = zoneTrail },
 		conts = { [1415] = "Eastern Kingdoms" }, zonemaps = { [1436] = "Westfall", [1429] = "Elwynn Forest", [1453] = "Stormwind City" },
 	}
@@ -177,8 +181,8 @@ end
 return {
 	setup = setup,
 	-- Other Pathwise addons a scene loads with Pathwise.
-	addons = { bags = { "Pathwise_Gear", "Pathwise_Bags" }, gear = { "Pathwise_Gear" }, insights = { "Pathwise_Insights" }, ["insights-map"] = { "Pathwise_Insights" }, ["insights-zone"] = { "Pathwise_Insights" } },
-	before = { ["hub-horde"] = horde, ["tracker-horde"] = horde, bags = bagItems, insights = insightsLog, ["insights-map"] = insightsLog, ["insights-zone"] = insightsLog },
+	addons = { bags = { "Pathwise_Gear", "Pathwise_Bags" }, gear = { "Pathwise_Gear" }, insights = { "Pathwise_Insights" }, ["insights-map"] = { "Pathwise_Insights" }, ["insights-zone"] = { "Pathwise_Insights" }, ["insights-share"] = { "Pathwise_Insights" } },
+	before = { ["hub-horde"] = horde, ["tracker-horde"] = horde, bags = bagItems, insights = insightsLog, ["insights-map"] = insightsLog, ["insights-zone"] = insightsLog, ["insights-share"] = insightsLog },
 	scenes = {
 		hub = function(ns)
 			onRoute(ns)
@@ -274,6 +278,11 @@ return {
 			onRoute(ns)
 			SlashCmdList.PATHWISEINSIGHTS("map")
 		end,
+		["insights-share"] = function(ns)
+			onRoute(ns)
+			SlashCmdList.PATHWISEINSIGHTS("")
+			stub.clickLabelText("Make a share code")
+		end,
 		["insights-zone"] = function(ns)
 			onRoute(ns)
 			SlashCmdList.PATHWISEINSIGHTS("map")
@@ -281,5 +290,5 @@ return {
 		end,
 	},
 	order = { "hub", "hub-horde", "hub-class", "hub-prof", "hub-wide", "hub-narrow", "tracker", "tracker-horde", "window", "minimal",
-		"settings", "settings-themes", "routebook", "routebook-page", "recipebook", "professions", "profession", "dungeons", "skip", "bags", "gear", "insights", "insights-map", "insights-zone" },
+		"settings", "settings-themes", "routebook", "routebook-page", "recipebook", "professions", "profession", "dungeons", "skip", "bags", "gear", "insights", "insights-map", "insights-zone", "insights-share" },
 }

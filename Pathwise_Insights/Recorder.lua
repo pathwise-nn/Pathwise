@@ -20,6 +20,8 @@ ns.Recorder = R
 local SCHEMA = 2
 local MAX_STEPS = 1000 -- the oldest step records go first
 local MAX_SESSIONS = 300
+local MAX_QUESTS = 800 -- quest records kept (the newest)
+local MAX_DEATHS = 300
 local MAX_TRAIL = 12000 -- points per continent; past it, every other one goes
 local HITCH = 2 -- a frame longer than this (a loading screen) is not counted
 local GRID = 100 -- heat map cells across a continent
@@ -75,13 +77,15 @@ local function fill(log)
 	log.kills = log.kills or 0
 	log.dist = log.dist or 0 -- yards
 	for _, k in ipairs({ "steps", "routes", "zones", "levels", "skills", "sessions", "days", "hours", "weekdays",
-		"open", "records", "heat", "trail", "conts", "zonemaps" }) do list(log, k) end
+		"open", "records", "heat", "trail", "conts", "zonemaps", "questLog", "deathLog" }) do list(log, k) end
 	-- steps: { r, s, t, xp, d, lvl, how }, oldest first
 	-- routes: id -> { t, xp, d, steps, skips, done }; zones: map -> { t, xp, d, lvl }
 	-- levels: level -> { t, xp, d, full } (full: seen from its start)
 	-- skills: line -> { from, to, ups }; sessions: { start, t, xp, q }
 	-- days: "2026-10-09" -> seconds; hours: 0-23 -> seconds; weekdays: 1-7 -> seconds
-	-- open: quest -> played seconds when taken; records: fastest/longest/best quest
+	-- open: quest -> { p = played seconds, lvl, m, x, y } when taken
+	-- questLog: { q, t, xp, lvl, am, ax, ay, tm, tx, ty, ab } (ab: abandoned), oldest first
+	-- deathLog: { m, x, y, lvl, r, s }; records: fastest/longest/best quest
 	-- heat: continent -> { [cell] = { t, xp } }; trail: continent -> { x, y, flag, ... }
 	-- conts: continent -> its name; zonemaps: zone -> its name (heat and trail
 	-- hold zones too, by their map id)
@@ -159,6 +163,18 @@ function R.ContinentOf(map)
 	return found or nil
 end
 
+-- Where you stand in your zone (the map the game puts you on): map, x, y (0-1).
+function R.Where()
+	local map = mapNow()
+	if not (map and C_Map and C_Map.GetPlayerMapPosition) then return nil end
+	local pos = C_Map.GetPlayerMapPosition(map, "player")
+	if not pos then return nil end
+	local x, y
+	if pos.GetXY then x, y = pos:GetXY() else x, y = pos.x, pos.y end
+	if not (x and y) or (x == 0 and y == 0) then return nil end
+	return map, x, y
+end
+
 -- Where you stand on your continent: continent, x, y (0-1), or nil.
 local function onContinent()
 	local cont = R.ContinentOf(mapNow())
@@ -232,7 +248,11 @@ local function close(log, how)
 	log.cur = nil
 	if not cur or (cur.t or 0) < 1 then return end
 	local steps = log.steps
-	steps[#steps + 1] = { r = cur.r, s = cur.s, t = math.floor(cur.t + 0.5), xp = cur.xp or 0, d = cur.d or 0, lvl = cur.lvl, how = how }
+	-- Where it ended (the place the step's last goal was done).
+	local m, x, y = R.Where()
+	steps[#steps + 1] = { r = cur.r, s = cur.s, t = math.floor(cur.t + 0.5), xp = cur.xp or 0, d = cur.d or 0, lvl = cur.lvl, how = how,
+		v = cur.v, k = cur.k or 0, yd = math.floor((cur.yd or 0) + 0.5), fly = math.floor((cur.fly or 0) + 0.5),
+		grp = math.floor((cur.grp or 0) + 0.5), m = m, x = x and math.floor(x * 1000 + 0.5), y = y and math.floor(y * 1000 + 0.5) }
 	while #steps > MAX_STEPS do table.remove(steps, 1) end
 	local route = bucket(log.routes, cur.r)
 	if how == "skip" then route.skips = (route.skips or 0) + 1
@@ -241,7 +261,8 @@ end
 
 local function open(log, route, step)
 	if step then
-		log.cur = { r = route, s = step, t = 0, xp = 0, d = 0, lvl = level() }
+		-- v: the Pathwise version (step numbers change between releases).
+		log.cur = { r = route, s = step, t = 0, xp = 0, d = 0, lvl = level(), v = S.VERSION, k = 0, yd = 0, fly = 0, grp = 0 }
 	else
 		bucket(log.routes, route).done = true -- the route is finished
 	end
@@ -272,10 +293,33 @@ local function questName(q)
 	return S.Quests and S.Quests.Name and S.Quests.Name(q) or ("Quest " .. tostring(q))
 end
 
+local function pos3(x) return x and math.floor(x * 1000 + 0.5) or nil end
+
 function R.OnAccepted(q)
 	if not (recording() and type(q) == "number") then return end
 	local log = R.Log()
-	log.open[q] = log.open[q] or log.played
+	if log.open[q] then return end
+	local m, x, y = R.Where()
+	log.open[q] = { p = log.played, lvl = level(), m = m, x = pos3(x), y = pos3(y) }
+end
+
+local function keepQuest(log, rec)
+	local list = log.questLog
+	list[#list + 1] = rec
+	while #list > MAX_QUESTS do table.remove(list, 1) end
+end
+
+-- QUEST_REMOVED: handed in (QUEST_TURNED_IN said so) or abandoned.
+function R.OnRemoved(q)
+	if not (recording() and type(q) == "number") then return end
+	local log = R.Log()
+	local taken = log.open[q]
+	if type(taken) ~= "table" then return end
+	local done = C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted and C_QuestLog.IsQuestFlaggedCompleted(q)
+	if done then return end
+	log.open[q] = nil
+	keepQuest(log, { q = q, t = math.floor(log.played - taken.p + 0.5), xp = 0, lvl = taken.lvl,
+		am = taken.m, ax = taken.x, ay = taken.y, ab = true })
 end
 
 -- QUEST_TURNED_IN: questID, xpReward, moneyReward.
@@ -287,8 +331,13 @@ function R.OnTurnedIn(q, xp)
 	local rec = log.records
 	local taken = log.open[q]
 	log.open[q] = nil
+	if type(taken) == "number" then taken = { p = taken } end -- kept by an older version
+	local m, x, y = R.Where()
+	keepQuest(log, { q = q, t = taken and math.floor(log.played - taken.p + 0.5) or nil, xp = tonumber(xp) or 0,
+		lvl = taken and taken.lvl or level(), am = taken and taken.m, ax = taken and taken.x, ay = taken and taken.y,
+		tm = m, tx = pos3(x), ty = pos3(y) })
 	if taken then
-		local t = math.floor(log.played - taken + 0.5)
+		local t = math.floor(log.played - taken.p + 0.5)
 		-- Taken and handed in on the spot is not a "fastest" quest.
 		if t >= 10 and (not rec.fastQuest or t < rec.fastQuest.t) then rec.fastQuest = { q = q, name = questName(q), t = t } end
 		if not rec.slowQuest or t > rec.slowQuest.t then rec.slowQuest = { q = q, name = questName(q), t = t } end
@@ -382,7 +431,10 @@ function R.Sample()
 	if S.Compat and S.Compat.PlayerWorldPosition then inst, north, west = S.Compat.PlayerWorldPosition() end
 	if here and here.inst == inst and north and here.north then
 		local d = math.sqrt((north - here.north) ^ 2 + (west - here.west) ^ 2)
-		if d < 300 then log.dist = log.dist + d end
+		if d < 300 then
+			log.dist = log.dist + d
+			if log.cur then log.cur.yd = (log.cur.yd or 0) + d end
+		end
 	end
 	here = { cont = cont, cell = cellOf(x, y), zone = zone, zcell = zone and cellOf(zx, zy), taxi = taxi,
 		inst = inst, north = north, west = west }
@@ -392,6 +444,11 @@ end
 function R.Play(sec)
 	if afk() then return end
 	add("t", sec)
+	local cur = recording() and R.Log().cur
+	if cur then
+		if here and here.taxi then cur.fly = (cur.fly or 0) + sec end
+		if IsInGroup and IsInGroup() then cur.grp = (cur.grp or 0) + sec end
+	end
 end
 
 -- Every frame: a frame longer than HITCH (a loading screen) is not play.
@@ -446,7 +503,9 @@ function R.OnCombatLog()
 	local _, sub, _, source = CombatLogGetCurrentEventInfo()
 	if sub ~= "PARTY_KILL" then return end
 	if source == (UnitGUID and UnitGUID("player")) or source == (UnitGUID and UnitGUID("pet")) then
-		R.Log().kills = R.Log().kills + 1
+		local log = R.Log()
+		log.kills = log.kills + 1
+		if log.cur then log.cur.k = (log.cur.k or 0) + 1 end
 	end
 end
 
@@ -476,10 +535,22 @@ clock:SetScript("OnUpdate", function(_, elapsed) R.Tick(elapsed) end)
 
 S.RegisterEvent("PLAYER_XP_UPDATE", function() R.OnXP() end)
 S.RegisterEvent("PLAYER_LEVEL_UP", function() R.OnXP() R.Log().level = level() end)
-S.RegisterEvent("PLAYER_DEAD", function() add("d", 1) S.Fire("INSIGHTS_UPDATED") end)
+function R.OnDead()
+	add("d", 1)
+	if recording() then
+		local log = R.Log()
+		local m, x, y = R.Where()
+		local list = log.deathLog
+		list[#list + 1] = { m = m, x = pos3(x), y = pos3(y), lvl = level(), r = log.cur and log.cur.r, s = log.cur and log.cur.s }
+		while #list > MAX_DEATHS do table.remove(list, 1) end
+	end
+	S.Fire("INSIGHTS_UPDATED")
+end
+S.RegisterEvent("PLAYER_DEAD", function() R.OnDead() end)
 S.RegisterEvent("ZONE_CHANGED_NEW_AREA", function() R.OnZone() end)
 S.RegisterEvent("SKILL_LINES_CHANGED", function() R.OnSkills() end)
 S.RegisterEvent("QUEST_ACCEPTED", function(_, q) R.OnAccepted(q) end)
 S.RegisterEvent("QUEST_TURNED_IN", function(_, q, xp) R.OnTurnedIn(q, xp) end)
+S.RegisterEvent("QUEST_REMOVED", function(_, q) R.OnRemoved(q) end)
 S.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function() R.OnCombatLog() end)
 S.On("READY", function() R.Start() end)
