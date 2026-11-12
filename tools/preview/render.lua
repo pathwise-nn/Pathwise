@@ -12,8 +12,10 @@ local stub = ...
 local Widget = getmetatable(UIParent)
 local render = {}
 
-UIParent.w, UIParent.h = 1600, 900
-local SCREEN_W, SCREEN_H = 1600, 900
+-- The screen: 1600 x 900, or taller with PREVIEW_H (a whole long page at once).
+local PREVIEW_H = tonumber(os.getenv("PREVIEW_H") or "") or 900
+UIParent.w, UIParent.h = 1600, PREVIEW_H
+local SCREEN_W, SCREEN_H = 1600, PREVIEW_H
 
 ---------------------------------------------------------------------------
 -- What the stub forgot
@@ -31,6 +33,42 @@ end
 local baseTexture, baseFont = Widget.CreateTexture, Widget.CreateFontString
 function Widget:CreateTexture(_, layer, _, sub) return stamp(baseTexture(self), layer, sub) end
 function Widget:CreateFontString(name, layer, template) return stamp(baseFont(self, name, layer, template), layer or "OVERLAY", 0) end
+-- An edit box's text (a copy box): drawn by a font string of its own, as
+-- the game draws it, wrapped at any character (a code has no spaces).
+local baseSetFont, baseSetText = Widget.SetFont, Widget.SetText
+function Widget:SetFont(path, size, flags)
+	if self.kind == "EditBox" then rawset(self, "boxFont", { path, size, flags }) end
+	return baseSetFont(self, path, size, flags)
+end
+function Widget:SetText(t)
+	baseSetText(self, t)
+	if self.kind ~= "EditBox" then return end
+	local m = rawget(self, "mirror")
+	if not m then
+		m = self:CreateFontString(nil, "OVERLAY")
+		local f = rawget(self, "boxFont")
+		if f then m:SetFont(f[1], f[2], f[3]) end
+		m:SetPoint("TOPLEFT", self, "TOPLEFT", 0, 0)
+		m:SetJustifyH("LEFT")
+		m:SetJustifyV("TOP")
+		m:SetWordWrap(true)
+		rawset(self, "mirror", m)
+	end
+	local c = rawget(self, "textColor")
+	if c then m:SetTextColor(c[1], c[2], c[3], c[4] or 1) end
+	-- Break the text into lines that fit the box (about 6 px a character).
+	local w = self:GetWidth() or 0
+	if w <= 0 and #self.points >= 2 then w = 0 end
+	local per = math.max(20, math.floor(((rawget(self, "parent") and rawget(self, "parent").w or 400) - 16) / 6.1))
+	local out, s = {}, tostring(t or "")
+	for i = 1, #s, per do out[#out + 1] = s:sub(i, i + per - 1) end
+	-- No more lines than the box holds.
+	local h = rawget(self, "parent") and rawget(self, "parent").h or 100
+	local lines = math.max(1, math.floor((h - 12) / 14))
+	while #out > lines do table.remove(out) end
+	m:SetWidth(per * 6.1 + 10)
+	m:SetText(table.concat(out, string.char(10)))
+end
 function Widget:SetDrawLayer(layer, sub) rawset(self, "layer", layer) rawset(self, "sublevel", sub or 0) end
 
 function Widget:SetAllPoints(rel)

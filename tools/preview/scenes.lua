@@ -77,6 +77,95 @@ local function settingsAtThemes(ns)
 end
 
 -- Bags and Gear: a few items to show (as the Bags tests have them).
+-- Pathwise Insights: a sample of what a few weeks' play leaves in its data
+-- (made-up numbers, for the picture only): this warrior and two alts.
+local function insightsLog()
+	local E, W = "forever/alliance/human/01-elwynn-forest", "forever/alliance/02-westfall"
+	local function step(r, s, t, xp, how) return { r = r, s = s, t = t, xp = xp, d = 0, lvl = 10, how = how or "done" } end
+	local function at(d, h) return os.time({ year = 2026, month = 10, day = d, hour = h }) end
+	-- A wandering path through Elwynn and Westfall on the continent (0-1),
+	-- with a flight back to Stormwind, and the heat where it lingers.
+	local trail, heat = {}, {}
+	local seed = 7
+	local function rnd() seed = (seed * 1103515245 + 12345) % 2147483648 return seed / 2147483648 end
+	local legs = {
+		{ 0.47, 0.73, 0.52, 0.72, 0 }, { 0.52, 0.72, 0.55, 0.75, 0 }, { 0.55, 0.75, 0.50, 0.78, 0 },
+		{ 0.50, 0.78, 0.44, 0.80, 0 }, { 0.44, 0.80, 0.42, 0.86, 0 }, { 0.42, 0.86, 0.40, 0.90, 0 },
+		{ 0.40, 0.90, 0.43, 0.84, 0 }, { 0.43, 0.84, 0.39, 0.82, 0 }, { 0.39, 0.82, 0.46, 0.71, 1 },
+	}
+	for _, l in ipairs(legs) do
+		for k = 0, 30 do
+			local f = k / 30
+			local x = l[1] + (l[3] - l[1]) * f + (l[5] == 0 and (rnd() - 0.5) * 0.008 or 0)
+			local y = l[2] + (l[4] - l[2]) * f + (l[5] == 0 and (rnd() - 0.5) * 0.008 or 0)
+			trail[#trail + 1], trail[#trail + 2], trail[#trail + 3] = math.floor(x * 10000), math.floor(y * 10000), l[5]
+			if l[5] == 0 then
+				local cell = math.floor(y * 100) * 100 + math.floor(x * 100)
+				local b = heat[cell] or { t = 0, xp = 0, d = 0 }
+				local stay = 60 + rnd() * 600
+				b.t, b.xp = b.t + stay, b.xp + stay * (1 + rnd() * 5)
+				heat[cell] = b
+			end
+		end
+	end
+	-- Westfall on its own map: the same walk, seen closer (0-1 of the zone).
+	local zoneTrail, zoneHeat = {}, {}
+	for i = 1, #trail, 3 do
+		local x, y = (trail[i] / 10000 - 0.36) / 0.22, (trail[i + 1] / 10000 - 0.68) / 0.24
+		if x > 0 and x < 1 and y > 0 and y < 1 then
+			zoneTrail[#zoneTrail + 1], zoneTrail[#zoneTrail + 2], zoneTrail[#zoneTrail + 3] = math.floor(x * 10000), math.floor(y * 10000), trail[i + 2]
+			if trail[i + 2] == 0 then
+				local cell = math.floor(y * 100) * 100 + math.floor(x * 100)
+				local b = zoneHeat[cell] or { t = 0, xp = 0, d = 0 }
+				local stay = 60 + rnd() * 600
+				b.t, b.xp = b.t + stay, b.xp + stay * (1 + rnd() * 5)
+				zoneHeat[cell] = b
+			end
+		end
+	end
+	local questLog = {}
+	for i = 1, 94 do questLog[i] = { q = 100 + i, t = 120 + i * 7, xp = 300 + i * 10, lvl = 5 + math.floor(i / 10) } end
+	local hours, week = {}, {}
+	for hr = 0, 23 do hours[hr] = (hr >= 9 and hr <= 23) and math.floor(600 + 3000 * math.abs(math.sin(hr))) or (hr == 0 and 900 or 0) end
+	week = { 5200, 1400, 3700, 0, 4300, 3100, 3600 }
+	local me = {
+		name = "Aldric", race = "Human", class = "Warrior", classKey = "WARRIOR", faction = "Alliance", level = 14, last = at(19, 21),
+		since = at(9, 18), played = 20520, xp = 41800, deaths = 3, quests = 94, kills = 203, dist = 51500,
+		steps = { step(E, 12, 720, 1400), step(E, 27, 840, 2100), step(E, 31, 610, 1600), step(E, 33, 90, 0, "skip"),
+			step(W, 9, 1260, 3100), step(W, 14, 980, 2700), step(W, 16, 60, 0, "skip") },
+		routes = { [E] = { t = 10920, xp = 21600, d = 1, steps = 38, skips = 2, done = true },
+			[W] = { t = 9600, xp = 20200, d = 2, steps = 21, skips = 1 } },
+		zones = { [1429] = { t = 10200, xp = 20900, d = 1, lvl = 1 }, [1436] = { t = 9100, xp = 19800, d = 2, lvl = 11 },
+			[1453] = { t = 1220, xp = 1100, d = 0, lvl = 10 } },
+		levels = { [14] = { t = 1500, xp = 2410, d = 0 }, [13] = { t = 2400, xp = 8000, d = 1, full = true },
+			[12] = { t = 2100, xp = 7200, d = 1, full = true }, [11] = { t = 1900, xp = 6500, d = 0, full = true },
+			[10] = { t = 1700, xp = 5800, d = 1, full = true }, [9] = { t = 1300, xp = 4400, d = 0, full = true } },
+		skills = { [197] = { from = 1, to = 48, ups = 47 }, [333] = { from = 1, to = 41, ups = 40 } },
+		sessions = { { start = at(9, 18), t = 9120, xp = 9800, q = 29 }, { start = at(10, 19), t = 3000, xp = 7100, q = 12 },
+			{ start = at(14, 20), t = 2040, xp = 11030, q = 15 }, { start = at(19, 21), t = 6360, xp = 13870, q = 21 } },
+		days = { ["2026-10-09"] = 9120, ["2026-10-10"] = 3000, ["2026-10-11"] = 1800, ["2026-10-14"] = 2040, ["2026-10-19"] = 6360 },
+		hours = hours, weekdays = week, open = {},
+		records = { fastQuest = { q = 109, name = "Report to Gryan Stoutmantle", t = 42 },
+			slowQuest = { q = 155, name = "The Defias Brotherhood", t = 22000 },
+			bestQuest = { q = 166, name = "The Defias Brotherhood", xp = 3900 } },
+		questLog = questLog, deathLog = { { m = 1436, x = 450, y = 700, lvl = 12 }, { m = 1436, x = 380, y = 520, lvl = 13 },
+			{ m = 1429, x = 700, y = 800, lvl = 9 } },
+		heat = { [1415] = heat, [1436] = zoneHeat }, trail = { [1415] = trail, [1436] = zoneTrail },
+		conts = { [1415] = "Eastern Kingdoms" }, zonemaps = { [1436] = "Westfall", [1429] = "Elwynn Forest", [1453] = "Stormwind City" },
+	}
+	PathwiseInsightsData = { schema = 2, chars = {
+		["Aldric-Forever"] = me,
+		["Fizzwick-Forever"] = { name = "Fizzwick", race = "Gnome", class = "Warlock", faction = "Alliance", level = 18, last = at(18, 20), played = 48700 },
+		["Thalanor-Forever"] = { name = "Thalanor", race = "Night Elf", class = "Hunter", faction = "Alliance", level = 30, last = at(17, 22), played = 112000 },
+	} }
+	UnitName = function() return "Aldric" end
+	-- The scene's character is a Human Warrior (the stub's own answers are an Undead Mage's).
+	UnitRace = function() return "Human", "Human", 1 end
+	UnitClass = function() return "Warrior", "WARRIOR", 1 end
+	GetRealmName = function() return "Forever" end
+	time = function() return at(19, 22) end
+end
+
 local function bagItems()
 	local items = {
 		[201] = { "Broken Fang", 0, 5, 3, 12 }, [202] = { "Cracked Bone", 0, 5, 7, 15 }, [203] = { "Ghoul Rib", 1, 5, 0, 12 },
@@ -92,8 +181,8 @@ end
 return {
 	setup = setup,
 	-- Other Pathwise addons a scene loads with Pathwise.
-	addons = { bags = { "Pathwise_Gear", "Pathwise_Bags" }, gear = { "Pathwise_Gear" } },
-	before = { ["hub-horde"] = horde, ["tracker-horde"] = horde, bags = bagItems },
+	addons = { bags = { "Pathwise_Gear", "Pathwise_Bags" }, gear = { "Pathwise_Gear" }, insights = { "Pathwise_Insights" }, ["insights-map"] = { "Pathwise_Insights" }, ["insights-zone"] = { "Pathwise_Insights" }, ["insights-share"] = { "Pathwise_Insights" }, ["insights-full"] = { "Pathwise_Insights" } },
+	before = { ["hub-horde"] = horde, ["tracker-horde"] = horde, bags = bagItems, insights = insightsLog, ["insights-map"] = insightsLog, ["insights-zone"] = insightsLog, ["insights-share"] = insightsLog, ["insights-full"] = insightsLog },
 	scenes = {
 		hub = function(ns)
 			onRoute(ns)
@@ -181,7 +270,39 @@ return {
 			onRoute(ns)
 			ns.Panels.Open("gear")
 		end,
+		insights = function(ns)
+			onRoute(ns)
+			SlashCmdList.PATHWISEINSIGHTS("")
+		end,
+		["insights-map"] = function(ns)
+			onRoute(ns)
+			SlashCmdList.PATHWISEINSIGHTS("map")
+		end,
+		-- The whole Overview at once: run with PREVIEW_H=2400.
+		["insights-full"] = function(ns)
+			onRoute(ns)
+			SlashCmdList.PATHWISEINSIGHTS("")
+			PathwiseInsights:ClearAllPoints()
+			PathwiseInsights:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 410, -40)
+			PathwiseInsights:SetSize(780, (UIParent:GetHeight() or 900) - 80)
+			SlashCmdList.PATHWISEINSIGHTS("") -- closed,
+			SlashCmdList.PATHWISEINSIGHTS("") -- and drawn again at that size
+		end,
+		["insights-share"] = function(ns)
+			onRoute(ns)
+			SlashCmdList.PATHWISEINSIGHTS("")
+			-- Taller than the usual 640 (drag the corner grip), to show the whole page.
+			PathwiseInsights:ClearAllPoints()
+			PathwiseInsights:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 410, -40)
+			PathwiseInsights:SetSize(780, 900)
+			stub.clickLabelText("Make a share code")
+		end,
+		["insights-zone"] = function(ns)
+			onRoute(ns)
+			SlashCmdList.PATHWISEINSIGHTS("map")
+			stub.clickLabelText("Westfall")
+		end,
 	},
 	order = { "hub", "hub-horde", "hub-class", "hub-prof", "hub-wide", "hub-narrow", "tracker", "tracker-horde", "window", "minimal",
-		"settings", "settings-themes", "routebook", "routebook-page", "recipebook", "professions", "profession", "dungeons", "skip", "bags", "gear" },
+		"settings", "settings-themes", "routebook", "routebook-page", "recipebook", "professions", "profession", "dungeons", "skip", "bags", "gear", "insights", "insights-map", "insights-zone", "insights-share", "insights-full" },
 }

@@ -6,6 +6,50 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Insights (new, needs Pathwise)
+- A window of its own with a tab for each character on your account (hide
+  or delete one). Overview: time played, XP an hour, quests turned in,
+  monsters killed, deaths, distance travelled, sessions and days played;
+  records (fastest and longest level, best and longest session, biggest
+  day, days in a row, fastest, longest and best-paying quest); the hours
+  and days you play; time and XP an hour per route, zone and level; your
+  slowest steps; profession skill-ups.
+- Map: a heat map of each continent you levelled on, and of the zones you
+  spent the most time in (time spent, or XP an hour), with the path you
+  walked and your flights, over the game's own map; zoomed to where you
+  went, or the whole map.
+- In the suite's look: the Pathwise logo, the hub's tabs and cards, your
+  faction's crest, a pin, and a corner grip to make any tab any size. Its
+  colours are your theme's (all 17, light and dark) with your class or own
+  accent on top, as in the hub.
+- Open it from its minimap button (right-click: the map), Settings >
+  Pathwise suite, or `/pwinsights` (`/pwinsights map`).
+- Time counts only while you play: AFK and loading screens are left out.
+  Recording can be turned off.
+- Share with Pathwise (the window's Share tab, laid out like the hub): a
+  share code for a character, to paste in a GitHub
+  form or the Pathwise Discord, so we can tune the routes. It holds each
+  guide step's time, XP, kills, deaths, yards walked, time flying and in a
+  group, and where it ended (with the Pathwise version), each quest's time
+  from taking to handing in, its XP and where it was taken and handed in
+  (or that it was abandoned), and where you died. The page shows what is in
+  it first; never your name, realm, guild or path on the map.
+- Saved on your computer (`PathwiseInsightsData`); nothing is sent from
+  the game. Comparing with other players comes once enough characters are
+  shared. Not yet checked in game.
+
+### For the guides (in the repository)
+- `npm run insights` reads players' share codes (kept in `data/insights/`,
+  never committed) and reports slow, long-walk, often-skipped and deadly
+  steps per route and version; quests slow for their XP or often
+  abandoned; hand-in and pick-up spots away from where Pathwise's data puts
+  the people; where players die; and the time per level
+  ([docs/INSIGHTS.md](docs/INSIGHTS.md)).
+
+### Pathwise
+- Suite addons can now hear when the guide's live step moves, and why
+  (`GUIDE_STEP`), and read the route followed (`Pathwise.Suite.Guide`).
+
 ## 0.3.1 (2026-11-11)
 
 The start of the 0.3 line: the whole Pathwise suite in the new look.

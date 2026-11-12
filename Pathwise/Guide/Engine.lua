@@ -308,6 +308,15 @@ function Engine.MoveMarks(g)
 end
 Engine.State = state
 
+-- GUIDE_STEP (for the suite's addons, Pathwise Insights) is fired when the
+-- live step moves: info = { route, step (nil: the route is done), from =
+-- { route, step } (nil at login), how }. how says why: "done" (the game:
+-- quests, items, levels), "skip" (a quest skipped), "marked" (marked done by
+-- you), "moved" (a route, zone or step picked by you), "sync" (/pw sync) or
+-- "login" (the first step of the session).
+local cause
+local function because(how) cause = cause or how end
+
 function Engine.Route()
 	local id = state().route
 	return id and routes[id]
@@ -315,6 +324,7 @@ end
 
 function Engine.SetRoute(id)
 	if id and not routes[id] then return false end
+	because("moved")
 	local s = state()
 	-- Picked by the player (the zones and routes panels, /pw route): its
 	-- quests stay in even when the character has outlevelled the route.
@@ -1219,11 +1229,26 @@ local function updateWaypoint()
 	if p then ns.Nav.SetTarget(p.map, p.x, p.y, p.name or goalText(goal)) else ns.Nav.Clear() end
 end
 
+-- GUIDE_STEP: the live step moved (see `because` above).
+local lastStep
+local function announceStep()
+	local route = Engine.Route()
+	local id, step = route and route.id, route and live
+	local key = tostring(id) .. ":" .. tostring(step)
+	local how = cause or "done"
+	cause = nil
+	if lastStep and lastStep.key == key then return end
+	local from = lastStep and lastStep.route and { route = lastStep.route, step = lastStep.step } or nil
+	lastStep = { key = key, route = id, step = step }
+	if id then ns.Fire("GUIDE_STEP", { route = id, step = step, from = from, how = from and how or "login" }) end
+end
+
 function Engine.Update()
 	compute()
 	nearby = computeNearby()
 	if ns.Guide and ns.Guide.SetView then ns.Guide.SetView(Engine.View()) end
 	updateWaypoint()
+	announceStep()
 	ns.Fire("GUIDE_UPDATED")
 	ns.Fire("PINS_CHANGED")
 end
@@ -1398,6 +1423,7 @@ end
 -- character now. Class and profession routes are never swapped. Returns the
 -- route shown, its live step, and the route switched to (or nil).
 function Engine.Sync()
+	because("sync")
 	local s = state()
 	player = Q.Player()
 	furthest = {}
@@ -1473,6 +1499,7 @@ end
 -- Skip quest q (and, with followUps, every quest that needs it, as far as
 -- the data knows). Returns the quests skipped.
 function Engine.SkipQuest(q, followUps)
+	because("skip")
 	local s = state()
 	local list = { q }
 	s.skipped[q] = followUps and "chain" or true
@@ -1509,6 +1536,7 @@ function Engine.MarkStepDone()
 	local route = Engine.Route()
 	if not (route and current) then return nil end
 	local s = current
+	because("marked")
 	state().stepsDone[route.id .. ":" .. s] = true
 	state().pin = nil
 	Engine.Update()
@@ -1546,6 +1574,7 @@ function Engine.GoToZone(id, map)
 	st.chosen = id -- picked by you: its quests stay in (see passedLow)
 	if not Engine.FirstOpenIn(r, map) then st.chosen = chosen return false end
 	if st.route ~= id then st.route, st.picked = id, nil end
+	because("moved")
 	st.pin, st.focus = nil, { route = id, map = map }
 	Engine.Update()
 	return true

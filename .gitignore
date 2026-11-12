@@ -8,3 +8,6 @@ data/sources/
 
 # The preview's pages and pictures (tools/preview)
 /preview/
+
+# Players' Insights share codes (tools/insights): read locally, never committed
+/data/insights/
