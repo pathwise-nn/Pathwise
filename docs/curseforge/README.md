@@ -22,10 +22,10 @@ their own (`## OptionalDeps`). All eight share one version; the tests check that
 agree. Pathwise Heal, Pathwise Encounters and Pathwise Loot carry copies of
 Pathwise UI's shared files (`npm run kit`); the build refuses stale copies.
 
-Pathwise Encounters and Pathwise Insights have no CurseForge project yet.
-Until each has one (its id in `PROJECTS` in `tools/curseforge.js`, or
-`CF_PROJECT_PATHWISE_ENCOUNTERS` / `CF_PROJECT_PATHWISE_INSIGHTS`), the upload
-skips it. Pathwise Loot's project is 1786208.
+Pathwise Encounters has no CurseForge project yet. Until it has one (its id
+in `PROJECTS` in `tools/curseforge.js`, or `CF_PROJECT_PATHWISE_ENCOUNTERS`),
+the upload skips it. Pathwise Loot's project is 1786208; Pathwise Insights'
+is 1800759.
 
 ## Before every release
 
