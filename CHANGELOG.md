@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.3 (2026-11-12)
+
 ### Pathwise Insights: works on its own
 - No longer needs Pathwise: Leveling & Professions. It now stands alone like
   Pathwise Loot and Pathwise Heal, with its own options window (Insights,
@@ -22,6 +24,9 @@ that version's section.
 - The minimap button's right-click opens the options; `/pwinsights share`
   opens the Share tab.
 - Not yet checked in game.
+
+### Pathwise UI, Heal, Encounters and Loot
+- Keep the same theme and accent as Pathwise Insights.
 
 ## 0.3.2 (2026-11-12)
 
