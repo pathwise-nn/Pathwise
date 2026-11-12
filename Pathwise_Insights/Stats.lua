@@ -2,7 +2,7 @@
 -- log (Recorder.lua). Nothing here changes the log.
 
 local ADDON, ns = ...
-local S = Pathwise.Suite
+local S = ns.S
 local St = {}
 ns.Stats = St
 

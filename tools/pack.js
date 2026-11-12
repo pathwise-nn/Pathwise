@@ -127,7 +127,7 @@ function main() {
 	const kit = require('./kit');
 	const stale = kit.plan().filter(([, to, want]) => !fs.existsSync(to) || !fs.readFileSync(to).equals(want));
 	if (stale.length) {
-		console.error(`${stale.length} stale copied kit file(s) (Pathwise_Heal, Pathwise_Encounters, Pathwise_Loot): run npm run kit first`);
+		console.error(`${stale.length} stale copied kit file(s) (Pathwise_Heal, Pathwise_Encounters, Pathwise_Loot, Pathwise_Insights): run npm run kit first`);
 		process.exit(1);
 	}
 	const v = version();

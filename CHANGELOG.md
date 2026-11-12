@@ -6,6 +6,23 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Insights: works on its own
+- No longer needs Pathwise: Leveling & Professions. It now stands alone like
+  Pathwise Loot and Pathwise Heal, with its own options window (Insights,
+  Look and accent, Colors, Help, Profile), and keeps one theme and accent
+  with the other Pathwise addons and with Pathwise when they are installed.
+- Without Pathwise it still times the leveling guide's steps: it carries the
+  routes' quest steps (with Pathwise's step numbers) and follows your quest
+  log against them. Travel-only steps have no time of their own then: it
+  goes to the next step with a quest. With Pathwise, Pathwise's guide says
+  where you are, as before. Share codes say which it was, and
+  `npm run insights` keeps them apart.
+- Quest records also keep when each quest was handed in (in play time), so
+  quests can be put in order.
+- The minimap button's right-click opens the options; `/pwinsights share`
+  opens the Share tab.
+- Not yet checked in game.
+
 ## 0.3.2 (2026-11-12)
 
 ### Pathwise Insights (new, needs Pathwise)

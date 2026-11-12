@@ -12,13 +12,18 @@ code. In game it is under **Insights > Share with Pathwise > Make a share code**
 - **The character:** race, class, faction, level, time played, XP, and the
   Pathwise version.
 - **Each guide step timed (the newest 600):**
-  - route, step, and the Pathwise version it was timed on
+  - route, step, and the version it was timed on
+  - who said where the player was: Pathwise's guide, or (players without
+    Pathwise) Insights following their quest log against its own copy of the
+    routes. Those steps have no time of their own for travel-only steps: it
+    goes to the next step with a quest.
   - seconds, XP, deaths and kills
   - yards walked, and seconds spent flying and in a group
   - the level, how the step ended (done, skipped, marked, moved), and where
     (zone, x, y)
 - **Each quest (the newest 600):** play time from taking it to handing it
-  in, the XP it paid, the level, and where it was taken and handed in. Or
+  in, and when (in play time) it was handed in, so quests can be put in
+  order; the XP it paid, the level, and where it was taken and handed in. Or
   that it was abandoned.
 - **Each death (the newest 200):** where, at what level, and on which step.
 - **Totals:** time, XP and deaths per route, level and zone.
@@ -51,7 +56,8 @@ npm run insights -- path/to/file-or-folder --out report.txt
 
 The report covers:
 
-- **Routes, by the Pathwise version the steps were timed on:**
+- **Routes, by the version the steps were timed on**, with steps worked out
+  from quest logs (players without Pathwise) kept apart:
   - the median time to finish and XP an hour
   - each step's median and 75th-percentile time, skips, deaths, kills,
     yards, and the share of time flying and grouped

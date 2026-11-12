@@ -208,7 +208,7 @@ function ns.Suite() return _G.Pathwise and _G.Pathwise.Suite or nil end
 
 -- The other Pathwise addons built on these shared files (they keep one
 -- accent between them), in the order whose accent wins at login.
-ns.PEERS = { "PathwiseUI", "PathwiseHeal", "PathwiseEncounters", "PathwiseLoot" }
+ns.PEERS = { "PathwiseUI", "PathwiseHeal", "PathwiseEncounters", "PathwiseLoot", "PathwiseInsights" }
 function ns.Peers()
 	local out = {}
 	for _, g in ipairs(ns.PEERS) do

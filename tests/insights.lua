@@ -20,6 +20,7 @@ local function setup(opts)
 	opts = opts or {}
 	local stub, ns = fresh()
 	PathwiseInsightsData = opts.data
+	PathwiseInsightsSettings, PathwiseInsightsCharSettings, PathwiseInsights = nil, nil, nil
 	stub.player.level, stub.player.xp, stub.player.xpMax, stub.player.afk = 2, 100, 1000, false
 	function UnitXP() return stub.player.xp end
 	function UnitXPMax() return stub.player.xpMax end
@@ -146,7 +147,7 @@ test("insights: AFK, loading screens and recording off are not counted", functio
 	eq(log().played, 0)
 	stub.advance(1) -- the clock frame
 	ok(math.abs(log().played - 1) < 0.01, "one second of play: " .. log().played)
-	ns.Set("insights.record", false)
+	ins.Set("insights.record", false)
 	R.Tick(1)
 	stub.fire("PLAYER_DEAD")
 	ok(math.abs(log().played - 1) < 0.01, "off: no time")
@@ -358,7 +359,7 @@ test("insights: the window: tabs per character, tiles, records, the map; delete 
 	ok(contains(texts, "Time spent"), "the layers")
 	ok(contains(texts, "in one spot"), "the legend")
 	ok(stub.clickLabelText("XP an hour"), "the XP layer")
-	eq(ns.Get("insights.layer"), "rate")
+	eq(ins.Get("insights.layer"), "rate")
 	local listed = false
 	for _, m in ipairs(Pathwise.Suite.Modules()) do if m.key == "insights" then listed = true end end
 	ok(listed, "in Settings > Pathwise suite")
@@ -442,7 +443,7 @@ test("insights: the Share tab shows the code, what is in it, and where to send i
 	ok(stub.clickLabelText("Share"), "the Share tab from the header")
 	eq(Win.state.page, "share")
 	-- Narrow: the cards go one under another, still all there.
-	PathwiseInsights:SetWidth(640)
+	PathwiseInsightsWindow:SetWidth(640)
 	Win.Draw()
 	ok(contains(stub.texts(), "On Discord"), "narrow")
 end)
@@ -603,4 +604,108 @@ test("insights: the import tool: quests slow for their XP, abandoned, handed in 
 	ok(report:find("3901 [^\n]*SLOW FOR ITS XP"), "3901 slow for its XP")
 	ok(not report:find("3095 [^\n]*<%-"), "3095 is fine")
 	ok(report:find("map 1420  45, 65  3 deaths, 3 players, median level 4  %(mostly test/insights step 2%)"), "the death spot")
+end)
+
+---------------------------------------------------------------------------
+-- On its own: no Pathwise installed
+---------------------------------------------------------------------------
+
+-- A fresh client with Pathwise Insights only (no Pathwise), logged in.
+local function alone(before)
+	PathwiseSettings, PathwiseCharSettings, Pathwise = nil, nil, nil
+	PathwiseInsightsData, PathwiseInsightsSettings, PathwiseInsightsCharSettings, PathwiseInsights = nil, nil, nil, nil
+	local stub = dofile("./tests/stub.lua")
+	stub.player.level, stub.player.xp, stub.player.xpMax, stub.player.afk = 1, 0, 400, false
+	function UnitXP() return stub.player.xp end
+	function UnitXPMax() return stub.player.xpMax end
+	function UnitIsAFK() return stub.player.afk end
+	function UnitName() return "Testchar" end
+	function GetRealmName() return "Test Realm" end
+	stub.clock = os.time({ year = 2026, month = 10, day = 9, hour = 14 })
+	function time() return stub.clock end
+	CombatLogGetCurrentEventInfo, UnitGUID = nil, nil
+	if before then before(stub) end
+	local ins = stub.loadAddon(".", "Pathwise_Insights")
+	stub.moveTo(1420, 30.2, 71.6)
+	stub.fire("ADDON_LOADED", "Pathwise_Insights")
+	stub.fire("PLAYER_LOGIN")
+	return stub, ins
+end
+
+test("insights alone: loads and records without Pathwise; the window, its options and the share code work", function()
+	local stub, ins = alone()
+	eq(rawget(_G, "Pathwise"), nil, "no Pathwise")
+	ok(not ins.S.Guide.Available(), "no guide")
+	ins.Recorder.Play(90)
+	stub.player.xp = 300
+	stub.fire("PLAYER_XP_UPDATE", "player")
+	local L = log()
+	eq(L.played, 90)
+	eq(L.xp, 300)
+	eq(L.race, "Undead")
+	stub.skills[186] = { 12, 75 }
+	stub.fire("SKILL_LINES_CHANGED")
+	eq(L.skills[186].from, 12, "professions from the game")
+	eq(ins.S.Quests.Name(363), "Quest 363", "no data: the game's name, else a number")
+	SlashCmdList.PATHWISEINSIGHTS("")
+	ok(ins.Window.Shown(), "/pwinsights opens it")
+	ok(contains(stub.texts(), "Time played"), "the Overview")
+	SlashCmdList.PATHWISEINSIGHTS("share")
+	eq(ins.Window.state.page, "share")
+	ok(ins.Share.Read((ins.Share.CodeFor())), "a code that reads back")
+	ins.Window.Close()
+	SlashCmdList.PATHWISEINSIGHTS("options")
+	ok(contains(stub.texts(), "Install Pathwise: Leveling & Professions to time each guide step"), "the options say what Pathwise adds")
+end)
+
+test("insights alone: follows the quest log against its own copy of the routes, with Pathwise's step numbers", function()
+	local stub, ins = alone()
+	local R, K = ins.Recorder, ins.Track
+	ok(K.Active(), "on without Pathwise")
+	local ROUTE_ID = "forever/horde/undead/01-tirisfal-glades"
+	ok(K.byId[ROUTE_ID], "the route is bundled")
+	eq(log().cur, nil, "no quest yet: no route")
+	-- Step 1 takes Rude Awakening (363): taken, so step 2 (hand it in) is live.
+	stub.accept(363)
+	eq(log().track.route, ROUTE_ID, "the route of the quest")
+	eq(log().cur.r, ROUTE_ID)
+	eq(log().cur.s, 2)
+	eq(log().cur.src, "quests")
+	R.Play(50)
+	-- Step 2: hand it in, take The Mindless Ones (364).
+	stub.turnin(363)
+	stub.accept(364, { { text = "Mindless Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false } })
+	local L = log()
+	eq(#L.steps, 1, "step 2 is done")
+	eq(L.steps[1].s, 2)
+	eq(L.steps[1].t, 50)
+	eq(L.steps[1].how, "done")
+	eq(L.steps[1].src, "quests")
+	eq(L.steps[1].v, "0.1.0-test", "the routes' version (Insights' own)")
+	eq(L.cur.s, 3, "step 3: do 364")
+	R.Play(120)
+	stub.progress(364, 1, 8)
+	eq(#L.steps, 2, "objectives done: step 3 is done")
+	eq(L.steps[2].s, 3)
+	eq(L.steps[2].t, 120)
+	eq(L.cur.s, 4)
+	-- In the share code, told apart from Pathwise's timing.
+	local p = assert(ins.Share.Read((ins.Share.CodeFor())))
+	eq(p.steps[1].src, "quests")
+	eq(p.steps[1].route, ROUTE_ID)
+end)
+
+test("insights with Pathwise: Pathwise says where you are; the quest-log tracker stays off", function()
+	local stub, ns, ins = setup()
+	ok(not ins.Track.Active(), "off with Pathwise")
+	ins.Recorder.Play(30)
+	levelTo(stub, 3)
+	eq(log().steps[1].src, "guide")
+end)
+
+test("insights: the bundled routes are up to date with Pathwise's", function()
+	local p = io.popen("lua5.1 tools/insights/routes.lua --check 2>&1")
+	local out = p:read("*a")
+	p:close()
+	ok(out:find("is up to date"), out)
 end)

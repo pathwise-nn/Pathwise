@@ -24,9 +24,12 @@
 --   h|1|<id>|<race>|<class>|<faction>|<level>|<played>|<xp>|<quests>|<deaths>|<version>
 --   r|<n>|<route id>                          route ids by number
 --   V|<n>|<Pathwise version>                  versions by number
---   s|<route n>|<step>|<t>|<xp>|<d>|<lvl>|<how>|<version n>|<kills>|<yards>|<flying>|<grouped>|<map>|<x>|<y>
---       how: d s k m y l (done skip marked moved sync login); x, y in thousandths
---   q|<quest>|<t>|<xp>|<lvl>|<map taken>|<x>|<y>|<map handed in>|<x>|<y>|<abandoned 0/1>
+--   s|<route n>|<step>|<t>|<xp>|<d>|<lvl>|<how>|<version n>|<kills>|<yards>|<flying>|<grouped>|<map>|<x>|<y>|<src>
+--       how: d s k m y l (done skip marked moved sync login); x, y in thousandths;
+--       src: g (Pathwise's guide said where you were) or q (your quest log, without Pathwise)
+--   q|<quest>|<t>|<xp>|<lvl>|<map taken>|<x>|<y>|<map handed in>|<x>|<y>|<abandoned 0/1>|<at>
+--       at: played seconds when it was handed in (or abandoned): quests in order, to
+--       line them up against a route even for players not following Pathwise
 --   x|<map>|<x>|<y>|<lvl>|<route n>|<step>    a death
 --   o|<route n>|<t>|<xp>|<d>|<steps>|<skips>|<done 0/1>
 --   v|<level>|<t>|<xp>|<d>|<full 0/1>
@@ -132,7 +135,7 @@ function Sh.Lines(log)
 		for i = 1, select("#", ...) do parts[i] = clean(parts[i]) end
 		lines[#lines + 1] = table.concat(parts, "|")
 	end
-	local S = Pathwise and Pathwise.Suite
+	local S = ns.S
 	add("h", Sh.VERSION, log.shareId or "", log.race, log.class, log.faction, int(log.level), int(log.played),
 		int(log.xp), int(log.quests), int(log.deaths), S and S.VERSION or "")
 	local vIndex, vn = {}, 0
@@ -160,13 +163,13 @@ function Sh.Lines(log)
 	for i = first, #steps do
 		local s = steps[i]
 		add("s", route(s.r), int(s.s), int(s.t), int(s.xp), int(s.d), int(s.lvl), HOW[s.how] or "d", version(s.v),
-			opt(s.k), opt(s.yd), opt(s.fly), opt(s.grp), opt(s.m), opt(s.x), opt(s.y))
+			opt(s.k), opt(s.yd), opt(s.fly), opt(s.grp), opt(s.m), opt(s.x), opt(s.y), s.src == "quests" and "q" or "g")
 	end
 	local quests = log.questLog or {}
 	for i = math.max(1, #quests - Sh.MAX_QUESTS + 1), #quests do
 		local q = quests[i]
 		add("q", int(q.q), opt(q.t), int(q.xp), opt(q.lvl), opt(q.am), opt(q.ax), opt(q.ay), opt(q.tm), opt(q.tx), opt(q.ty),
-			q.ab and 1 or 0)
+			q.ab and 1 or 0, opt(q.at))
 	end
 	local deaths = log.deathLog or {}
 	for i = math.max(1, #deaths - Sh.MAX_DEATHS + 1), #deaths do
@@ -229,11 +232,13 @@ function Sh.Read(code)
 			out.steps[#out.steps + 1] = { route = ids[num(2)], step = num(3), t = num(4), xp = num(5), d = num(6),
 				lvl = num(7), how = HOW_BACK[f[8]] or "done", version = versions[maybe(9) or -1], kills = maybe(10),
 				yards = maybe(11), flying = maybe(12), grouped = maybe(13), map = maybe(14),
-				x = maybe(15) and maybe(15) / 1000, y = maybe(16) and maybe(16) / 1000 }
+				x = maybe(15) and maybe(15) / 1000, y = maybe(16) and maybe(16) / 1000,
+				src = f[17] == "q" and "quests" or "guide" }
 		elseif kind == "q" then
 			out.quests[#out.quests + 1] = { quest = num(2), t = maybe(3), xp = num(4), lvl = maybe(5),
 				takenMap = maybe(6), takenX = maybe(7) and maybe(7) / 1000, takenY = maybe(8) and maybe(8) / 1000,
-				inMap = maybe(9), inX = maybe(10) and maybe(10) / 1000, inY = maybe(11) and maybe(11) / 1000, abandoned = f[12] == "1" }
+				inMap = maybe(9), inX = maybe(10) and maybe(10) / 1000, inY = maybe(11) and maybe(11) / 1000, abandoned = f[12] == "1",
+				at = maybe(13) }
 		elseif kind == "x" then
 			out.deaths[#out.deaths + 1] = { map = maybe(2), x = maybe(3) and maybe(3) / 1000, y = maybe(4) and maybe(4) / 1000,
 				lvl = maybe(5), route = ids[maybe(6) or -1], step = maybe(7) }
@@ -254,8 +259,8 @@ end
 -- In game: the character's code (the window's Share tab draws it)
 ---------------------------------------------------------------------------
 
-local S = Pathwise and Pathwise.Suite
-if not S then return Sh end
+local S = ns.S
+if not S then return Sh end -- read by the import tool: the codec only
 
 Sh.GITHUB_FORM = "https://github.com/pathwise-nn/Pathwise/issues/new?template=leveling_numbers.yml"
 

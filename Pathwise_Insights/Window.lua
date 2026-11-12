@@ -11,8 +11,8 @@
 -- Drag it by its header (insights.point, insights.size). Escape closes it.
 
 local ADDON, ns = ...
-local S, R, St = Pathwise.Suite, ns.Recorder, ns.Stats
-local T = S.Theme
+local S, R, St = ns.S, ns.Recorder, ns.Stats
+local T = ns.Look
 local floor, max, min, sqrt = math.floor, math.max, math.min, math.sqrt
 
 local Win = {}
@@ -188,7 +188,7 @@ local function savePoint(f)
 end
 
 local function build()
-	local f = CreateFrame("Frame", "PathwiseInsights", UIParent)
+	local f = CreateFrame("Frame", "PathwiseInsightsWindow", UIParent)
 	W.frame = f
 	f:SetFrameStrata("MEDIUM")
 	f:SetToplevel(true)
@@ -282,7 +282,7 @@ local function build()
 		onReset = function() S.Set("insights.size", nil) f:SetSize(Win.W, Win.H) draw() end,
 	})
 
-	if type(UISpecialFrames) == "table" then table.insert(UISpecialFrames, "PathwiseInsights") end
+	if type(UISpecialFrames) == "table" then table.insert(UISpecialFrames, "PathwiseInsightsWindow") end
 	f:Hide()
 end
 
@@ -512,8 +512,8 @@ local function drawOverview(log, key)
 		draw()
 	end)
 	x = x + w + 6
-	chip(c, x, y, S.Get("insights.minimap") and "Minimap button: shown" or "Minimap button: hidden", false, function()
-		S.Set("insights.minimap", not S.Get("insights.minimap"))
+	chip(c, x, y, S.Get("minimap.shown") and "Minimap button: shown" or "Minimap button: hidden", false, function()
+		S.Set("minimap.shown", not S.Get("minimap.shown"))
 		draw()
 	end)
 	y = y + 36
@@ -945,28 +945,7 @@ function Win.Shown() return W.frame ~= nil and W.frame:IsShown() end
 
 S.On("INSIGHTS_UPDATED", function() if Win.Shown() then draw() end end)
 -- A new theme or accent: everything painted again.
-S.On("THEME_CHANGED", function() if Win.Shown() then draw() end end)
-S.On("ACCENT_CHANGED", function() if Win.Shown() then draw() end end)
-
-S.On("READY", function()
-	S.MinimapButton({
-		key = "Insights", name = "Pathwise Insights", shownPath = "insights.minimap", anglePath = "insights.minimapAngle",
-		accent = "insights", glyph = "list",
-		lines = { "Click: your leveling numbers", "Right-click: the map" },
-		onClick = function(which)
-			if which == "RightButton" then Win.Open("map") else Win.Toggle() end
-		end,
-	})
+S.On("SETTING_CHANGED", function(path)
+	if Win.Shown() and type(path) == "string" and (path == "*" or path:find("^look") or path:find("^colors")) then draw() end
 end)
-
-S.RegisterModule({
-	key = "insights", name = "Pathwise Insights", accent = "insights",
-	about = "Your leveling numbers, records and a heat map of where you went",
-	open = function() Win.Open() end,
-})
-
-SLASH_PATHWISEINSIGHTS1 = "/pwinsights"
-SlashCmdList = SlashCmdList or {}
-SlashCmdList.PATHWISEINSIGHTS = function(msg)
-	if tostring(msg or ""):lower():find("map") then Win.Open("map") else Win.Toggle() end
-end
+S.On("ACCENT_CHANGED", function() if Win.Shown() then draw() end end)

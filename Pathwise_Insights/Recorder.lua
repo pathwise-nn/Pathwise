@@ -13,7 +13,7 @@
 -- are not counted.
 
 local ADDON, ns = ...
-local S = Pathwise.Suite
+local S = ns.S
 local R = {}
 ns.Recorder = R
 
@@ -31,7 +31,7 @@ local SAMPLE = 1 -- seconds between looks at where you are
 
 R.GRID = GRID
 
-S.Defaults("insights", { record = true, minimap = true, minimapAngle = 165 })
+S.Defaults("insights", { record = true })
 
 local function now() return time and time() or 0 end
 local dateFn = date or (os and os.date)
@@ -84,7 +84,8 @@ local function fill(log)
 	-- skills: line -> { from, to, ups }; sessions: { start, t, xp, q }
 	-- days: "2026-10-09" -> seconds; hours: 0-23 -> seconds; weekdays: 1-7 -> seconds
 	-- open: quest -> { p = played seconds, lvl, m, x, y } when taken
-	-- questLog: { q, t, xp, lvl, am, ax, ay, tm, tx, ty, ab } (ab: abandoned), oldest first
+	-- questLog: { q, t, xp, lvl, am, ax, ay, tm, tx, ty, ab, at } (ab: abandoned; at:
+	--   played seconds when it was handed in or abandoned, so taken at at - t), oldest first
 	-- deathLog: { m, x, y, lvl, r, s }; records: fastest/longest/best quest
 	-- heat: continent -> { [cell] = { t, xp } }; trail: continent -> { x, y, flag, ... }
 	-- conts: continent -> its name; zonemaps: zone -> its name (heat and trail
@@ -251,7 +252,7 @@ local function close(log, how)
 	-- Where it ended (the place the step's last goal was done).
 	local m, x, y = R.Where()
 	steps[#steps + 1] = { r = cur.r, s = cur.s, t = math.floor(cur.t + 0.5), xp = cur.xp or 0, d = cur.d or 0, lvl = cur.lvl, how = how,
-		v = cur.v, k = cur.k or 0, yd = math.floor((cur.yd or 0) + 0.5), fly = math.floor((cur.fly or 0) + 0.5),
+		v = cur.v, src = cur.src, k = cur.k or 0, yd = math.floor((cur.yd or 0) + 0.5), fly = math.floor((cur.fly or 0) + 0.5),
 		grp = math.floor((cur.grp or 0) + 0.5), m = m, x = x and math.floor(x * 1000 + 0.5), y = y and math.floor(y * 1000 + 0.5) }
 	while #steps > MAX_STEPS do table.remove(steps, 1) end
 	local route = bucket(log.routes, cur.r)
@@ -259,16 +260,21 @@ local function close(log, how)
 	elseif how == "done" then route.steps = (route.steps or 0) + 1 end
 end
 
-local function open(log, route, step)
+local function open(log, route, step, src)
 	if step then
-		-- v: the Pathwise version (step numbers change between releases).
-		log.cur = { r = route, s = step, t = 0, xp = 0, d = 0, lvl = level(), v = S.VERSION, k = 0, yd = 0, fly = 0, grp = 0 }
+		-- v: the version whose routes the step numbers are (they change between
+		-- releases): Pathwise's, or Insights' own copy of the routes (the same
+		-- release). src: who said where you are: "guide" (Pathwise) or "quests"
+		-- (Track.lua, from your quest log, without Pathwise).
+		log.cur = { r = route, s = step, t = 0, xp = 0, d = 0, lvl = level(), v = S.VERSION or ns.VERSION, k = 0, yd = 0,
+			fly = 0, grp = 0, src = src or "guide" }
 	else
 		bucket(log.routes, route).done = true -- the route is finished
 	end
 end
 
--- Pathwise's GUIDE_STEP (Guide/Engine.lua): the live step moved.
+-- The live step moved: Pathwise's GUIDE_STEP (Guide/Engine.lua), or
+-- Track.lua's when Pathwise is not installed.
 function R.OnStep(info)
 	if not recording() or type(info) ~= "table" or not info.route then return end
 	local log = R.Log()
@@ -280,10 +286,14 @@ function R.OnStep(info)
 	else
 		close(log, info.how)
 	end
-	open(log, info.route, info.step)
+	open(log, info.route, info.step, info.src)
 	S.Fire("INSIGHTS_UPDATED")
 end
-S.On("GUIDE_STEP", R.OnStep)
+-- Pathwise's message (only when Pathwise is installed: it times the steps).
+do
+	local P = ns.Pathwise()
+	if P and P.On then P.On("GUIDE_STEP", R.OnStep) end
+end
 
 ---------------------------------------------------------------------------
 -- Quests: how long each took (played time) and what it paid
@@ -319,7 +329,7 @@ function R.OnRemoved(q)
 	if done then return end
 	log.open[q] = nil
 	keepQuest(log, { q = q, t = math.floor(log.played - taken.p + 0.5), xp = 0, lvl = taken.lvl,
-		am = taken.m, ax = taken.x, ay = taken.y, ab = true })
+		am = taken.m, ax = taken.x, ay = taken.y, ab = true, at = math.floor(log.played + 0.5) })
 end
 
 -- QUEST_TURNED_IN: questID, xpReward, moneyReward.
@@ -335,7 +345,7 @@ function R.OnTurnedIn(q, xp)
 	local m, x, y = R.Where()
 	keepQuest(log, { q = q, t = taken and math.floor(log.played - taken.p + 0.5) or nil, xp = tonumber(xp) or 0,
 		lvl = taken and taken.lvl or level(), am = taken and taken.m, ax = taken and taken.x, ay = taken and taken.y,
-		tm = m, tx = pos3(x), ty = pos3(y) })
+		tm = m, tx = pos3(x), ty = pos3(y), at = math.floor(log.played + 0.5) })
 	if taken then
 		local t = math.floor(log.played - taken.p + 0.5)
 		-- Taken and handed in on the spot is not a "fastest" quest.

@@ -121,8 +121,8 @@ local function pct(a, b) return b > 0 and math.floor(100 * a / b + 0.5) or 0 end
 -- Routes are kept apart by the Pathwise version the steps were timed on:
 -- step numbers change between releases.
 local routes, levels, quests, deaths, versions, chars = {}, {}, {}, {}, {}, 0
-local function route(id, version)
-	local key = id .. (version and ("  @ " .. version) or "")
+local function route(id, version, src)
+	local key = id .. (version and ("  @ " .. version) or "") .. (src == "quests" and "  [from quest logs, without Pathwise]" or "")
 	local r = routes[key]
 	if not r then
 		r = { key = key, id = id, players = {}, finished = {}, rates = {}, steps = {} }
@@ -144,7 +144,9 @@ for _, p in pairs(players) do
 	if p.version then versions[p.version] = (versions[p.version] or 0) + 1 end
 	for _, s in ipairs(p.steps) do
 		if s.route then
-			local r = route(s.route, s.version)
+			-- Steps worked out from the quest log (players without Pathwise)
+			-- are kept apart from those Pathwise's guide timed.
+			local r = route(s.route, s.version, s.src)
 			r.players[p.id] = true
 			local st = r.steps[s.step]
 			if not st then

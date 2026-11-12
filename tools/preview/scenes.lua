@@ -282,9 +282,9 @@ return {
 		["insights-full"] = function(ns)
 			onRoute(ns)
 			SlashCmdList.PATHWISEINSIGHTS("")
-			PathwiseInsights:ClearAllPoints()
-			PathwiseInsights:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 410, -40)
-			PathwiseInsights:SetSize(780, (UIParent:GetHeight() or 900) - 80)
+			PathwiseInsightsWindow:ClearAllPoints()
+			PathwiseInsightsWindow:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 410, -40)
+			PathwiseInsightsWindow:SetSize(780, (UIParent:GetHeight() or 900) - 80)
 			SlashCmdList.PATHWISEINSIGHTS("") -- closed,
 			SlashCmdList.PATHWISEINSIGHTS("") -- and drawn again at that size
 		end,
@@ -292,9 +292,9 @@ return {
 			onRoute(ns)
 			SlashCmdList.PATHWISEINSIGHTS("")
 			-- Taller than the usual 640 (drag the corner grip), to show the whole page.
-			PathwiseInsights:ClearAllPoints()
-			PathwiseInsights:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 410, -40)
-			PathwiseInsights:SetSize(780, 900)
+			PathwiseInsightsWindow:ClearAllPoints()
+			PathwiseInsightsWindow:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 410, -40)
+			PathwiseInsightsWindow:SetSize(780, 900)
 			stub.clickLabelText("Make a share code")
 		end,
 		["insights-zone"] = function(ns)

@@ -27,6 +27,7 @@
     "recipebook": "node tools/data/recipebook.js",
     "efficiency": "lua5.1 tools/routes/efficiency.lua",
     "insights": "lua5.1 tools/insights/import.lua",
+    "insights:routes": "lua5.1 tools/insights/routes.lua",
     "preview": "python3 tools/preview/preview.py && node tools/preview/shot.js"
   }
 }
