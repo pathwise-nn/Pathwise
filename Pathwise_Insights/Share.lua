@@ -251,13 +251,13 @@ function Sh.Read(code)
 end
 
 ---------------------------------------------------------------------------
--- In game: the share page (a suite panel, beside the window)
+-- In game: the character's code (the window's Share tab draws it)
 ---------------------------------------------------------------------------
 
 local S = Pathwise and Pathwise.Suite
 if not S then return Sh end
 
-local GITHUB_FORM = "https://github.com/pathwise-nn/Pathwise/issues/new?template=leveling_numbers.yml"
+Sh.GITHUB_FORM = "https://github.com/pathwise-nn/Pathwise/issues/new?template=leveling_numbers.yml"
 
 -- The character's code, with its id made the first time.
 function Sh.CodeFor(key)
@@ -267,42 +267,9 @@ function Sh.CodeFor(key)
 	return Sh.Make(log), log
 end
 
-local shown -- the character whose code the page shows
-
-function Sh.Build()
-	local R, St = ns.Recorder, ns.Stats
-	local key = shown or R.CharKey()
-	local code, log = Sh.CodeFor(key)
-	local steps = math.min(#(log.steps or {}), Sh.MAX_STEPS)
-	local rows = { { "heading", "Share with Pathwise" } }
-	rows[#rows + 1] = { "text", ("%s: your numbers help tune the guides — how long each step really takes, the ones people skip, where they get stuck."):format(St.CharLabel(log, key)), "insights" }
-	rows[#rows + 1] = { "heading", "What is in it" }
-	local quests = math.min(#(log.questLog or {}), Sh.MAX_QUESTS)
-	local deaths = math.min(#(log.deathLog or {}), Sh.MAX_DEATHS)
-	rows[#rows + 1] = { "text", ("Race, class, faction and level; time played and XP; your Pathwise version."):format() }
-	rows[#rows + 1] = { "text", ("%d guide steps: how long each took, its XP, kills and deaths, the yards you walked, time flying and in a group, and where it ended."):format(steps) }
-	rows[#rows + 1] = { "text", ("%d quests: how long from taking to handing in, the XP, and where you took and handed them in (or that you abandoned them)."):format(quests) }
-	rows[#rows + 1] = { "text", ("%d deaths: where, at what level, on which step. And your time and XP by route, level and zone."):format(deaths) }
-	rows[#rows + 1] = { "text", "Not in it: your character's name, realm or guild, your path on the map, or anyone else. A random number stands for the character, so a newer code replaces an older one.", "muted" }
-	rows[#rows + 1] = { "heading", "Your code" }
-	rows[#rows + 1] = { "text", "Click the box, press Ctrl+A then Ctrl+C. Nothing is sent from the game." }
-	rows[#rows + 1] = { "copy", code, 6 }
-	rows[#rows + 1] = { "heading", "Send it" }
-	rows[#rows + 1] = { "text", "On GitHub: copy the link, open it in your browser and paste the code into the form.", "muted" }
-	rows[#rows + 1] = { "copy", GITHUB_FORM, 1 }
-	if S.DISCORD then
-		rows[#rows + 1] = { "text", "Or paste it in the Pathwise Discord. Not in the server yet? Copy the invite.", "muted" }
-		rows[#rows + 1] = { "copy", S.DISCORD, 1 }
-	end
-	rows[#rows + 1] = S.CloseButtons()
-	return rows
-end
-
+-- The Share tab of the window (Window.lua, Win.DrawShare) shows the code.
 function Sh.Open(key)
-	shown = key
-	S.Open("insightsshare")
+	ns.Window.Open("share", key)
 end
-
-S.Panel("insightsshare", Sh.Build)
 
 return Sh

@@ -5,7 +5,9 @@
 -- XP fastest) and the trail you walked and flew.
 --
 -- In the suite's look (v2, like the hub and the tracker): a rounded window
--- with the Pathwise logo, a pin, and a corner grip to make it any size.
+-- with the Pathwise logo, a pin, and a corner grip to make it any size. Its
+-- colours are the theme's (all of Pathwise's themes, light and dark, and
+-- your class or own accent on top), as in the hub.
 -- Drag it by its header (insights.point, insights.size). Escape closes it.
 
 local ADDON, ns = ...
@@ -88,8 +90,8 @@ end
 -- A tab or choice: `on` fills it with the accent.
 local function paintChip(b, hover)
 	if b.on then
-		local a = T.Color("insights")
-		T.PaintRound(b, { a[1], a[2], a[3], hover and 0.24 or 0.16 }, "insights")
+		local a = T.Color("accent")
+		T.PaintRound(b, { a[1], a[2], a[3], hover and 0.24 or 0.16 }, "accent")
 		textColor(b.text, "text")
 	else
 		T.PaintRound(b, hover and "hover" or "bg2", "border")
@@ -231,10 +233,10 @@ local function build()
 	-- The pages: a segmented row in the header, like the hub's tabs.
 	W.header = CreateFrame("Frame", nil, head)
 	W.header:SetPoint("CENTER", head, "CENTER", 0, 0)
-	W.header:SetSize(200, 34)
+	W.header:SetSize(297, 34)
 	T.Round(W.header, "bg2", false, 8)
 	W.pages = {}
-	for i, p in ipairs({ { "overview", "Overview" }, { "map", "Map" } }) do
+	for i, p in ipairs({ { "overview", "Overview" }, { "map", "Map" }, { "share", "Share" } }) do
 		local b = CreateFrame("Button", nil, W.header)
 		b:SetSize(97, 28)
 		b:SetPoint("LEFT", 3 + (i - 1) * 97, 0)
@@ -363,7 +365,7 @@ local function bars(parent, x, y, width, height, values, labels)
 	local bw = (width - (n - 1) * gap) / n
 	for i, v in ipairs(values) do
 		local h = top > 0 and floor(v / top * height + 0.5) or 0
-		if h > 0 then box(parent, "ARTWORK", x + (i - 1) * (bw + gap), y + height - h, bw, h, "insights", 0.9) end
+		if h > 0 then box(parent, "ARTWORK", x + (i - 1) * (bw + gap), y + height - h, bw, h, "accent", 0.9) end
 		local _, fs = text(parent, x + (i - 1) * (bw + gap) - 6, y + height + 4, bw + 12, labels[i], "small", "muted", "CENTER")
 	end
 	return y + height + 18
@@ -465,7 +467,7 @@ local function drawOverview(log, key)
 			if i > 10 then break end
 			text(c, 0, y, 160, z.name, "body", "text")
 			box(c, "ARTWORK", 170, y + 4, width - 170 - 200, 8, "bg2", 1)
-			box(c, "OVERLAY", 170, y + 4, (width - 170 - 200) * z.t / top, 8, "insights", 0.9)
+			box(c, "OVERLAY", 170, y + 4, (width - 170 - 200) * z.t / top, 8, "accent", 0.9)
 			local bits = St.Duration(z.t) .. "  ·  " .. St.RateText(z.xp, z.t)
 			y = text(c, width - 190, y, 190, bits, "meta", "text2", "RIGHT") + 6
 		end
@@ -499,7 +501,7 @@ local function drawOverview(log, key)
 
 	y = heading(c, y, width, "Share with Pathwise")
 	y = text(c, 0, y, width, "Send this character's numbers to help tune the guides: real step and quest times, the steps people skip, where they get stuck or die, and NPCs that are not where the guide says. You see what is in the code first; no name or realm is in it.", "meta", "text2") + 8
-	chip(c, 0, y, "Make a share code", false, function() ns.Share.Open(key) end)
+	chip(c, 0, y, "Make a share code", false, function() Win.Open("share", key) end)
 	y = y + 34
 	y = text(c, 0, y, width, "Where you stand among other players comes once enough characters are shared.", "small", "muted")
 
@@ -720,7 +722,7 @@ local function drawMap(log, viewH)
 		if flag ~= 1 then
 			box(canvas, "OVERLAY", px(u) - 1, py(v) - 1, 2, 2, "text", 0.6)
 		elseif flights then
-			box(canvas, "OVERLAY", px(u) - 1, py(v) - 1, 2, 2, "insights", 0.8)
+			box(canvas, "OVERLAY", px(u) - 1, py(v) - 1, 2, 2, "accent", 0.8)
 		end
 	end
 	-- You are here.
@@ -736,8 +738,149 @@ local function drawMap(log, viewH)
 	text(c, 0, y, 20, "0", "small", "muted")
 	local most = layer == "time" and (St.Duration(top) .. " in one spot") or (St.Number(top) .. " XP/h or more")
 	text(c, 24 + lw + 8, y, 260, most, "small", "muted")
-	text(c, width - 320, y, 320, "White: your path" .. (flights and "  ·  Green: flights" or ""), "small", "muted", "RIGHT")
+	text(c, width - 320, y, 320, "White: your path" .. (flights and "  ·  In colour: flights" or ""), "small", "muted", "RIGHT")
 	return y + 20
+end
+
+---------------------------------------------------------------------------
+-- Share
+---------------------------------------------------------------------------
+
+-- A card: a raised, rounded box; what goes in it is drawn on it.
+local function card(parent, x, y, w, h)
+	local f = pool("card" .. tostring(parent), function()
+		local f = CreateFrame("Frame", nil, parent)
+		T.Round(f, "bg2", "divider", 10)
+		return f
+	end)
+	f:ClearAllPoints()
+	f:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -y)
+	f:SetSize(w, h or 10)
+	return f
+end
+
+-- A box to copy from: click it, Ctrl+A, Ctrl+C. Typing in it changes nothing.
+local function copyBox(parent, x, y, w, lines, value)
+	local f = pool("copy" .. tostring(parent), function()
+		local f = CreateFrame("Frame", nil, parent)
+		T.Round(f, "bg", "border", 6)
+		local e = CreateFrame("EditBox", nil, f)
+		e:SetMultiLine(true)
+		e:SetAutoFocus(false)
+		e:SetPoint("TOPLEFT", 8, -6)
+		e:SetPoint("BOTTOMRIGHT", -8, 6)
+		if not e:SetFont(T.FONTS.regular, 11, "") then e:SetFont("Fonts\\FRIZQT__.TTF", 11, "") end
+		e:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+		e:SetScript("OnMouseUp", function(self) self:SetFocus() self:HighlightText() end)
+		e:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+		e:SetScript("OnTextChanged", function(self, user)
+			if user and f.value and self:GetText() ~= f.value then self:SetText(f.value) self:HighlightText() end
+		end)
+		f.box = e
+		return f
+	end)
+	f:ClearAllPoints()
+	f:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -y)
+	f:SetSize(w, 12 + lines * 14)
+	f.value = value
+	local col = T.Color("text2")
+	f.box:SetTextColor(col[1], col[2], col[3])
+	f.box:SetText(value)
+	return y + 12 + lines * 14
+end
+
+-- Cards in a row, each as tall as the tallest: draw(card, w) -> its height.
+local function cardRow(parent, y, width, n, gap, draw)
+	local w = (width - (n - 1) * gap) / n
+	local cards, tallest = {}, 0
+	for i = 1, n do
+		local f = card(parent, (i - 1) * (w + gap), y, w)
+		cards[i] = f
+		tallest = max(tallest, draw(i, f, w))
+	end
+	for _, f in ipairs(cards) do f:SetHeight(tallest) end
+	return y + tallest
+end
+
+function Win.DrawShare(log, key)
+	local c, width = W.child, W.pageW
+	local Sh = ns.Share
+	local code = Sh.CodeFor(key)
+	local y = 0
+	y = text(c, 0, y, width, "Help tune the guides", "quest", "text")
+	y = text(c, 0, y + 2, width, St.CharLabel(log, key) .. ": your times show how long each step really takes, the steps people skip, where they get stuck or die, and NPCs that are not where the guide says. Nothing is sent from the game: you copy a code and send it.", "meta", "text2") + 14
+
+	-- What is in the code: a card for each kind, with how many.
+	local steps = min(#log.steps, Sh.MAX_STEPS)
+	local quests = min(#log.questLog, Sh.MAX_QUESTS)
+	local deaths = min(#log.deathLog, Sh.MAX_DEATHS)
+	local kinds = {
+		{ "Guide steps", St.Number(steps), "How long each took, its XP, kills and deaths, the yards you walked, time flying and in a group, where it ended, and your Pathwise version." },
+		{ "Quests", St.Number(quests), "How long from taking each to handing it in, the XP it paid, and where you took and handed it in, or that you abandoned it." },
+		{ "Deaths", St.Number(deaths), "Where, at what level, and on which step." },
+		{ "Totals", "", "Race, class, faction and level; time and XP by route, level and zone." },
+	}
+	y = text(c, 0, y, width, "WHAT IS IN YOUR CODE", "label", "text2") + 6
+	local cols = width >= 700 and 4 or 2
+	for row = 0, math.ceil(#kinds / cols) - 1 do
+		y = cardRow(c, y, width, cols, 10, function(i, f, w)
+			local k = kinds[row * cols + i]
+			if not k then f:Hide() return 0 end
+			local cy = text(f, 14, 12, w - 28, k[1], "meta", "text2")
+			if k[2] ~= "" then cy = text(f, 14, cy + 2, w - 28, k[2], "number", "text") end
+			cy = text(f, 14, cy + 4, w - 28, k[3], "small", "muted")
+			return cy + 14
+		end) + 10
+	end
+
+	-- Never in it, and the code.
+	y = y + 6
+	y = cardRow(c, y, width, width >= 700 and 2 or 1, 10, function(i, f, w)
+		if i == 1 then
+			local cy = text(f, 14, 12, w - 28, "Your code", "window", "text")
+			cy = text(f, 14, cy + 4, w - 28, "Click the box, press Ctrl+A, then Ctrl+C.", "small", "muted") + 8
+			cy = copyBox(f, 14, cy, w - 28, 6, code)
+			return cy + 14
+		end
+		local cy = text(f, 14, 12, w - 28, "Never in it", "window", "text")
+		for _, line in ipairs({ "Your character's name, realm or guild", "Your path on the map", "Anything about other players" }) do
+			cy = text(f, 14, cy + 6, w - 28, "·  " .. line, "meta", "text2")
+		end
+		cy = text(f, 14, cy + 10, w - 28, "A random number stands for the character, so a newer code replaces an older one.", "small", "muted")
+		return cy + 14
+	end)
+	if width < 700 then
+		-- One column: the privacy card under the code.
+		y = cardRow(c, y + 10, width, 1, 10, function(_, f, w)
+			local cy = text(f, 14, 12, w - 28, "Never in it", "window", "text")
+			cy = text(f, 14, cy + 6, w - 28, "Your character's name, realm or guild, your path on the map, or anything about other players.", "meta", "text2")
+			return cy + 14
+		end)
+	end
+
+	-- Where to send it.
+	y = y + 16
+	y = text(c, 0, y, width, "SEND IT", "label", "text2") + 6
+	local places = { { "On GitHub", "Copy the link, open it in your browser, and paste your code into the form.", ns.Share.GITHUB_FORM } }
+	if S.DISCORD then places[#places + 1] = { "On Discord", "Paste your code in the Pathwise Discord. Not in the server yet? Copy the invite.", S.DISCORD } end
+	y = cardRow(c, y, width, width >= 700 and #places or 1, 10, function(i, f, w)
+		local p = places[i]
+		if not p then f:Hide() return 0 end
+		local cy = text(f, 14, 12, w - 28, p[1], "window", "text")
+		cy = text(f, 14, cy + 4, w - 28, p[2], "small", "muted") + 8
+		cy = copyBox(f, 14, cy, w - 28, 2, p[3])
+		return cy + 14
+	end)
+	if width < 700 and #places > 1 then
+		y = cardRow(c, y + 10, width, 1, 10, function(_, f, w)
+			local p = places[2]
+			local cy = text(f, 14, 12, w - 28, p[1], "window", "text")
+			cy = text(f, 14, cy + 4, w - 28, p[2], "small", "muted") + 8
+			cy = copyBox(f, 14, cy, w - 28, 2, p[3])
+			return cy + 14
+		end)
+	end
+	return y + 12
 end
 
 ---------------------------------------------------------------------------
@@ -747,10 +890,10 @@ end
 local function drawHeader()
 	for _, b in ipairs(W.pages) do
 		local on = b.page == state.page
-		local a = T.Color("insights")
+		local a = T.Color("accent")
 		T.PaintRound(b, on and { a[1], a[2], a[3], 0.16 } or "bg2")
 		textColor(b.text, on and "text" or "text2")
-		paint(b.line, "insights")
+		paint(b.line, "accent")
 		b.line:SetShown(on)
 	end
 	W.logo:Paint()
@@ -774,16 +917,18 @@ draw = function()
 	W.scroll:SetPoint("BOTTOMRIGHT", W.frame, "BOTTOMRIGHT", -PAD + 6, PAD)
 	local view = fh - (HEADER_H + 12 + topH + 6) - PAD
 	local h
-	if state.page == "map" then h = drawMap(pick.log, view) else h = drawOverview(pick.log, pick.key) end
+	if state.page == "map" then h = drawMap(pick.log, view)
+	elseif state.page == "share" then h = Win.DrawShare(pick.log, pick.key)
+	else h = drawOverview(pick.log, pick.key) end
 	W.child:SetHeight(max(1, h))
 	W.range = max(0, h - view)
 	if (W.scroll:GetVerticalScroll() or 0) > W.range then W.scroll:SetVerticalScroll(W.range) end
 end
 Win.Draw = draw
 
-function Win.Open(page)
+function Win.Open(page, key)
 	if not W.frame then build() end
-	state.char = state.char or R.CharKey()
+	state.char = key or state.char or R.CharKey()
 	state.page = page or state.page
 	state.confirm = nil
 	W.frame:Show()

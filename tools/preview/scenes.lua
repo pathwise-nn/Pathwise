@@ -291,6 +291,10 @@ return {
 		["insights-share"] = function(ns)
 			onRoute(ns)
 			SlashCmdList.PATHWISEINSIGHTS("")
+			-- Taller than the usual 640 (drag the corner grip), to show the whole page.
+			PathwiseInsights:ClearAllPoints()
+			PathwiseInsights:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 410, -40)
+			PathwiseInsights:SetSize(780, 900)
 			stub.clickLabelText("Make a share code")
 		end,
 		["insights-zone"] = function(ns)

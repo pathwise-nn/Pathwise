@@ -407,22 +407,44 @@ test("insights: the share code: what goes in, what never does, and reading it ba
 	ok(Sh.Read(code:sub(1, 40) .. "\n  " .. code:sub(41)), "a pasted code with a line break")
 end)
 
-test("insights: the share page shows the code, what is in it, and where to send it", function()
+test("insights: the Share tab shows the code, what is in it, and where to send it; it resizes with the window", function()
 	local stub, ns, ins = setup()
+	local Win = ins.Window
 	ins.Recorder.Play(120)
-	ins.Window.Open()
-	ok(stub.clickLabelText("Make a share code"), "the button")
-	ok(ns.Panels.IsOpen("insightsshare"), "the share page")
+	Win.Open()
+	ok(stub.clickLabelText("Make a share code"), "the button on the Overview")
+	eq(Win.state.page, "share", "the Share tab")
 	local texts = stub.texts()
-	ok(contains(texts, "SHARE WITH PATHWISE"), "its title")
-	ok(contains(texts, "Not in it: your character's name, realm or guild"), "what is left out")
-	local found
+	for _, want in ipairs({ "Help tune the guides", "WHAT IS IN YOUR CODE", "Guide steps", "Quests", "Deaths", "Totals",
+		"Your code", "Never in it", "Your character's name, realm or guild", "SEND IT", "On GitHub", "On Discord" }) do
+		ok(contains(texts, want), "shows " .. want)
+	end
+	local boxes = {}
 	for _, f in ipairs(stub.frames) do
 		local t = rawget(f, "text")
-		if type(t) == "string" and t:match("^PWI1:") and f.shown then found = t end
+		if f.kind == "EditBox" and type(t) == "string" and f.shown then boxes[#boxes + 1] = t end
 	end
-	ok(found, "the code in a copy box")
-	ok(Pathwise.Suite.DISCORD, "the Discord invite")
+	ok(boxes[1] and boxes[1]:match("^PWI1:"), "the code in a box to copy")
+	ok(contains(boxes, "github.com/pathwise-nn/Pathwise/issues/new?template=leveling_numbers.yml"), "the GitHub form")
+	ok(contains(boxes, Pathwise.Suite.DISCORD), "the Discord invite")
+	ok(ins.Share.Read(boxes[1]), "a code that reads back")
+	-- Typing in the box changes nothing.
+	for _, f in ipairs(stub.frames) do
+		if f.kind == "EditBox" and f.text == boxes[1] then
+			f:SetText("hello")
+			f.scripts.OnTextChanged(f, true)
+			eq(f.text, boxes[1], "the code stays")
+		end
+	end
+	-- The tabs: Overview, Map, Share.
+	ok(stub.clickLabelText("Overview"), "back to the Overview")
+	eq(Win.state.page, "overview")
+	ok(stub.clickLabelText("Share"), "the Share tab from the header")
+	eq(Win.state.page, "share")
+	-- Narrow: the cards go one under another, still all there.
+	PathwiseInsights:SetWidth(640)
+	Win.Draw()
+	ok(contains(stub.texts(), "On Discord"), "narrow")
 end)
 
 test("insights: the import tool reads codes, keeps the newest per character, and flags steps", function()

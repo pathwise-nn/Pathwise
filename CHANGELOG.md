@@ -19,13 +19,15 @@ that version's section.
   walked and your flights, over the game's own map; zoomed to where you
   went, or the whole map.
 - In the suite's look: the Pathwise logo, the hub's tabs and cards, your
-  faction's crest, a pin, and a corner grip to make it any size; it follows
-  your theme and accent.
+  faction's crest, a pin, and a corner grip to make any tab any size. Its
+  colours are your theme's (all 17, light and dark) with your class or own
+  accent on top, as in the hub.
 - Open it from its minimap button (right-click: the map), Settings >
   Pathwise suite, or `/pwinsights` (`/pwinsights map`).
 - Time counts only while you play: AFK and loading screens are left out.
   Recording can be turned off.
-- Share with Pathwise: a share code for a character, to paste in a GitHub
+- Share with Pathwise (the window's Share tab, laid out like the hub): a
+  share code for a character, to paste in a GitHub
   form or the Pathwise Discord, so we can tune the routes. It holds each
   guide step's time, XP, kills, deaths, yards walked, time flying and in a
   group, and where it ended (with the Pathwise version), each quest's time
