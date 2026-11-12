@@ -327,7 +327,7 @@ end)
 test("insights: the window: tabs per character, tiles, records, the map; delete asks first", function()
 	local stub, ns, ins = setup({ before = continent })
 	local R, Win = ins.Recorder, ins.Window
-	PathwiseInsightsData.chars["Alt-Test Realm"] = { race = "Gnome", class = "Warlock", level = 18, last = 1 }
+	PathwiseInsightsData.chars["Alt-Test Realm"] = { race = "Gnome", class = "Warlock", faction = "Alliance", level = 18, last = 1 }
 	stub.moveTo(1420, 50, 50)
 	R.Tick(1)
 	R.Play(600)
@@ -342,8 +342,10 @@ test("insights: the window: tabs per character, tiles, records, the map; delete 
 		"Records", "When you play", "Routes", "Insights (test)", "Zones", "Tirisfal Glades", "Where you stand" }) do
 		ok(contains(texts, want), "shows " .. want)
 	end
+	eq(Win.frames.crest.faction, "Horde", "an Undead: the Horde crest")
 	ok(stub.clickLabelText("Gnome Warlock"), "the alt's tab")
 	ok(contains(stub.texts(), "Gnome  ·  Warlock  ·  Level 18"), "the alt's numbers")
+	eq(Win.frames.crest.faction, "Alliance", "a Gnome: the Alliance crest")
 	ok(stub.clickLabelText("Delete this character"), "Delete")
 	ok(PathwiseInsightsData.chars["Alt-Test Realm"], "not yet")
 	ok(stub.clickLabelText("Yes, delete it"), "Yes")

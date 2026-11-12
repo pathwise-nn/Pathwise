@@ -151,10 +151,13 @@ local function insightsLog()
 	}
 	PathwiseInsightsData = { schema = 2, chars = {
 		["Aldric-Forever"] = me,
-		["Fizzwick-Forever"] = { name = "Fizzwick", race = "Gnome", class = "Warlock", level = 18, last = at(18, 20), played = 48700 },
-		["Thalanor-Forever"] = { name = "Thalanor", race = "Night Elf", class = "Hunter", level = 30, last = at(17, 22), played = 112000 },
+		["Fizzwick-Forever"] = { name = "Fizzwick", race = "Gnome", class = "Warlock", faction = "Alliance", level = 18, last = at(18, 20), played = 48700 },
+		["Thalanor-Forever"] = { name = "Thalanor", race = "Night Elf", class = "Hunter", faction = "Alliance", level = 30, last = at(17, 22), played = 112000 },
 	} }
 	UnitName = function() return "Aldric" end
+	-- The scene's character is a Human Warrior (the stub's own answers are an Undead Mage's).
+	UnitRace = function() return "Human", "Human", 1 end
+	UnitClass = function() return "Warrior", "WARRIOR", 1 end
 	GetRealmName = function() return "Forever" end
 	time = function() return at(19, 22) end
 end
