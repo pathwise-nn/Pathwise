@@ -127,7 +127,8 @@ function P.Build()
 			local bits = { P.Duration(z.t), rateText(z.xp, z.t) }
 			if z.b.lvl then bits[#bits + 1] = "came at level " .. z.b.lvl end
 			if z.d > 0 then bits[#bits + 1] = z.d .. (z.d == 1 and " death" or " deaths") end
-			rows[#rows + 1] = { "setting", z.name, table.concat(bits, "  ·  ") }
+			rows[#rows + 1] = { "text", z.name, "text" }
+			rows[#rows + 1] = { "text", table.concat(bits, "  ·  "), "muted" }
 		end
 	end
 

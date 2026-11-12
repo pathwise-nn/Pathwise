@@ -77,6 +77,25 @@ local function settingsAtThemes(ns)
 end
 
 -- Bags and Gear: a few items to show (as the Bags tests have them).
+-- Pathwise Insights: a sample of what a few hours' play leaves in its log
+-- (made-up numbers, for the picture only).
+local function insightsLog()
+	local E, W = "forever/alliance/human/01-elwynn-forest", "forever/alliance/02-westfall"
+	local function step(r, s, t, xp, how) return { r = r, s = s, t = t, xp = xp, d = 0, lvl = 10, how = how or "done" } end
+	PathwiseInsightsLog = {
+		schema = 1, since = 0, played = 20520, xp = 41800, deaths = 3,
+		steps = { step(E, 12, 720, 1400), step(E, 27, 840, 2100), step(E, 31, 610, 1600), step(E, 33, 90, 0, "skip"),
+			step(W, 9, 1260, 3100), step(W, 14, 980, 2700), step(W, 16, 60, 0, "skip") },
+		routes = { [E] = { t = 10920, xp = 21600, d = 1, steps = 38, skips = 2, done = true },
+			[W] = { t = 9600, xp = 20200, d = 2, steps = 21, skips = 1 } },
+		zones = { [1429] = { t = 10200, xp = 20900, d = 1, lvl = 1 }, [1436] = { t = 9100, xp = 19800, d = 2, lvl = 11 },
+			[1453] = { t = 1220, xp = 1100, d = 0, lvl = 10 } },
+		levels = { [14] = { t = 1500, xp = 2410, d = 0 }, [13] = { t = 2400, xp = 8000, d = 1 }, [12] = { t = 2100, xp = 7200, d = 1 },
+			[11] = { t = 1900, xp = 6500, d = 0 }, [10] = { t = 1700, xp = 5800, d = 1 } },
+		skills = { [197] = { from = 1, to = 48, ups = 47 }, [333] = { from = 1, to = 41, ups = 40 } },
+	}
+end
+
 local function bagItems()
 	local items = {
 		[201] = { "Broken Fang", 0, 5, 3, 12 }, [202] = { "Cracked Bone", 0, 5, 7, 15 }, [203] = { "Ghoul Rib", 1, 5, 0, 12 },
@@ -92,8 +111,8 @@ end
 return {
 	setup = setup,
 	-- Other Pathwise addons a scene loads with Pathwise.
-	addons = { bags = { "Pathwise_Gear", "Pathwise_Bags" }, gear = { "Pathwise_Gear" } },
-	before = { ["hub-horde"] = horde, ["tracker-horde"] = horde, bags = bagItems },
+	addons = { bags = { "Pathwise_Gear", "Pathwise_Bags" }, gear = { "Pathwise_Gear" }, insights = { "Pathwise_Insights" }, ["insights-end"] = { "Pathwise_Insights" } },
+	before = { ["hub-horde"] = horde, ["tracker-horde"] = horde, bags = bagItems, insights = insightsLog, ["insights-end"] = insightsLog },
 	scenes = {
 		hub = function(ns)
 			onRoute(ns)
@@ -181,7 +200,21 @@ return {
 			onRoute(ns)
 			ns.Panels.Open("gear")
 		end,
+		insights = function(ns)
+			onRoute(ns)
+			ns.Panels.Open("insights")
+		end,
+		-- The same page scrolled to its end (the panel's scroll frame).
+		["insights-end"] = function(ns)
+			onRoute(ns)
+			ns.Panels.Open("insights")
+			for _, f in ipairs(stub.frames) do
+				local wheel = f.kind == "ScrollFrame" and f.scripts.OnMouseWheel
+				local child = rawget(f, "scrollChild")
+				if wheel and child and f.parent and rawget(f.parent, "pin") then wheel(f, -100) end
+			end
+		end,
 	},
 	order = { "hub", "hub-horde", "hub-class", "hub-prof", "hub-wide", "hub-narrow", "tracker", "tracker-horde", "window", "minimal",
-		"settings", "settings-themes", "routebook", "routebook-page", "recipebook", "professions", "profession", "dungeons", "skip", "bags", "gear" },
+		"settings", "settings-themes", "routebook", "routebook-page", "recipebook", "professions", "profession", "dungeons", "skip", "bags", "gear", "insights", "insights-end" },
 }
