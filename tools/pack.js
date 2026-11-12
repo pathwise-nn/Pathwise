@@ -1,11 +1,11 @@
 'use strict';
 // Builds the release zips, one per CurseForge project: dist/<Addon>-<version>.zip
 // for Pathwise, Pathwise_Gear, Pathwise_Bags, PathwiseUI, Pathwise_Heal,
-// Pathwise_Encounters and Pathwise_Loot, each holding its addon folder
+// Pathwise_Encounters, Pathwise_Loot and Pathwise_Insights, each holding its addon folder
 // as players install it, with LICENSE and THIRD_PARTY.md inside it (the GPL
 // asks that the licence travels with every copy). Nothing is uploaded.
 //
-//   node tools/pack.js                  build all seven zips
+//   node tools/pack.js                  build all eight zips
 //   node tools/pack.js Pathwise_Gear    build only the zips named
 //   node tools/pack.js --list           print what would go in, build nothing
 //
@@ -29,7 +29,7 @@ function version() {
 // The addons, each its own CurseForge project and zip. Gear and Bags need
 // Pathwise installed (## Dependencies in their TOCs); Pathwise UI,
 // Pathwise Heal, Pathwise Encounters and Pathwise Loot work on their own (## OptionalDeps).
-const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI', 'Pathwise_Heal', 'Pathwise_Encounters', 'Pathwise_Loot'];
+const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI', 'Pathwise_Heal', 'Pathwise_Encounters', 'Pathwise_Loot', 'Pathwise_Insights'];
 
 // Every file of the addon folders asked for (all by default), sorted,
 // skipping dotfiles; then the licence files from the repository root, in

@@ -57,6 +57,7 @@ T.MODULES = {
 	explorer = hex("#4FD1C5"),
 	auction = hex("#E0956A"),
 	encounters = hex("#F07A86"),
+	insights = hex("#C7E86A"),
 }
 
 T.FONTS = {

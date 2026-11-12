@@ -11,7 +11,7 @@
 --   S.RegisterModule({ key, name, accent, about, open = fn })
 --       lists the addon in Settings > Pathwise suite; open() shows its panel.
 --   S.Modules() -> { module, ... }
---   S.Data, S.Quests, S.Dungeons, S.SetWaypoint: see below
+--   S.Data, S.Quests, S.Dungeons, S.SetWaypoint, S.Guide: see below
 --   S.MinimapButton(def)       the addon's own minimap button
 
 local ADDON, ns = ...
@@ -36,6 +36,24 @@ S.Quests = ns.Quests
 S.Dungeons = ns.Dungeons
 S.Professions = ns.Professions -- Known(), Recipes(line), BY_LINE
 function S.SetWaypoint(map, x, y, title) return ns.Nav.SetTarget(map, x, y, title) end
+
+-- The leveling guide, read only (Pathwise Insights). Listen for GUIDE_STEP
+-- (Guide/Engine.lua) to hear when the live step moves.
+--   S.Guide.Route() -> id, title (the route followed now, or nil)
+--   S.Guide.Step() -> the live step's number, or nil
+--   S.Guide.RouteInfo(id) -> { id, title, steps, levels = { lo, hi }, category } or nil
+S.Guide = {}
+function S.Guide.Route()
+	local r = ns.Engine and ns.Engine.Route()
+	if r then return r.id, r.title end
+end
+function S.Guide.Step() return ns.Engine and ns.Engine.LiveStep() end
+function S.Guide.RouteInfo(id)
+	local r = ns.Engine and ns.Engine.routes and ns.Engine.routes[id]
+	if not r then return nil end
+	return { id = r.id, title = r.title, steps = #r.steps, category = r.category or "Leveling",
+		levels = r.levels and { r.levels[1], r.levels[2] } or nil }
+end
 
 function S.Panel(kind, builder) ns.Panels.Register(kind, builder) end
 function S.Open(kind) ns.Panels.Open(kind) end

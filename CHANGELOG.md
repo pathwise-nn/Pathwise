@@ -6,6 +6,20 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Insights (new, needs Pathwise)
+- Your own leveling numbers: time played, XP an hour, deaths, and the same
+  for each route, zone and level; your slowest steps, steps skipped, and
+  profession skill-ups. Open it from its minimap button, Settings > Pathwise
+  suite, or `/pwinsights`.
+- Time counts only while you play: AFK and loading screens are left out.
+  Recording can be turned off, and a character's numbers cleared.
+- Saved per character on your computer (`PathwiseInsightsLog`); nothing is
+  sent anywhere. Sharing your numbers comes later. Not yet checked in game.
+
+### Pathwise
+- Suite addons can now hear when the guide's live step moves, and why
+  (`GUIDE_STEP`), and read the route followed (`Pathwise.Suite.Guide`).
+
 ## 0.3.1 (2026-11-11)
 
 The start of the 0.3 line: the whole Pathwise suite in the new look.

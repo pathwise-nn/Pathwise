@@ -1,0 +1,12 @@
+## Interface: 16001
+## Title: Pathwise Insights
+## Notes: Your leveling numbers with Pathwise: time and XP an hour per route, zone and level, deaths, slow and skipped steps, profession skill-ups. Kept on your computer. Part of Pathwise.
+## Author: leight_nn & florp
+## Version: 0.3.1
+## Dependencies: Pathwise
+## SavedVariablesPerCharacter: PathwiseInsightsLog
+## IconTexture: Interface\AddOns\Pathwise\Media\icon
+## X-License: GPL-3.0-only
+
+Recorder.lua
+Panel.lua
