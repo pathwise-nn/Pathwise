@@ -3,7 +3,8 @@
 -- and XP per route, zone and level, quests turned in (how long each took and
 -- what it paid), monsters killed, deaths, distance travelled, sessions and
 -- days, the hours of the day you play, profession skill-ups, and where you
--- went on each continent (a heat map and a trail).
+-- went on each continent and in each zone (a heat map and a trail), to draw
+-- over the game's own maps.
 --
 -- Everything stays in PathwiseInsightsData (saved for the account, in
 -- WTF\Account\...\SavedVariables): nothing leaves your computer.
@@ -23,6 +24,7 @@ local MAX_TRAIL = 12000 -- points per continent; past it, every other one goes
 local HITCH = 2 -- a frame longer than this (a loading screen) is not counted
 local GRID = 100 -- heat map cells across a continent
 local TRAIL_STEP = 0.002 -- a trail point at least this far (of the continent) from the last
+local ZONE_STEP = 0.005 -- the same in a zone (a zone is smaller: about as many yards)
 local SAMPLE = 1 -- seconds between looks at where you are
 
 R.GRID = GRID
@@ -73,7 +75,7 @@ local function fill(log)
 	log.kills = log.kills or 0
 	log.dist = log.dist or 0 -- yards
 	for _, k in ipairs({ "steps", "routes", "zones", "levels", "skills", "sessions", "days", "hours", "weekdays",
-		"open", "records", "heat", "trail", "conts" }) do list(log, k) end
+		"open", "records", "heat", "trail", "conts", "zonemaps" }) do list(log, k) end
 	-- steps: { r, s, t, xp, d, lvl, how }, oldest first
 	-- routes: id -> { t, xp, d, steps, skips, done }; zones: map -> { t, xp, d, lvl }
 	-- levels: level -> { t, xp, d, full } (full: seen from its start)
@@ -81,7 +83,8 @@ local function fill(log)
 	-- days: "2026-10-09" -> seconds; hours: 0-23 -> seconds; weekdays: 1-7 -> seconds
 	-- open: quest -> played seconds when taken; records: fastest/longest/best quest
 	-- heat: continent -> { [cell] = { t, xp } }; trail: continent -> { x, y, flag, ... }
-	-- conts: continent -> its name
+	-- conts: continent -> its name; zonemaps: zone -> its name (heat and trail
+	-- hold zones too, by their map id)
 	return log
 end
 
@@ -194,8 +197,8 @@ local function targets(log)
 	out[#out + 1] = bucket(log.levels, level())
 	if session then out[#out + 1] = session end
 	if here and not here.taxi then
-		local heat = list(log.heat, here.cont)
-		out[#out + 1] = bucket(heat, here.cell)
+		out[#out + 1] = bucket(list(log.heat, here.cont), here.cell)
+		if here.zone then out[#out + 1] = bucket(list(log.heat, here.zone), here.zcell) end
 	end
 	return out
 end
@@ -328,28 +331,51 @@ local function afk() return UnitIsAFK and UnitIsAFK("player") end
 -- Where you are, every SAMPLE seconds: the heat map cell, the trail, and
 -- the distance walked (or flown).
 local since = 0
+local function mapName(map)
+	local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(map)
+	return info and info.name or ("Map " .. map)
+end
+
+-- A trail point on map `map`, when far enough from the last one.
+local function addPoint(log, map, x, y, taxi, step)
+	local trail = list(log.trail, map)
+	local n = #trail
+	local lx, ly = n >= 3 and trail[n - 2] / 10000, n >= 3 and trail[n - 1] / 10000
+	local moved = lx and math.sqrt((x - lx) ^ 2 + (y - ly) ^ 2) or 1
+	if moved < step then return end
+	trail[n + 1] = math.floor(x * 10000 + 0.5)
+	trail[n + 2] = math.floor(y * 10000 + 0.5)
+	trail[n + 3] = taxi and 1 or 0
+	if #trail > MAX_TRAIL * 3 then
+		local kept = {}
+		for i = 1, #trail, 6 do kept[#kept + 1], kept[#kept + 2], kept[#kept + 3] = trail[i], trail[i + 1], trail[i + 2] end
+		log.trail[map] = kept
+	end
+end
+
+-- Where you stand in the zone (the map the game puts you on): zone, x, y.
+local function inZone(cont)
+	local map = mapNow()
+	if not (map and map ~= cont and C_Map and C_Map.GetPlayerMapPosition) then return nil end
+	local pos = C_Map.GetPlayerMapPosition(map, "player")
+	if not pos then return nil end
+	local x, y
+	if pos.GetXY then x, y = pos:GetXY() else x, y = pos.x, pos.y end
+	if not (x and y) or (x == 0 and y == 0) then return nil end
+	return map, x, y
+end
+
 function R.Sample()
 	local cont, x, y = onContinent()
 	if not cont then here = nil return end
 	local taxi = UnitOnTaxi and UnitOnTaxi("player") or false
 	local log = R.Log()
-	if not log.conts[cont] then
-		local info = C_Map.GetMapInfo(cont)
-		log.conts[cont] = info and info.name or ("Map " .. cont)
-	end
-	local trail = list(log.trail, cont)
-	local n = #trail
-	local lx, ly = n >= 3 and trail[n - 2] / 10000, n >= 3 and trail[n - 1] / 10000
-	local moved = lx and math.sqrt((x - lx) ^ 2 + (y - ly) ^ 2) or 1
-	if moved >= TRAIL_STEP then
-		trail[n + 1] = math.floor(x * 10000 + 0.5)
-		trail[n + 2] = math.floor(y * 10000 + 0.5)
-		trail[n + 3] = taxi and 1 or 0
-		if #trail > MAX_TRAIL * 3 then
-			local kept = {}
-			for i = 1, #trail, 6 do kept[#kept + 1], kept[#kept + 2], kept[#kept + 3] = trail[i], trail[i + 1], trail[i + 2] end
-			log.trail[cont] = kept
-		end
+	log.conts[cont] = log.conts[cont] or mapName(cont)
+	addPoint(log, cont, x, y, taxi, TRAIL_STEP)
+	local zone, zx, zy = inZone(cont)
+	if zone then
+		log.zonemaps[zone] = log.zonemaps[zone] or mapName(zone)
+		addPoint(log, zone, zx, zy, taxi, ZONE_STEP)
 	end
 	-- Yards: from the world position, when the last look was close by.
 	local inst, north, west
@@ -358,7 +384,8 @@ function R.Sample()
 		local d = math.sqrt((north - here.north) ^ 2 + (west - here.west) ^ 2)
 		if d < 300 then log.dist = log.dist + d end
 	end
-	here = { cont = cont, cell = cellOf(x, y), taxi = taxi, inst = inst, north = north, west = west }
+	here = { cont = cont, cell = cellOf(x, y), zone = zone, zcell = zone and cellOf(zx, zy), taxi = taxi,
+		inst = inst, north = north, west = west }
 end
 
 -- Counts `sec` seconds of play, unless you are AFK.

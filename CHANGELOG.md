@@ -14,9 +14,13 @@ that version's section.
   day, days in a row, fastest, longest and best-paying quest); the hours
   and days you play; time and XP an hour per route, zone and level; your
   slowest steps; profession skill-ups.
-- Map: a heat map of each continent you levelled on (time spent, or XP an
-  hour) with the path you walked and your flights, zoomed to where you
-  went or the whole continent.
+- Map: a heat map of each continent you levelled on, and of the zones you
+  spent the most time in (time spent, or XP an hour), with the path you
+  walked and your flights, over the game's own map; zoomed to where you
+  went, or the whole map.
+- In the suite's look: the Pathwise logo, the hub's tabs and cards, your
+  faction's crest, a pin, and a corner grip to make it any size; it follows
+  your theme and accent.
 - Open it from its minimap button (right-click: the map), Settings >
   Pathwise suite, or `/pwinsights` (`/pwinsights map`).
 - Time counts only while you play: AFK and loading screens are left out.

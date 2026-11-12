@@ -205,14 +205,22 @@ function St.Heat(log, cont, layer)
 	return out, top
 end
 
--- The continents with a trail or heat, by time spent: { { id, name, t } }.
-function St.Continents(log)
+-- The maps with a trail or heat, by time spent: { { id, name, t } }.
+local function maps(log, names)
 	local out = {}
-	for cont, name in pairs(log.conts) do
+	for cont, name in pairs(names) do
 		local t = 0
 		for _, b in pairs(log.heat[cont] or {}) do t = t + (b.t or 0) end
 		out[#out + 1] = { id = cont, name = name, t = t }
 	end
 	table.sort(out, function(a, b) return a.t > b.t end)
+	return out
+end
+
+function St.Continents(log) return maps(log, log.conts) end
+-- The zones you spent the most time in (the first `limit`).
+function St.Zones(log, limit)
+	local out = maps(log, log.zonemaps or {})
+	while limit and #out > limit do table.remove(out) end
 	return out
 end

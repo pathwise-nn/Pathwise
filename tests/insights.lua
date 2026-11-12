@@ -246,6 +246,11 @@ test("insights: where you went: heat map cells, a trail, flights apart, distance
 	R.Play(60)
 	local L = log()
 	eq(L.conts[1415], "Eastern Kingdoms")
+	-- The zone too, on its own map: Tirisfal at 50, 50.
+	eq(L.zonemaps[1420], "Tirisfal Glades")
+	eq(L.trail[1420][1], 5000)
+	ok(L.heat[1420][R.CellOf(0.5, 0.5)].t >= 60, "the zone's cell")
+	eq(ins.Stats.Zones(L)[1].name, "Tirisfal Glades")
 	eq(#L.trail[1415], 3, "one point")
 	eq(L.trail[1415][1], 4500)
 	eq(L.trail[1415][2], 3500)
@@ -332,7 +337,7 @@ test("insights: the window: tabs per character, tiles, records, the map; delete 
 	Win.Open()
 	ok(Win.Shown(), "open")
 	local texts = stub.texts()
-	for _, want in ipairs({ "PATHWISE INSIGHTS", "Overview", "Map", "Undead Mage lvl 3", "Gnome Warlock lvl 18",
+	for _, want in ipairs({ "Pathwise Insights", "Overview", "Map", "Undead Mage lvl 3", "Gnome Warlock lvl 18",
 		"Time played", "10 min", "XP per hour", "5,391", "Turned in", "Monsters killed", "Distance travelled",
 		"Records", "When you play", "Routes", "Insights (test)", "Zones", "Tirisfal Glades", "Where you stand" }) do
 		ok(contains(texts, want), "shows " .. want)
@@ -346,6 +351,8 @@ test("insights: the window: tabs per character, tiles, records, the map; delete 
 	ok(stub.clickLabelText("Map"), "the Map tab")
 	texts = stub.texts()
 	ok(contains(texts, "Eastern Kingdoms"), "the continent")
+	ok(stub.clickLabelText("Tirisfal Glades"), "a zone you went to")
+	ok(contains(stub.texts(), "in one spot"), "its heat map")
 	ok(contains(texts, "Time spent"), "the layers")
 	ok(contains(texts, "in one spot"), "the legend")
 	ok(stub.clickLabelText("XP an hour"), "the XP layer")

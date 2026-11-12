@@ -108,6 +108,21 @@ local function insightsLog()
 			end
 		end
 	end
+	-- Westfall on its own map: the same walk, seen closer (0-1 of the zone).
+	local zoneTrail, zoneHeat = {}, {}
+	for i = 1, #trail, 3 do
+		local x, y = (trail[i] / 10000 - 0.36) / 0.22, (trail[i + 1] / 10000 - 0.68) / 0.24
+		if x > 0 and x < 1 and y > 0 and y < 1 then
+			zoneTrail[#zoneTrail + 1], zoneTrail[#zoneTrail + 2], zoneTrail[#zoneTrail + 3] = math.floor(x * 10000), math.floor(y * 10000), trail[i + 2]
+			if trail[i + 2] == 0 then
+				local cell = math.floor(y * 100) * 100 + math.floor(x * 100)
+				local b = zoneHeat[cell] or { t = 0, xp = 0, d = 0 }
+				local stay = 60 + rnd() * 600
+				b.t, b.xp = b.t + stay, b.xp + stay * (1 + rnd() * 5)
+				zoneHeat[cell] = b
+			end
+		end
+	end
 	local hours, week = {}, {}
 	for hr = 0, 23 do hours[hr] = (hr >= 9 and hr <= 23) and math.floor(600 + 3000 * math.abs(math.sin(hr))) or (hr == 0 and 900 or 0) end
 	week = { 5200, 1400, 3700, 0, 4300, 3100, 3600 }
@@ -131,7 +146,8 @@ local function insightsLog()
 		records = { fastQuest = { q = 109, name = "Report to Gryan Stoutmantle", t = 42 },
 			slowQuest = { q = 155, name = "The Defias Brotherhood", t = 22000 },
 			bestQuest = { q = 166, name = "The Defias Brotherhood", xp = 3900 } },
-		heat = { [1415] = heat }, trail = { [1415] = trail }, conts = { [1415] = "Eastern Kingdoms" },
+		heat = { [1415] = heat, [1436] = zoneHeat }, trail = { [1415] = trail, [1436] = zoneTrail },
+		conts = { [1415] = "Eastern Kingdoms" }, zonemaps = { [1436] = "Westfall", [1429] = "Elwynn Forest", [1453] = "Stormwind City" },
 	}
 	PathwiseInsightsData = { schema = 2, chars = {
 		["Aldric-Forever"] = me,
@@ -158,8 +174,8 @@ end
 return {
 	setup = setup,
 	-- Other Pathwise addons a scene loads with Pathwise.
-	addons = { bags = { "Pathwise_Gear", "Pathwise_Bags" }, gear = { "Pathwise_Gear" }, insights = { "Pathwise_Insights" }, ["insights-map"] = { "Pathwise_Insights" } },
-	before = { ["hub-horde"] = horde, ["tracker-horde"] = horde, bags = bagItems, insights = insightsLog, ["insights-map"] = insightsLog },
+	addons = { bags = { "Pathwise_Gear", "Pathwise_Bags" }, gear = { "Pathwise_Gear" }, insights = { "Pathwise_Insights" }, ["insights-map"] = { "Pathwise_Insights" }, ["insights-zone"] = { "Pathwise_Insights" } },
+	before = { ["hub-horde"] = horde, ["tracker-horde"] = horde, bags = bagItems, insights = insightsLog, ["insights-map"] = insightsLog, ["insights-zone"] = insightsLog },
 	scenes = {
 		hub = function(ns)
 			onRoute(ns)
@@ -255,7 +271,12 @@ return {
 			onRoute(ns)
 			SlashCmdList.PATHWISEINSIGHTS("map")
 		end,
+		["insights-zone"] = function(ns)
+			onRoute(ns)
+			SlashCmdList.PATHWISEINSIGHTS("map")
+			stub.clickLabelText("Westfall")
+		end,
 	},
 	order = { "hub", "hub-horde", "hub-class", "hub-prof", "hub-wide", "hub-narrow", "tracker", "tracker-horde", "window", "minimal",
-		"settings", "settings-themes", "routebook", "routebook-page", "recipebook", "professions", "profession", "dungeons", "skip", "bags", "gear", "insights", "insights-map" },
+		"settings", "settings-themes", "routebook", "routebook-page", "recipebook", "professions", "profession", "dungeons", "skip", "bags", "gear", "insights", "insights-map", "insights-zone" },
 }

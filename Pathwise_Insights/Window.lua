@@ -4,7 +4,9 @@
 -- a continent with a heat map of where you spent your time (or earned your
 -- XP fastest) and the trail you walked and flew.
 --
--- Drag it anywhere (insights.point). Escape closes it.
+-- In the suite's look (v2, like the hub and the tracker): a rounded window
+-- with the Pathwise logo, a pin, and a corner grip to make it any size.
+-- Drag it by its header (insights.point, insights.size). Escape closes it.
 
 local ADDON, ns = ...
 local S, R, St = Pathwise.Suite, ns.Recorder, ns.Stats
@@ -14,13 +16,13 @@ local floor, max, min, sqrt = math.floor, math.max, math.min, math.sqrt
 local Win = {}
 ns.Window = Win
 
-Win.W, Win.H = 780, 640
+Win.W, Win.H = 780, 640 -- the usual size
+Win.MIN_W, Win.MIN_H, Win.MAX_W, Win.MAX_H = 640, 460, 1400, 1100
 local PAD = 16
-local HEADER_H = 36
-local COLS = 5
-local TILE_H, TILE_GAP = 58, 8
+local HEADER_H = 44
+local TILE_W, TILE_H, TILE_GAP = 140, 58, 8
 
-S.Defaults("insights", { point = nil, layer = "time", flights = true })
+S.Defaults("insights", { point = nil, size = nil, locked = false, layer = "time", flights = true })
 
 -- What is shown: the character (its key), the page, the continent.
 local state = { char = nil, page = "overview", cont = nil, confirm = nil, hidden = false, whole = false }
@@ -84,22 +86,32 @@ local function box(parent, layer, x, y, w, h, color, alpha)
 end
 
 -- A tab or choice: `on` fills it with the accent.
+local function paintChip(b, hover)
+	if b.on then
+		local a = T.Color("insights")
+		T.PaintRound(b, { a[1], a[2], a[3], hover and 0.24 or 0.16 }, "insights")
+		textColor(b.text, "text")
+	else
+		T.PaintRound(b, hover and "hover" or "bg2", "border")
+		textColor(b.text, hover and "text" or "text2")
+	end
+end
+
 local function chip(parent, x, y, label, on, onClick)
 	local b = pool("chip" .. tostring(parent), function()
 		local b = CreateFrame("Button", nil, parent)
-		T.Panel(b, "bg2", "border", 6)
+		T.Round(b, "bg2", "border", 6)
 		b:SetHeight(28)
 		b.text = T.Text(b, "button", "text2")
 		b.text:SetPoint("CENTER")
-		b:SetScript("OnEnter", function(self) if not self.on then paint(self.pwGround, "hover") end end)
-		b:SetScript("OnLeave", function(self) if not self.on then paint(self.pwGround, "bg2") end end)
+		b:SetScript("OnEnter", function(self) paintChip(self, true) end)
+		b:SetScript("OnLeave", function(self) paintChip(self, false) end)
 		return b
 	end)
 	b.on = on and true or false
 	b.text:SetText(label)
-	textColor(b.text, on and "bg" or "text")
-	paint(b.pwGround, on and "insights" or "bg2")
-	b:SetWidth(max(56, (b.text:GetStringWidth() or 40) + 34))
+	paintChip(b, false)
+	b:SetWidth(max(56, (b.text:GetStringWidth() or 40) + 40))
 	b:ClearAllPoints()
 	b:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -y)
 	b:SetScript("OnClick", onClick)
@@ -110,7 +122,7 @@ end
 local function tile(parent, x, y, w, label, value, sub)
 	local f = pool("tile" .. tostring(parent), function()
 		local f = CreateFrame("Frame", nil, parent)
-		T.Panel(f, "bg2", false, 6)
+		T.Round(f, "bg2", "divider", 8)
 		f.label = T.Text(f, "small", "muted")
 		f.label:SetPoint("TOPLEFT", 10, -8)
 		f.value = T.Text(f, "number", "text")
@@ -133,6 +145,8 @@ end
 
 -- Tiles in rows of COLS; returns the y under them.
 local function tiles(parent, y, width, list)
+	-- As many columns as fit (the window can be any width).
+	local COLS = max(3, min(7, floor((width + TILE_GAP) / (TILE_W + TILE_GAP))))
 	local w = (width - (COLS - 1) * TILE_GAP) / COLS
 	local rowH = 0
 	for i, t in ipairs(list) do
@@ -150,7 +164,13 @@ local function heading(parent, y, width, str)
 	line:ClearAllPoints()
 	line:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -(y - 10))
 	line:SetWidth(width)
-	return text(parent, 0, y, width, str, "quest", "insights") + 8
+	local fs = pool("heading" .. tostring(parent), function() return T.TextAt(parent, "semibold", 17, "text") end)
+	fs:ClearAllPoints()
+	fs:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -y)
+	fs:SetWidth(width)
+	textColor(fs, "text")
+	fs:SetText(str)
+	return y + max(18, fs:GetStringHeight() or 20) + 10
 end
 
 ---------------------------------------------------------------------------
@@ -173,37 +193,71 @@ local function build()
 	f:EnableMouse(true)
 	f:SetMovable(true)
 	f:SetClampedToScreen(true)
-	f:RegisterForDrag("LeftButton")
-	f:SetScript("OnDragStart", function(self) self:StartMoving() end)
-	f:SetScript("OnDragStop", function(self)
-		self:StopMovingOrSizing()
-		savePoint(self)
-	end)
-	T.Panel(f)
-	T.TrackGround(f)
+	T.RoundWindow(f, 12)
 	T.TrackScale(f)
-	f:SetSize(Win.W, Win.H)
+	local size = S.Get("insights.size")
+	if type(size) == "table" then
+		f:SetSize(max(Win.MIN_W, min(Win.MAX_W, size[1] or Win.W)), max(Win.MIN_H, min(Win.MAX_H, size[2] or Win.H)))
+	else
+		f:SetSize(Win.W, Win.H)
+	end
 	local saved = S.Get("insights.point")
 	f:ClearAllPoints()
 	if type(saved) == "table" then f:SetPoint(saved[1], UIParent, saved[4] or saved[1], saved[2], saved[3])
 	else f:SetPoint("CENTER", UIParent, "CENTER", 0, 20) end
 
-	W.label = T.Text(f, "label", "text2")
-	W.label:SetPoint("LEFT", f, "TOPLEFT", PAD, -HEADER_H / 2)
-	W.label:SetText("PATHWISE INSIGHTS")
-	W.close = T.IconButton(f, "close", "Close", function() Win.Close() end)
-	W.close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -8, -7)
+	-- The header: the Pathwise logo and the name; drag it to move.
+	local head = CreateFrame("Frame", nil, f)
+	W.head = head
+	head:SetPoint("TOPLEFT")
+	head:SetPoint("TOPRIGHT")
+	head:SetHeight(HEADER_H)
+	head:EnableMouse(true)
+	head:RegisterForDrag("LeftButton")
+	head:SetScript("OnDragStart", function() if T.Movable("insights.locked") then f:StartMoving() end end)
+	head:SetScript("OnDragStop", function() f:StopMovingOrSizing() savePoint(f) end)
+	W.logo = T.Logo(head, 24)
+	W.logo:SetPoint("LEFT", PAD - 3, 0)
+	W.title = T.Text(head, "window", "text")
+	W.title:SetPoint("LEFT", W.logo, "RIGHT", 8, 0)
+	W.title:SetText("Pathwise Insights")
+	W.close = T.IconButton(head, "close", "Close", function() Win.Close() end, 28)
+	W.close:SetPoint("RIGHT", -8, 0)
+	W.pin = T.PinButton(head, "insights.locked", 28)
+	W.pin:SetPoint("RIGHT", W.close, "LEFT", -2, 0)
 	local hl = T.Divider(f)
-	hl:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -HEADER_H)
-	hl:SetPoint("TOPRIGHT", f, "TOPRIGHT", 0, -HEADER_H)
-	-- The pages, beside the title.
-	W.header = CreateFrame("Frame", nil, f)
-	W.header:SetPoint("TOPLEFT", f, "TOPLEFT", 160, -4)
-	W.header:SetSize(300, 28)
+	hl:SetPoint("TOPLEFT", head, "BOTTOMLEFT", 0, 0)
+	hl:SetPoint("TOPRIGHT", head, "BOTTOMRIGHT", 0, 0)
+	-- The pages: a segmented row in the header, like the hub's tabs.
+	W.header = CreateFrame("Frame", nil, head)
+	W.header:SetPoint("CENTER", head, "CENTER", 0, 0)
+	W.header:SetSize(200, 34)
+	T.Round(W.header, "bg2", false, 8)
+	W.pages = {}
+	for i, p in ipairs({ { "overview", "Overview" }, { "map", "Map" } }) do
+		local b = CreateFrame("Button", nil, W.header)
+		b:SetSize(97, 28)
+		b:SetPoint("LEFT", 3 + (i - 1) * 97, 0)
+		T.Round(b, "bg2", false, 6)
+		b.text = T.Text(b, "button", "text2")
+		b.text:SetPoint("CENTER")
+		b.text:SetText(p[2])
+		b.line = b:CreateTexture(nil, "OVERLAY")
+		b.line:SetHeight(2)
+		b.line:SetPoint("BOTTOMLEFT", 8, 0)
+		b.line:SetPoint("BOTTOMRIGHT", -8, 0)
+		b:SetScript("OnClick", function()
+			state.page = p[1]
+			W.scroll:SetVerticalScroll(0)
+			draw()
+		end)
+		b.page = p[1]
+		W.pages[i] = b
+	end
 
 	-- The characters and their buttons (drawn each time: they change).
 	W.top = CreateFrame("Frame", nil, f)
-	W.top:SetPoint("TOPLEFT", f, "TOPLEFT", PAD, -(HEADER_H + 10))
+	W.top:SetPoint("TOPLEFT", f, "TOPLEFT", PAD, -(HEADER_H + 12))
 	W.top:SetSize(Win.W - 2 * PAD, 1)
 
 	local scroll = CreateFrame("ScrollFrame", nil, f)
@@ -216,8 +270,15 @@ local function build()
 		self:SetVerticalScroll(max(0, min(W.range or 0, (self:GetVerticalScroll() or 0) - delta * 40)))
 	end)
 	W.scroll, W.child = scroll, child
-	W.pageW = Win.W - 2 * PAD - 6
-	child:SetWidth(W.pageW)
+
+	-- The corner grip: any width and height; right-click for the usual size.
+	W.grip = T.Grip(f, {
+		minW = Win.MIN_W, maxW = Win.MAX_W, minH = Win.MIN_H, maxH = Win.MAX_H, height = true,
+		lockPath = "insights.locked",
+		onSize = function() draw() end,
+		onDone = function(w, h) S.Set("insights.size", { w, h or f:GetHeight() }) savePoint(f) draw() end,
+		onReset = function() S.Set("insights.size", nil) f:SetSize(Win.W, Win.H) draw() end,
+	})
 
 	if type(UISpecialFrames) == "table" then table.insert(UISpecialFrames, "PathwiseInsights") end
 	f:Hide()
@@ -242,7 +303,7 @@ Win.Selected = selected
 -- The tabs and the buttons under them; returns the height used.
 local function drawTop(chars, pick)
 	local p = W.top
-	local x, y, width = 0, 0, Win.W - 2 * PAD
+	local x, y, width = 0, 0, W.pageW + 6
 	local hidden = 0
 	for _, c in ipairs(chars) do
 		if c.log.hidden and c.key ~= pick.key and not state.hidden then
@@ -317,7 +378,24 @@ local function drawOverview(log, key)
 	if log.race then parts[#parts + 1] = log.race end
 	if log.class then parts[#parts + 1] = log.class end
 	parts[#parts + 1] = "Level " .. (log.level or 1)
-	y = text(c, 0, y, width, table.concat(parts, "  ·  "), "quest", "insights") + 10
+	if not W.crest then
+		W.crest = T.Crest(c, 34)
+		W.who = T.TextAt(c, "semibold", 20, "text")
+		W.whoSub = T.Text(c, "meta", "text2")
+	end
+	W.crest:Show() W.who:Show() W.whoSub:Show()
+	W.crest:SetFaction(log.faction)
+	W.crest:ClearAllPoints()
+	W.crest:SetPoint("TOPLEFT", c, "TOPLEFT", 0, -y)
+	W.who:ClearAllPoints()
+	W.who:SetPoint("TOPLEFT", c, "TOPLEFT", 44, -(y + 1))
+	W.who:SetWidth(width - 44)
+	W.who:SetText(table.concat(parts, "  ·  "))
+	W.whoSub:ClearAllPoints()
+	W.whoSub:SetPoint("TOPLEFT", W.who, "BOTTOMLEFT", 0, -3)
+	W.whoSub:SetWidth(width - 44)
+	W.whoSub:SetText(log.name or key)
+	y = y + 46
 	local t = St.Totals(log)
 	y = tiles(c, y, width, {
 		{ "Time played", St.Duration(t.played) },
@@ -515,18 +593,37 @@ local function drawMap(log, viewH)
 	if #conts == 0 then
 		return text(c, 0, y, width, "No map yet: your path and the places you spend time show here once you have played a little with Insights on.", "meta", "muted")
 	end
+	local zones = St.Zones(log, 10)
+	-- The map shown: a continent or one of your zones.
 	local cont
 	for _, k in ipairs(conts) do if k.id == state.cont then cont = k end end
+	for _, k in ipairs(zones) do if k.id == state.cont then cont = k end end
 	cont = cont or conts[1]
 	state.cont = cont.id
 
-	-- Continent, layer, flights, zoom.
+	-- The continents, then the zones you spent the most time in.
 	local x = 0
-	for _, k in ipairs(conts) do
-		local _, w = chip(c, x, y, k.name, k.id == cont.id, function() state.cont = k.id draw() end)
+	local function pick(k)
+		local b, w = chip(c, x, y, k.name, k.id == cont.id, function() state.cont = k.id draw() end)
+		if x > 80 and x + w > width then
+			x, y = 80, y + 34
+			b:ClearAllPoints()
+			b:SetPoint("TOPLEFT", c, "TOPLEFT", x, -y)
+		end
 		x = x + w + 6
 	end
-	x = x + 12
+	text(c, 0, y + 6, 80, "Continent", "meta", "text2")
+	x = 80
+	for _, k in ipairs(conts) do pick(k) end
+	if #zones > 0 then
+		y, x = y + 34, 0
+		text(c, 0, y + 6, 80, "Zone", "meta", "text2")
+		x = 80
+		for _, k in ipairs(zones) do pick(k) end
+	end
+	y, x = y + 40, 0
+	text(c, 0, y + 6, 80, "Show", "meta", "text2")
+	x = 80
 	local layer = S.Get("insights.layer")
 	for _, l in ipairs({ { "time", "Time spent" }, { "rate", "XP an hour" } }) do
 		local _, w = chip(c, x, y, l[2], layer == l[1], function() S.Set("insights.layer", l[1]) draw() end)
@@ -539,7 +636,9 @@ local function drawMap(log, viewH)
 		draw()
 	end)
 	x = x + w + 6
-	chip(c, x, y, "Whole continent", state.whole, function()
+	local isZone = true
+	for _, k in ipairs(conts) do if k.id == cont.id then isZone = false end end
+	chip(c, x, y, isZone and "Whole zone" or "Whole continent", state.whole, function()
 		state.whole = not state.whole
 		draw()
 	end)
@@ -643,28 +742,34 @@ end
 ---------------------------------------------------------------------------
 
 local function drawHeader()
-	local x = 0
-	for _, p in ipairs({ { "overview", "Overview" }, { "map", "Map" } }) do
-		local _, w = chip(W.header, x, 0, p[2], state.page == p[1], function()
-			state.page = p[1]
-			W.scroll:SetVerticalScroll(0)
-			draw()
-		end)
-		x = x + w + 6
+	for _, b in ipairs(W.pages) do
+		local on = b.page == state.page
+		local a = T.Color("insights")
+		T.PaintRound(b, on and { a[1], a[2], a[3], 0.16 } or "bg2")
+		textColor(b.text, on and "text" or "text2")
+		paint(b.line, "insights")
+		b.line:SetShown(on)
 	end
+	W.logo:Paint()
 end
 
 draw = function()
 	if not W.frame then return end
 	releaseAll()
 	if W.canvas then W.canvas:Hide() end
+	if W.crest then W.crest:Hide() W.who:Hide() W.whoSub:Hide() end
+	-- The page fills the window, whatever its size.
+	local fw, fh = W.frame:GetWidth() or Win.W, W.frame:GetHeight() or Win.H
+	W.pageW = fw - 2 * PAD - 6
+	W.child:SetWidth(W.pageW)
+	W.top:SetWidth(fw - 2 * PAD)
 	local pick, chars = selected()
 	drawHeader()
 	local topH = drawTop(chars, pick)
 	W.scroll:ClearAllPoints()
-	W.scroll:SetPoint("TOPLEFT", W.frame, "TOPLEFT", PAD, -(HEADER_H + 10 + topH + 6))
+	W.scroll:SetPoint("TOPLEFT", W.frame, "TOPLEFT", PAD, -(HEADER_H + 12 + topH + 6))
 	W.scroll:SetPoint("BOTTOMRIGHT", W.frame, "BOTTOMRIGHT", -PAD + 6, PAD)
-	local view = Win.H - (HEADER_H + 10 + topH + 6) - PAD
+	local view = fh - (HEADER_H + 12 + topH + 6) - PAD
 	local h
 	if state.page == "map" then h = drawMap(pick.log, view) else h = drawOverview(pick.log, pick.key) end
 	W.child:SetHeight(max(1, h))
@@ -691,6 +796,9 @@ function Win.Close() if W.frame then W.frame:Hide() end end
 function Win.Shown() return W.frame ~= nil and W.frame:IsShown() end
 
 S.On("INSIGHTS_UPDATED", function() if Win.Shown() then draw() end end)
+-- A new theme or accent: everything painted again.
+S.On("THEME_CHANGED", function() if Win.Shown() then draw() end end)
+S.On("ACCENT_CHANGED", function() if Win.Shown() then draw() end end)
 
 S.On("READY", function()
 	S.MinimapButton({
