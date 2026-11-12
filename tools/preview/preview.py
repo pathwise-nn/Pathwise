@@ -29,7 +29,7 @@ from PIL import Image, ImageFont
 
 ROOT = os.getcwd()
 OUT = os.path.join(ROOT, "preview")
-W, H = 1600, 900
+W, H = 1600, int(os.environ.get("PREVIEW_H") or 900)  # PREVIEW_H: a taller screen
 FONT_DIR = os.path.join(ROOT, "Pathwise", "Media", "Fonts")
 FONTS = {"regular": "Inter-Regular.ttf", "medium": "Inter-Medium.ttf", "semibold": "Inter-SemiBold.ttf"}
 

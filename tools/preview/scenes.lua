@@ -181,8 +181,8 @@ end
 return {
 	setup = setup,
 	-- Other Pathwise addons a scene loads with Pathwise.
-	addons = { bags = { "Pathwise_Gear", "Pathwise_Bags" }, gear = { "Pathwise_Gear" }, insights = { "Pathwise_Insights" }, ["insights-map"] = { "Pathwise_Insights" }, ["insights-zone"] = { "Pathwise_Insights" }, ["insights-share"] = { "Pathwise_Insights" } },
-	before = { ["hub-horde"] = horde, ["tracker-horde"] = horde, bags = bagItems, insights = insightsLog, ["insights-map"] = insightsLog, ["insights-zone"] = insightsLog, ["insights-share"] = insightsLog },
+	addons = { bags = { "Pathwise_Gear", "Pathwise_Bags" }, gear = { "Pathwise_Gear" }, insights = { "Pathwise_Insights" }, ["insights-map"] = { "Pathwise_Insights" }, ["insights-zone"] = { "Pathwise_Insights" }, ["insights-share"] = { "Pathwise_Insights" }, ["insights-full"] = { "Pathwise_Insights" } },
+	before = { ["hub-horde"] = horde, ["tracker-horde"] = horde, bags = bagItems, insights = insightsLog, ["insights-map"] = insightsLog, ["insights-zone"] = insightsLog, ["insights-share"] = insightsLog, ["insights-full"] = insightsLog },
 	scenes = {
 		hub = function(ns)
 			onRoute(ns)
@@ -278,6 +278,16 @@ return {
 			onRoute(ns)
 			SlashCmdList.PATHWISEINSIGHTS("map")
 		end,
+		-- The whole Overview at once: run with PREVIEW_H=2400.
+		["insights-full"] = function(ns)
+			onRoute(ns)
+			SlashCmdList.PATHWISEINSIGHTS("")
+			PathwiseInsights:ClearAllPoints()
+			PathwiseInsights:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 410, -40)
+			PathwiseInsights:SetSize(780, (UIParent:GetHeight() or 900) - 80)
+			SlashCmdList.PATHWISEINSIGHTS("") -- closed,
+			SlashCmdList.PATHWISEINSIGHTS("") -- and drawn again at that size
+		end,
 		["insights-share"] = function(ns)
 			onRoute(ns)
 			SlashCmdList.PATHWISEINSIGHTS("")
@@ -290,5 +300,5 @@ return {
 		end,
 	},
 	order = { "hub", "hub-horde", "hub-class", "hub-prof", "hub-wide", "hub-narrow", "tracker", "tracker-horde", "window", "minimal",
-		"settings", "settings-themes", "routebook", "routebook-page", "recipebook", "professions", "profession", "dungeons", "skip", "bags", "gear", "insights", "insights-map", "insights-zone", "insights-share" },
+		"settings", "settings-themes", "routebook", "routebook-page", "recipebook", "professions", "profession", "dungeons", "skip", "bags", "gear", "insights", "insights-map", "insights-zone", "insights-share", "insights-full" },
 }

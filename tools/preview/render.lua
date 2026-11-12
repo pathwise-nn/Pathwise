@@ -12,8 +12,10 @@ local stub = ...
 local Widget = getmetatable(UIParent)
 local render = {}
 
-UIParent.w, UIParent.h = 1600, 900
-local SCREEN_W, SCREEN_H = 1600, 900
+-- The screen: 1600 x 900, or taller with PREVIEW_H (a whole long page at once).
+local PREVIEW_H = tonumber(os.getenv("PREVIEW_H") or "") or 900
+UIParent.w, UIParent.h = 1600, PREVIEW_H
+local SCREEN_W, SCREEN_H = 1600, PREVIEW_H
 
 ---------------------------------------------------------------------------
 -- What the stub forgot
