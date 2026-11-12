@@ -35,9 +35,9 @@ const ROOT = path.resolve(__dirname, '..');
 const API = 'https://wow.curseforge.com/api';
 const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI', 'Pathwise_Heal', 'Pathwise_Encounters', 'Pathwise_Loot', 'Pathwise_Insights'];
 // The CurseForge projects (public ids; CF_PROJECT_<ADDON> overrides one).
-// Pathwise_Encounters and Pathwise_Insights have no project yet: each is skipped
-// until it gets one here or in CF_PROJECT_<ADDON>.
-const PROJECTS = { Pathwise: '1783619', Pathwise_Gear: '1784186', Pathwise_Bags: '1784179', PathwiseUI: '1785205', Pathwise_Heal: '1785207', Pathwise_Loot: '1786208' };
+// Pathwise_Encounters has no project yet: it is skipped until it gets one
+// here or in CF_PROJECT_PATHWISE_ENCOUNTERS.
+const PROJECTS = { Pathwise: '1783619', Pathwise_Gear: '1784186', Pathwise_Bags: '1784179', PathwiseUI: '1785205', Pathwise_Heal: '1785207', Pathwise_Loot: '1786208', Pathwise_Insights: '1800759' };
 
 function fail(msg) {
 	console.error(msg);
