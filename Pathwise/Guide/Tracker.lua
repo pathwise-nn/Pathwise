@@ -12,10 +12,19 @@ ns.Tracker = K
 
 ns.Defaults("tracker", { shown = true })
 
-local function call(fn, ...) if type(fn) == "function" then return fn(...) end end
+-- One value from the game; nil when it has none, or keeps it secret (a boss
+-- fight: comparing a secret is an error).
+local function call(fn, ...)
+	if type(fn) ~= "function" then return nil end
+	local v = ns.Compat.Readable((fn(...)))
+	if type(v) == "number" then return v end
+	return nil
+end
 local function now() return call(GetTime) or 0 end
-local function xp() return call(UnitXP, "player") or 0, call(UnitXPMax, "player") or 0 end
+local function readXP() return call(UnitXP, "player"), call(UnitXPMax, "player") end
+local function xp() local cur, max = readXP() return cur or 0, max or 0 end
 local function level() return call(UnitLevel, "player") or 1 end
+K.Level = level
 
 local function state()
 	local c = ns.CharState()
@@ -49,7 +58,8 @@ local function bank()
 end
 
 function K.OnXP()
-	local cur, max = xp()
+	local cur, max = readXP()
+	if not (cur and max) then return end -- secret for now: counted at the next readable update
 	if cur >= session.lastXP then session.gained = session.gained + (cur - session.lastXP)
 	else session.gained = session.gained + (session.lastMax - session.lastXP) + cur end -- a level up in between
 	session.lastXP, session.lastMax = cur, max

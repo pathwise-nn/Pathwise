@@ -6,6 +6,17 @@ that version's section.
 
 ## Unreleased
 
+### No more error floods in boss fights
+- In a boss fight the game keeps some values secret from addons (AFK,
+  level, XP, map position), and testing one is an error. Pathwise:
+  Insights tested AFK every frame, which flooded errors ("Your AddOns are
+  experiencing a large number of errors") until the fight ended. Insights,
+  the leveling tracker (XP per hour), the hub and the map pins now read
+  every such value safely: a secret counts as unknown, and XP gained in the
+  fight is counted at the next readable update.
+- Checked against a simulated boss fight in the tests; not yet checked in
+  game.
+
 ### Settings > Language
 - Pathwise speaks the game's language by default; Settings > Language now
   lets you pick another: English, Deutsch, Français, Español, Português

@@ -719,3 +719,38 @@ test("insights: the bundled routes are up to date with Pathwise's", function()
 	p:close()
 	ok(out:find("is up to date"), out)
 end)
+
+test("insights in a boss fight: the game's values come back secret; nothing is tested, nothing errors", function()
+	local stub, ns, ins = setup({ before = continent })
+	local R = ins.Recorder
+	stub.moveTo(1420, 50, 50)
+	R.Tick(1)
+	R.Play(10)
+	local before = log().played
+	-- A boss fight: what the game hands over is a secret. Here a table that
+	-- errors if it is ever added, compared or indexed, as the game's would.
+	local SECRET = setmetatable({}, {
+		__index = function() error("indexed a secret " .. debug.traceback()) end,
+		__add = function() error("added a secret") end, __sub = function() error("subtracted a secret") end,
+		__lt = function() error("compared a secret") end, __le = function() error("compared a secret") end,
+	})
+	issecretvalue = function(v) return v == SECRET end
+	local saved = { UnitIsAFK, UnitOnTaxi, IsInGroup, UnitLevel, UnitXP, UnitXPMax, C_Map.GetPlayerMapPosition }
+	local function secret() return SECRET end
+	UnitIsAFK, UnitOnTaxi, IsInGroup, UnitLevel, UnitXP, UnitXPMax = secret, secret, secret, secret, secret, secret
+	C_Map.GetPlayerMapPosition = secret
+	-- A fight's worth of frames and events: no error, the time still counts.
+	for _ = 1, 5 do R.Tick(1) end
+	stub.advance(1)
+	stub.fire("PLAYER_XP_UPDATE", "player")
+	stub.fire("QUEST_LOG_UPDATE")
+	ok(math.abs(log().played - before - 6) < 0.05, "a secret AFK is not AFK: the time counts (" .. (log().played - before) .. ")")
+	for _, line in ipairs(stub.printed) do ok(not line:find("error"), "no error: " .. line) end
+	-- The fight ends: values come back and recording carries on.
+	UnitIsAFK, UnitOnTaxi, IsInGroup, UnitLevel, UnitXP, UnitXPMax, C_Map.GetPlayerMapPosition =
+		saved[1], saved[2], saved[3], saved[4], saved[5], saved[6], saved[7]
+	issecretvalue = nil
+	stub.player.xp = 700
+	stub.fire("PLAYER_XP_UPDATE", "player")
+	eq(log().xp, 600, "XP counted again after the fight")
+end)

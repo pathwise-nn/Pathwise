@@ -17,6 +17,19 @@ local S = ns.S
 local R = {}
 ns.Recorder = R
 
+-- In a boss fight (and other restricted moments) Forever hands addons some
+-- values as "secrets": testing or comparing one is an error, every time.
+-- Every value read from the game goes through this: a secret is nil here
+-- (unknown), never tested.
+local function readable(v) if ns.Readable then return ns.Readable(v) end return v end
+local function call(fn, ...)
+	if type(fn) ~= "function" then return nil end
+	local ok, a, b = pcall(fn, ...)
+	if not ok then return nil end
+	return readable(a), readable(b)
+end
+R.Readable = readable
+
 local SCHEMA = 2
 local MAX_STEPS = 1000 -- the oldest step records go first
 local MAX_SESSIONS = 300
@@ -50,8 +63,8 @@ R.DayKey = dayKey
 ---------------------------------------------------------------------------
 
 local function charKey()
-	local name = UnitName and UnitName("player") or "Player"
-	local realm = GetRealmName and GetRealmName() or ""
+	local name = call(UnitName, "player") or "Player"
+	local realm = call(GetRealmName) or ""
 	return realm ~= "" and (name .. "-" .. realm) or name
 end
 R.CharKey = charKey
@@ -140,8 +153,24 @@ local function bucket(tbl, key)
 	return b
 end
 
-local function level() return UnitLevel and UnitLevel("player") or 1 end
-local function mapNow() return C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player") end
+-- The last level read, for the moments the game keeps it secret.
+local lastKnownLevel = 1
+local function level()
+	local l = call(UnitLevel, "player")
+	if type(l) == "number" then lastKnownLevel = l end
+	return lastKnownLevel
+end
+local function mapNow() return C_Map and call(C_Map.GetBestMapForUnit, "player") end
+
+-- x, y (0-1) of a map position the game gives, or nil (none, or secret).
+local function xy(pos)
+	if not pos then return nil end
+	local x, y
+	if pos.GetXY then x, y = call(pos.GetXY, pos) else x, y = readable(pos.x), readable(pos.y) end
+	if type(x) ~= "number" or type(y) ~= "number" or (x == 0 and y == 0) then return nil end
+	return x, y
+end
+R.XY = xy
 
 ---------------------------------------------------------------------------
 -- Where you are on the continent
@@ -155,10 +184,10 @@ function R.ContinentOf(map)
 	if continentCache[map] ~= nil then return continentCache[map] or nil end
 	local found, m, hops = false, map, 0
 	while m and hops < 8 do
-		local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(m)
-		if not info then break end
-		if info.mapType == CONTINENT then found = m break end
-		m, hops = info.parentMapID, hops + 1
+		local info = C_Map and call(C_Map.GetMapInfo, m)
+		if type(info) ~= "table" then break end
+		if readable(info.mapType) == CONTINENT then found = m break end
+		m, hops = readable(info.parentMapID), hops + 1
 	end
 	continentCache[map] = found
 	return found or nil
@@ -168,11 +197,8 @@ end
 function R.Where()
 	local map = mapNow()
 	if not (map and C_Map and C_Map.GetPlayerMapPosition) then return nil end
-	local pos = C_Map.GetPlayerMapPosition(map, "player")
-	if not pos then return nil end
-	local x, y
-	if pos.GetXY then x, y = pos:GetXY() else x, y = pos.x, pos.y end
-	if not (x and y) or (x == 0 and y == 0) then return nil end
+	local x, y = xy(call(C_Map.GetPlayerMapPosition, map, "player"))
+	if not x then return nil end
 	return map, x, y
 end
 
@@ -180,11 +206,8 @@ end
 local function onContinent()
 	local cont = R.ContinentOf(mapNow())
 	if not (cont and C_Map and C_Map.GetPlayerMapPosition) then return nil end
-	local pos = C_Map.GetPlayerMapPosition(cont, "player")
-	if not pos then return nil end
-	local x, y
-	if pos.GetXY then x, y = pos:GetXY() else x, y = pos.x, pos.y end
-	if not (x and y) or (x == 0 and y == 0) then return nil end
+	local x, y = xy(call(C_Map.GetPlayerMapPosition, cont, "player"))
+	if not x then return nil end
 	return cont, x, y
 end
 R.OnContinent = onContinent
@@ -325,7 +348,7 @@ function R.OnRemoved(q)
 	local log = R.Log()
 	local taken = log.open[q]
 	if type(taken) ~= "table" then return end
-	local done = C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted and C_QuestLog.IsQuestFlaggedCompleted(q)
+	local done = C_QuestLog and call(C_QuestLog.IsQuestFlaggedCompleted, q)
 	if done then return end
 	log.open[q] = nil
 	keepQuest(log, { q = q, t = math.floor(log.played - taken.p + 0.5), xp = 0, lvl = taken.lvl,
@@ -366,13 +389,15 @@ end
 local lastXP, lastMax, lastLevel
 
 local function readXP()
-	return UnitXP and UnitXP("player") or 0, UnitXPMax and UnitXPMax("player") or 0, level()
+	return call(UnitXP, "player"), call(UnitXPMax, "player"), level()
 end
 
 -- XP gained since the last look: across a level up, the rest of the old
 -- level and what is in the new one.
 function R.OnXP()
 	local xp, max, lvl = readXP()
+	-- Kept secret (a boss fight): counted at the next look the game allows.
+	if type(xp) ~= "number" or type(max) ~= "number" then return end
 	if lastXP then
 		local gain
 		if lvl == lastLevel then gain = xp - lastXP
@@ -385,13 +410,13 @@ function R.OnXP()
 	lastXP, lastMax, lastLevel = xp, max, lvl
 end
 
-local function afk() return UnitIsAFK and UnitIsAFK("player") end
+local function afk() return call(UnitIsAFK, "player") == true end
 
 -- Where you are, every SAMPLE seconds: the heat map cell, the trail, and
 -- the distance walked (or flown).
 local since = 0
 local function mapName(map)
-	local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(map)
+	local info = C_Map and call(C_Map.GetMapInfo, map)
 	return info and info.name or ("Map " .. map)
 end
 
@@ -416,18 +441,15 @@ end
 local function inZone(cont)
 	local map = mapNow()
 	if not (map and map ~= cont and C_Map and C_Map.GetPlayerMapPosition) then return nil end
-	local pos = C_Map.GetPlayerMapPosition(map, "player")
-	if not pos then return nil end
-	local x, y
-	if pos.GetXY then x, y = pos:GetXY() else x, y = pos.x, pos.y end
-	if not (x and y) or (x == 0 and y == 0) then return nil end
+	local x, y = xy(call(C_Map.GetPlayerMapPosition, map, "player"))
+	if not x then return nil end
 	return map, x, y
 end
 
 function R.Sample()
 	local cont, x, y = onContinent()
 	if not cont then here = nil return end
-	local taxi = UnitOnTaxi and UnitOnTaxi("player") or false
+	local taxi = call(UnitOnTaxi, "player") == true
 	local log = R.Log()
 	log.conts[cont] = log.conts[cont] or mapName(cont)
 	addPoint(log, cont, x, y, taxi, TRAIL_STEP)
@@ -457,7 +479,7 @@ function R.Play(sec)
 	local cur = recording() and R.Log().cur
 	if cur then
 		if here and here.taxi then cur.fly = (cur.fly or 0) + sec end
-		if IsInGroup and IsInGroup() then cur.grp = (cur.grp or 0) + sec end
+		if call(IsInGroup) == true then cur.grp = (cur.grp or 0) + sec end
 	end
 end
 
@@ -498,12 +520,11 @@ end
 
 -- Who this character is, for the tabs.
 local function describe(log)
-	local race = UnitRace and UnitRace("player")
-	local class = UnitClass and UnitClass("player")
-	local _, classKey = UnitClass and UnitClass("player")
-	log.name = UnitName and UnitName("player") or log.name
+	local race = call(UnitRace, "player")
+	local class, classKey = call(UnitClass, "player")
+	log.name = call(UnitName, "player") or log.name
 	log.race, log.class, log.classKey = race or log.race, class or log.class, classKey or log.classKey
-	log.faction = UnitFactionGroup and UnitFactionGroup("player") or log.faction
+	log.faction = call(UnitFactionGroup, "player") or log.faction
 	log.level = level()
 end
 

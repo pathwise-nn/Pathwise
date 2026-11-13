@@ -214,7 +214,7 @@ function Card.Stats()
 	local K = ns.Tracker
 	if not (K and ns.Get("tracker.shown")) then return nil end
 	local s = K.Stats()
-	local lvl = UnitLevel and UnitLevel("player") or 1
+	local lvl = K.Level()
 	local bits = {}
 	if s.xpPerHour then bits[#bits + 1] = (s.xpPerHour >= 1000 and (ns.L("%.1fk")):format(s.xpPerHour / 1000) or tostring(floor(s.xpPerHour))) .. ns.L(" XP/h") end
 	if s.secondsToLevel then bits[#bits + 1] = (ns.L("%s to %d")):format(K.Duration(s.secondsToLevel), lvl + 1) end

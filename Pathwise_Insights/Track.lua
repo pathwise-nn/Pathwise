@@ -39,10 +39,12 @@ K.byId = byId
 function K.Active() return not S.Guide.Available() end
 
 local function player()
+	local R = ns.Recorder.Readable
 	local _, race = UnitRace and UnitRace("player")
 	local _, class = UnitClass and UnitClass("player")
-	return { race = race, class = class, faction = UnitFactionGroup and UnitFactionGroup("player"),
-		level = UnitLevel and UnitLevel("player") or 1 }
+	local level = UnitLevel and R(UnitLevel("player"))
+	return { race = R(race), class = R(class), faction = UnitFactionGroup and R(UnitFactionGroup("player")),
+		level = type(level) == "number" and level or 1 }
 end
 
 local function inList(list, v)
@@ -66,12 +68,18 @@ function K.Suits(r, p)
 	return true
 end
 
-local function questDone(q) return C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted and C_QuestLog.IsQuestFlaggedCompleted(q) or false end
-local function onQuest(q) return C_QuestLog and C_QuestLog.IsOnQuest and C_QuestLog.IsOnQuest(q) or false end
+-- Quest states as the game gives them; a secret one counts as "no".
+local function yes(fn, ...)
+	if type(fn) ~= "function" then return false end
+	local ok, v = pcall(fn, ...)
+	return ok and ns.Recorder.Readable(v) == true
+end
+local function questDone(q) return C_QuestLog and yes(C_QuestLog.IsQuestFlaggedCompleted, q) or false end
+local function onQuest(q) return C_QuestLog and yes(C_QuestLog.IsOnQuest, q) or false end
 local function ready(q)
 	if not C_QuestLog then return false end
-	if C_QuestLog.ReadyForTurnIn and C_QuestLog.ReadyForTurnIn(q) then return true end
-	return C_QuestLog.IsComplete and C_QuestLog.IsComplete(q) or false
+	if yes(C_QuestLog.ReadyForTurnIn, q) then return true end
+	return yes(C_QuestLog.IsComplete, q)
 end
 
 local function goalDone(g)
@@ -145,9 +153,11 @@ function K.Where(hint)
 	local id = (hint and hint.id) or (log.track and log.track.route)
 	-- None yet: the route of a quest in your log.
 	if not id and C_QuestLog and C_QuestLog.GetNumQuestLogEntries and C_QuestLog.GetInfo then
-		for i = 1, C_QuestLog.GetNumQuestLogEntries() or 0 do
-			local info = C_QuestLog.GetInfo(i)
-			local q = type(info) == "table" and not info.isHeader and info.questID
+		local R = ns.Recorder.Readable
+		local n = R(C_QuestLog.GetNumQuestLogEntries())
+		for i = 1, type(n) == "number" and n or 0 do
+			local info = R(C_QuestLog.GetInfo(i))
+			local q = type(info) == "table" and R(info.isHeader) ~= true and R(info.questID)
 			local found = q and K.RouteOf(q, p)
 			if found then id = found.id break end
 		end
