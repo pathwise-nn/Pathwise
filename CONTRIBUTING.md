@@ -59,8 +59,11 @@ Pathwise is written in English. A translation is a file in
 `Pathwise/Locales/` named for the game's language code (`ruRU.lua`, `deDE.lua`)
 and listed in the TOC after `Core\Locale.lua`. It is a table of the English
 text, exactly as Pathwise shows it, and its translation, handed to
-`ns.AddLocale("<code>", table)`; it is used only when the game runs in that
-language. In the code:
+`ns.AddLocale("<code>", table)`; it is used when the game runs in that
+language, or when a player picks it in Settings > Language. WoW loads saved
+settings after the addon's files have run, so the language is chosen then
+(LOADED): never translate while a file loads (a table of `ns.L(...)` at the
+top of a file stays English), translate where the text is used. In the code:
 
 - `ns.L("text")` for any text a player sees; a template that takes values
   is translated before it is filled: `ns.L("Step %d of %d"):format(i, n)`.

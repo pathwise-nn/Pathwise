@@ -37,7 +37,7 @@ ns.Defaults("settings", { point = nil, locked = false, text = 1.15 })
 Panels.TEXT_SIZES = { { "Normal", 1 }, { "Large", 1.15 }, { "Largest", 1.3 } }
 local function panelScale() return (ns.Get("ui.scale") or 1) * (ns.Get("settings.text") or 1) end
 Panels.Scale = panelScale
-local WINDOW_KINDS = { settings = true, about = true, tools = true, leveling = true }
+local WINDOW_KINDS = { settings = true, about = true, tools = true, leveling = true, language = true }
 function Panels.IsWindow(kind)
 	return kind ~= nil and (WINDOW_KINDS[kind] or (Panels.IsSuiteKind and Panels.IsSuiteKind(kind))) or false
 end
@@ -1071,7 +1071,7 @@ local showAllDungeons = false
 
 local STATUS = {
 	now = "Take it now", log = "In your quest log", ready = "Ready to hand in",
-	level = ns.L("From level %d"), pre = "Needs another quest first", done = "Done",
+	level = "From level %d", pre = "Needs another quest first", done = "Done", -- translated where used
 }
 
 function builders.dungeons()
@@ -1125,7 +1125,7 @@ function builders.dungeon()
 	rows[#rows + 1] = { "heading", (ns.L("Quests (%d)")):format(#quests) }
 	if #quests == 0 then rows[#rows + 1] = { "text", "No quests for your character here." } end
 	for _, q in ipairs(quests) do
-		local status = q.status == "level" and STATUS.level:format(q.minLevel) or STATUS[q.status]
+		local status = q.status == "level" and ns.L(STATUS.level):format(q.minLevel) or STATUS[q.status]
 		local giver = q.giver and q.giver.name
 		local sub = (ns.L("Level %d  ·  %s%s")):format(q.level, status, giver and q.status ~= "done" and ("  ·  " .. giver) or "")
 		rows[#rows + 1] = { "choice", q.name, sub, function()
@@ -1201,6 +1201,38 @@ function builders.report()
 		{ "copy", DISCORD, 1 },
 		{ "buttons", { { "Close", "default", Panels.Close } } },
 	}
+end
+
+-- Settings > Language: the game's language, or one of Pathwise's. Shown in
+-- its own language; it takes effect after a reload (Core/Locale.lua).
+function Panels.LanguageLine()
+	local want = ns.Get("ui.language") or "auto"
+	local name = want == "auto" and (ns.L("Game language") .. " (" .. ns.LanguageName(ns.GAME_LOCALE == "enGB" and "enUS" or ns.GAME_LOCALE) .. ")")
+		or ns.LanguageName(want)
+	if ns.Language() ~= ns.ACTIVE_LOCALE then name = name .. "  ·  " .. ns.L("after a reload") end
+	return name
+end
+
+function builders.language()
+	local want = ns.Get("ui.language") or "auto"
+	local rows = { { "heading", "Language" },
+		{ "text", "The language Pathwise speaks. Quest, NPC, item and zone names come from the game, in its own language.", "muted" } }
+	for _, l in ipairs(ns.LANGUAGES) do
+		if ns.LanguageOffered(l[1]) then
+			local label = l[1] == "auto" and (ns.L("Game language") .. " (" .. ns.LanguageName(ns.GAME_LOCALE == "enGB" and "enUS" or ns.GAME_LOCALE) .. ")") or l[2]
+			rows[#rows + 1] = { "choice", (l[1] == want and "✓  " or "") .. label, nil, function()
+				ns.Set("ui.language", l[1])
+				Panels.Refresh()
+			end }
+		end
+	end
+	if ns.Language() ~= ns.ACTIVE_LOCALE then
+		rows[#rows + 1] = { "text", "Reload to switch: Pathwise picks its language as the game starts.", "accent" }
+		rows[#rows + 1] = { "buttons", { { "Reload now", "accent", function() if ReloadUI then ReloadUI() end end } } }
+	end
+	rows[#rows + 1] = { "text", "Korean and Chinese are offered on a Korean or Chinese client only: other clients have no fonts for their letters.", "muted" }
+	rows[#rows + 1] = { "buttons", { { "Back", "default", function() Panels.Back() end }, { "Close", "default", Panels.Close } } }
+	return rows
 end
 
 function builders.about()
@@ -1294,6 +1326,7 @@ function builders.settings()
 			return list
 		end)() },
 		{ "text", "How large Settings and the other panels draw. Scroll past a slider to scroll the list; hold Shift to move it with the wheel.", "muted" },
+		{ "choice", "Language", Panels.LanguageLine(), function() Panels.Open("language") end },
 		{ "heading", "Guide on screen" },
 		{ "setting", "Style", "", {
 			{ "Tracker", pickStyle("tracker"), style == "tracker" and "accent" or "default" },

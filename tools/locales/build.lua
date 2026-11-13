@@ -114,10 +114,10 @@ local function build(code, write)
 	out[#out + 1] = ""
 	local codes = {}
 	for _, c in ipairs(lang.codes) do codes[#codes + 1] = ("%q"):format(c) end
-	out[#out + 1] = ("if ns.AddLocale({ %s }, T) then"):format(table.concat(codes, ", "))
-	if METRES[code] then out[#out + 1] = '\tns.DEFAULT_UNITS = "metres"' end
-	if COMMA[code] then out[#out + 1] = "\tns.DECIMAL_COMMA = true" end
-	out[#out + 1] = "end"
+	local extras = {}
+	if METRES[code] then extras[#extras + 1] = 'units = "metres"' end
+	if COMMA[code] then extras[#extras + 1] = "comma = true" end
+	out[#out + 1] = ("ns.AddLocale({ %s }, T, nil, { %s })"):format(table.concat(codes, ", "), table.concat(extras, ", "))
 	out[#out + 1] = ""
 	local text = table.concat(out, "\n")
 	if write then

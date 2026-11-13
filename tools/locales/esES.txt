@@ -621,3 +621,9 @@
 621	Grande
 622	Muy grande
 623	Lo grandes que se ven las Opciones y los demás paneles. Desplazarte sobre un control deslizante desplaza la lista; mantén Mayús para moverlo con la rueda.
+624	Idioma
+625	Idioma del juego
+626	tras recargar
+627	El idioma de Pathwise. Los nombres de misiones, PNJ, objetos y zonas vienen del juego, en su idioma.
+628	Recarga para cambiar: Pathwise elige su idioma al iniciar el juego.
+629	Coreano y chino solo se ofrecen en un cliente coreano o chino: los demás clientes no tienen fuentes para sus caracteres.

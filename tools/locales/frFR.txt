@@ -621,3 +621,9 @@
 621	Grande
 622	La plus grande
 623	Taille d’affichage des Paramètres et des autres panneaux. Faire défiler sur un curseur fait défiler la liste ; maintenez Maj pour le déplacer avec la molette.
+624	Langue
+625	Langue du jeu
+626	après un rechargement
+627	La langue de Pathwise. Les noms de quêtes, PNJ, objets et zones viennent du jeu, dans sa langue.
+628	Rechargez pour changer : Pathwise choisit sa langue au démarrage du jeu.
+629	Le coréen et le chinois ne sont proposés que sur un client coréen ou chinois : les autres clients n’ont pas de police pour leurs caractères.

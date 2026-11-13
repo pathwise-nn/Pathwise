@@ -630,8 +630,12 @@ local T = {
 	["Large"] = "大",
 	["Largest"] = "最大",
 	["How large Settings and the other panels draw. Scroll past a slider to scroll the list; hold Shift to move it with the wheel."] = "設定和其他面板的顯示大小。在滑桿上捲動會捲動列表；按住 Shift 用滾輪可移動滑桿。",
+	["Language"] = "語言",
+	["Game language"] = "遊戲語言",
+	["after a reload"] = "重新載入後",
+	["The language Pathwise speaks. Quest, NPC, item and zone names come from the game, in its own language."] = "Pathwise 使用的語言。任務、NPC、物品和區域名稱來自遊戲，使用遊戲的語言。",
+	["Reload to switch: Pathwise picks its language as the game starts."] = "重新載入以切換：Pathwise 在遊戲啟動時選擇語言。",
+	["Korean and Chinese are offered on a Korean or Chinese client only: other clients have no fonts for their letters."] = "韓語和中文僅在韓語或中文用戶端中提供：其他用戶端沒有這些文字的字型。",
 }
 
-if ns.AddLocale({ "zhTW" }, T) then
-	ns.DEFAULT_UNITS = "metres"
-end
+ns.AddLocale({ "zhTW" }, T, nil, { units = "metres" })

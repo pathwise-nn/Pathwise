@@ -1063,6 +1063,13 @@ local T = {
 	-- "Train Apprentice Tailoring": in Russian the profession comes first.
 	["Train %s %s"] = { "Учиться: %s (%s)", 2, 1 },
 	["%dx %s"] = "%d× %s",
+	-- Added with Settings > Language.
+	["Language"] = "Язык",
+	["Game language"] = "Язык игры",
+	["after a reload"] = "после перезагрузки",
+	["The language Pathwise speaks. Quest, NPC, item and zone names come from the game, in its own language."] = "Язык Pathwise. Названия заданий, NPC, предметов и зон берутся из игры, на её языке.",
+	["Reload to switch: Pathwise picks its language as the game starts."] = "Перезагрузите, чтобы сменить: Pathwise выбирает язык при запуске игры.",
+	["Korean and Chinese are offered on a Korean or Chinese client only: other clients have no fonts for their letters."] = "Корейский и китайский доступны только в корейском или китайском клиенте: в других клиентах нет шрифтов для этих букв.",
 	-- Added with Settings > Text size.
 	["Text size"] = "Размер текста",
 	["Normal"] = "Обычный",
@@ -1141,9 +1148,6 @@ local function zoneList(s)
 	return table.concat(parts, ", ") .. " и " .. last
 end
 
-if ns.AddLocale("ruRU", T, zoneList) then
-	ns.TRANSLATOR = "Designer"
-	-- Distances in metres unless you choose yards (Settings).
-	ns.DEFAULT_UNITS = "metres"
-	ns.DECIMAL_COMMA = true
-end
+-- The translator, credited in About when Russian is in use; distances in
+-- metres unless you choose yards (Settings), with a decimal comma.
+ns.AddLocale("ruRU", T, zoneList, { translator = "Designer", units = "metres", comma = true })
