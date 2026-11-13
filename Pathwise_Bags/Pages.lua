@@ -35,7 +35,7 @@ local function bagsRows()
 		rows[#rows + 1] = { "text", "Install Pathwise: Leveling & Professions to mark items quests later on your path will ask for, and your profession routes' materials. Without it, quest items are the ones the game marks.", "muted" }
 	end
 	rows[#rows + 1] = { "text", S.Gear() and "Pathwise Gear is installed: upgrades and best in slot are marked, and gear you can't use or that is worse can go."
-		or "With Pathwise Gear (it needs Pathwise), upgrades and best in slot are marked too.", "muted" }
+		or "With Pathwise Gear installed, upgrades and best in slot are marked too.", "muted" }
 	return rows
 end
 

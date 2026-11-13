@@ -1,5 +1,5 @@
 'use strict';
-// Pathwise Heal, Pathwise Encounters, Pathwise Loot, Pathwise Insights and Pathwise Bags stand alone, so each carries its own
+// Pathwise Heal, Pathwise Encounters, Pathwise Loot, Pathwise Insights, Pathwise Bags and Pathwise Gear stand alone, so each carries its own
 // copy of the files it shares with Pathwise UI: the core (settings, events),
 // theme, motion, widgets, move mode, options window and minimap button, plus
 // their media. Pathwise UI's are the originals; this copies them into each
@@ -14,7 +14,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 const FROM = path.join(ROOT, 'PathwiseUI');
-const TARGETS = ['Pathwise_Heal', 'Pathwise_Encounters', 'Pathwise_Loot', 'Pathwise_Insights', 'Pathwise_Bags'];
+const TARGETS = ['Pathwise_Heal', 'Pathwise_Encounters', 'Pathwise_Loot', 'Pathwise_Insights', 'Pathwise_Bags', 'Pathwise_Gear'];
 const FILES = ['Core.lua', 'Theme.lua', 'Anim.lua', 'Widgets.lua', 'Movers.lua', 'Options.lua', 'Minimap.lua'];
 const HEADER = (name) => `-- COPIED from PathwiseUI/${name} by tools/kit.js: do not edit here.\n-- Edit PathwiseUI/${name}, then run npm run kit.\n`;
 

@@ -11,11 +11,13 @@
 -- Pathwise Gear scores everything itself; it needs no other addon.
 
 local ADDON, ns = ...
-local S = Pathwise.Suite
+local S = ns.S
 local W = ns.Weights
 local Gear = {}
 ns.Gear = Gear
-Pathwise.Gear = Gear
+-- For the other Pathwise addons: Pathwise Loot finds it here, and Pathwise
+-- Bags (and Pathwise) under Pathwise.Gear when Pathwise is installed.
+if _G.Pathwise then _G.Pathwise.Gear = Gear end
 
 S.Defaults("gear", {
 	minUpgrade = 0.01, -- the smallest gain that counts as an upgrade (0.01 = 1%)

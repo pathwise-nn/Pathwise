@@ -16,9 +16,9 @@ Pathwise is eight CurseForge projects, built from this one repository:
 | Pathwise Loot | `Pathwise_Loot/` | `dist/Pathwise_Loot-<x.y.z>.zip` | [loot.md](loot.md) |
 | Pathwise Insights | `Pathwise_Insights/` | `dist/Pathwise_Insights-<x.y.z>.zip` | [insights.md](insights.md) |
 
-Gear needs Pathwise (`## Dependencies: Pathwise` in its TOC).
-Pathwise UI, Pathwise Heal, Pathwise Encounters, Pathwise Loot, Pathwise
-Insights and Pathwise Bags work on their own (`## OptionalDeps`). All eight share one version; the
+Pathwise Gear, Pathwise Bags, Pathwise UI, Pathwise Heal, Pathwise
+Encounters, Pathwise Loot and Pathwise Insights work on their own
+(`## OptionalDeps`). All eight share one version; the
 tests check that the TOCs agree. Pathwise Heal, Pathwise Encounters, Pathwise
 Loot, Pathwise Insights and Pathwise Bags carry copies of Pathwise UI's shared files
 (`npm run kit`); the build refuses stale copies. Pathwise Insights also carries
@@ -72,10 +72,10 @@ For all eight:
 |---|---|---|---|---|---|---|---|---|
 | Summary | Every quest. Every craft. Every level. Leveling routes 1-60 and profession guides 1-300 for WoW: Forever. | Is this an upgrade for me? Upgrade arrows, tooltip advice, the best quest reward and Best in Slot (Level) for WoW: Forever. | One bag window that knows what you need: sorted bags, keep and junk marks, and junk selling for WoW: Forever. | Your whole interface, in your color: unit frames, action bars, nameplates, tooltips and fonts for WoW: Forever. | Click-to-heal party and raid frames, like HealBot or VuhDo, with a preset for every healing spec, for WoW: Forever. | A boss mod for WoW: Forever: boss timers and warnings, the game's own encounter warnings, pull and break timers. | What does this boss drop? Every dungeon and raid boss's loot, search, a wishlist and upgrade marks for WoW: Forever. | How is your leveling really going? Records, a heat map and your numbers per character for WoW: Forever. |
 | Categories | Quests & Leveling; Professions | Bags & Inventory; Tooltip | Bags & Inventory | the closest to Unit Frames, Action Bars | the closest to Raid Frames, Healer, Unit Frames | the closest to Boss Encounters, Combat | the closest to Boss Encounters, Tooltip | Quests & Leveling; the closest to Map & Minimap |
-| Relations | none | Pathwise: **Required Dependency** | Pathwise: **Required Dependency**; Pathwise Gear: **Optional Dependency** | Pathwise: **Optional Dependency** | Pathwise, Pathwise UI: **Optional Dependency** | Pathwise, Pathwise UI, Pathwise Heal: **Optional Dependency** | Pathwise, Pathwise UI, Pathwise Gear: **Optional Dependency** | Pathwise, Pathwise UI: **Optional Dependency** (it was Required: change it on the page) |
+| Relations | none | Pathwise, Pathwise UI: **Optional Dependency** (it was Required: change it on the page) | Pathwise: **Required Dependency**; Pathwise Gear: **Optional Dependency** | Pathwise: **Optional Dependency** | Pathwise, Pathwise UI: **Optional Dependency** | Pathwise, Pathwise UI, Pathwise Heal: **Optional Dependency** | Pathwise, Pathwise UI, Pathwise Gear: **Optional Dependency** | Pathwise, Pathwise UI: **Optional Dependency** (it was Required: change it on the page) |
 
 With the relations set, the CurseForge app installs Pathwise when someone
-installs Gear or Bags.
+installs Bags.
 
 ## Uploading a file
 

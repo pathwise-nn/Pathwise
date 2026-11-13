@@ -15,7 +15,9 @@ data, never typed in.
    `src/corrections/enum`, `src/meta`, `support/Forever`.
 2. `npm run data` (that is `lua5.1 tools/data/build.lua`) writes
    `Pathwise/Data/Data.lua`.
-3. `npm test`, then check a few quests in game.
+3. `npm run gear:data` copies what Pathwise Gear's Best in Slot needs into
+   `Pathwise_Gear/Data/Gear.lua` (the tests refuse a stale copy).
+4. `npm test`, then check a few quests in game.
 
 `tools/data/build.lua` runs every QuestieDB file in a sandbox that can only
 build tables (no file, OS or network access).

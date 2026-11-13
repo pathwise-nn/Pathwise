@@ -163,7 +163,7 @@ test("gear best: picking one up is announced on screen, with a sound and in chat
 	stub.bags[0][4] = { itemID = 107 }
 	stub.fire("BAG_UPDATE_DELAYED")
 	eq(stub.notices[2], "Best in slot for level 30: Hood of Ages (Head)", "and up: the level it needs")
-	ns.Set("gear.bisAlert", false)
+	g.Set("gear.bisAlert", false)
 	stub.bags[0][5] = { itemID = 104 }
 	stub.fire("BAG_UPDATE_DELAYED")
 	eq(#stub.notices, 2, "switched off")
@@ -222,10 +222,10 @@ test("gear best: crafted gear, by anyone or by me, with its recipe", function()
 	ok(B.Chase(head()), "the arrow goes to the pattern's vendor")
 	-- Mine only, without the profession: gone.
 	stub.skills[197] = nil
-	ns.Set("gear.bisCrafted", "mine")
+	g.Set("gear.bisCrafted", "mine")
 	B.Clear()
 	ok(head().id ~= 990000, "not mine: left out")
-	ns.Set("gear.bisCrafted", "off")
+	g.Set("gear.bisCrafted", "off")
 	stub.skills[197] = { 120, 150 }
 	B.Clear()
 	ok(head().id ~= 990000, "crafted gear off")
@@ -241,25 +241,44 @@ test("gear best: bind on pickup crafts are only yours; Season of Discovery recip
 	stub.skills[197] = { 120, 150 }
 	eq(head().id, 990000, "but you can make it")
 	ok(B.SourceText(head().source):find("Season of Discovery recipe: found in Forever, not confirmed"), B.SourceText(head().source))
-	ns.Set("gear.bisSod", false)
+	g.Set("gear.bisSod", false)
 	ok(head().id ~= 990000, "Season of Discovery recipes hidden")
 end)
 
-test("gear best panel: slot by slot, and the options", function()
+-- A page of Gear's own options window: its rows, and their texts.
+local function page(g, key)
+	for _, c in ipairs(g.Config.CATEGORIES) do
+		if c.key == key then
+			local rows = c.rows()
+			local texts = {}
+			for _, r in ipairs(rows) do
+				if type(r[2]) == "string" then texts[#texts + 1] = r[2] end
+				if r[1] == "toggle" or r[1] == "dropdown" or r[1] == "choice" then texts[#texts + 1] = r[r[1] == "toggle" and 4 or 5] end
+			end
+			return rows, texts
+		end
+	end
+end
+local function row(rows, kind, label)
+	for _, r in ipairs(rows) do if r[1] == kind and tostring(r[2]):find(label, 1, true) then return r end end
+end
+
+test("gear best page: slot by slot, and the options", function()
 	local stub, ns, g = gear()
 	withGear(stub)
 	g.Best.Clear()
-	ns.Fire("SHOW_SETTINGS")
-	stub.clickLabelText("Pathwise Gear")
-	ok(stub.clickLabelText("Best in Slot (Level)"), "open it from the Gear panel")
-	ok(contains(stub.texts(), "BEST IN SLOT (LEVEL)"), "its heading")
-	local texts = stub.texts()
-	ok(contains(texts, "Head:  Glyphed Hood"), table.concat(texts, " | "))
+	SlashCmdList.PATHWISEGEAR("best")
+	ok(_G.PathwiseGearConfig and _G.PathwiseGearConfig.shown, "/pwgear best opens Gear's own window")
+	eq(g.Config.Current(), "best", "on Best in Slot")
+	local rows, texts = page(g, "best")
+	ok(contains(texts, "Best in Slot (Level)"), "its heading")
+	ok(row(rows, "button", "Head:  Glyphed Hood"), table.concat(texts, " | "))
 	ok(contains(texts, "World drop"), "where it comes from")
-	ok(contains(texts, "Alert when I pick one up"))
-	ok(contains(texts, "Crafted gear") and contains(texts, "Season of Discovery recipes"))
-	ok(stub.clickLabel("+3"))
-	eq(ns.Get("gear.bisAhead"), 3)
+	ok(row(rows, "toggle", "Alert when I pick one up"))
+	ok(row(rows, "choice", "Crafted gear") and row(rows, "toggle", "Season of Discovery recipes"))
+	eq(row(rows, "choice", "Look ahead")[3], "gear.bisAhead")
+	row(rows, "button", "Head:  Glyphed Hood")[3]()
+	ok(lastPrint(stub):find("World drop"), lastPrint(stub))
 end)
 
 test("gear: an item better than what is worn is an upgrade, by how much and where", function()
@@ -354,7 +373,7 @@ test("gear: the tooltip line", function()
 	ok(lines[1][2]:find("upgrade · Head"), lines[1][2])
 	lines = stub.showTooltip("item:103")
 	eq(lines[1][2], "You can't wear this armour")
-	ns.Set("gear.tooltip", false)
+	g.Set("gear.tooltip", false)
 	eq(#stub.showTooltip("item:102"), 0, "switched off")
 end)
 
@@ -371,7 +390,7 @@ test("gear: a gold arrow on bag items that are upgrades", function()
 	end
 	ok(arrow(b1) and arrow(b1).shown, "the hood is an upgrade")
 	ok(not arrow(b2) or not arrow(b2).shown, "the plate helm is not")
-	ns.Set("gear.bags", false)
+	g.Set("gear.bags", false)
 	ContainerFrameCombinedBags:UpdateItems()
 	eq(arrow(b1).shown, false, "switched off")
 end)
@@ -388,71 +407,61 @@ test("gear: the best quest reward, in chat and on its tooltip", function()
 	ok(lines[1][2]:find("upgrade"), "the panel closed: back to the comparison")
 end)
 
-test("gear panel: in Settings, with spec, stat priority, Pawn import and bag upgrades", function()
+test("gear page: Upgrades, with spec, stat priority, custom weights and bag upgrades", function()
 	local stub, ns, g = gear(function(s) s.bags[0] = { { itemID = 102 } } end)
 	ns.Fire("SHOW_SETTINGS")
 	ok(contains(stub.texts(), "PATHWISE SUITE"), "a Pathwise suite section")
-	ok(stub.clickLabelText("Pathwise Gear"), "open Pathwise Gear")
-	local texts = stub.texts()
+	ok(stub.clickLabelText("Pathwise Gear"), "listed there")
+	ok(_G.PathwiseGearConfig and _G.PathwiseGearConfig.shown, "it opens Gear's own window")
+	eq(g.Config.Current(), "gear", "on Upgrades")
+	local rows, texts = page(g, "gear")
 	ok(contains(texts, "Scoring with Pathwise's Frost weights"), table.concat(texts, " | "))
-	ok(contains(texts, "STAT PRIORITY"))
+	ok(contains(texts, "Stat priority"))
 	ok(contains(texts, "Intellect") and contains(texts, "Spell damage"))
 	ok(contains(texts, "The class guides agree: Hit, Spell power (Frost)"), "the spec's guide order")
 	ok(contains(texts, "Glyphed Hood"), "an upgrade in the bags")
-	-- Paste a scale and import it.
-	local input
-	for _, f in ipairs(stub.frames) do if rawget(f, "key") == "gear.import" and f.shown then input = f end end
+	ok(not contains(texts, "Pawn"), "the page never mentions another addon")
+	-- Paste a scale and apply it.
+	local input = row(rows, "input", "gear.import")
 	ok(input, "the paste box")
-	ok(not contains(texts, "Pawn"), "the panel never mentions another addon")
-	input.box:SetText('"Pasted": Intellect=1')
-	input.box.scripts.OnTextChanged(input.box, true)
-	ok(stub.clickLabel("Import"))
+	eq(input[4]("hello"), false, "nothing it knows: kept in the box")
+	eq(input[4]('"Pasted": Intellect=1'), true)
 	ok(lastPrint(stub):find('imported "Pasted"'), lastPrint(stub))
 	eq(select(2, g.Gear.Weights()), "Pasted")
-	-- Choose a spec by hand.
-	ok(stub.clickLabel("Fire"))
-	eq(ns.Get("gear.spec").MAGE, "fire")
+	rows = page(g, "gear")
+	row(rows, "button", 'Stop using "Pasted"')[3]()
+	eq(select(3, g.Gear.Weights()), "pathwise", "back to Pathwise's weights")
+	-- Choose a spec by hand, then follow the talents again.
+	local spec = row(page(g, "gear"), "dropdown", "Spec")
+	eq(spec[3].get(), "auto")
+	spec[3].set("fire")
+	eq(g.Get("gear.spec").MAGE, "fire")
+	eq(row(page(g, "gear"), "dropdown", "Spec")[3].get(), "fire")
+	row(page(g, "gear"), "dropdown", "Spec")[3].set("auto")
+	eq(g.Get("gear.spec").MAGE, nil)
+end)
+
+test("gear: settings kept in Pathwise's before are moved over once", function()
+	local stub, ns, g = gear(function()
+		PathwiseSettings = nil
+	end)
+	-- As 0.3.3 left them: in Pathwise's settings.
+	PathwiseGearSettings, PathwiseGearCharSettings = nil, nil
+	ns.Set("gear.tooltip", false)
+	ns.Set("gear.spec", { MAGE = "fire" })
+	ns.Set("gear.minimap", false)
+	ok(g.MoveSettings(), "moved")
+	eq(g.Get("gear.tooltip"), false)
+	eq(g.Get("gear.spec").MAGE, "fire")
+	eq(g.Get("minimap.shown"), false, "the minimap button stays hidden")
+	g.Set("gear.tooltip", true)
+	ok(not g.MoveSettings(), "only once")
+	eq(g.Get("gear.tooltip"), true, "what you set since stays")
 end)
 
 ---------------------------------------------------------------------------
--- Pathwise's side panels, as a suite addon uses them (Pathwise Gear)
+-- Pathwise's settings panel
 ---------------------------------------------------------------------------
-
-local function inPanel(f, P) while f do if f == P then return true end f = rawget(f, "parent") end return false end
-local function bottomBack(stub, P)
-	for _, f in ipairs(stub.frames) do
-		local t = rawget(f, "pwText")
-		if t and t.text == "Back" and f.shown and inPanel(f, P) then return f end
-	end
-end
-
-test("panels: Back returns to the panel a suite addon was opened from", function()
-	local stub, ns = gear()
-	ns.Fire("SHOW_SETTINGS")
-	local P = _G.PathwisePanel
-	ok(not P.back.shown, "no Back on the first panel")
-	ok(stub.clickLabelText("Pathwise Gear"), "into Pathwise Gear")
-	ok(P.back.shown, "a Back button at the top")
-	ok(contains(stub.texts(), "Scoring with"))
-	-- The Back beside Close (not the guide window's own Back, a step back).
-	local bottom = bottomBack(stub, P)
-	ok(bottom, "and one beside Close")
-	bottom.scripts.OnClick(bottom)
-	ok(contains(stub.texts(), "PATHWISE SUITE"), "back in Pathwise's settings")
-	ok(not P.back.shown, "nothing further back")
-	-- Two steps: Settings > Pathwise Gear > Best in Slot (Level), then back twice.
-	ok(stub.clickLabelText("Pathwise Gear"))
-	ok(stub.clickLabelText("Best in Slot (Level)"))
-	P.back.scripts.OnClick(P.back)
-	ok(contains(stub.texts(), "Scoring with"), "back in Pathwise Gear")
-	P.back.scripts.OnClick(P.back)
-	ok(contains(stub.texts(), "PATHWISE SUITE"), "back in Settings")
-	-- Closing forgets the way back.
-	stub.clickLabelText("Pathwise Gear")
-	ns.Suite.Close()
-	ns.Fire("SHOW_SETTINGS")
-	ok(not P.back.shown, "a fresh start after closing")
-end)
 
 test("panels: a setting's label never runs under its value or buttons", function()
 	local stub, ns = gear()
@@ -472,67 +481,3 @@ test("panels: a setting's label never runs under its value or buttons", function
 	ok(checked >= 5, "checked the setting rows: " .. checked)
 end)
 
-test("panels: a suite panel opened on its own still has Back, to Pathwise's settings", function()
-	local stub, ns = gear()
-	ns.Suite.Open("gear") -- as Pathwise Gear's minimap button does
-	local P = _G.PathwisePanel
-	ok(P.back.shown, "the back arrow at the top")
-	local bottom = bottomBack(stub, P)
-	ok(bottom, "and Back beside Close at the bottom")
-	bottom.scripts.OnClick(bottom)
-	ok(contains(stub.texts(), "PATHWISE SUITE"), "it leads to Pathwise's settings")
-	ok(not P.back.shown, "no Back from the settings themselves")
-end)
-
-test("minimap buttons: a suite addon's own, in its colour, with its own place and switch", function()
-	local stub, ns = gear()
-	local main, btn = _G.PathwiseMinimapButton, _G.PathwiseGearMinimapButton
-	ok(main and btn, "Pathwise and Pathwise Gear each have one")
-	ok(btn.shown and main.shown)
-	ok(btn.icon.texture:find("glyph%-upgrade"), "its own mark")
-	btn.scripts.OnClick(btn, "LeftButton")
-	ok(contains(stub.texts(), "Scoring with"), "click opens Pathwise Gear")
-	btn.scripts.OnClick(btn, "RightButton")
-	ok(contains(stub.texts(), "BEST IN SLOT (LEVEL)"), "right-click: Best in Slot (Level)")
-	-- Hidden from its own settings; Pathwise's stays.
-	ns.Set("gear.minimap", false)
-	ok(not btn.shown and main.shown, "each has its own switch")
-	ns.Set("gear.minimap", true)
-	-- Dragged: it remembers its own place.
-	ns.Set("gear.minimapAngle", 90)
-	ok(btn.points[#btn.points][5] > 0, "moved to the top")
-end)
-
-test("suite panels open by their own minimap button, Pathwise's by the guide", function()
-	local stub, ns = gear()
-	ns.Fire("SHOW_SETTINGS") -- builds this run's panel
-	ns.Suite.Close()
-	local P = _G.PathwisePanel
-	local btn = _G.PathwiseGearMinimapButton
-	-- A 1920 x 1080 screen at scale 1; the Gear button near the top right.
-	UIParent.GetWidth, UIParent.GetHeight, UIParent.GetEffectiveScale = function() return 1920 end, function() return 1080 end, function() return 1 end
-	P.GetEffectiveScale = function() return 1 end
-	btn.GetCenter, btn.GetEffectiveScale = function() return 1700, 900 end, function() return 1 end
-	btn.scripts.OnClick(btn, "LeftButton")
-	local pt = P.points[#P.points]
-	eq(pt[2], UIParent, "placed on the screen, not attached to anything")
-	ok(pt[4] < 1700 - 24, "to the left of the button (the right half of the screen)")
-	ok(pt[5] <= 1080 - 8 and pt[5] >= 900, "hanging down from the button's height")
-	-- Pathwise's own settings: beside the guide window as before.
-	ns.Fire("SHOW_SETTINGS")
-	pt = P.points[#P.points]
-	ok(pt[2] ~= UIParent or pt[1] == "CENTER", "Pathwise's settings are not by the Gear button")
-	-- The button hidden: the Gear panel falls back to the guide window.
-	ns.Set("gear.minimap", false)
-	ns.Suite.Close()
-	ns.Suite.Open("gear")
-	pt = P.points[#P.points]
-	ok(pt[2] ~= UIParent or pt[1] == "CENTER", "no button: by the guide")
-	-- A button on the left, low down: the panel to its right, standing up from it.
-	ns.Set("gear.minimap", true)
-	btn.GetCenter = function() return 200, 150 end
-	ns.Suite.Close()
-	ns.Suite.Open("gear")
-	pt = P.points[#P.points]
-	eq(pt[4], 224, "to the right of the button")
-end)

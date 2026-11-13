@@ -13,7 +13,7 @@
 --     and GetQuestItemLink("choice", i); the pick shows on its tooltip and in chat
 
 local ADDON, ns = ...
-local S, Gear = Pathwise.Suite, ns.Gear
+local S, Gear = ns.S, ns.Gear
 local T = S.Theme
 local H = {}
 ns.Hooks = H
@@ -204,7 +204,7 @@ local function onQuestComplete()
 	local i, link, pct = H.BestChoice(links)
 	if not i then return end
 	pick = { link = link, pct = pct }
-	S.Print(pct and ("Pathwise Gear: take %s (+%.1f%%)."):format(link, pct) or ("Pathwise Gear: take %s."):format(link))
+	S.Print(pct and ("take %s (+%.1f%%)."):format(link, pct) or ("take %s."):format(link))
 end
 H.OnQuestComplete = onQuestComplete
 function H.Pick() return pick end

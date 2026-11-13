@@ -26,10 +26,8 @@ function version() {
 	return m[1];
 }
 
-// The addons, each its own CurseForge project and zip. Gear needs Pathwise
-// installed (## Dependencies in its TOC); Pathwise UI, Pathwise Heal,
-// Pathwise Encounters, Pathwise Loot, Pathwise Insights and Pathwise Bags
-// work on their own (## OptionalDeps).
+// The addons, each its own CurseForge project and zip. All but Pathwise
+// work on their own (## OptionalDeps: Pathwise in their TOCs).
 const ADDONS = ['Pathwise', 'Pathwise_Gear', 'Pathwise_Bags', 'PathwiseUI', 'Pathwise_Heal', 'Pathwise_Encounters', 'Pathwise_Loot', 'Pathwise_Insights'];
 
 // Every file of the addon folders asked for (all by default), sorted,
@@ -128,7 +126,7 @@ function main() {
 	const kit = require('./kit');
 	const stale = kit.plan().filter(([, to, want]) => !fs.existsSync(to) || !fs.readFileSync(to).equals(want));
 	if (stale.length) {
-		console.error(`${stale.length} stale copied kit file(s) (Pathwise_Heal, Pathwise_Encounters, Pathwise_Loot, Pathwise_Insights, Pathwise_Bags): run npm run kit first`);
+		console.error(`${stale.length} stale copied kit file(s) (Pathwise_Heal, Pathwise_Encounters, Pathwise_Loot, Pathwise_Insights, Pathwise_Bags, Pathwise_Gear): run npm run kit first`);
 		process.exit(1);
 	}
 	const v = version();

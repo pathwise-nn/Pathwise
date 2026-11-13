@@ -20,6 +20,10 @@ local function ok(v, msg) if not v then error(msg or "expected true", 2) end end
 local function fresh()
 	for k in pairs(package.loaded) do if k:match("^tests") then package.loaded[k] = nil end end
 	PathwiseSettings, PathwiseCharSettings, Pathwise, SLASH_PATHWISE1 = nil, nil, nil, nil
+	-- Pathwise Gear stands alone: its own settings, table and frames.
+	local drop = {}
+	for k in pairs(_G) do if type(k) == "string" and k:find("^PathwiseGear") then drop[#drop + 1] = k end end
+	for _, k in ipairs(drop) do _G[k] = nil end
 	local stub = dofile(ROOT .. "/tests/stub.lua")
 	local ns = stub.load(ROOT)
 	return stub, ns

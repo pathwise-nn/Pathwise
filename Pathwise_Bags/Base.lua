@@ -57,8 +57,10 @@ function S.Professions()
 	return P and P.Professions or nil
 end
 
-function S.Gear() return _G.Pathwise and _G.Pathwise.Gear or nil end
-function S.GearBest() return _G.Pathwise and _G.Pathwise.GearBest or nil end
+-- Pathwise Gear on its own (its ns), or as Pathwise had it before.
+local function gear() return _G.PathwiseGear end
+function S.Gear() local G = gear() return G and G.Gear or (_G.Pathwise and _G.Pathwise.Gear) or nil end
+function S.GearBest() local G = gear() return G and G.Best or (_G.Pathwise and _G.Pathwise.GearBest) or nil end
 
 ---------------------------------------------------------------------------
 -- The look: the kit's theme, and what the bag window adds to it
