@@ -1,5 +1,6 @@
 ## Interface: 16001
 ## Title: Pathwise
+## Notes-ruRU: Каждое задание. Каждый рецепт. Каждый уровень. Маршруты прокачки 1-60 и гиды по профессиям 1-300 для WoW: Forever.
 ## Notes: Every quest. Every craft. Every level.
 ## Author: leight_nn & florp
 ## Version: 0.3.4
@@ -9,6 +10,9 @@
 ## X-License: GPL-3.0-only
 
 Core\Init.lua
+Core\Locale.lua
+Locales\ruRU.lua
+Locales\ruRU-routes.lua
 Data\Data.lua
 Core\Compat.lua
 Theme\Signature.lua

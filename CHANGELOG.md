@@ -6,6 +6,18 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise in Russian
+- Pathwise speaks Russian on Russian clients (ruRU): the hub, the guide,
+  the tracker, Settings, tooltips, chat messages and /pw help, route titles
+  with the Russian zone names, and the Horde routes' texts for levels 32-60.
+  Other route texts stay in English for now. English clients see no change.
+- Distances in yards or metres: Settings > Compass > Distances (metres by
+  default on Russian clients).
+- For translators: Pathwise can now be translated. Everything it shows
+  goes through one lookup (Core/Locale.lua); a language is a table of
+  English text and its translation in Locales/ (CONTRIBUTING.md).
+- Not yet checked in game.
+
 ### Pathwise Bags: works on its own
 - No longer needs Pathwise: Leveling & Professions. It stands alone like
   Pathwise Loot and Pathwise Insights, with its own options window (Bags,

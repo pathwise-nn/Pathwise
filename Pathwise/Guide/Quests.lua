@@ -37,7 +37,7 @@ function Q.Get(id) return D.quests[id] end
 function Q.Name(id)
 	local q = D.quests[id]
 	local live = C_QuestLog and C_QuestLog.GetTitleForQuestID and ns.Compat.Readable(C_QuestLog.GetTitleForQuestID(id))
-	return live or (q and q[NAME]) or ("Quest " .. tostring(id))
+	return live or (q and q[NAME]) or (ns.L("Quest ") .. tostring(id))
 end
 function Q.Level(id) local q = D.quests[id] return q and q[LEVEL] or 0 end
 function Q.MinLevel(id) local q = D.quests[id] return q and q[MINLEVEL] or 0 end

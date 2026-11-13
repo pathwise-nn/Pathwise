@@ -53,6 +53,30 @@ Do not edit generated files by hand: change their generator and rebuild.
    Quest goals only need the quest ID; the data fills in the rest.
 3. Run `npm test`, then play the fix.
 
+## Translations
+
+Pathwise is written in English. A translation is a file in
+`Pathwise/Locales/` named for the game's language code (`ruRU.lua`, `deDE.lua`)
+and listed in the TOC after `Core\Locale.lua`. It is a table of the English
+text, exactly as Pathwise shows it, and its translation, handed to
+`ns.AddLocale("<code>", table)`; it is used only when the game runs in that
+language. In the code:
+
+- `ns.L("text")` for any text a player sees; a template that takes values
+  is translated before it is filled: `ns.L("Step %d of %d"):format(i, n)`.
+- When a language needs the values in another order, use
+  `ns.F("Train %s %s", rank, name)` and give the translation as
+  `{ "Учиться: %s (%s)", 2, 1 }`.
+- `ns.U(text)` for capitals (it knows Cyrillic too), `ns.Tip.SetText` /
+  `ns.Tip.AddLine` for tooltips. Font strings made with the theme's `T.Text`
+  translate what they are given.
+- Route texts are keyed by their English text too (`Locales/ruRU-routes.lua`):
+  when a route's text changes, that line shows in English until it is
+  translated again.
+
+The tests check that English is unchanged and that no translation expects
+more values than its English text gives (`tests/locale.lua`).
+
 ## Pull requests
 
 - One change per pull request, with a line on what players will notice.

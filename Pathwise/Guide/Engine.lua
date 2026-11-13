@@ -631,7 +631,7 @@ local function ownRoutes(s)
 	local route = Engine.Route()
 	if route and not fits(route, player) then
 		s.route, s.pin = nil, nil
-		ns.Print(("%s is not for this character: choosing one that is."):format(route.title))
+		ns.Print((ns.L("%s is not for this character: choosing one that is.")):format(route.title))
 	end
 	if not s.route then
 		local best = Engine.BestRoute(player, (C.PlayerMapPosition()))
@@ -645,7 +645,7 @@ local function ownRoutes(s)
 		local best = Engine.BestRoute(player, (C.PlayerMapPosition()))
 		if best and best.id ~= picked.id and Engine.HeldIn(best) > 0 then
 			s.route, s.picked, s.pin = best.id, best.id, nil
-			ns.Print(("your quests are on %s: following that route."):format(best.title))
+			ns.Print((ns.L("your quests are on %s: following that route.")):format(best.title))
 		end
 	elseif s.picked and s.picked ~= s.route then
 		s.picked = nil
@@ -678,7 +678,7 @@ local function compute()
 		route = Engine.NextOf(route)
 		s.route, s.pin = route.id, nil
 		live = firstOpen(route)
-		ns.Print(("on to the next route: %s."):format(route.title))
+		ns.Print((ns.L("on to the next route: %s.")):format(route.title))
 	end
 	local pin = s.pin
 	if pin and route and route.steps[pin] and pin ~= live then current = pin
@@ -818,7 +818,7 @@ local function placeOf(goal)
 		local c = pickFrom(goal.from, from)
 		if c then return { map = c[1], x = c[2], y = c[3], name = c[4] } end
 	end
-	if verb == "bind" then return atPlace(goal.who or ("Innkeeper, " .. tostring(goal[2]))) end
+	if verb == "bind" then return atPlace(goal.who or (ns.L("Innkeeper, ") .. tostring(goal[2]))) end
 	if verb == "have" or verb == "learn" then return atPlace(goal.name) end
 	return nil
 end
@@ -832,29 +832,29 @@ local function startItemOf(goal)
 end
 Engine.StartItem = startItemOf
 
-local RANKS = { [75] = "Apprentice", [150] = "Journeyman", [225] = "Expert", [300] = "Artisan" }
-local VERB_TEXT = { accept = "Accept %s", turnin = "Turn in %s", complete = "Complete %s" }
+local RANKS = { [75] = ns.L("Apprentice"), [150] = ns.L("Journeyman"), [225] = ns.L("Expert"), [300] = ns.L("Artisan") }
+local VERB_TEXT = { accept = ns.L("Accept %s"), turnin = ns.L("Turn in %s"), complete = ns.L("Complete %s") }
 
 local function goalText(goal)
 	local verb = goal[1]
 	local item = startItemOf(goal)
-	if item then return ("Use %s: accept %s"):format(item.name, qname(goal)) end
+	if item then return (ns.L("Use %s: accept %s")):format(item.name, qname(goal)) end
 	if VERB_TEXT[verb] then return VERB_TEXT[verb]:format(qname(goal)) end
 	if verb == "goto" then return goal[5] or "Go to the marked spot" end
-	if verb == "level" then return ("Reach level %d"):format(goal[2]) end
+	if verb == "level" then return (ns.L("Reach level %d")):format(goal[2]) end
 	if verb == "have" then
 		local name = goal.name or (Q.Data.items[goal[2]] and Q.Data.items[goal[2]][1]) or ("item " .. goal[2])
 		local n = goal[3] or 1
-		return n > 1 and ("Get %d %s (%d)"):format(n, name, C.ItemCount(goal[2])) or ("Get " .. name)
+		return n > 1 and (ns.L("Get %d %s (%d)")):format(n, name, C.ItemCount(goal[2])) or (ns.L("Get ") .. name)
 	end
-	if verb == "bind" then return ("Make %s your home"):format(goal[2] or "this inn") end
-	if verb == "skill" then return ("Reach %s %d"):format(goal.name or "skill", goal[3]) end
-	if verb == "train" then return ("Train %s %s"):format(RANKS[goal[3]] or "", goal.name or "") end
-	if verb == "learn" then return "Learn " .. (goal.name or "the recipe") end
+	if verb == "bind" then return (ns.L("Make %s your home")):format(goal[2] or ns.L("this inn")) end
+	if verb == "skill" then return (ns.L("Reach %s %d")):format(ns.L(goal.name or "skill"), goal[3]) end
+	if verb == "train" then return ns.F("Train %s %s", RANKS[goal[3]] or "", ns.L(goal.name or "")) end
+	if verb == "learn" then return ns.L("Learn ") .. (goal.name or "the recipe") end
 	if verb == "craft" then
-		if goal.untilSkill then return ("Craft %s until %d"):format(goal.name or "it", goal.untilSkill) end
-		if goal.count then return ("Craft %d %s"):format(goal.count, goal.name or "") end
-		return "Craft " .. (goal.name or "")
+		if goal.untilSkill then return (ns.L("Craft %s until %d")):format(goal.name or "it", goal.untilSkill) end
+		if goal.count then return (ns.L("Craft %d %s")):format(goal.count, goal.name or "") end
+		return ns.L("Craft ") .. (goal.name or "")
 	end
 	return goal[2]
 end
@@ -938,14 +938,14 @@ end
 -- under it while open), "goto", "have", "bind", "note"... lead and tail are
 -- plain, name is the part to pick out (a person, quest or item).
 local LINE = {
-	accept = "Accept ", turnin = "Turn in ", complete = "", have = "Get ", learn = "Learn ",
+	accept = ns.L("Accept "), turnin = ns.L("Turn in "), complete = "", have = ns.L("Get "), learn = ns.L("Learn "),
 }
 local function goalLine(route, s, g, goal, st, withObjectives, out)
 	local verb = goal[1]
 	local line = { kind = verb, done = st == "done", info = st == "info", optional = goal.optional }
 	local item = startItemOf(goal)
 	if item then
-		line.lead, line.name, line.tail = "Use ", item.name, ": accept " .. qname(goal)
+		line.lead, line.name, line.tail = ns.L("Use "), item.name, ns.L(": accept ") .. qname(goal)
 	elseif QUEST_VERBS[verb] then
 		line.lead, line.name = LINE[verb], qname(goal)
 	elseif verb == "have" then
@@ -953,7 +953,7 @@ local function goalLine(route, s, g, goal, st, withObjectives, out)
 		line.lead, line.name = LINE.have, name
 		if (goal[3] or 1) > 1 then line.have, line.need = math.min(C.ItemCount(goal[2]), goal[3]), goal[3] end
 	elseif verb == "bind" then
-		line.lead, line.name, line.tail = "Make ", goal[2] or "this inn", " your home"
+		line.lead, line.name, line.tail = ns.L("Make "), goal[2] or ns.L("this inn"), ns.L(" your home")
 	elseif verb == "learn" then
 		line.lead, line.name = LINE.learn, goal.name or "the recipe"
 	else
@@ -977,7 +977,7 @@ local function linesOf(route, s, withObjectives)
 		if st ~= "na" and st ~= "wait" then
 			local who = TALK[goal[1]] and goal.who or nil
 			if who and who ~= lastWho then
-				talk = { kind = "talk", lead = "Talk to ", name = who, done = true }
+				talk = { kind = "talk", lead = ns.L("Talk to "), name = who, done = true }
 				out[#out + 1] = talk
 			elseif not who then
 				talk = nil
@@ -1155,7 +1155,7 @@ local function sideCard()
 	elseif yards then sub = ("%s  ·  %s"):format(p.name or step.title or "On your way", ns.Nav.FormatYards(yards))
 	else sub = p.name or step.title end
 	return {
-		label = "Optional · " .. side.title,
+		label = ns.L("Optional · ") .. ns.L(side.title),
 		text = text or titleOf(step, side, sideLive),
 		sub = sub, aimed = s.aimSide, yards = yards,
 	}
@@ -1177,14 +1177,14 @@ function Engine.View()
 			index = route and live or nil, count = route and #route.steps or nil,
 			progress = route and progressOf(route) or 0,
 			title = Q.Name(extra.quest),
-			text = extra.verb == "complete" and Q.Text(extra.quest) or (p and p.name and ((extra.verb == "accept" and "From " or "To ") .. p.name)) or nil,
+			text = extra.verb == "complete" and Q.Text(extra.quest) or (p and p.name and ((extra.verb == "accept" and ns.L("From ") or ns.L("To ")) .. p.name)) or nil,
 			coords = coordsOf(p), objectives = rows, detour = sideCard(),
 			card = (function()
 				local lines = {}
 				goalLine(nil, nil, nil, goal, "open", true, lines)
 				return lines
 			end)(),
-			next = route and live and ("Then back to the route: " .. (titleOf(route.steps[live], route, live) or "")) or nil,
+			next = route and live and (ns.L("Then back to the route: ") .. (titleOf(route.steps[live], route, live) or "")) or nil,
 			nearby = nearby,
 		}, route, p)
 	end
@@ -1333,7 +1333,7 @@ function Engine.Pins()
 				local goal = leadIn(route, s)
 				local p = goal and placeOf(goal)
 				local before = #out
-				add(p, "step", ("Step %d · %s"):format(s, titleOf(route.steps[s], route, s)), goal and goalText(goal))
+				add(p, "step", (ns.L("Step %d · %s")):format(s, titleOf(route.steps[s], route, s)), goal and goalText(goal))
 				if #out > before then out[#out].label = tostring(s) end
 			end
 		end
@@ -1442,10 +1442,10 @@ function Engine.Sync()
 	if not route then
 		ns.Print("synced: no leveling route for this character.")
 	elseif not live then
-		ns.Print(("synced with your quest log: %s is done."):format(route.title))
+		ns.Print((ns.L("synced with your quest log: %s is done.")):format(route.title))
 	else
-		ns.Print(("synced with your quest log: %s%s, step %d of %d."):format(
-			switched and "now on " or "", route.title, live, #route.steps))
+		ns.Print((ns.L("synced with your quest log: %s%s, step %d of %d.")):format(
+			switched and ns.L("now on ") or "", route.title, live, #route.steps))
 	end
 	return route, live, switched
 end
@@ -1749,7 +1749,7 @@ function Engine.Zones()
 	local mine = Engine.RoutesFor(player, "Leveling")
 	local out = {}
 	for _, z in ipairs(Q.ZonesFor(player.level, player.faction)) do
-		z.name = C.MapName(z.map) or ("Map " .. z.map)
+		z.name = C.MapName(z.map) or (ns.L("Map ") .. z.map)
 		z.city = CITIES[z.map] or nil
 		if not z.city then
 			local best, bestA, bestB

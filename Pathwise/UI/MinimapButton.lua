@@ -85,9 +85,9 @@ function MB.Make(def)
 		ring:SetVertexColor(accent[1], accent[2], accent[3])
 		if GameTooltip then
 			GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-			GameTooltip:SetText(def.name, 1, 1, 1)
-			for _, line in ipairs(def.lines or {}) do GameTooltip:AddLine(line, 0.6, 0.69, 0.75) end
-			GameTooltip:AddLine("Drag: move this button", 0.6, 0.69, 0.75)
+			ns.Tip.SetText(GameTooltip, def.name, 1, 1, 1)
+			for _, line in ipairs(def.lines or {}) do ns.Tip.AddLine(GameTooltip, line, 0.6, 0.69, 0.75) end
+			ns.Tip.AddLine(GameTooltip, "Drag: move this button", 0.6, 0.69, 0.75)
 			GameTooltip:Show()
 		end
 	end)

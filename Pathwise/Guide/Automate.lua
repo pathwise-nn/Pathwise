@@ -176,7 +176,7 @@ function A.OnTaxiMap()
 	local where = A.FlyTarget()
 	local i, name = A.FindNode(where)
 	if not i then return nil end
-	ns.Print(("flying to %s. Hold Shift when you talk to the flight master to choose yourself."):format(name))
+	ns.Print((ns.L("flying to %s. Hold Shift when you talk to the flight master to choose yourself.")):format(name))
 	TakeTaxiNode(i)
 	return name
 end

@@ -50,8 +50,8 @@ local function build()
 	frame:SetScript("OnEnter", function(self)
 		if not GameTooltip or ns.Get("arrow.locked") then return end
 		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-		GameTooltip:SetText("Pathwise arrow", 1, 1, 1)
-		GameTooltip:AddLine("Drag to move it. Lock it in Settings.", nil, nil, nil, true)
+		ns.Tip.SetText(GameTooltip, "Pathwise arrow", 1, 1, 1)
+		ns.Tip.AddLine(GameTooltip, "Drag to move it. Lock it in Settings.", nil, nil, nil, true)
 		GameTooltip:Show()
 	end)
 	frame:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
@@ -123,9 +123,21 @@ local function setMode(m)
 	end
 end
 
--- Yards as shown, always in yards (the game's unit), so every step walked
--- shows: "42 yd", "1,240 yd".
+-- A distance as shown. In yards, the game's unit ("42 yd", "1,240 yd"), or
+-- in metres and kilometres ("38 m", "1.1 km"; 1 yd = 0.9144 m) when
+-- Settings > Distances says so. A translation may make metres the usual
+-- (ns.DEFAULT_UNITS) and write its own decimal comma.
+function Nav.Units()
+	return ns.Get("nav.units") or ns.DEFAULT_UNITS or "yards"
+end
 function Nav.FormatYards(y)
+	if Nav.Units() == "metres" then
+		local m = (y or 0) * 0.9144
+		if m < 1000 then return ns.L("%d m"):format(floor(m + 0.5)) end
+		local km = ("%.1f"):format(m / 1000)
+		if ns.DECIMAL_COMMA then km = km:gsub("%.", ",") end
+		return ns.L("%s km"):format(km)
+	end
 	local n = tostring(floor(y + 0.5))
 	local grouped = n:reverse():gsub("(%d%d%d)", "%1,"):reverse():gsub("^,", "")
 	return grouped .. " yd"

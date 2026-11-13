@@ -57,7 +57,7 @@ local function pill(parent, label, primary, onClick, glyph, tip)
 		b:SetScript("OnEnter", function(self)
 			if not GameTooltip then return end
 			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-			GameTooltip:SetText(tip, 1, 1, 1)
+			ns.Tip.SetText(GameTooltip, tip, 1, 1, 1)
 			GameTooltip:Show()
 		end)
 		b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
@@ -156,7 +156,7 @@ function Hud.Refresh()
 	if not f then return end
 	local v = Guide.View()
 	local width = f:GetWidth()
-	W.route:SetText(v and v.count and ("%s  ·  %d / %d"):format(v.route or "", v.index or 0, v.count):upper() or (v and v.route or "PATHWISE"):upper())
+	W.route:SetText(v and v.count and ns.U(("%s  ·  %d / %d"):format(ns.L(v.route or ""), v.index or 0, v.count)) or ns.U(ns.L(v and v.route or "PATHWISE")))
 	local lvl, _, rate = ns.TrackerCard.Stats()
 	local lvlBits = {}
 	if lvl then lvlBits[#lvlBits + 1] = lvl end
@@ -216,7 +216,7 @@ function Hud.Refresh()
 	W.coords:SetShown(xy and true or false)
 	if xy then
 		place(W.coords, y + 2)
-		W.coords:SetText("You  " .. xy)
+		W.coords:SetText(ns.L("You  ") .. xy)
 		y = y + 2 + height(W.coords) + 4
 	end
 
@@ -259,7 +259,7 @@ ns.On("PLAYER_COORDS", function()
 	if not Hud.Shown() then return end
 	local xy = ns.Coords.Text()
 	if (xy ~= nil) ~= (W.coords:IsShown() and true or false) then Hud.Refresh()
-	elseif xy then W.coords:SetText("You  " .. xy) end
+	elseif xy then W.coords:SetText(ns.L("You  ") .. xy) end
 end)
 ns.On("SETTING_CHANGED", function(path)
 	if path == "guide.shown" or path == "guide.style" then Hud.Show()

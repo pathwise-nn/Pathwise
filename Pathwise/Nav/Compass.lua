@@ -144,8 +144,8 @@ local function build()
 	f:SetScript("OnEnter", function(self)
 		if not GameTooltip then return end
 		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-		GameTooltip:SetText("Pathwise compass", 1, 1, 1)
-		GameTooltip:AddLine("Drag to move it. Turn it off in Settings, or with /pw compass.", nil, nil, nil, true)
+		ns.Tip.SetText(GameTooltip, "Pathwise compass", 1, 1, 1)
+		ns.Tip.AddLine(GameTooltip, "Drag to move it. Turn it off in Settings, or with /pw compass.", nil, nil, nil, true)
 		GameTooltip:Show()
 	end)
 	f:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
@@ -273,7 +273,7 @@ local function youLine()
 	local xy = ns.Coords.Text()
 	if not xy then return nil end
 	local zone = coordMap and C.MapName(coordMap)
-	return "You  " .. xy .. (zone and ("  ·  " .. zone) or "")
+	return ns.L("You  ") .. xy .. (zone and ("  ·  " .. zone) or "")
 end
 
 local function paintYou(anchor)
