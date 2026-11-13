@@ -2,7 +2,7 @@
 ## Title: Pathwise Gear
 ## Notes: Upgrades for your spec, stat priority, Best in Slot (Level) and the best quest reward. Works on its own.
 ## Author: leight_nn & florp
-## Version: 0.3.4
+## Version: 0.3.5
 ## SavedVariables: PathwiseGearSettings
 ## SavedVariablesPerCharacter: PathwiseGearCharSettings
 ## OptionalDeps: Pathwise, PathwiseUI
