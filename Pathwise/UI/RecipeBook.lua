@@ -102,7 +102,7 @@ local function iconFrame(parent, size)
 	return holder
 end
 
-local function upper(s) return (s or ""):upper() end
+local function upper(s) return ns.U(ns.L(s or "")) end
 
 ---------------------------------------------------------------------------
 -- The plan for what is shown
@@ -172,9 +172,9 @@ end
 -- The arrow to an NPC; prints where it leads.
 local function arrowTo(id, what)
 	local p = ns.RecipeBook.Place(id)
-	if not p then return ns.Print(("no position for %s in the data."):format(what or "them")) end
+	if not p then return ns.Print((ns.L("no position for %s in the data.")):format(what or "them")) end
 	ns.Nav.SetTarget(p.map, p.x, p.y, p.name)
-	ns.Print(("the arrow leads to %s%s."):format(p.name, p.zone and (" in " .. p.zone) or ""))
+	ns.Print(ns.L("the arrow leads to %s%s."):format(p.name, p.zone and (ns.L(" in ") .. p.zone) or ""))
 end
 Book.ArrowTo = arrowTo
 
@@ -278,8 +278,8 @@ local function buildTab(i, prof)
 		if GameTooltip then
 			local rank, cap = C.SkillRank(prof.line)
 			GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-			GameTooltip:SetText(prof.name, 1, 1, 1)
-			GameTooltip:AddLine(rank and ("%d / %d"):format(rank, cap or 0) or "Not learned", 0.6, 0.69, 0.75)
+			ns.Tip.SetText(GameTooltip, prof.name, 1, 1, 1)
+			ns.Tip.AddLine(GameTooltip, rank and ("%d / %d"):format(rank, cap or 0) or "Not learned", 0.6, 0.69, 0.75)
 			GameTooltip:Show()
 		end
 	end)
@@ -472,9 +472,9 @@ local function buildHandles(f)
 		paintHandle(self)
 		if GameTooltip and not self:GetScript("OnUpdate") then
 			GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
-			GameTooltip:SetText("Resize", 1, 1, 1)
-			GameTooltip:AddLine("Drag any edge or corner to change the size.", nil, nil, nil, true)
-			GameTooltip:AddLine("Right-click: back to the size it opens at.", nil, nil, nil, true)
+			ns.Tip.SetText(GameTooltip, "Resize", 1, 1, 1)
+			ns.Tip.AddLine(GameTooltip, "Drag any edge or corner to change the size.", nil, nil, nil, true)
+			ns.Tip.AddLine(GameTooltip, "Right-click: back to the size it opens at.", nil, nil, nil, true)
 			GameTooltip:Show()
 		end
 	end)
@@ -727,18 +727,18 @@ local function drawTrain(b, ch, rank, cap)
 	local r, text, sub, who
 	if not rank and ch.r == b.ranks[1] then
 		r = b.ranks[1]
-		text = ("You don't have %s. Learn it from a trainer."):format(profession().name)
+		text = (ns.L("You don't have %s. Learn it from a trainer.")):format(profession().name)
 	elseif rank and ch.r.cap > (cap or 0) and ch.r.rank ~= "Apprentice" then
 		r = ch.r
-		text = "Train " .. RB.RankText(r)
+		text = ns.L("Train ") .. RB.RankText(r)
 	end
 	if not r then s:Hide() return 0 end
 	for _, p in ipairs(RB.People(r, side)) do
 		if p.id then who = p break end
 		who = who or p
 	end
-	if r.book then sub = "From the book " .. RB.ItemName(r.book) .. (who and (", sold by " .. who.name) or "")
-	elseif r.quest then sub = "From the quest " .. r.quest .. (who and (", given by " .. who.name) or "")
+	if r.book then sub = ns.L("From the book ") .. RB.ItemName(r.book) .. (who and (ns.L(", sold by ") .. who.name) or "")
+	elseif r.quest then sub = ns.L("From the quest ") .. r.quest .. (who and (ns.L(", given by ") .. who.name) or "")
 	elseif who then
 		local zone
 		for map in pairs(who.npc and who.npc.spawns or {}) do zone = C.MapName(map) break end
@@ -795,7 +795,7 @@ local function card(x, y, w, i, step, rank, side)
 	b.name:SetText(name)
 	local bits = { ("%d-%d"):format(step.from, step.to) }
 	if first and first.count then bits[#bits + 1] = first.count .. "x" end
-	if more > 0 then bits[#bits + 1] = ("+%d more"):format(more) end
+	if more > 0 then bits[#bits + 1] = (ns.L("+%d more")):format(more) end
 	if done then bits[#bits + 1] = "done" end
 	b.sub:SetText(table.concat(bits, "  ·  "))
 	local col = first and rank and ns.RecipeBook.Color(first.spell, rank)
@@ -849,7 +849,7 @@ local function drawCards(b, list, ch, rank)
 		if b.tools then
 			local bits = {}
 			for _, it in ipairs(b.tools) do bits[#bits + 1] = RB.ItemName(it) end
-			y = line(y, 0, pw, "Carry: " .. table.concat(bits, ", "), "meta", "text2")
+			y = line(y, 0, pw, ns.L("Carry: ") .. table.concat(bits, ", "), "meta", "text2")
 		end
 		for _, x in ipairs(b.bonuses or {}) do
 			local name = x.name or (x.item and RB.ItemName(x.item)) or "?"
@@ -858,9 +858,9 @@ local function drawCards(b, list, ch, rank)
 		y = y + 6
 	end
 	for _, n in ipairs(b.notes or {}) do y = line(y, 0, pw, n, "small", "muted") + 2 end
-	local src = "From wow-professions.com's Forever guide, written on the beta"
-	if b.untestedFrom then src = src .. (", not tested there from %d"):format(b.untestedFrom) end
-	y = line(y + 2, 0, pw, src .. ". Recipes, colours and materials: the Forever client's own data; green is an estimate.", "small", "muted")
+	local src = ns.L("From wow-professions.com's Forever guide, written on the beta")
+	if b.untestedFrom then src = src .. (ns.L(", not tested there from %d")):format(b.untestedFrom) end
+	y = line(y + 2, 0, pw, src .. ns.L(". Recipes, colours and materials: the Forever client's own data; green is an estimate."), "small", "muted")
 	return y
 end
 
@@ -957,7 +957,7 @@ local function drawStep(list, i, ch, rank)
 		y = line(y, ix, iw, RB.EntryText(e), "body", e.kind == "alt" and "text2" or "text")
 		local col = rank and RB.Color(e.spell, rank)
 		local status = RB.ColorText(e.spell)
-		if col then status = "now " .. COLOR_WORD[col] .. "  ·  " .. status end
+		if col then status = ns.L("now ") .. COLOR_WORD[col] .. "  ·  " .. status end
 		y = line(y + 1, ix, iw, status, "small", col and DIFF[col] or "muted")
 		y = line(y + 1, ix, iw, RB.ReagentText(e.spell), "meta", "text2")
 		y = diffBar(y + 6, ix, min(iw, 360), e.spell, rank)
@@ -976,7 +976,7 @@ local function drawStep(list, i, ch, rank)
 	if #mats > 0 then
 		local bits = {}
 		for _, m in ipairs(mats) do bits[#bits + 1] = ("%d %s"):format(m.count, m.name) end
-		y = line(y, 0, pw, "In all: " .. table.concat(bits, ", "), "meta", "text2") + 6
+		y = line(y, 0, pw, ns.L("In all: ") .. table.concat(bits, ", "), "meta", "text2") + 6
 	end
 	if step.nodes then
 		local bits = {}
@@ -989,14 +989,14 @@ local function drawStep(list, i, ch, rank)
 		for _, k in ipairs({ side or "A", "AH" }) do
 			for _, map in ipairs(step.zones[k] or {}) do zones[#zones + 1] = RB.ZoneName(map) end
 		end
-		if #zones > 0 then y = line(y, 0, pw, "Where: " .. table.concat(zones, ", "), "meta", "text2") + 6 end
+		if #zones > 0 then y = line(y, 0, pw, ns.L("Where: ") .. table.concat(zones, ", "), "meta", "text2") + 6 end
 	end
 	if step.mobs then
 		for _, id in ipairs(step.mobs) do
 			local n = RB.Npc(id)
 			local lv = ns.Data.npcs[id]
 			if n and lv then
-				y = linkRow(y, 0, pw, ("%s  ·  level %d-%d"):format(n.name, lv[2], lv[3]), "arrow to the nearest", function() arrowTo(id, n.name) end)
+				y = linkRow(y, 0, pw, (ns.L("%s  ·  level %d-%d")):format(n.name, lv[2], lv[3]), "arrow to the nearest", function() arrowTo(id, n.name) end)
 			end
 		end
 	end
@@ -1060,10 +1060,10 @@ function draw()
 	local h
 	if state.step then
 		h = drawStep(list, state.step, ch, rank)
-		drawFooter(b, ("Step %d / %d"):format(state.step, #list), state.step > 1, state.step < #list)
+		drawFooter(b, (ns.L("Step %d / %d")):format(state.step, #list), state.step > 1, state.step < #list)
 	else
 		h = drawCards(b, list, ch, rank)
-		drawFooter(b, ("Page %d / %d"):format(state.chapter, #chapters), state.chapter > 1, state.chapter < #chapters)
+		drawFooter(b, (ns.L("Page %d / %d")):format(state.chapter, #chapters), state.chapter > 1, state.chapter < #chapters)
 	end
 	W.child:SetSize(W.pageW, max(1, h))
 	W.range = max(0, h - W.viewH)

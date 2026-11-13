@@ -676,11 +676,11 @@ local function drawMiddle()
 		end
 	end
 	W.routesEmpty:SetShown(#cards == 0)
-	W.routesEmpty:SetText(tab == "Leveling" and "No leveling route for this character yet." or ("No %s routes for this character."):format(tab:lower()))
+	W.routesEmpty:SetText(tab == "Leveling" and "No leveling route for this character yet." or (ns.L("No %s routes for this character.")):format(ns.L(tab):lower()))
 
 	local P = ns.Professions
 	local known = P and P.Known() or {}
-	W.profCount:SetText(#known > 0 and ("%d learned"):format(#known) or "")
+	W.profCount:SetText(#known > 0 and (ns.L("%d learned")):format(#known) or "")
 	for i, c in ipairs(W.profCards) do
 		local k = known[i]
 		c:SetShown(k ~= nil and i <= (W.profFit or #W.profCards))
@@ -735,7 +735,7 @@ local function drawMain(v)
 		local st = steps[i]
 		s:SetShown(st ~= nil)
 		if st then
-			s.text:SetText(("Step %d"):format(st.index))
+			s.text:SetText((ns.L("Step %d")):format(st.index))
 			local a = T.Color("accent")
 			if st.current then
 				T.PaintRound(s, { a[1], a[2], a[3], 0.12 })
@@ -778,7 +778,7 @@ local function drawMain(v)
 	else
 		for _, b in ipairs({ W.back, W.skip, W.next }) do T.Relabel(b) end
 		place(W.label, y)
-		W.label:SetText(v.index and v.count and ("Step %d of %d"):format(v.index, v.count):upper() or (v.extra and "EXTRA QUEST" or "NOW"))
+		W.label:SetText(v.index and v.count and ns.U((ns.L("Step %d of %d")):format(v.index, v.count)) or (v.extra and "EXTRA QUEST" or "NOW"))
 		y = y + max(12, height(W.label)) + 8
 		place(W.stepTitle, y)
 		W.stepTitle:SetText(v.title or "")
@@ -806,7 +806,7 @@ local function drawMain(v)
 		if #rows > Hub.MAX_ROWS then
 			local cut = {}
 			for k = 1, Hub.MAX_ROWS - 1 do cut[k] = rows[k] end
-			cut[#cut + 1] = { kind = "note", lead = ("+%d more"):format(#rows - (Hub.MAX_ROWS - 1)), info = true }
+			cut[#cut + 1] = { kind = "note", lead = (ns.L("+%d more")):format(#rows - (Hub.MAX_ROWS - 1)), info = true }
 			rows = cut
 		end
 		W.divider:SetShown(#rows > 0)
@@ -838,7 +838,7 @@ local function drawMain(v)
 		if d then
 			local dd = W.detour
 			place(dd, y + 6)
-			dd.label:SetText((d.label or "Optional"):upper())
+			dd.label:SetText(ns.U(ns.L(d.label or "Optional")))
 			dd.text:SetText(d.text or "")
 			dd.sub:SetText(d.sub or "")
 			dd.go.pwText:SetText(d.aimed and "Stop" or "Go")
@@ -852,7 +852,7 @@ local function drawMain(v)
 	local stats = lvl ~= nil
 	for _, w in ipairs({ W.statsLine, W.level, W.levelBar, W.rate }) do w:SetShown(stats) end
 	if stats then
-		W.level:SetText(("Level %d  " .. T.Esc("text2") .. "·  %d%%|r"):format(UnitLevel and UnitLevel("player") or 1, floor((frac or 0) * 100)))
+		W.level:SetText((ns.L("Level %d  ") .. T.Esc("text2") .. "·  %d%%|r"):format(UnitLevel and UnitLevel("player") or 1, floor((frac or 0) * 100)))
 		W.rate:SetText(rate ~= "" and rate or "XP per hour after a minute")
 		local bw = max(60, width - (W.rate:GetStringWidth() or 0) - 24)
 		W.levelBar:SetWidth(bw)
@@ -860,7 +860,7 @@ local function drawMain(v)
 	end
 	local xy = ns.Coords and ns.Coords.Text()
 	W.coords:SetShown(xy and true or false)
-	if xy then W.coords:SetText("You  " .. xy) end
+	if xy then W.coords:SetText(ns.L("You  ") .. xy) end
 end
 
 -- Places the columns for a size: the menu, the routes and professions
@@ -945,7 +945,7 @@ ns.On("PLAYER_COORDS", function()
 	if not Hub.Shown() then return end
 	local xy = ns.Coords.Text()
 	W.coords:SetShown(xy and true or false)
-	if xy then W.coords:SetText("You  " .. xy) end
+	if xy then W.coords:SetText(ns.L("You  ") .. xy) end
 end)
 ns.On("SETTING_CHANGED", function(path)
 	if (path == "hub.width" or path == "hub.height") and W.frame and not (W.grip and W.grip.pwState.held) then

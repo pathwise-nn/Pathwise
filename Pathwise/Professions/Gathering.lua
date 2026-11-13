@@ -149,7 +149,7 @@ function G.Pins(map, setting)
 			for _, n in ipairs(G.NodesOn(map, kind, rank)) do
 				if WEIGHT[n.color] then
 					out[#out + 1] = { map = map, x = n.x, y = n.y, kind = "gather", rgb = G.RGB[n.color], title = n.name,
-						sub = ("%s %d  ·  %s"):format(k.name, n.skill, n.color) .. (G.UNCHECKED_MAPS[map] and "  ·  not checked on Forever" or "") }
+						sub = ("%s %d  ·  %s"):format(k.name, n.skill, n.color) .. (G.UNCHECKED_MAPS[map] and ns.L("  ·  not checked on Forever") or "") }
 				end
 			end
 		end

@@ -1,0 +1,618 @@
+1	(facultatif)
+2	·  terminé
+3	·  entrée pas encore vérifiée sur Forever
+4	·  non vérifié sur Forever
+5	·  pas encore vérifié sur Forever
+6	·  vous
+7	(d’après ses quêtes)
+8	PX/h
+9	à côté de votre route.
+10	à
+11	routes
+12	votre foyer
+13	%.1fk
+14	%d depuis vos sacs
+15	%d apprises
+16	%d m
+17	%d matériaux à obtenir
+18	%d quêtes pour vous
+19	encore %d à obtenir
+20	%d yd
+21	%d h %02d min
+22	%d min
+23	%d s
+24	%dx %s
+25	%s  ·  cliquez pour changer
+26	%s  ·  niveau %d-%d
+27	%s  ·  compétence %s  ·  niveau d’objet %d
+28	%s (jusqu’à %d)
+29	%s ajoutée ; la route reprend ensuite.
+30	%s est une ville : les routes s’y arrêtent en chemin.
+31	%s ne convient pas à ce personnage : choix d’une route qui convient.
+32	%s km
+33	%s jusqu’à %d
+34	La route de %s est pour les personnages %s.
+35	%s, niveaux %d-%d%s
+36	%s : %d-%d%s, donc %d%s.
+37	+%d de plus
+38	+%d de plus dans le hub
+39	, donnée par
+40	, non testé là-bas à partir de %d
+41	, vendu par
+42	. Recettes, couleurs et matériaux : données du client Forever ; le vert est une estimation.
+43	1 route
+44	: accepter
+45	Une carte compacte : l’étape, ses objectifs en cases à cocher, la tâche de métier et votre niveau.
+46	Une fenêtre à onglets : l’étape, les étapes suivantes et ce qui est proche dans votre journal de quêtes.
+47	À propos de Pathwise
+48	Accent
+49	Accepter :
+50	Accepter : %s
+51	Accepter et rendre les quêtes
+52	En haut de l’écran : où vous regardez, où est l’étape et à quelle distance. Faites-la glisser pour la déplacer.
+53	Alchimie
+54	Tous les donjons
+55	Toutes les routes
+56	Toutes les routes de cette tranche
+57	Alliance
+58	Toujours : les métiers d’abord.
+59	Améthyste
+60	Appliquer
+61	Apprenti
+62	Arrivé
+63	Taille de la flèche
+64	Flèche : aucune
+65	Artisan
+66	À ce niveau
+67	Automatisation
+68	Retour
+69	Opacité du fond
+70	Équilibré
+71	À côté de votre route
+72	Le mieux maintenant :
+73	Forge
+74	Fleur
+75	Rétablir
+76	Parcourir les guides de métiers
+77	À emporter :
+78	Choisissez une route
+79	Ville : les routes s’y arrêtent pour les maîtres et les remises de quêtes
+80	Classe
+81	Quêtes de classe
+82	Route de classe
+83	Effacer
+84	Cliquez sur un métier pour sa prochaine fabrication, ses matériaux et son guide.
+85	Cliquez sur une route pour ses étapes : la suivre, la commencer à n’importe quelle étape, ou choisir la route suivante.
+86	Cliquez sur une zone pour la flèche. Chaque gisement qui vous donne encore de la compétence est sur votre carte et votre minicarte dans sa couleur : orange toujours, jaune souvent, vert rarement (Paramètres > Repères de carte).
+87	Clic : ouvrir le hub, clic droit : paramètres, glisser : déplacer.
+88	Cliquez pour qu’elle ne puisse pas être déplacée par accident.
+89	Cliquez dans la case, appuyez sur Ctrl+C et collez-le dans un rapport de bug avec une ligne sur ce qui n’a pas marché. Rien n’est envoyé depuis le jeu.
+90	Cliquez pour arrêter
+91	Cliquez pour détacher et la déplacer à nouveau.
+92	Clic : ouvrir le hub
+93	Fermer
+94	Réduire
+95	Objets de collection
+96	Mode compact
+97	Boussole
+98	Boussole activée ou non
+99	Taille de la boussole
+100	Terminer : %s
+101	Cuisine
+102	Coordonnées
+103	Copiez le lien et ouvrez-le dans votre navigateur. Connectez-vous avec Discord, puis collez le rapport dans le formulaire.
+104	Compté pendant que vous jouez avec Pathwise ; /played corrige le niveau actuel.
+105	Comptée comme rendue : les quêtes suivantes apparaissent
+106	Fabriquer :
+107	Fabriquer : %d %s
+108	Fabriquer %s jusqu’à %d
+109	Artisanat
+110	Créé par leight_nn & florp
+111	Pourpre
+112	Personnalisé
+113	Sombre
+114	Données : %s
+115	Discord
+116	Désenchantez ce que vous fabriquez pour des points au lieu de le vendre : %s.
+117	Désenchantement
+118	Distances
+119	Terminé
+120	Faites glisser un bord ou un coin pour changer la taille.
+121	Faites glisser la flèche pour la déplacer.
+122	Faites glisser le coin inférieur droit de la fenêtre du guide pour changer sa largeur et sa hauteur ; une étape plus haute que la fenêtre défile.
+123	Glisser pour changer la largeur et la hauteur.
+124	Glisser pour changer la largeur.
+125	Glisser pour la déplacer. Verrouillez-la dans les Paramètres.
+126	Glisser pour la déplacer. Désactivez-la dans les Paramètres ou avec /pw compass.
+127	Glisser : déplacer ce bouton
+128	Butin, réputation et recettes de marchand que le guide indique pour les dernières tranches.
+129	Donjon
+130	Entrées des donjons
+131	Donjons
+132	Donjons pour le niveau %d
+133	Donjons pour votre niveau
+134	Le temps de chaque niveau s’affiche ici quand vous atteignez le suivant avec Pathwise.
+135	Émeraude
+136	Enchantement
+137	Ingénierie
+138	Tous les donjons et raids
+139	Le plan de chaque métier par tranche de compétence, appris ou non
+140	Chaque quête. Chaque fabrication. Chaque niveau.
+141	Toutes les étapes du guide sont terminées
+142	Toutes les étapes du guide sont terminées.
+143	Tout ce qu’elle contient, objets et lieux compris : on passe à la suivante
+144	Expert
+145	Exploration
+146	Quête supplémentaire
+147	Très loin
+148	Secourisme
+149	Pêche
+150	Adapter à l’étape
+151	S’adapte à chaque étape
+152	Voler là où l’étape l’indique
+153	Suivre à côté de votre route
+154	Suivre cette route
+155	Suivie  ·  cliquez pour arrêter
+156	Suivie à côté de votre route
+157	Suivie maintenant
+158	Pour l’herboristerie et le minage : les gisements qui vous donnent encore de la compétence, dans leur couleur.
+159	Pour les rapports de bug
+160	Pour votre niveau
+161	Les nouvelles herbes et minerais de Forever (bauxite, pyrite, sauge démoniaque...) ne sont pas encore dans les données.
+162	Libre et open source sous la licence publique générale GNU, version 3.
+163	De
+164	À partir du niveau
+165	À partir du niveau %d
+166	Du livre
+167	De la quête
+168	D’après le guide Forever de wow-professions.com, écrit pendant la bêta
+169	Depuis votre journal de quêtes
+170	Guide complet
+171	Guide complet ou compact
+172	Obtenir :
+173	Obtenir : %d %s (%d)
+174	Aller
+175	Aller à
+176	Aller à l’entrée
+177	Aller à l’endroit marqué
+178	Or
+179	Graphite
+180	Guide
+181	Guide à l’écran
+182	Fenêtre du guide
+183	Rendre :
+184	Herboristerie
+185	Herbes et minerais sur la carte
+186	Herbes et minerais sur la minicarte
+187	Masqué
+188	Masquer
+189	Contraste élevé
+190	Horde
+191	Je l’ai déjà fait
+192	En tout
+193	En tout :
+194	En mètres et kilomètres.
+195	En mètres de jeu (yards), comme le jeu les compte.
+196	Dans votre journal de quêtes
+197	Aubergiste,
+198	À la place, à proximité
+199	Ses suites restent dans la route
+200	Sa prochaine étape s’affiche dans la fenêtre du guide
+201	Compagnon
+202	Problèmes connus, suggestions et rapports de bug. Copiez le lien et ouvrez-le dans votre navigateur.
+203	LEVELING · MÉTIERS
+204	Lavande
+205	Apprendre :
+206	Travail du cuir
+207	Omet les quêtes vertes et grises derrière votre progression, et sur une route que vous avez dépassée, sauf si une quête ultérieure en a besoin.
+208	Niveau %d
+209	Niveau %d
+210	Niveau %d  ·  %s%s
+211	Les tranches de niveau sont estimées d’après les quêtes de chaque zone (données QuestieDB).
+212	Leveling
+213	Route de leveling
+214	Suivi du leveling
+215	Niveaux %d-%d
+216	Niveaux %d-%d  ·  %d étapes  ·  %s
+217	Niveaux %d-%d%s
+218	Les niveaux sont ceux des monstres à l’intérieur, d’après les données de QuestieDB : une estimation.
+219	Licence
+220	Clair
+221	Les thèmes clairs gardent la boussole et le guide minimal clairs, pour qu’ils se lisent sur le jeu.
+222	Verrouiller
+223	Verrouiller la flèche
+224	Verrouillée : elle reste en place, et les clics passent au monde.
+225	Niv. %d
+226	Principal
+227	Faire de
+228	Faire de %s votre foyer
+229	Carte
+230	Repères de carte
+231	Marquées terminées par vous
+232	Matériaux pour ce rang
+233	Mètres
+234	Minuit
+235	Minimal
+236	Bouton de la minicarte
+237	Minage
+238	Menthe
+239	Divers
+240	Mode
+241	Plus de guides
+242	Montures
+243	MAINTENANT
+244	Demande d’abord une autre quête
+245	Suivant
+246	Style de guide suivant (Suivi, Fenêtre, Minimal)
+247	Route suivante
+248	Aucune route %s pour ce personnage.
+249	Pas encore de guide pour ce métier
+250	Pas encore de guide pour ce métier.
+251	Aucune route de leveling
+252	Pas encore de route de leveling pour ce personnage.
+253	Pas encore de route de leveling pour votre personnage dans cette tranche.
+254	Aucune route de leveling proche de votre niveau.
+255	Pas de position sur la carte ici (dans une instance ?).
+256	Aucune autre quête de votre niveau n’est ouverte sur cette carte pour l’instant.
+257	Pas encore de métier. Apprenez-en un chez un maître : Pathwise le suit à côté de votre route.
+258	Pas encore de métier. Rendez visite à un maître de métier pour en apprendre un : Pathwise le suit à partir de là.
+259	Aucune quête pour votre personnage ici.
+260	Aucune route
+261	Pas encore de route pour ce personnage.\n\nOuvrez « Zones pour votre niveau » (le bouton de carte ci-dessus) pour en choisir une.
+262	Pas encore de route pour ce personnage.\n\nChoisissez-en une dans Routes à gauche, ou dans le livre des routes.
+263	Pas encore de route pour ce personnage. Ouvrez le hub pour en choisir une.
+264	Aucune route chargée
+265	Pas encore de route
+266	Pas encore de route : ouvrez le hub pour en choisir une.
+267	Aucune étape ne commence dans ce rang.
+268	Aucun point de passage.
+269	Pas de fenêtre : l’étape et ses objectifs en texte par-dessus le jeu.
+270	Aucune donnée de zone pour votre niveau et votre camp.
+271	Aucun
+272	Rien pour votre niveau : les premiers donjons commencent vers le niveau 13.
+273	Non appris
+274	Rien dans votre rang d’enchantement n’en a besoin maintenant : comparez le prix du marchand avec ce qu’ils rapportent.
+275	Plus rien ne vous donne de compétence : chaque gisement est gris pour vous.
+276	Rien à passer à cette étape.
+277	Maintenant :
+278	À L’ÉCRAN
+279	L’UN DE
+280	OU À LA PLACE
+281	AUTRES RECETTES
+282	Objectifs
+283	Océan
+284	Désactivé
+285	Activé
+286	Sur la minicarte
+287	Sur le site web
+288	Sur la carte du monde
+289	En chemin
+290	En chemin · environ 1 min
+291	Activé : Pathwise Gear, Bags et les autres l’utilisent à la place de leurs propres couleurs.
+292	Seulement pour ce que la route demande. Maintenez Maj en parlant à quelqu’un pour le faire vous-même.
+293	Seulement quand une étape de métier est juste sur votre chemin (environ 150 m).
+294	Ouvrez Routes dans les Paramètres, ou Zones pour votre niveau.
+295	Ouvrir ou fermer le hub
+296	Ouvrir le hub
+297	Ouvrir le livre de recettes
+298	Ouvrez une fois votre fenêtre %s pour que Pathwise puisse lire vos recettes.
+299	Facultatif
+300	Facultatif ·
+301	Facultatif · Couture
+302	Ou sur Discord
+303	PATHWISE
+304	Page %d / %d
+305	Collez-le dans #report-a-bug. Pas encore sur le serveur ? Copiez l’invitation.
+306	Pathwise %s  ·  Chaque quête. Chaque fabrication. Chaque niveau.  ·  créé par leight_nn & florp  _nn
+307	Bleu Pathwise
+308	Flèche Pathwise
+309	Boussole Pathwise
+310	Suite Pathwise
+311	Pathwise : l’objet de l’étape. Maj+glisser pour déplacer.
+312	Mascottes
+313	Choisir les récompenses
+314	Choisissez votre prochaine route dans Zones pour votre niveau, ou Routes dans les Paramètres.
+315	Épingler
+316	Épingler sur place
+317	Épingler (ou détacher)
+318	Épingler la boussole
+319	Épinglé sur place
+320	Épinglée : elle reste en place, et les clics passent au monde.
+321	Épinglée : détachez-la pour la redimensionner.
+322	Position : aucune
+323	Détours de métier
+324	Guides de métiers
+325	Route de métier
+326	Métiers
+327	Métiers, à côté de votre route
+328	Quête
+329	Données de quêtes de QuestieDB par l’équipe Questie et ses contributeurs.
+330	Bouton d’objet de quête
+331	Repères de quêtes sur la carte
+332	Repères de quêtes sur la minicarte
+333	Quêtes (%d)
+334	Quêtes à prendre :
+335	LIVRE DES ROUTES
+336	Raid
+337	Atteindre %s %d
+338	Atteindre le niveau %d
+339	Prête à rendre
+340	Livre de recettes
+341	Livres de recettes
+342	Recharger maintenant
+343	Signaler cette étape
+344	Réputation
+345	Réinitialiser
+346	Redimensionner
+347	PX de repos
+348	Clic droit : revenir à la taille d’ouverture.
+349	Clic droit : revenir à la taille habituelle.
+350	Clic droit : adapter la hauteur à chaque étape.
+351	Clic droit : paramètres
+352	Rose
+353	Route
+354	Route %d / %d
+355	Route à venir
+356	Route terminée
+357	Route : aucune
+358	Routes
+359	Routes adaptées de Polestar (GPL-3.0) ; données de quêtes de QuestieDB.
+360	Routes adaptées de Polestar par les auteurs de Polestar (GPL-3.0).
+361	ÉTAPES  ·  CLIQUEZ-EN UNE POUR COMMENCER LÀ
+362	Exemple · Clairières de Tirisfal
+363	Sable
+364	Placer
+365	Placer un point de passage par coordonnées ; ce que voit la flèche
+366	Placer un point de passage sur cette carte
+367	Lier votre pierre de foyer
+368	Paramètres
+369	Afficher
+370	Afficher les donjons de mon niveau
+371	Afficher tous les donjons et raids
+372	Afficher toutes les routes de leveling
+373	Afficher tous les métiers
+374	L’afficher
+375	Afficher seulement mes métiers
+376	Afficher ou masquer le guide
+377	Afficher les routes proches de mon niveau
+378	Afficher la flèche
+379	Guide annexe
+380	Compétence
+381	La compétence requise vient de la table Classic, pas encore vérifiée sur Forever : votre infobulle a le dernier mot.
+382	Dépeçage
+383	Passer
+384	La passer avec ses suites
+385	Passer seulement cette quête
+386	Passer la quête
+387	Passer les quêtes que vous avez dépassées
+388	Passer ce détour
+389	Quêtes passées
+390	Ciel
+391	Neige
+392	Vitesse
+393	Recommencer
+394	Zone de départ : la route %s
+395	Étape %d
+396	Étape %d / %d
+397	Étape %d sur %d
+398	Étape %d · %s
+399	Numéros d’étape sur la carte
+400	Étapes listées
+401	Étapes numérotées à l’avance
+402	Arrêter
+403	Style
+404	Couchant
+405	Synchroniser avec votre journal de quêtes
+406	ENSUITE  ·  LA ROUTE APRÈS CELLE-CI
+407	OUTILS ET BONUS
+408	Couture
+409	Couture + Enchantement
+410	La prendre maintenant
+411	Parler à
+412	Remerciements
+413	La flèche mène ici maintenant
+414	La flèche mène à %s.
+415	La flèche s’affiche quand la boussole est désactivée.
+416	Le hub, le suivi et la fenêtre du guide ont aussi une épingle dans leur coin.
+417	L’objet que l’étape veut faire utiliser, à côté du guide. Maj+glisser pour le déplacer ; une touche existe dans Raccourcis > Pathwise.
+418	Le livre des routes : chaque route par niveau
+419	Toute la chaîne quitte la route
+420	Thème
+421	Ensuite
+422	Puis retour à la route :
+423	Cette session
+424	Cette étape est terminée
+425	Temps par niveau
+426	Temps
+427	À
+428	Jusqu’au niveau suivant
+429	Suivi
+430	Apprendre :
+431	Apprendre %s %s
+432	Apprendre Apprenti Couture
+433	Apprendre chez les maîtres
+434	Rendre :
+435	Rendre : %s
+436	Désactiver
+437	Activer
+438	Police : Inter par Rasmus Andersson (SIL Open Font License).
+439	Commande inconnue '%s'. Tapez /pw help.
+440	Déverrouiller
+441	Détacher
+442	Utiliser
+443	Utiliser %s : accepter %s
+444	Utiliser l’objet de quête de l’étape
+445	Version
+446	Version %s
+447	Version %s  ·  créé par leight_nn & florp   _nn
+448	Point de passage
+449	Point de passage
+450	Point de passage et outils
+451	Flèche de point de passage
+452	Site web
+453	Ce que voit la flèche. Cliquez, Ctrl+C, et collez-le avec un rapport.
+454	Quoi fabriquer pour chaque tranche de compétence, où sont les recettes et les maîtres
+455	Quand une étape de métier est proche (environ 550 m).
+456	Quand l’étape est un apprentissage : apprend tout ce que le maître propose et que vous pouvez payer.
+457	Où récolter maintenant
+458	Votre position sur la carte, sous la boussole et dans le guide.
+459	Où :
+460	Où que vous soyez
+461	Toute la suite dans cette couleur
+462	Fenêtre
+463	Hauteur de la fenêtre
+464	Positions des fenêtres
+465	Taille de la fenêtre
+466	Les fenêtres déjà ouvertes prennent la nouvelle couleur après un rechargement
+467	Avec un choix de récompenses, prendre celle que recommande Pathwise Gear (Gear requis). Une récompense unique est toujours prise.
+468	Sans lui, ouvrez Pathwise avec une touche : Menu du jeu > Raccourcis > Pathwise.
+469	PX gagnés
+470	PX par heure
+471	PX par heure après une minute
+472	Yards
+473	Vous
+474	Vous êtes en %.1f, %.1f  ·  %s
+475	Vous suivez cette route
+476	Vous êtes ici
+477	Vous n’avez pas %s. Apprenez-le chez un maître.
+478	Vous n’avez pas encore de métier.
+479	Votre rang d’enchantement a encore besoin de %s : ceux-ci valent la peine d’être désenchantés.
+480	La couleur de votre classe, propre à chaque personnage.
+481	Votre couleur : %s. Tapez-en une autre au format #RRGGBB, puis Appliquer.
+482	Vos coordonnées
+483	Votre route
+484	Vos routes, métiers et l’étape entière, dans une seule fenêtre
+485	ZONES  ·  ALLEZ DANS L’UNE ET LE GUIDE VOUS Y MÈNE MAINTENANT
+486	Zones
+487	Zones pour le niveau %d
+488	une couleur, c’est six chiffres hexadécimaux, comme #66D7FF.
+489	un rapport de cette étape à coller dans Discord
+490	un point de passage
+491	un butin du monde (hôtel des ventes)
+492	après une minute
+493	flèche désactivée.
+494	flèche activée (glisser pour déplacer).
+495	taille de la flèche %d%%.
+496	flèche vers le plus proche
+497	sous votre niveau
+498	aligner le guide sur votre journal de quêtes (et la bonne route)
+499	pas encore apprenable
+500	cliquez pour la flèche
+501	commandes :
+502	boussole désactivée : la flèche s’affiche à la place.
+503	boussole activée (glisser pour déplacer).
+504	boussole activée ou non ; /pw compass coords : vos coordonnées ; /pw compass pin : l’épingler
+505	boussole épinglée.
+506	boussole détachée : glissez pour la déplacer.
+507	terminé
+508	butin de
+509	donjons et raids pour votre niveau, leurs quêtes et entrées
+510	chaque route pour vous : leveling, quêtes de classe, métiers
+511	guides d’exploration
+512	vol vers %s. Maintenez Maj en parlant au maître de vol pour choisir vous-même.
+513	suivi :
+514	pour votre niveau
+515	à partir du niveau
+516	à partir du niveau %d
+517	à partir de l’étape
+518	allez ici ensuite
+519	gris %d
+520	style du guide :
+521	taille de la fenêtre du guide, 50-150 (aussi dans les Paramètres)
+522	apprendre %d
+523	l’apprendre d’abord
+524	niveau %d
+525	fabriqué ou trouvé
+526	carte
+527	%s marquée terminée.
+528	guides de montures
+529	pas de position sur la carte ici (dans une instance ?).
+530	pas de position pour %s dans les données.
+531	aucune route nommée '
+532	aucun thème nommé '
+533	aucun point de passage
+534	pas dans le journal
+535	plus rien ici
+536	plus rien à faire dans %s sur %s.
+537	maintenant
+538	maintenant sur
+539	en cours
+540	route suivante : %s.
+541	ouvrir ou fermer le Signature Hub
+542	ouvrir le panneau des paramètres
+543	autres guides
+544	guides de mascottes
+545	aperçu de la fenêtre du guide avec une étape d’exemple
+546	quête
+547	guides de réputation
+548	réinitialiser les positions des fenêtres
+549	récompense de
+550	route :
+551	route : %s, à partir de l’étape %d. Paramètres, Marquées terminées par vous, Rétablir annule les étapes d’avant.
+552	route : %s, d’abord dans %s.
+553	route : %s, dans %s.
+554	route : %s.
+555	comme /pw prof
+556	exemple effacé.
+557	placer un point de passage sur cette carte : /pw way <x> <y> [titre] ; /pw way clear
+558	afficher ou choisir la route : /pw route <id ou titre>
+559	afficher ou masquer la flèche ; /pw arrow scale <50-200> règle sa taille
+560	affichage d’une étape d’exemple (/pw demo à nouveau pour effacer).
+561	compétence %d
+562	passer la quête actuelle, ou en choisir une proche à la place
+563	%s passée avec %d suites.
+564	%s passée.
+565	vendu par
+566	vendu seulement à l’autre faction (hôtel des ventes)
+567	source absente des données
+568	commencer ici
+569	étape
+570	étape %d / %d
+571	étape marquée terminée.
+572	n’est plus suivi :
+573	basculer le guide entre complet et compact
+574	passer à celle-ci
+575	synchronisé avec votre journal de quêtes : %s est terminée.
+576	synchronisé avec votre journal de quêtes : %s%s, étape %d sur %d.
+577	synchronisé : aucune route de leveling pour ce personnage.
+578	la flèche mène à %s pour %s.
+579	la flèche mène à %s dans %s.
+580	la flèche mène à %s%s.
+581	la flèche mène à %s.
+582	le thème de couleurs : /pw theme <nom> (sans : la liste)
+583	le guide est masqué : ramenez-le avec votre touche (Raccourcis > Pathwise), ou affichez le bouton de la minicarte dans les Paramètres.
+584	le guide est masqué : cliquez sur le bouton de minicarte de Pathwise pour le hub, et choisissez un style dans À l’écran.
+585	le guide à l’écran : /pw style tracker | window | minimal (sans : le suivant)
+586	l’étape suivante
+587	la recette
+588	le livre des routes : chaque route de leveling par niveau, ses étapes, et le changement
+589	thème actuel : %s. Thèmes : %s.
+590	thème : %s. /reload pour le voir sur chaque fenêtre.
+591	thème : %s. Les fenêtres déjà ouvertes le prennent après un rechargement (Paramètres > Recharger maintenant, ou /reload).
+592	il n’y a pas encore de route Pathwise pour %s.
+593	cette auberge
+594	cette liste
+595	tapez deux nombres de 0 à 100, comme 45.2 et 61.8.
+596	jusqu’à %d
+597	utilisation : /pw arrow scale <50-200>   (actuellement %d%%)
+598	utilisation : /pw opacity <40-100>   (actuellement
+599	utilisation : /pw scale <50-150>   (actuellement %d%%)
+600	utilisation : /pw style tracker | window | minimal   (actuellement
+601	utilisation : /pw way <x> <y> [titre]   ex. /pw way 45.2 61.8 Auberge
+602	version et crédits
+603	point de passage effacé.
+604	point de passage placé : %s sur %s.
+605	ce que voit la flèche (aussi dans Paramètres > Point de passage et outils)
+606	opacité du fond des fenêtres, 40-100
+607	positions des fenêtres réinitialisées ; /reload pour appliquer.
+608	taille de la fenêtre %d%%.
+609	jaune %d
+610	vous  ·
+611	vous êtes en %.1f, %.1f sur %s (carte %d).
+612	vous y allez
+613	vous êtes ici
+614	vos coordonnées désactivées.
+615	vos coordonnées sur cette carte
+616	vos coordonnées activées.
+617	vos métiers : compétence, meilleure fabrication, matériaux
+618	vos quêtes sont sur %s : on suit cette route.

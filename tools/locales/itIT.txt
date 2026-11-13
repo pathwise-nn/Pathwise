@@ -1,0 +1,618 @@
+1	(facoltativa)
+2	·  fatto
+3	·  ingresso non ancora verificato su Forever
+4	·  non verificato su Forever
+5	·  non ancora verificato su Forever
+6	·  tu
+7	(dalle sue missioni)
+8	PE/h
+9	accanto al tuo percorso.
+10	a
+11	percorsi
+12	la tua casa
+13	%.1fk
+14	%d dalle tue borse
+15	%d imparate
+16	%d m
+17	%d materiali da procurare
+18	%d missioni per te
+19	ancora %d da procurare
+20	%d yd
+21	%d h %02d min
+22	%d min
+23	%d s
+24	%dx %s
+25	%s  ·  clic per cambiare
+26	%s  ·  livello %d-%d
+27	%s  ·  abilità %s  ·  livello oggetto %d
+28	%s (fino a %d)
+29	%s aggiunta; poi il percorso riprende.
+30	%s è una città: i percorsi vi si fermano lungo la strada.
+31	%s non è per questo personaggio: ne scelgo uno adatto.
+32	%s km
+33	%s al %d
+34	Il percorso di %s è per personaggi %s.
+35	%s, livelli %d-%d%s
+36	%s: %d-%d%s, quindi %d%s.
+37	+%d in più
+38	+%d in più nell’hub
+39	, data da
+40	, non testato lì da %d
+41	, venduta da
+42	. Ricette, colori e materiali: dati del client di Forever; il verde è una stima.
+43	1 percorso
+44	: accetta
+45	Una scheda compatta: il passo, i suoi obiettivi come caselle, il compito di professione e il tuo livello.
+46	Una finestra a schede: il passo, i passi successivi e cosa c’è vicino nel tuo registro missioni.
+47	Informazioni su Pathwise
+48	Accento
+49	Accetta:
+50	Accetta: %s
+51	Accettare e consegnare missioni
+52	In cima allo schermo: dove guardi, dov’è il passo e quanto dista. Trascinala per spostarla.
+53	Alchimia
+54	Tutte le spedizioni
+55	Tutti i percorsi
+56	Tutti i percorsi di questa fascia
+57	Alleanza
+58	Sempre: prima le professioni.
+59	Ametista
+60	Applica
+61	Apprendista
+62	Arrivato
+63	Dimensione della freccia
+64	Freccia: nessuna
+65	Artigiano
+66	A questo livello
+67	Automazione
+68	Indietro
+69	Opacità dello sfondo
+70	Bilanciato
+71	Accanto al tuo percorso
+72	Il migliore ora:
+73	Forgiatura
+74	Fiore
+75	Ripristina
+76	Sfoglia le guide delle professioni
+77	Da portare:
+78	Scegli un percorso
+79	Città: i percorsi si fermano qui per istruttori e consegne
+80	Classe
+81	Missioni di classe
+82	Percorso di classe
+83	Cancella
+84	Fai clic su una professione per la prossima creazione, i materiali e la guida.
+85	Fai clic su un percorso per i suoi passi: seguilo, inizialo da qualsiasi passo o scegli il percorso successivo.
+86	Fai clic su una zona per la freccia. Ogni nodo che ti dà ancora abilità è sulla mappa e sulla minimappa nel suo colore: arancione sempre, giallo spesso, verde di rado (Impostazioni > Segnalini della mappa).
+87	Clic per aprire l’hub, clic destro per le impostazioni, trascina per spostarlo.
+88	Fai clic perché non si sposti per errore.
+89	Fai clic nel riquadro, premi Ctrl+C e incollalo in una segnalazione con una riga su cosa è andato storto. Dal gioco non viene inviato nulla.
+90	Clic per smettere
+91	Clic per sbloccarla e trascinarla di nuovo.
+92	Clic: apri l’hub
+93	Chiudi
+94	Comprimi
+95	Collezionabili
+96	Modalità compatta
+97	Bussola
+98	Bussola sì o no
+99	Dimensione della bussola
+100	Completa: %s
+101	Cucina
+102	Coordinate
+103	Copia il link e aprilo nel browser. Accedi con Discord, poi incolla la segnalazione nel modulo.
+104	Contato mentre giochi con Pathwise; /played corregge il livello attuale.
+105	Conta come consegnata: compaiono le missioni successive
+106	Crea:
+107	Crea: %d %s
+108	Crea %s fino a %d
+109	Creazione
+110	Creato da leight_nn & florp
+111	Cremisi
+112	Personalizzato
+113	Scuro
+114	Dati: %s
+115	Discord
+116	Disincanta ciò che crei per i punti invece di venderlo: %s.
+117	Disincantare
+118	Distanze
+119	Fatto
+120	Trascina un bordo o un angolo per cambiare la dimensione.
+121	Trascina la freccia per spostarla.
+122	Trascina l’angolo in basso a destra della finestra della guida per cambiarne larghezza e altezza; un passo più alto della finestra scorre.
+123	Trascina per cambiare larghezza e altezza.
+124	Trascina per cambiare la larghezza.
+125	Trascina per spostarla. Bloccala nelle Impostazioni.
+126	Trascina per spostarla. Disattivala nelle Impostazioni o con /pw compass.
+127	Trascina: sposta questo pulsante
+128	Bottini, reputazione e ricette dei mercanti che la guida indica per le fasce finali.
+129	Spedizione
+130	Ingressi delle spedizioni
+131	Spedizioni
+132	Spedizioni per il livello %d
+133	Spedizioni per il tuo livello
+134	Il tempo di ogni livello compare qui quando raggiungi il successivo con Pathwise.
+135	Smeraldo
+136	Incantamento
+137	Ingegneria
+138	Tutte le spedizioni e incursioni
+139	Il piano di ogni professione per fascia di abilità, imparata o no
+140	Ogni missione. Ogni creazione. Ogni livello.
+141	Tutti i passi della guida sono fatti
+142	Tutti i passi della guida sono fatti.
+143	Tutto quel che contiene, anche oggetti e luoghi: al prossimo
+144	Esperto
+145	Esplorazione
+146	Missione extra
+147	Molto lontano
+148	Primo soccorso
+149	Pesca
+150	Adatta al passo
+151	Si adatta a ogni passo
+152	Vola dove dice il passo
+153	Segui accanto al tuo percorso
+154	Segui questo percorso
+155	Seguito  ·  clic per smettere
+156	Seguito accanto al tuo percorso
+157	Seguito ora
+158	Per Erbalismo e Estrazione: i nodi che ti danno ancora abilità, nel loro colore.
+159	Per le segnalazioni
+160	Per il tuo livello
+161	Le nuove erbe e minerali di Forever (bauxite, pirite, salvia demoniaca...) non sono ancora nei dati.
+162	Software libero e open source sotto la GNU General Public License, versione 3.
+163	Da
+164	Dal livello
+165	Dal livello %d
+166	Dal libro
+167	Dalla missione
+168	Dalla guida di Forever di wow-professions.com, scritta durante la beta
+169	Dal tuo registro missioni
+170	Guida completa
+171	Guida completa o compatta
+172	Procura:
+173	Procura: %d %s (%d)
+174	Vai
+175	Vai a
+176	Vai all’ingresso
+177	Vai al punto segnato
+178	Oro
+179	Grafite
+180	Guida
+181	Guida sullo schermo
+182	Finestra della guida
+183	Consegna:
+184	Erbalismo
+185	Erbe e minerali sulla mappa
+186	Erbe e minerali sulla minimappa
+187	Nascosto
+188	Nascondi
+189	Contrasto elevato
+190	Orda
+191	L’ho già fatto
+192	In tutto
+193	In tutto:
+194	In metri e chilometri.
+195	In iarde, come le conta il gioco.
+196	Nel tuo registro missioni
+197	Locandiere,
+198	Invece, qui vicino
+199	Le missioni successive restano nel percorso
+200	Il suo prossimo passo compare nella finestra della guida
+201	Garzone
+202	Problemi noti, suggerimenti e segnalazioni. Copia il link e aprilo nel browser.
+203	LIVELLAMENTO · PROFESSIONI
+204	Lavanda
+205	Impara:
+206	Conciatura
+207	Esclude le missioni verdi e grigie rimaste indietro, e su un percorso che hai superato, a meno che una missione successiva ne abbia bisogno.
+208	Livello %d
+209	Livello %d
+210	Livello %d  ·  %s%s
+211	Le fasce di livello sono stimate dalle missioni di ogni zona (dati QuestieDB).
+212	Livellamento
+213	Percorso di livellamento
+214	Andamento del livello
+215	Livelli %d-%d
+216	Livelli %d-%d  ·  %d passi  ·  %s
+217	Livelli %d-%d%s
+218	I livelli sono quelli dei mostri all’interno, dai dati di QuestieDB: una stima.
+219	Licenza
+220	Chiaro
+221	I temi chiari mantengono chiare la bussola e la guida minima, così si leggono sopra il gioco.
+222	Blocca
+223	Blocca la freccia
+224	Bloccata: resta ferma e i clic passano al mondo.
+225	Liv. %d
+226	Principale
+227	Rendi
+228	Rendi %s la tua casa
+229	Mappa
+230	Segnalini della mappa
+231	Segnate come fatte da te
+232	Materiali per questo grado
+233	Metri
+234	Mezzanotte
+235	Minimo
+236	Pulsante della minimappa
+237	Estrazione
+238	Menta
+239	Varie
+240	Modalità
+241	Altre guide
+242	Cavalcature
+243	ORA
+244	Prima serve un’altra missione
+245	Avanti
+246	Stile di guida successivo (Tracker, Finestra, Minimo)
+247	Percorso successivo
+248	Nessun percorso di %s per questo personaggio.
+249	Ancora nessuna guida per questa professione
+250	Ancora nessuna guida per questa professione.
+251	Nessun percorso di livellamento
+252	Ancora nessun percorso di livellamento per questo personaggio.
+253	Ancora nessun percorso di livellamento per il tuo personaggio in questa fascia.
+254	Nessun percorso di livellamento vicino al tuo livello.
+255	Nessuna posizione sulla mappa qui (dentro un’istanza?).
+256	Al momento nessun’altra missione del tuo livello è aperta su questa mappa.
+257	Ancora nessuna professione. Imparane una da un istruttore: Pathwise la segue accanto al tuo percorso.
+258	Ancora nessuna professione. Visita un istruttore di professione per impararne una: Pathwise la segue da lì.
+259	Nessuna missione per il tuo personaggio qui.
+260	Nessun percorso
+261	Ancora nessun percorso per questo personaggio.\n\nApri «Zone per il tuo livello» (il pulsante mappa qui sopra) per sceglierne uno.
+262	Ancora nessun percorso per questo personaggio.\n\nScegline uno da Percorsi a sinistra, o dal libro dei percorsi.
+263	Ancora nessun percorso per questo personaggio. Apri l’hub per sceglierne uno.
+264	Nessun percorso caricato
+265	Ancora nessun percorso
+266	Ancora nessun percorso: apri l’hub per sceglierne uno.
+267	Nessun passo inizia in questo grado.
+268	Nessun punto di riferimento impostato.
+269	Nessuna finestra: il passo e i suoi obiettivi come testo sopra il gioco.
+270	Nessun dato di zona per il tuo livello e la tua fazione.
+271	Nessuno
+272	Ancora nessuna per il tuo livello: le prime spedizioni iniziano verso il livello 13.
+273	Non imparata
+274	Niente nel tuo grado di Incantamento ne ha bisogno ora: confronta il prezzo del mercante con quanto rendono.
+275	Più niente ti dà abilità: ogni nodo è grigio per te.
+276	Niente da saltare in questo passo.
+277	Ora:
+278	SULLO SCHERMO
+279	UNO TRA
+280	O INVECE
+281	ALTRE RICETTE
+282	Obiettivi
+283	Oceano
+284	No
+285	Sì
+286	Sulla minimappa
+287	Sul sito
+288	Sulla mappa del mondo
+289	Sulla tua strada
+290	Sulla tua strada · circa 1 min
+291	Sì: Pathwise Gear, Bags e gli altri lo usano al posto dei propri colori.
+292	Solo per ciò che chiede il percorso. Tieni premuto Maiusc quando parli con qualcuno per farlo tu.
+293	Solo quando un passo di professione è proprio sulla tua strada (circa 150 yd).
+294	Apri Percorsi nelle Impostazioni, o Zone per il tuo livello.
+295	Apri o chiudi l’hub
+296	Apri l’hub
+297	Apri il ricettario
+298	Apri una volta la finestra di %s così Pathwise può leggere le tue ricette.
+299	Facoltativo
+300	Facoltativo ·
+301	Facoltativo · Sartoria
+302	Oppure su Discord
+303	PATHWISE
+304	Pagina %d / %d
+305	Incollalo in #report-a-bug. Non sei ancora sul server? Copia l’invito.
+306	Pathwise %s  ·  Ogni missione. Ogni creazione. Ogni livello.  ·  creato da leight_nn & florp  _nn
+307	Blu Pathwise
+308	Freccia di Pathwise
+309	Bussola di Pathwise
+310	Suite Pathwise
+311	Pathwise: l’oggetto del passo. Maiusc+trascina per spostarlo.
+312	Mascotte
+313	Scegli le ricompense
+314	Scegli il prossimo percorso da Zone per il tuo livello, o Percorsi nelle Impostazioni.
+315	Fissa
+316	Fissa sul posto
+317	Fissa sul posto (o sblocca)
+318	Fissa la bussola
+319	Fissato sul posto
+320	Fissata: resta ferma e i clic passano al mondo.
+321	Fissata: sbloccala per ridimensionarla.
+322	Posizione: nessuna
+323	Deviazioni di professione
+324	Guide delle professioni
+325	Percorso di professione
+326	Professioni
+327	Professioni, accanto al tuo percorso
+328	Missione
+329	Dati delle missioni da QuestieDB, del team di Questie e dei collaboratori.
+330	Pulsante oggetto missione
+331	Segnalini delle missioni sulla mappa
+332	Segnalini delle missioni sulla minimappa
+333	Missioni (%d)
+334	Missioni da prendere:
+335	LIBRO DEI PERCORSI
+336	Incursione
+337	Raggiungi %s %d
+338	Raggiungi il livello %d
+339	Pronta da consegnare
+340	Ricettario
+341	Libri di ricette
+342	Ricarica ora
+343	Segnala questo passo
+344	Reputazione
+345	Reimposta
+346	Ridimensiona
+347	PE di riposo
+348	Clic destro: torna alla dimensione di apertura.
+349	Clic destro: torna alla dimensione solita.
+350	Clic destro: adatta l’altezza a ogni passo.
+351	Clic destro: impostazioni
+352	Rosa
+353	Percorso
+354	Percorso %d / %d
+355	Percorso in arrivo
+356	Percorso completato
+357	Percorso: nessuno
+358	Percorsi
+359	Percorsi adattati da Polestar (GPL-3.0); dati delle missioni da QuestieDB.
+360	Percorsi adattati da Polestar dagli autori di Polestar (GPL-3.0).
+361	PASSI  ·  FAI CLIC SU UNO PER INIZIARE DA LÌ
+362	Esempio · Radure di Tirisfal
+363	Sabbia
+364	Imposta
+365	Imposta un punto di riferimento con le coordinate; cosa vede la freccia
+366	Imposta un punto di riferimento su questa mappa
+367	Lega la tua pietra del ritorno
+368	Impostazioni
+369	Mostra
+370	Mostra le spedizioni del mio livello
+371	Mostra tutte le spedizioni e incursioni
+372	Mostra tutti i percorsi di livellamento
+373	Mostra tutte le professioni
+374	Mostralo
+375	Mostra solo le mie professioni
+376	Mostra o nascondi la guida
+377	Mostra i percorsi vicini al mio livello
+378	Mostra la freccia
+379	Guida laterale
+380	Abilità
+381	L’abilità richiesta è la tabella Classic, non ancora verificata su Forever: il tuo tooltip ha l’ultima parola.
+382	Scuoiatura
+383	Salta
+384	Saltala con le successive
+385	Salta solo questa missione
+386	Salta missione
+387	Salta le missioni che hai superato
+388	Salta questa deviazione
+389	Missioni saltate
+390	Cielo
+391	Neve
+392	Velocità
+393	Ricomincia
+394	Zona iniziale: il percorso %s
+395	Passo %d
+396	Passo %d / %d
+397	Passo %d di %d
+398	Passo %d · %s
+399	Numeri dei passi sulla mappa
+400	Passi elencati
+401	Passi numerati in anticipo
+402	Ferma
+403	Stile
+404	Tramonto
+405	Sincronizza con il registro missioni
+406	POI  ·  IL PERCORSO DOPO QUESTO
+407	STRUMENTI ED EXTRA
+408	Sartoria
+409	Sartoria + Incantamento
+410	Prendila ora
+411	Parla con
+412	Ringraziamenti
+413	La freccia porta qui ora
+414	La freccia porta a %s.
+415	La freccia compare quando la bussola è disattivata.
+416	Anche l’hub, il tracker e la finestra della guida hanno una puntina nel loro angolo.
+417	L’oggetto che il passo vuole che usi, accanto alla guida. Maiusc+trascina per spostarlo; c’è un tasto in Assegnazione tasti > Pathwise.
+418	Il libro dei percorsi: ogni percorso per livello
+419	L’intera catena esce dal percorso
+420	Tema
+421	Poi
+422	Poi di nuovo al percorso:
+423	Questa sessione
+424	Questo passo è fatto
+425	Tempo per livello
+426	Tempi
+427	A
+428	Al prossimo livello
+429	Tracker
+430	Impara:
+431	Impara %s %s
+432	Impara Sartoria Apprendista
+433	Impara dagli istruttori
+434	Consegna:
+435	Consegna: %s
+436	Disattiva
+437	Attiva
+438	Carattere: Inter di Rasmus Andersson (SIL Open Font License).
+439	Comando sconosciuto '%s'. Digita /pw help.
+440	Sblocca
+441	Sblocca
+442	Usa
+443	Usa %s: accetta %s
+444	Usa l’oggetto missione del passo
+445	Versione
+446	Versione %s
+447	Versione %s  ·  creato da leight_nn & florp   _nn
+448	Punto di riferimento
+449	Punto di riferimento
+450	Punto di riferimento e strumenti
+451	Freccia del punto di riferimento
+452	Sito web
+453	Cosa vede la freccia. Clic, Ctrl+C e incollalo con una segnalazione.
+454	Cosa creare per ogni fascia di abilità, dove sono le ricette e gli istruttori
+455	Quando un passo di professione è vicino (circa 600 yd).
+456	Quando il passo è addestramento: impara tutto ciò che l’istruttore ha e che puoi permetterti.
+457	Dove raccogliere ora
+458	Dove sei sulla mappa, sotto la bussola e nella guida.
+459	Dove:
+460	Ovunque tu sia
+461	Tutta la suite in questo colore
+462	Finestra
+463	Altezza della finestra
+464	Posizioni delle finestre
+465	Dimensione della finestra
+466	Le finestre già aperte prendono il nuovo colore dopo una ricarica
+467	Con una scelta di ricompense, prendi quella consigliata da Pathwise Gear (serve Gear). Una ricompensa singola viene sempre presa.
+468	Senza, apri Pathwise con un tasto: Menu di gioco > Assegnazione tasti > Pathwise.
+469	PE ottenuti
+470	PE all’ora
+471	PE all’ora dopo un minuto
+472	Iarde
+473	Tu
+474	Sei a %.1f, %.1f  ·  %s
+475	Stai seguendo questo percorso
+476	Sei qui
+477	Non hai %s. Imparala da un istruttore.
+478	Non hai ancora professioni.
+479	Il tuo grado di Incantamento ha ancora bisogno di %s: conviene disincantare questi.
+480	Il colore della tua classe, per ogni personaggio il suo.
+481	Il tuo colore: %s. Scrivine un altro come #RRGGBB, poi Applica.
+482	Le tue coordinate
+483	Il tuo percorso
+484	I tuoi percorsi, le professioni e il passo intero, in una finestra
+485	ZONE  ·  VAI IN UNA E LA GUIDA TI PORTA LÌ ORA
+486	Zone
+487	Zone per il livello %d
+488	un colore è fatto di sei cifre esadecimali, come #66D7FF.
+489	una segnalazione di questo passo da incollare su Discord
+490	un punto di riferimento
+491	un bottino nel mondo (casa d’aste)
+492	dopo un minuto
+493	freccia disattivata.
+494	freccia attivata (trascina per spostarla).
+495	dimensione della freccia %d%%.
+496	freccia al più vicino
+497	sotto il tuo livello
+498	allinea la guida al tuo registro missioni (e al percorso giusto)
+499	non ancora imparabile
+500	clic per la freccia
+501	comandi:
+502	bussola disattivata: al suo posto compare la freccia.
+503	bussola attivata (trascina per spostarla).
+504	bussola sì o no; /pw compass coords: le tue coordinate; /pw compass pin: fissala
+505	bussola fissata sul posto.
+506	bussola sbloccata: trascinala per spostarla.
+507	fatto
+508	bottino da
+509	spedizioni e incursioni per il tuo livello, le loro missioni e gli ingressi
+510	ogni percorso per te: livellamento, missioni di classe, professioni
+511	guide di esplorazione
+512	in volo verso %s. Tieni premuto Maiusc parlando con il maestro di volo per scegliere tu.
+513	segui:
+514	per il tuo livello
+515	dal livello
+516	dal livello %d
+517	dal passo
+518	vai qui dopo
+519	grigio %d
+520	stile della guida:
+521	dimensione della finestra della guida, 50-150 (anche nelle Impostazioni)
+522	impara %d
+523	imparala prima
+524	livello %d
+525	creato o trovato
+526	mappa
+527	%s segnata come fatta.
+528	guide delle cavalcature
+529	nessuna posizione sulla mappa qui (dentro un’istanza?).
+530	nessuna posizione per %s nei dati.
+531	nessun percorso chiamato '
+532	nessun tema chiamato '
+533	nessun punto di riferimento impostato
+534	non nel registro
+535	qui non resta niente
+536	non resta niente da fare in %s su %s.
+537	ora
+538	ora su
+539	in corso
+540	al percorso successivo: %s.
+541	apri o chiudi il Signature Hub
+542	apri il pannello delle impostazioni
+543	altre guide
+544	guide delle mascotte
+545	anteprima della finestra della guida con un passo di esempio
+546	missione
+547	guide di reputazione
+548	reimposta le posizioni delle finestre
+549	ricompensa di
+550	percorso:
+551	percorso: %s, dal passo %d. Impostazioni, Segnate come fatte da te, Ripristina annulla i passi precedenti.
+552	percorso: %s, prima in %s.
+553	percorso: %s, in %s.
+554	percorso: %s.
+555	come /pw prof
+556	esempio rimosso.
+557	imposta un punto di riferimento su questa mappa: /pw way <x> <y> [titolo]; /pw way clear
+558	mostra o scegli il percorso: /pw route <id o titolo>
+559	mostra o nascondi la freccia; /pw arrow scale <50-200> ne imposta la dimensione
+560	passo di esempio mostrato (/pw demo di nuovo per rimuoverlo).
+561	abilità %d
+562	salta la missione attuale, o scegline una vicina al suo posto
+563	%s saltata con %d successive.
+564	%s saltata.
+565	venduta da
+566	venduta solo all’altra fazione (casa d’aste)
+567	fonte non presente nei dati
+568	inizia qui
+569	passo
+570	passo %d / %d
+571	passo segnato come fatto.
+572	non più seguito:
+573	passa la guida tra completa e compatta
+574	passa a questo
+575	sincronizzato con il registro missioni: %s è fatto.
+576	sincronizzato con il registro missioni: %s%s, passo %d di %d.
+577	sincronizzato: nessun percorso di livellamento per questo personaggio.
+578	la freccia porta a %s per %s.
+579	la freccia porta a %s in %s.
+580	la freccia porta a %s%s.
+581	la freccia porta a %s.
+582	il tema dei colori: /pw theme <nome> (senza nome: l’elenco)
+583	la guida è nascosta: riportala con il tuo tasto (Assegnazione tasti > Pathwise), o mostra il pulsante della minimappa nelle Impostazioni.
+584	la guida è nascosta: fai clic sul pulsante della minimappa di Pathwise per l’hub e scegli uno stile in Sullo schermo.
+585	la guida sullo schermo: /pw style tracker | window | minimal (senza: il successivo)
+586	il passo successivo
+587	la ricetta
+588	il libro dei percorsi: ogni percorso di livellamento per livello, i suoi passi e il cambio
+589	tema attuale: %s. Temi: %s.
+590	tema: %s. /reload per vederlo in ogni finestra.
+591	tema: %s. Le finestre già aperte lo prendono dopo una ricarica (Impostazioni > Ricarica ora, o /reload).
+592	non c’è ancora un percorso Pathwise per %s.
+593	questa locanda
+594	questo elenco
+595	scrivi due numeri da 0 a 100, come 45.2 e 61.8.
+596	fino a %d
+597	uso: /pw arrow scale <50-200>   (ora %d%%)
+598	uso: /pw opacity <40-100>   (ora
+599	uso: /pw scale <50-150>   (ora %d%%)
+600	uso: /pw style tracker | window | minimal   (ora
+601	uso: /pw way <x> <y> [titolo]   es. /pw way 45.2 61.8 Locanda
+602	versione e riconoscimenti
+603	punto di riferimento rimosso.
+604	punto di riferimento impostato: %s su %s.
+605	cosa vede la freccia (anche in Impostazioni > Punto di riferimento e strumenti)
+606	opacità dello sfondo delle finestre, 40-100
+607	posizioni delle finestre reimpostate; /reload per applicare.
+608	dimensione della finestra %d%%.
+609	giallo %d
+610	tu  ·
+611	sei a %.1f, %.1f su %s (mappa %d).
+612	stai andando qui
+613	sei qui
+614	coordinate disattivate.
+615	le tue coordinate su questa mappa
+616	coordinate attivate.
+617	le tue professioni: abilità, migliore creazione, materiali
+618	le tue missioni sono su %s: seguo quel percorso.

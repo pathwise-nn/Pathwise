@@ -22,7 +22,10 @@ ns.NAME = "Pathwise"
 
 function ns.Print(...)
 	local parts = {}
-	for i = 1, select("#", ...) do parts[#parts + 1] = tostring((select(i, ...))) end
+	for i = 1, select("#", ...) do
+		local v = tostring((select(i, ...)))
+		parts[#parts + 1] = ns.L and ns.L(v) or v
+	end
 	local line = "|cff66d7ffPathwise|r  " .. table.concat(parts, " ")
 	if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage(line) else print(line) end
 end
@@ -186,7 +189,7 @@ function ns.RunCommand(text)
 		ns.Fire("TOGGLE_GUIDE")
 		return true
 	end
-	ns.Print(("Unknown command '%s'. Type /pw help."):format(name))
+	ns.Print((ns.L("Unknown command '%s'. Type /pw help.")):format(name))
 	return false
 end
 

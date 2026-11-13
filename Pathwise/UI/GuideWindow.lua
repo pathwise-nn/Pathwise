@@ -222,9 +222,9 @@ local function buildGrip(f)
 		paintGrip(self)
 		if GameTooltip and not self:GetScript("OnUpdate") then
 			GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
-			GameTooltip:SetText("Resize", 1, 1, 1)
-			GameTooltip:AddLine("Drag to change the width and height.", nil, nil, nil, true)
-			GameTooltip:AddLine("Right-click: fit the height to each step.", nil, nil, nil, true)
+			ns.Tip.SetText(GameTooltip, "Resize", 1, 1, 1)
+			ns.Tip.AddLine(GameTooltip, "Drag to change the width and height.", nil, nil, nil, true)
+			ns.Tip.AddLine(GameTooltip, "Right-click: fit the height to each step.", nil, nil, nil, true)
 			GameTooltip:Show()
 		end
 	end)
@@ -422,7 +422,7 @@ local function build()
 
 	-- From your quest log: held quests near the player.
 	W.nearLabel = T.Text(body, "label", "accent")
-	W.nearLabel:SetText(("From your quest log"):upper())
+	W.nearLabel:SetText(ns.U(ns.L("From your quest log")))
 	W.nearRows = {}
 	for i = 1, 4 do
 		W.nearRows[i] = { text = T.Text(body, "meta", "text"), sub = T.Text(body, "small", "text2") }
@@ -675,7 +675,7 @@ local function layoutFull()
 	now:SetPoint("RIGHT", body, "RIGHT", -PAD, 0)
 	now.label:ClearAllPoints()
 	now.label:SetPoint("TOPLEFT", 12, -10)
-	now.label:SetText(view.index and ("Step %d"):format(view.index):upper() or (view.extra and "EXTRA QUEST" or "PATHWISE"))
+	now.label:SetText(view.index and ns.U((ns.L("Step %d")):format(view.index)) or (view.extra and "EXTRA QUEST" or "PATHWISE"))
 	now.title:ClearAllPoints()
 	now.title:SetPoint("TOPRIGHT", -10, -10)
 	now.title:SetPoint("LEFT", now.label, "RIGHT", 10, 0)
@@ -709,7 +709,7 @@ local function layoutFull()
 		-- other); the number on the right of every step.
 		local newPlace = i == 1 or (listed[i - 1].title ~= step.title)
 		b.title:SetShown(newPlace)
-		b.title:SetText(newPlace and (step.title or ""):upper() or "")
+		b.title:SetText(newPlace and ns.U(ns.L(step.title or "")) or "")
 		T.TextColor(b.title, step.current and "text" or "text2")
 		local by = newPlace and (max(12, height(b.title)) + 6) or 0
 		b.num:ClearAllPoints()
@@ -728,7 +728,7 @@ local function layoutFull()
 		if #lines > Guide.MAX_LINES then
 			local cut = {}
 			for k = 1, Guide.MAX_LINES - 1 do cut[k] = lines[k] end
-			cut[#cut + 1] = { kind = "note", lead = ("+%d more"):format(#lines - (Guide.MAX_LINES - 1)), info = true }
+			cut[#cut + 1] = { kind = "note", lead = (ns.L("+%d more")):format(#lines - (Guide.MAX_LINES - 1)), info = true }
 			lines = cut
 		end
 		by = drawLines(b.lines, b, lines, by, 0, 24)
@@ -758,7 +758,7 @@ local function layoutFull()
 		card.go:SetHeight(24)
 		card.go:SetWidth(48)
 		card.go.pwText:SetText(d.aimed and "Stop" or "Go")
-		card.label:SetText((d.label or "Optional"):upper())
+		card.label:SetText(ns.U(ns.L(d.label or "Optional")))
 		card.text:SetText(d.text or "")
 		card.sub:SetText(d.sub or "")
 		card.label:ClearAllPoints()
@@ -895,18 +895,18 @@ local KIND = { Leveling = "Leveling route", Class = "Class route", Professions =
 function Guide.Eyebrow(v)
 	if not v then return "PATHWISE" end
 	if v.extra then return "EXTRA QUEST" end
-	local bits = { KIND[v.category] or "Route" }
-	if v.faction then bits[#bits + 1] = v.faction end
-	return table.concat(bits, "  ·  "):upper()
+	local bits = { ns.L(KIND[v.category] or "Route") }
+	if v.faction then bits[#bits + 1] = ns.L(v.faction) end
+	return ns.U(table.concat(bits, "  ·  "))
 end
 
 -- "Alliance  ·  Levels 12-17"
 function Guide.RouteLine(v)
 	if not v then return "" end
 	local bits = {}
-	if v.faction then bits[#bits + 1] = v.faction end
+	if v.faction then bits[#bits + 1] = ns.L(v.faction) end
 	if v.levels and v.levels[1] then
-		bits[#bits + 1] = v.levels[2] and v.levels[2] ~= v.levels[1] and ("Levels %d-%d"):format(v.levels[1], v.levels[2]) or ("Level %d"):format(v.levels[1])
+		bits[#bits + 1] = v.levels[2] and v.levels[2] ~= v.levels[1] and (ns.L("Levels %d-%d")):format(v.levels[1], v.levels[2]) or (ns.L("Level %d")):format(v.levels[1])
 	end
 	return table.concat(bits, "  ·  ")
 end

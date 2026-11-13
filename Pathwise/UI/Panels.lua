@@ -330,7 +330,7 @@ local function render(rows)
 		local first = i == 1
 		if kind == "heading" then
 			local fs = take("heading", makers.heading)
-			fs:SetText(tostring(r[2]):upper())
+			fs:SetText(ns.U(ns.L(tostring(r[2]))))
 			fs:SetWidth(inner - (first and 76 or 0)) -- clear of back, pin and close
 			place(fs, fs:GetStringHeight() or 10, first and 0 or 14)
 		elseif kind == "title" then
@@ -458,7 +458,7 @@ local function render(rows)
 				f.box:SetNumber(percent(v))
 				if n and n / mul ~= v then
 					local u = count and "" or "%"
-					ns.Print(("%s: %d-%d%s, so %d%s."):format(label, percent(lo), percent(hi), u, percent(v), u))
+					ns.Print((ns.L("%s: %d-%d%s, so %d%s.")):format(ns.L(label), percent(lo), percent(hi), u, percent(v), u))
 				end
 			end
 			local v = ns.Get(path) or lo
@@ -690,17 +690,17 @@ function builders.skip()
 		rows[#rows + 1] = { "title", Q.Name(q) }
 		rows[#rows + 1] = { "choice", "I've already done it", "Counts as handed in: the quests after it come up", function()
 			E.MarkQuestDone(q)
-			ns.Print(("marked %s done."):format(Q.Name(q)))
+			ns.Print((ns.L("marked %s done.")):format(Q.Name(q)))
 			Panels.Refresh()
 		end }
 		rows[#rows + 1] = { "choice", "Skip just this quest", "Its follow-ups stay in the route", function()
 			E.SkipQuest(q, false)
-			ns.Print(("skipped %s."):format(Q.Name(q)))
+			ns.Print((ns.L("skipped %s.")):format(Q.Name(q)))
 			Panels.Refresh()
 		end }
 		rows[#rows + 1] = { "choice", "Skip it and its follow-ups", "The whole chain leaves the route", function()
 			local list = E.SkipQuest(q, true)
-			ns.Print(("skipped %s and %d follow-up%s."):format(Q.Name(q), #list - 1, #list == 2 and "" or "s"))
+			ns.Print(ns.L("skipped %s and %d follow-up%s."):format(Q.Name(q), #list - 1, #list == 2 and "" or "s"))
 			Panels.Refresh()
 		end }
 	end
@@ -719,10 +719,10 @@ function builders.skip()
 		rows[#rows + 1] = { "text", "No other quests at your level are open on this map right now." }
 	end
 	for _, a in ipairs(alts) do
-		local sub = ("Level %d  ·  %s%s"):format(a.level, a.giver or "?", a.yards and ("  ·  " .. yardsText(a.yards)) or "")
+		local sub = (ns.L("Level %d  ·  %s%s")):format(a.level, a.giver or "?", a.yards and ("  ·  " .. yardsText(a.yards)) or "")
 		rows[#rows + 1] = { "choice", a.name, sub, function()
 			E.AddExtra(a.quest)
-			ns.Print(("%s added; the route picks up again after it."):format(a.name))
+			ns.Print((ns.L("%s added; the route picks up again after it.")):format(a.name))
 			Panels.Close()
 		end }
 	end
@@ -737,29 +737,29 @@ end
 function builders.zones()
 	local E, Q = ns.Engine, ns.Quests
 	local p = Q.Player()
-	local rows = { { "heading", ("Zones for level %d"):format(p.level or 1) } }
+	local rows = { { "heading", (ns.L("Zones for level %d")):format(p.level or 1) } }
 	local current = E.Route()
 	local zones = E.Zones()
 	if #zones == 0 then rows[#rows + 1] = { "text", "No zone data for your level and side." } end
 	for _, z in ipairs(zones) do
 		local note
 		if z.route and current and z.route.id == current.id then note = "Your route"
-		elseif z.route then note = ("%s  ·  click to switch"):format(z.route.title)
+		elseif z.route then note = (ns.L("%s  ·  click to switch")):format(z.route.title)
 		elseif z.city then note = "City: the routes stop here for trainers and hand-ins"
-		elseif z.raceRoute then note = ("Starting zone: the %s route"):format(table.concat(z.raceRoute.races, ", "))
+		elseif z.raceRoute then note = (ns.L("Starting zone: the %s route")):format(table.concat(z.raceRoute.races, ", "))
 		else note = "Route coming" end
 		rows[#rows + 1] = { "choice", ("%s   %d-%d"):format(z.name, z.low, z.high), note, function()
 			if z.route then
 				-- To the route's steps in this zone, now; else the route.
 				if not E.GoToZone(z.route.id, z.map) then E.SetRoute(z.route.id) end
-				ns.Print(("route: %s, in %s."):format(z.route.title, z.name))
+				ns.Print((ns.L("route: %s, in %s.")):format(z.route.title, z.name))
 				Panels.Close()
 			elseif z.city then
-				ns.Print(("%s is a city: the routes stop there on the way."):format(z.name))
+				ns.Print((ns.L("%s is a city: the routes stop there on the way.")):format(z.name))
 			elseif z.raceRoute then
-				ns.Print(("%s's route is for %s characters."):format(z.name, table.concat(z.raceRoute.races, ", ")))
+				ns.Print((ns.L("%s's route is for %s characters.")):format(z.name, table.concat(z.raceRoute.races, ", ")))
 			else
-				ns.Print(("there is no Pathwise route for %s yet."):format(z.name))
+				ns.Print((ns.L("there is no Pathwise route for %s yet.")):format(z.name))
 			end
 		end }
 	end
@@ -801,7 +801,7 @@ function builders.routes()
 			rows[#rows + 1] = { "choice", ("%s   %d-%d"):format(r.title, r.levels[1], r.levels[2]),
 				mine and "Your route" or nil, function()
 					E.SetRoute(r.id)
-					ns.Print("route: " .. r.title)
+					ns.Print(ns.L("route: ") .. r.title)
 					Panels.Refresh()
 				end }
 		end
@@ -818,9 +818,9 @@ function builders.routes()
 		for _, r in ipairs(class) do
 			local mine = current and current.id == r.id
 			rows[#rows + 1] = { "choice", ("%s   %d-%d"):format(r.title, r.levels[1], r.levels[2]),
-				mine and "Your route" or (p.level < r.levels[1] and ("From level " .. r.levels[1])) or nil, function()
+				mine and "Your route" or (p.level < r.levels[1] and (ns.L("From level ") .. r.levels[1])) or nil, function()
 					E.SetRoute(r.id)
-					ns.Print("route: " .. r.title)
+					ns.Print(ns.L("route: ") .. r.title)
 					Panels.Refresh()
 				end }
 		end
@@ -834,9 +834,9 @@ function builders.routes()
 		local mine = side and side.id == r.id
 		if showAll.professions or have or mine then
 			listed = listed + 1
-			rows[#rows + 1] = { "choice", r.title, mine and "Following  ·  click to stop" or (have and ("Skill " .. have)) or nil, function()
+			rows[#rows + 1] = { "choice", r.title, mine and "Following  ·  click to stop" or (have and (ns.L("Skill ") .. have)) or nil, function()
 				E.SetSide(mine and nil or r.id)
-				ns.Print(mine and "stopped following " .. r.title .. "." or ("following " .. r.title .. " beside your route."))
+				ns.Print(mine and ns.L("stopped following ") .. r.title .. "." or (ns.L("following ") .. r.title .. ns.L(" beside your route.")))
 				Panels.Refresh()
 			end }
 		end
@@ -857,9 +857,9 @@ function builders.routes()
 		if not open then return end
 		for _, r in ipairs(list) do
 			local mine = current and current.id == r.id
-			rows[#rows + 1] = { "choice", r.title, mine and "Your route" or (r.levels and p.level < r.levels[1] and ("From level " .. r.levels[1])) or nil, function()
+			rows[#rows + 1] = { "choice", r.title, mine and "Your route" or (r.levels and p.level < r.levels[1] and (ns.L("From level ") .. r.levels[1])) or nil, function()
 				E.SetRoute(r.id)
-				ns.Print("route: " .. r.title)
+				ns.Print(ns.L("route: ") .. r.title)
 				Panels.Refresh()
 			end }
 		end
@@ -902,10 +902,10 @@ local function professionSummary(prof)
 	if not st then return "Every step of the guide is done" end
 	local bits = {}
 	local step = route.steps[st.step]
-	bits[#bits + 1] = "Now: " .. (step.title or E.GoalText(step[1]) or "the next step")
+	bits[#bits + 1] = ns.L("Now: ") .. (step.title or E.GoalText(step[1]) or "the next step")
 	local missing = 0
 	for _, r in ipairs(P.Shopping(prof)) do if r.missing > 0 then missing = missing + 1 end end
-	if missing > 0 then bits[#bits + 1] = ("%d material%s to get"):format(missing, missing == 1 and "" or "s") end
+	if missing > 0 then bits[#bits + 1] = ns.L("%d material%s to get"):format(missing, missing == 1 and "" or "s") end
 	local side = E.Side()
 	if side and side.id == route.id then bits[#bits + 1] = "following" end
 	return table.concat(bits, "  ·  ")
@@ -962,18 +962,18 @@ function builders.profession()
 		rows[#rows + 1] = { "text", "Every step of the guide is done.", "success" }
 	else
 		local step = route.steps[st.step]
-		rows[#rows + 1] = { "text", "Now: " .. (step.title or E.GoalText(step[1]) or "the next step"), "text" }
+		rows[#rows + 1] = { "text", ns.L("Now: ") .. (step.title or E.GoalText(step[1]) or "the next step"), "text" }
 		local craft = P.NextCraft(prof)
 		if craft then
-			local bits = { "Best now: " .. (craft.name or "?") }
-			if craft.craftable then bits[#bits + 1] = ("%d from your bags"):format(craft.craftable) end
-			if craft.untilSkill then bits[#bits + 1] = ("until %d"):format(craft.untilSkill) end
+			local bits = { ns.L("Best now: ") .. (craft.name or "?") }
+			if craft.craftable then bits[#bits + 1] = (ns.L("%d from your bags")):format(craft.craftable) end
+			if craft.untilSkill then bits[#bits + 1] = (ns.L("until %d")):format(craft.untilSkill) end
 			if craft.difficulty then bits[#bits + 1] = craft.difficulty end
 			if craft.known == false then bits[#bits + 1] = "learn it first" end
 			rows[#rows + 1] = { "text", table.concat(bits, "  ·  "), "text" }
 		end
 		if prof.kind == "craft" and not P.Recipes(prof.line) then
-			rows[#rows + 1] = { "text", ("Open your %s window once so Pathwise can read your recipes."):format(prof.name), "muted" }
+			rows[#rows + 1] = { "text", (ns.L("Open your %s window once so Pathwise can read your recipes.")):format(prof.name), "muted" }
 		end
 		local shop = P.Shopping(prof)
 		if #shop > 0 then
@@ -981,7 +981,7 @@ function builders.profession()
 			for _, r in ipairs(shop) do
 				local how = SOURCE[r.src] or "made or found"
 				if r.where then how = how .. ": " .. r.where end
-				local status = r.missing > 0 and ("%d to get"):format(r.missing) or "ready"
+				local status = r.missing > 0 and (ns.L("%d to get")):format(r.missing) or "ready"
 				rows[#rows + 1] = { "text", ("%s   %d / %d  ·  %s  ·  %s"):format(r.name, r.have, r.need, status, how),
 					r.missing > 0 and "text2" or "success" }
 			end
@@ -1008,13 +1008,13 @@ function builders.profession()
 			local bits = {}
 			for j = 1, math.min(3, #z.nodes) do bits[#bits + 1] = ("%d %s"):format(z.nodes[j].count, z.nodes[j].name) end
 			local about = table.concat(bits, ", ")
-			if z.unchecked then about = about .. "  ·  not checked on Forever" end
+			if z.unchecked then about = about .. ns.L("  ·  not checked on Forever") end
 			local levels = z.low and (" (%d-%d)"):format(z.low, z.high) or ""
 			rows[#rows + 1] = { "choice", z.name .. levels, about, function()
 				local spot = G.Spot(z.map, gk, k.rank)
 				if spot then
 					ns.Nav.SetTarget(z.map, spot.x, spot.y, ("%s, %s"):format(spot.name, z.name))
-					ns.Print(("the arrow leads to %s in %s."):format(spot.name, z.name))
+					ns.Print((ns.L("the arrow leads to %s in %s.")):format(spot.name, z.name))
 				end
 			end }
 		end
@@ -1029,14 +1029,14 @@ function builders.profession()
 			rows[#rows + 1] = { "heading", "Disenchanting" }
 			local needs, row = P.EnchantingNeedsDust()
 			if needs then
-				rows[#rows + 1] = { "text", ("Your Enchanting rank still needs %s: these are worth disenchanting."):format(row.name), "accent" }
+				rows[#rows + 1] = { "text", (ns.L("Your Enchanting rank still needs %s: these are worth disenchanting.")):format(row.name), "accent" }
 			else
 				rows[#rows + 1] = { "text", "Nothing in your Enchanting rank needs these now: compare the vendor price with what they fetch." }
 			end
 			for j, it in ipairs(list) do
 				if j > 6 then break end
 				local skill = it.skill and ((P.DE_SKILL_VERIFIED and "" or "≈") .. it.skill) or "?"
-				rows[#rows + 1] = { "text", ("%s  ·  skill %s  ·  item level %d"):format(it.name, skill, it.ilvl or 0),
+				rows[#rows + 1] = { "text", (ns.L("%s  ·  skill %s  ·  item level %d")):format(it.name, skill, it.ilvl or 0),
 					it.canNow and "text" or "muted" }
 			end
 			if not P.DE_SKILL_VERIFIED then
@@ -1046,7 +1046,7 @@ function builders.profession()
 		local te = P.TailorEnchant()
 		if te and #te > 0 then
 			rows[#rows + 1] = { "heading", "Tailoring + Enchanting" }
-			rows[#rows + 1] = { "text", ("Disenchant what you craft for points instead of selling it: %s."):format(table.concat(te, ", ")) }
+			rows[#rows + 1] = { "text", (ns.L("Disenchant what you craft for points instead of selling it: %s.")):format(table.concat(te, ", ")) }
 		end
 	end
 	rows[#rows + 1] = { "choice", "Recipe book", "What to craft for every skill range, where the recipes and trainers are", function()
@@ -1065,14 +1065,14 @@ local showAllDungeons = false
 
 local STATUS = {
 	now = "Take it now", log = "In your quest log", ready = "Ready to hand in",
-	level = "From level %d", pre = "Needs another quest first", done = "Done",
+	level = ns.L("From level %d"), pre = "Needs another quest first", done = "Done",
 }
 
 function builders.dungeons()
 	local Dg, Q = ns.Dungeons, ns.Quests
 	local p = Q.Player()
 	local list = showAllDungeons and Dg.All() or Dg.ForLevel(p.level or 1)
-	local rows = { { "heading", showAllDungeons and "Every dungeon and raid" or ("Dungeons for level %d"):format(p.level or 1) } }
+	local rows = { { "heading", showAllDungeons and "Every dungeon and raid" or (ns.L("Dungeons for level %d")):format(p.level or 1) } }
 	if #list == 0 then rows[#rows + 1] = { "text", "None for your level yet: the first dungeons start in the low teens." } end
 	for _, d in ipairs(list) do
 		local open = 0
@@ -1082,7 +1082,7 @@ function builders.dungeons()
 		local bits = {}
 		if d.raid then bits[#bits + 1] = "Raid" end
 		if where then bits[#bits + 1] = where end
-		if open > 0 then bits[#bits + 1] = ("%d quest%s for you"):format(open, open == 1 and "" or "s") end
+		if open > 0 then bits[#bits + 1] = ns.L("%d quest%s for you"):format(open, open == 1 and "" or "s") end
 		rows[#rows + 1] = { "choice", ("%s   %d-%d"):format(d.name, d.low, d.high), #bits > 0 and table.concat(bits, "  ·  ") or nil, function()
 			dungeonId = d.id
 			Panels.Open("dungeon")
@@ -1104,28 +1104,28 @@ function builders.dungeon()
 	local rows = {
 		{ "heading", d.raid and "Raid" or "Dungeon" },
 		{ "title", d.name },
-		{ "text", ("Levels %d-%d%s"):format(d.low, d.high, d.levelsFrom == "quests" and " (from its quests)" or "") },
+		{ "text", (ns.L("Levels %d-%d%s")):format(d.low, d.high, d.levelsFrom == "quests" and " (from its quests)" or "") },
 	}
 	local e = Dg.Entrance(d.id)
 	if e then
-		local zone = ns.Compat.MapName(e.map) or ("map " .. e.map)
+		local zone = ns.Compat.MapName(e.map) or (ns.L("map ") .. e.map)
 		rows[#rows + 1] = { "choice", "Go to the entrance", ("%s  ·  %.1f, %.1f%s"):format(zone, e.x, e.y,
-			e.unverified and "  ·  not yet checked on Forever" or ""), function()
+			e.unverified and ns.L("  ·  not yet checked on Forever") or ""), function()
 			Dg.GuideTo(d.id)
-			ns.Print(("the arrow leads to %s."):format(d.name))
+			ns.Print((ns.L("the arrow leads to %s.")):format(d.name))
 		end }
 	end
 	local quests = Dg.Quests(d.id)
-	rows[#rows + 1] = { "heading", ("Quests (%d)"):format(#quests) }
+	rows[#rows + 1] = { "heading", (ns.L("Quests (%d)")):format(#quests) }
 	if #quests == 0 then rows[#rows + 1] = { "text", "No quests for your character here." } end
 	for _, q in ipairs(quests) do
 		local status = q.status == "level" and STATUS.level:format(q.minLevel) or STATUS[q.status]
 		local giver = q.giver and q.giver.name
-		local sub = ("Level %d  ·  %s%s"):format(q.level, status, giver and q.status ~= "done" and ("  ·  " .. giver) or "")
+		local sub = (ns.L("Level %d  ·  %s%s")):format(q.level, status, giver and q.status ~= "done" and ("  ·  " .. giver) or "")
 		rows[#rows + 1] = { "choice", q.name, sub, function()
 			if q.giver and q.status ~= "done" then
 				ns.Nav.SetTarget(q.giver.map, q.giver.x, q.giver.y, q.giver.name)
-				ns.Print(("the arrow leads to %s for %s."):format(q.giver.name, q.name))
+				ns.Print((ns.L("the arrow leads to %s for %s.")):format(q.giver.name, q.name))
 			end
 		end }
 	end
@@ -1143,7 +1143,7 @@ function builders.tools()
 	local t = Nav.Target()
 	return {
 		{ "heading", "Waypoint & tools" },
-		{ "text", map and ("You are at %.1f, %.1f  ·  %s"):format(x, y, C.MapName(map) or ("map " .. map)) or "No map position here (inside an instance?).", "text" },
+		{ "text", map and (ns.L("You are at %.1f, %.1f  ·  %s")):format(x, y, C.MapName(map) or (ns.L("map ") .. map)) or "No map position here (inside an instance?).", "text" },
 		{ "heading", "Set a waypoint on this map" },
 		{ "coords", function(wx, wy)
 			if not (wx and wy) or wx > 100 or wy > 100 then
@@ -1161,7 +1161,7 @@ function builders.tools()
 			Nav.Clear()
 			Panels.Refresh()
 		end },
-		{ "text", t and ("The arrow leads to %s."):format(t.title or "a waypoint") or "No waypoint set.", "muted" },
+		{ "text", t and (ns.L("The arrow leads to %s.")):format(t.title or "a waypoint") or "No waypoint set.", "muted" },
 		{ "heading", "For bug reports" },
 		{ "text", "What the arrow sees. Click, Ctrl+C, and paste it with a report." },
 		{ "copy", Nav.DebugText(), 6 },
@@ -1199,11 +1199,11 @@ end
 
 function builders.about()
 	local Q = ns.Quests
-	return {
+	local rows = {
 		{ "icon", 40 },
 		{ "title", "Pathwise" },
 		{ "text", "Every quest. Every craft. Every level.", "accent" },
-		{ "text", ("Version %s"):format(ns.VERSION) },
+		{ "text", (ns.L("Version %s")):format(ns.VERSION) },
 		{ "text", "Created by leight_nn & florp", "text" },
 		{ "text", "_nn", "muted" },
 		{ "divider" },
@@ -1211,7 +1211,7 @@ function builders.about()
 		{ "text", "Routes adapted from Polestar by the Polestar authors (GPL-3.0)." },
 		{ "text", "Quest data from QuestieDB by the Questie team and contributors." },
 		{ "text", "Typeface: Inter by Rasmus Andersson (SIL Open Font License)." },
-		{ "text", ("Data: %s"):format(tostring(Q.Data.SOURCE)), "muted" },
+		{ "text", (ns.L("Data: %s")):format(tostring(Q.Data.SOURCE)), "muted" },
 		{ "heading", "Licence" },
 		{ "text", "Free and open source under the GNU General Public License, version 3." },
 		{ "heading", "Website" },
@@ -1221,6 +1221,9 @@ function builders.about()
 		{ "copy", DISCORD, 1 },
 		{ "buttons", { { "Close", "default", Panels.Close } } },
 	}
+	-- The translator, only in the translation (Locales/<code>.lua sets it).
+	if ns.TRANSLATOR then table.insert(rows, 7, { "text", ns.L("Russian translation: %s"):format(ns.TRANSLATOR), "text" }) end
+	return rows
 end
 
 ---------------------------------------------------------------------------
@@ -1257,7 +1260,7 @@ function builders.leveling()
 	local total = 0
 	for _, l in ipairs(levels) do
 		total = total + l.seconds
-		rows[#rows + 1] = { "setting", ("Level %d"):format(l.level), K.Duration(l.seconds), {} }
+		rows[#rows + 1] = { "setting", (ns.L("Level %d")):format(l.level), K.Duration(l.seconds), {} }
 	end
 	if #levels > 1 then rows[#rows + 1] = { "setting", "In all", K.Duration(total), {} } end
 	rows[#rows + 1] = { "text", "Counted while you play with Pathwise on; /played sets the current level right.", "muted" }
@@ -1310,7 +1313,7 @@ function builders.settings()
 	rows[#rows + 1] = { "themes", ns.Theme.Theme().key, function(key)
 		if key == ns.Theme.Theme().key then return end
 		ns.Set("ui.theme", key)
-		ns.Print(("theme: %s. Windows already open take it after a reload (Settings > Reload now, or /reload)."):format(ns.Theme.Theme().name))
+		ns.Print((ns.L("theme: %s. Windows already open take it after a reload (Settings > Reload now, or /reload).")):format(ns.Theme.Theme().name))
 		Panels.Refresh()
 	end }
 	rows[#rows + 1] = { "text", "Light themes keep the compass and the minimal guide light, so they read over the game.", "muted" }
@@ -1321,7 +1324,7 @@ function builders.settings()
 		{ "Class", pickMode("class"), mode == "class" and "accent" or "default" },
 		{ "Custom", pickMode("custom"), mode == "custom" and "accent" or "default" } } }
 	if mode == "custom" then
-		rows[#rows + 1] = { "text", ("Your colour: %s. Type another as #RRGGBB, then Apply."):format(ns.Get("ui.accentColor") or "#66D7FF") }
+		rows[#rows + 1] = { "text", (ns.L("Your colour: %s. Type another as #RRGGBB, then Apply.")):format(ns.Get("ui.accentColor") or "#66D7FF") }
 		rows[#rows + 1] = { "input", "ui.accentColor", 1 }
 		rows[#rows + 1] = { "buttons", { { "Apply", "accent", function()
 			local text = (Panels.InputText("ui.accentColor") or ""):gsub("%s", "")
@@ -1348,6 +1351,10 @@ function builders.settings()
 		{ "text", "Across the top of the screen: where you face, where the step is and how far. Drag it to move it.", "muted" },
 		{ "setting", "Your coordinates", onOff(ns.Get("compass.coords")), { { ns.Get("compass.coords") and "Hide" or "Show", toggle("compass.coords") } } },
 		{ "text", "Where you stand on the map, under the compass and in the guide.", "muted" },
+		{ "setting", "Distances", ns.Nav.Units() == "metres" and "Metres" or "Yards", {
+			{ "Yards", function() ns.Set("nav.units", "yards") Panels.Refresh() end, ns.Nav.Units() == "yards" and "accent" or "default" },
+			{ "Metres", function() ns.Set("nav.units", "metres") Panels.Refresh() end, ns.Nav.Units() == "metres" and "accent" or "default" } } },
+		{ "text", ns.Nav.Units() == "metres" and "In metres and kilometres." or "In yards, as the game counts them.", "muted" },
 		{ "slider", "Compass size", "compass.scale", 0.5, 2, 0.1, pct },
 		{ "setting", "Pin the compass", onOff(ns.Get("compass.locked")), { { ns.Get("compass.locked") and "Unpin" or "Pin", toggle("compass.locked") } } },
 		{ "text", ns.Get("compass.locked") and "Pinned: it stays put, and clicks on it go to the world." or "The hub, the tracker and the guide window have a pin in their corner too.", "muted" },
@@ -1418,7 +1425,7 @@ function builders.settings()
 		for _, m in ipairs(mods) do rows[#rows + 1] = { "choice", m.name, m.about, function() m.open() end } end
 	end
 	rows[#rows + 1] = { "choice", "Waypoint & tools", "Set a waypoint by coordinates; what the arrow sees", function() Panels.Open("tools") end }
-	rows[#rows + 1] = { "choice", "About Pathwise", ("Version %s  ·  created by leight_nn & florp   _nn"):format(ns.VERSION), function() Panels.Open("about") end }
+	rows[#rows + 1] = { "choice", "About Pathwise", (ns.L("Version %s  ·  created by leight_nn & florp   _nn")):format(ns.VERSION), function() Panels.Open("about") end }
 	return rows
 end
 

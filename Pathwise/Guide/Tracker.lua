@@ -86,13 +86,13 @@ end
 -- "1h 05m", "18m", "45s"
 function K.Duration(s)
 	s = math.floor((s or 0) + 0.5)
-	if s >= 3600 then return ("%dh %02dm"):format(math.floor(s / 3600), math.floor(s % 3600 / 60)) end
-	if s >= 60 then return ("%dm"):format(math.floor(s / 60)) end
-	return ("%ds"):format(s)
+	if s >= 3600 then return (ns.L("%dh %02dm")):format(math.floor(s / 3600), math.floor(s % 3600 / 60)) end
+	if s >= 60 then return (ns.L("%dm")):format(math.floor(s / 60)) end
+	return (ns.L("%ds")):format(s)
 end
 
 local function short(n)
-	if n >= 1000 then return ("%.1fk"):format(n / 1000) end
+	if n >= 1000 then return (ns.L("%.1fk")):format(n / 1000) end
 	return tostring(math.floor(n + 0.5))
 end
 
@@ -100,9 +100,9 @@ end
 function K.Line()
 	if not ns.Get("tracker.shown") then return nil end
 	local s = K.Stats()
-	local parts = { ("Level %d"):format(level()), ("%d%%"):format(math.floor(s.percent * 100)) }
-	if s.xpPerHour then parts[#parts + 1] = short(s.xpPerHour) .. " XP/h" end
-	if s.secondsToLevel then parts[#parts + 1] = ("%s to %d"):format(K.Duration(s.secondsToLevel), level() + 1) end
+	local parts = { (ns.L("Level %d")):format(level()), ("%d%%"):format(math.floor(s.percent * 100)) }
+	if s.xpPerHour then parts[#parts + 1] = short(s.xpPerHour) .. ns.L(" XP/h") end
+	if s.secondsToLevel then parts[#parts + 1] = (ns.L("%s to %d")):format(K.Duration(s.secondsToLevel), level() + 1) end
 	return table.concat(parts, "  ·  ")
 end
 

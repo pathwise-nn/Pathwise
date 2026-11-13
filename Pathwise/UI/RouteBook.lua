@@ -111,7 +111,7 @@ function Book.Zones(r)
 		if (a == r.map) ~= (b == r.map) then return a == r.map end
 		return count[a] > count[b]
 	end)
-	for _, map in ipairs(maps) do names[#names + 1] = C.MapName(map) or ("Map " .. map) end
+	for _, map in ipairs(maps) do names[#names + 1] = C.MapName(map) or (ns.L("Map ") .. map) end
 	return names, maps
 end
 
@@ -327,7 +327,7 @@ end
 local function drawHeader()
 	local p, route = player(), ns.Engine.Route()
 	W.title:SetText(route and route.title or "No route yet")
-	W.level:SetText(("Level %d"):format(p.level or 1))
+	W.level:SetText((ns.L("Level %d")):format(p.level or 1))
 	W.bar:SetProgress((p.level or 1) / 60)
 end
 
@@ -337,7 +337,7 @@ local function drawChapters()
 		local ch, on = Book.CHAPTERS[i], state.chapter == i
 		b.name:SetText(("%d-%d"):format(ch[1], ch[2]))
 		local n = #Book.RoutesIn(i)
-		b.sub:SetText((here == i and "you  ·  " or "") .. (n == 1 and "1 route" or (n .. " routes")))
+		b.sub:SetText((here == i and ns.L("you  ·  ") or "") .. (n == 1 and "1 route" or (n .. ns.L(" routes"))))
 		textColor(b.name, on and "text" or "text2")
 		textColor(b.sub, here == i and "accent" or "muted")
 		paint(b.pwGround, on and "selected" or "bg2")
@@ -346,7 +346,7 @@ local function drawChapters()
 end
 
 local STANDING = {
-	now = { "for your level", "accent" }, later = { "from level %d", "muted" },
+	now = { "for your level", "accent" }, later = { ns.L("from level %d"), "muted" },
 	passed = { "below your level", "text2" }, done = { "done", "success" },
 }
 
@@ -380,7 +380,7 @@ local function card(x, y, w, r)
 	b.name:SetWidth(w - 54 - (mine and 80 or 0))
 	b.name:SetText(r.title)
 	local bits = { ("%d-%d"):format(r.levels[1], r.levels[2]), st[1]:format(r.levels[1]) }
-	if p.done > 0 and p.at then bits[#bits + 1] = ("step %d / %d"):format(p.at, p.count) end
+	if p.done > 0 and p.at then bits[#bits + 1] = (ns.L("step %d / %d")):format(p.at, p.count) end
 	b.sub:SetText(table.concat(bits, "  ·  "))
 	textColor(b.sub, st[2])
 	local c = T.Color(mine and "accent" or st[2])
@@ -422,14 +422,14 @@ local function drawRoute(r)
 	local standing, p = Book.Standing(r)
 	local y = line(0, 0, pw, r.title, "quest", "text")
 	local zones, maps = Book.Zones(r)
-	y = line(y + 2, 0, pw, ("Levels %d-%d  ·  %d steps  ·  %s"):format(r.levels[1], r.levels[2], p.count, table.concat(zones, ", ")), "meta", "text2")
+	y = line(y + 2, 0, pw, (ns.L("Levels %d-%d  ·  %d steps  ·  %s")):format(r.levels[1], r.levels[2], p.count, table.concat(zones, ", ")), "meta", "text2")
 	y = y + 8
 	if mine then
-		y = row(y, pw, "You are following this route", p.at and ("step " .. p.at) or "done", function() end, true)
+		y = row(y, pw, "You are following this route", p.at and (ns.L("step ") .. p.at) or "done", function() end, true)
 	else
-		y = row(y, pw, "Follow this route", standing == "later" and ("from level " .. r.levels[1]) or "switch to it", function()
+		y = row(y, pw, "Follow this route", standing == "later" and (ns.L("from level ") .. r.levels[1]) or "switch to it", function()
 			E.SetRoute(r.id)
-			ns.Print(("route: %s."):format(r.title))
+			ns.Print((ns.L("route: %s.")):format(r.title))
 			draw()
 		end)
 	end
@@ -441,11 +441,11 @@ local function drawRoute(r)
 		for i, map in ipairs(maps) do
 			local at = E.FirstOpenIn(r, map)
 			local on = mine and focus and focus.route == r.id and focus.map == map
-			y = row(y, pw, "Go to " .. zones[i], on and "you are going here" or (at and ("from step " .. at) or "nothing left here"), function()
+			y = row(y, pw, ns.L("Go to ") .. zones[i], on and "you are going here" or (at and (ns.L("from step ") .. at) or "nothing left here"), function()
 				if E.GoToZone(r.id, map) then
-					ns.Print(("route: %s, in %s first."):format(r.title, zones[i]))
+					ns.Print((ns.L("route: %s, in %s first.")):format(r.title, zones[i]))
 				else
-					ns.Print(("nothing left to do in %s on %s."):format(zones[i], r.title))
+					ns.Print((ns.L("nothing left to do in %s on %s.")):format(zones[i], r.title))
 				end
 				draw()
 			end, on, not at)
@@ -463,7 +463,7 @@ local function drawRoute(r)
 			local hint = here and "you are here" or (done and "done" or "start here")
 			y = row(y, pw, label, hint, function()
 				E.StartAt(r.id, s)
-				ns.Print(("route: %s, from step %d. Settings, Marked done by you, Bring back undoes the steps before it."):format(r.title, s))
+				ns.Print((ns.L("route: %s, from step %d. Settings, Marked done by you, Bring back undoes the steps before it.")):format(r.title, s))
 				draw()
 			end, here and mine, done)
 		end
@@ -499,7 +499,7 @@ function draw()
 		local list = Book.RoutesIn(state.chapter)
 		local at = 0
 		for i, x in ipairs(list) do if x == r then at = i end end
-		W.page:SetText(at > 0 and ("Route %d / %d"):format(at, #list) or "")
+		W.page:SetText(at > 0 and (ns.L("Route %d / %d")):format(at, #list) or "")
 		W.prev:SetEnabled(at > 1)
 		W.prev:SetAlpha(at > 1 and 1 or 0.35)
 		W.next:SetEnabled(at > 0 and at < #list)
@@ -508,7 +508,7 @@ function draw()
 	else
 		h = drawCards()
 		local ch = Book.CHAPTERS[state.chapter]
-		W.page:SetText(("Levels %d-%d"):format(ch[1], ch[2]))
+		W.page:SetText((ns.L("Levels %d-%d")):format(ch[1], ch[2]))
 		W.prev:SetEnabled(state.chapter > 1)
 		W.prev:SetAlpha(state.chapter > 1 and 1 or 0.35)
 		W.next:SetEnabled(state.chapter < #Book.CHAPTERS)

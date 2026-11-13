@@ -65,6 +65,12 @@ T.FONTS = {
 	medium = MEDIA .. "Fonts\\Inter-Medium.ttf",
 	semibold = MEDIA .. "Fonts\\Inter-SemiBold.ttf",
 }
+-- Korean and Chinese: Inter has none of their letters, so the game's own
+-- font (read now, before any addon changes it), in every weight.
+if ns.GAME_FONT_LOCALES and ns.GAME_FONT_LOCALES[ns.GAME_LOCALE] then
+	local own = STANDARD_TEXT_FONT or ({ koKR = "Fonts\\2002.TTF", zhCN = "Fonts\\ARKai_T.ttf", zhTW = "Fonts\\bLEI00D.ttf" })[ns.GAME_LOCALE]
+	T.FONTS.regular, T.FONTS.medium, T.FONTS.semibold = own, own, own
+end
 
 -- The type ladder: role -> font, size, colour.
 T.TYPE = {
@@ -430,7 +436,7 @@ end
 
 -- A text in a type role at a size of its own (the hub's big titles).
 function T.TextAt(parent, weight, size, color)
-	local fs = parent:CreateFontString(nil, "OVERLAY")
+	local fs = ns.HookText(parent:CreateFontString(nil, "OVERLAY"))
 	if not fs:SetFont(T.FONTS[weight] or T.FONTS.regular, size, "") then fs:SetFont("Fonts\\FRIZQT__.TTF", size, "") end
 	local c = T.Color(color or "text")
 	fs:SetTextColor(c[1], c[2], c[3], c[4])
@@ -614,7 +620,7 @@ end
 -- A font string in a type role. `upper` for small caps labels.
 function T.Text(parent, role, color, layer)
 	local r = T.TYPE[role] or T.TYPE.body
-	local fs = parent:CreateFontString(nil, layer or "OVERLAY")
+	local fs = ns.HookText(parent:CreateFontString(nil, layer or "OVERLAY"))
 	T.Font(fs, role)
 	local c = T.Color(color or r[3])
 	fs:SetTextColor(c[1], c[2], c[3], c[4])
@@ -755,7 +761,7 @@ function T.IconButton(parent, glyph, tip, onClick, size)
 		T.TextColor(text, "text")
 		if tip and GameTooltip then
 			GameTooltip:SetOwner(self, "ANCHOR_TOP")
-			GameTooltip:SetText(tip, 1, 1, 1)
+			ns.Tip.SetText(GameTooltip, tip, 1, 1, 1)
 			GameTooltip:Show()
 		end
 	end)
@@ -786,8 +792,8 @@ function T.PinButton(parent, path, size)
 		paint(true)
 		if GameTooltip then
 			GameTooltip:SetOwner(self, "ANCHOR_TOP")
-			GameTooltip:SetText(ns.Get(path) and "Pinned in place" or "Pin in place", 1, 1, 1)
-			GameTooltip:AddLine(ns.Get(path) and "Click to unpin and drag it again." or "Click so it cannot be dragged by accident.", nil, nil, nil, true)
+			ns.Tip.SetText(GameTooltip, ns.Get(path) and "Pinned in place" or "Pin in place", 1, 1, 1)
+			ns.Tip.AddLine(GameTooltip, ns.Get(path) and "Click to unpin and drag it again." or "Click so it cannot be dragged by accident.", nil, nil, nil, true)
 			GameTooltip:Show()
 		end
 	end)
@@ -874,12 +880,12 @@ function T.Grip(frame, o)
 		paint()
 		if GameTooltip and not st.held then
 			GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
-			GameTooltip:SetText("Resize", 1, 1, 1)
+			ns.Tip.SetText(GameTooltip, "Resize", 1, 1, 1)
 			if o.lockPath and ns.Get(o.lockPath) then
-				GameTooltip:AddLine("Pinned: unpin it to resize.", nil, nil, nil, true)
+				ns.Tip.AddLine(GameTooltip, "Pinned: unpin it to resize.", nil, nil, nil, true)
 			else
-				GameTooltip:AddLine(o.height and "Drag to change the width and height." or "Drag to change the width.", nil, nil, nil, true)
-				GameTooltip:AddLine("Right-click: back to the usual size.", nil, nil, nil, true)
+				ns.Tip.AddLine(GameTooltip, o.height and "Drag to change the width and height." or "Drag to change the width.", nil, nil, nil, true)
+				ns.Tip.AddLine(GameTooltip, "Right-click: back to the usual size.", nil, nil, nil, true)
 			end
 			GameTooltip:Show()
 		end

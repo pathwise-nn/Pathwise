@@ -96,7 +96,7 @@ end
 -- A zone's name: the client's, else the one the data keeps (UiMap).
 function RB.ZoneName(map)
 	local d = data()
-	return C.MapName(map) or (d and d.zones and d.zones[map]) or ("map " .. tostring(map))
+	return C.MapName(map) or (d and d.zones and d.zones[map]) or (ns.L("map ") .. tostring(map))
 end
 
 function RB.Color(spell, skill)
@@ -205,14 +205,14 @@ end
 ---------------------------------------------------------------------------
 
 function RB.EntryText(e)
-	return e.count and ("%dx %s"):format(e.count, e.spell.name) or e.spell.name
+	return e.count and ns.L("%dx %s"):format(e.count, e.spell.name) or e.spell.name
 end
 
 function RB.ColorText(spell)
 	local bits = {}
-	if spell.learn then bits[#bits + 1] = ("learn %d"):format(spell.learn) end
-	if spell.yellow then bits[#bits + 1] = ("yellow %d"):format(spell.yellow) end
-	if spell.grey then bits[#bits + 1] = ("grey %d"):format(spell.grey) end
+	if spell.learn then bits[#bits + 1] = (ns.L("learn %d")):format(spell.learn) end
+	if spell.yellow then bits[#bits + 1] = (ns.L("yellow %d")):format(spell.yellow) end
+	if spell.grey then bits[#bits + 1] = (ns.L("grey %d")):format(spell.grey) end
 	return table.concat(bits, ", ")
 end
 
@@ -225,7 +225,7 @@ end
 local function names(list, max)
 	local bits = {}
 	for i, n in ipairs(list) do
-		if i > max then bits[#bits + 1] = ("+%d more"):format(#list - max) break end
+		if i > max then bits[#bits + 1] = (ns.L("+%d more")):format(#list - max) break end
 		local zone
 		for map in pairs(n.spawns or {}) do zone = C.MapName(map) break end
 		bits[#bits + 1] = zone and ("%s (%s)"):format(n.name, zone) or n.name
@@ -235,16 +235,16 @@ end
 
 function RB.SourceText(src)
 	local bits = {}
-	if #src.vendors > 0 then bits[#bits + 1] = "sold by " .. names(src.vendors, 3) end
+	if #src.vendors > 0 then bits[#bits + 1] = ns.L("sold by ") .. names(src.vendors, 3) end
 	if #src.quests > 0 then
 		local q = {}
 		for _, id in ipairs(src.quests) do
 			local d = ns.Quests.Data.quests[id]
-			q[#q + 1] = d and d[1] or ("quest " .. id)
+			q[#q + 1] = d and d[1] or (ns.L("quest ") .. id)
 		end
-		bits[#bits + 1] = "reward of " .. table.concat(q, ", ")
+		bits[#bits + 1] = ns.L("reward of ") .. table.concat(q, ", ")
 	end
-	if #src.drops > 0 then bits[#bits + 1] = "drops from " .. names(src.drops, 2) end
+	if #src.drops > 0 then bits[#bits + 1] = ns.L("drops from ") .. names(src.drops, 2) end
 	if src.worldDrop then bits[#bits + 1] = "a world drop (Auction House)" end
 	if #bits == 0 then bits[1] = src.otherSide and "sold only to the other faction (Auction House)" or "source not in the data" end
 	return table.concat(bits, "; ")
@@ -262,10 +262,10 @@ end
 
 function RB.RankText(r)
 	local need = {}
-	if r.level then need[#need + 1] = ("level %d"):format(r.level) end
-	if r.skill then need[#need + 1] = ("skill %d"):format(r.skill) end
+	if r.level then need[#need + 1] = (ns.L("level %d")):format(r.level) end
+	if r.skill then need[#need + 1] = (ns.L("skill %d")):format(r.skill) end
 	if r.cost then need[#need + 1] = RB.MoneyText(r.cost) end
-	local text = ("%s (to %d)"):format(r.rank, r.cap)
+	local text = (ns.L("%s (to %d)")):format(r.rank, r.cap)
 	if #need > 0 then text = text .. ": " .. table.concat(need, ", ") end
 	return text
 end

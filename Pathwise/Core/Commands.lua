@@ -6,7 +6,7 @@ local Nav, Guide = ns.Nav, ns.Guide
 ns.Command("help", function()
 	ns.Print("commands:")
 	for _, c in ipairs(ns.CommandHelp()) do
-		ns.Print(("  /pw %s  -  %s"):format(c.name, c.help or ""))
+		ns.Print(("  /pw %s  -  %s"):format(c.name, ns.L(c.help or "")))
 	end
 end, "this list")
 
@@ -31,7 +31,7 @@ ns.Command("way", function(args)
 	end
 	if title == "" then title = ("%.1f, %.1f"):format(x, y) end
 	Nav.SetTarget(map, x, y, title)
-	ns.Print(("waypoint set: %s on %s."):format(title, ns.Compat.MapName(map) or ("map " .. map)))
+	ns.Print((ns.L("waypoint set: %s on %s.")):format(title, ns.Compat.MapName(map) or (ns.L("map ") .. map)))
 end, "set a waypoint on this map: /pw way <x> <y> [title]; /pw way clear")
 
 ns.Command("where", function()
@@ -41,7 +41,7 @@ ns.Command("where", function()
 		ns.Print("no map position here (inside an instance?).")
 		return
 	end
-	ns.Print(("you are at %.1f, %.1f on %s (map %d)."):format(x, y, C.MapName(map) or "?", map))
+	ns.Print((ns.L("you are at %.1f, %.1f on %s (map %d).")):format(x, y, C.MapName(map) or "?", map))
 end, "your coordinates on this map")
 
 -- What the arrow sees, to tell a position problem from a display one.
@@ -59,15 +59,15 @@ ns.Command("theme", function(args)
 		for _, th in ipairs(T.THEMES) do
 			if th.key == want or th.name:lower():gsub("%s+", "") == want then
 				ns.Set("ui.theme", th.key)
-				ns.Print(("theme: %s. /reload to see it on every window."):format(th.name))
+				ns.Print((ns.L("theme: %s. /reload to see it on every window.")):format(th.name))
 				return
 			end
 		end
-		ns.Print("no theme called '" .. args .. "'.")
+		ns.Print(ns.L("no theme called '") .. args .. "'.")
 	end
 	local names = {}
 	for _, th in ipairs(T.THEMES) do names[#names + 1] = th.key end
-	ns.Print(("theme now: %s. Themes: %s."):format(T.Theme().name, table.concat(names, ", ")))
+	ns.Print((ns.L("theme now: %s. Themes: %s.")):format(T.Theme().name, table.concat(names, ", ")))
 end, "the colour theme: /pw theme <name> (none: list them)")
 
 ns.Command("style", function(args)
@@ -78,10 +78,10 @@ ns.Command("style", function(args)
 	elseif want == "" then
 		Guide.CycleStyle()
 	else
-		ns.Print("usage: /pw style tracker | window | minimal   (now " .. Guide.Style() .. ")")
+		ns.Print(ns.L("usage: /pw style tracker | window | minimal   (now ") .. Guide.Style() .. ")")
 		return
 	end
-	ns.Print("guide style: " .. Guide.STYLE_NAMES[Guide.Style()] .. ".")
+	ns.Print(ns.L("guide style: ") .. Guide.STYLE_NAMES[Guide.Style()] .. ".")
 end, "the guide on screen: /pw style tracker | window | minimal (none: the next one)")
 
 ns.Command("compass", function(args)
@@ -106,7 +106,7 @@ end, "switch the guide between full and compact")
 ns.Command("opacity", function(args)
 	local v = tonumber(args)
 	if not v or v < 40 or v > 100 then
-		ns.Print("usage: /pw opacity <40-100>   (now " .. math.floor(ns.Get("ui.opacity") * 100 + 0.5) .. ")")
+		ns.Print(ns.L("usage: /pw opacity <40-100>   (now ") .. math.floor(ns.Get("ui.opacity") * 100 + 0.5) .. ")")
 		return
 	end
 	ns.Set("ui.opacity", v / 100)
@@ -115,11 +115,11 @@ end, "window background opacity, 40-100")
 ns.Command("scale", function(args)
 	local v = tonumber(((args or ""):gsub("%%", "")))
 	if not v or v < 50 or v > 150 then
-		ns.Print(("usage: /pw scale <50-150>   (now %d%%)"):format(math.floor((ns.Get("ui.scale") or 1) * 100 + 0.5)))
+		ns.Print((ns.L("usage: /pw scale <50-150>   (now %d%%)")):format(math.floor((ns.Get("ui.scale") or 1) * 100 + 0.5)))
 		return
 	end
 	ns.Set("ui.scale", v / 100)
-	ns.Print(("window size %d%%."):format(v))
+	ns.Print((ns.L("window size %d%%.")):format(v))
 end, "guide window size, 50-150 (also in Settings)")
 
 ns.Command("arrow", function(args)
@@ -127,11 +127,11 @@ ns.Command("arrow", function(args)
 	if sub == "scale" then
 		local v = tonumber((rest:gsub("%%", "")))
 		if not v or v < 50 or v > 200 then
-			ns.Print(("usage: /pw arrow scale <50-200>   (now %d%%)"):format(math.floor((ns.Get("arrow.scale") or 1) * 100 + 0.5)))
+			ns.Print((ns.L("usage: /pw arrow scale <50-200>   (now %d%%)")):format(math.floor((ns.Get("arrow.scale") or 1) * 100 + 0.5)))
 			return
 		end
 		ns.Set("arrow.scale", v / 100)
-		ns.Print(("arrow size %d%%."):format(v))
+		ns.Print((ns.L("arrow size %d%%.")):format(v))
 		return
 	end
 	ns.Set("arrow.shown", not ns.Get("arrow.shown"))
@@ -168,7 +168,7 @@ ns.Command("demo", function()
 end, "preview the guide window with a sample step")
 
 ns.Command("about", function()
-	ns.Print(("Pathwise %s  ·  Every quest. Every craft. Every level.  ·  created by leight_nn & florp  _nn"):format(ns.VERSION))
+	ns.Print((ns.L("Pathwise %s  ·  Every quest. Every craft. Every level.  ·  created by leight_nn & florp  _nn")):format(ns.VERSION))
 	ns.Fire("SHOW_ABOUT")
 end, "version and credits")
 ns.Command("report", function() ns.Fire("REPORT_STEP") end, "a report of this step to paste into Discord")
@@ -188,15 +188,15 @@ ns.Command("route", function(args)
 		for _, r in ipairs(E.Routes()) do
 			if r.id == args or r.title:lower() == args:lower() then
 				E.SetRoute(r.id)
-				ns.Print("route: " .. r.title)
+				ns.Print(ns.L("route: ") .. r.title)
 				return
 			end
 		end
-		ns.Print("no route called '" .. args .. "'.")
+		ns.Print(ns.L("no route called '") .. args .. "'.")
 		return
 	end
 	local r = E.Route()
-	ns.Print("route: " .. (r and (r.title .. " (" .. r.id .. ")") or "none"))
+	ns.Print(ns.L("route: ") .. (r and (r.title .. " (" .. r.id .. ")") or "none"))
 	for _, x in ipairs(E.Routes()) do ns.Print("  " .. x.id .. "  " .. x.title) end
 end, "show or choose the route: /pw route <id or title>")
 

@@ -61,8 +61,8 @@ local function tooltip(self)
 	local pin = self.pin
 	if not (pin and GameTooltip) then return end
 	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-	GameTooltip:SetText(pin.title or "Pathwise", 1, 1, 1)
-	if pin.sub then GameTooltip:AddLine(pin.sub, 0.6, 0.69, 0.75, true) end
+	ns.Tip.SetText(GameTooltip, pin.title or "Pathwise", 1, 1, 1)
+	if pin.sub then ns.Tip.AddLine(GameTooltip, pin.sub, 0.6, 0.69, 0.75, true) end
 	GameTooltip:Show()
 end
 
@@ -143,7 +143,7 @@ local function dungeonPins()
 	for _, d in ipairs(ns.Dungeons.ForLevel(level)) do
 		for _, e in ipairs(d.entrances) do
 			out[#out + 1] = { map = e[1], x = e[2], y = e[3], kind = "dungeon", title = d.name,
-				sub = ("%s, levels %d-%d%s"):format(d.raid and "Raid" or "Dungeon", d.low, d.high, e[4] and "  ·  entrance not yet checked on Forever" or "") }
+				sub = (ns.L("%s, levels %d-%d%s")):format(d.raid and "Raid" or "Dungeon", d.low, d.high, e[4] and ns.L("  ·  entrance not yet checked on Forever") or "") }
 		end
 	end
 	return out

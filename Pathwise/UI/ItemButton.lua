@@ -98,8 +98,8 @@ local function build()
 		if not GameTooltip then return end
 		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
 		if self.link and GameTooltip.SetHyperlink then GameTooltip:SetHyperlink(self.link)
-		else GameTooltip:SetText(self.itemName or "") end
-		GameTooltip:AddLine("Pathwise: the step's item. Shift-drag to move.", 0.6, 0.6, 0.6, true)
+		else ns.Tip.SetText(GameTooltip, self.itemName or "") end
+		ns.Tip.AddLine(GameTooltip, "Pathwise: the step's item. Shift-drag to move.", 0.6, 0.6, 0.6, true)
 		GameTooltip:Show()
 	end)
 	b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)

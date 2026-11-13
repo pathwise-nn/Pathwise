@@ -124,7 +124,7 @@ local function build()
 	step:SetScript("OnEnter", function(self)
 		if GameTooltip then
 			GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-			GameTooltip:SetText("Open the hub", 1, 1, 1)
+			ns.Tip.SetText(GameTooltip, "Open the hub", 1, 1, 1)
 			GameTooltip:Show()
 		end
 	end)
@@ -216,9 +216,9 @@ function Card.Stats()
 	local s = K.Stats()
 	local lvl = UnitLevel and UnitLevel("player") or 1
 	local bits = {}
-	if s.xpPerHour then bits[#bits + 1] = (s.xpPerHour >= 1000 and ("%.1fk"):format(s.xpPerHour / 1000) or tostring(floor(s.xpPerHour))) .. " XP/h" end
-	if s.secondsToLevel then bits[#bits + 1] = ("%s to %d"):format(K.Duration(s.secondsToLevel), lvl + 1) end
-	return ("Lv %d"):format(lvl), s.percent or 0, table.concat(bits, "  ·  ")
+	if s.xpPerHour then bits[#bits + 1] = (s.xpPerHour >= 1000 and (ns.L("%.1fk")):format(s.xpPerHour / 1000) or tostring(floor(s.xpPerHour))) .. ns.L(" XP/h") end
+	if s.secondsToLevel then bits[#bits + 1] = (ns.L("%s to %d")):format(K.Duration(s.secondsToLevel), lvl + 1) end
+	return (ns.L("Lv %d")):format(lvl), s.percent or 0, table.concat(bits, "  ·  ")
 end
 
 local function place(widget, y, left, right)
@@ -273,7 +273,7 @@ function Card.Refresh()
 
 	-- Step.
 	place(W.stepLabel, y)
-	W.stepLabel:SetText(v.index and v.count and ("Step %d of %d"):format(v.index, v.count):upper() or (v.extra and "EXTRA QUEST" or "NOW"))
+	W.stepLabel:SetText(v.index and v.count and ns.U((ns.L("Step %d of %d")):format(v.index, v.count)) or (v.extra and "EXTRA QUEST" or "NOW"))
 	y = y + max(12, height(W.stepLabel)) + 8
 	local step = W.step
 	place(step, y)
@@ -299,7 +299,7 @@ function Card.Refresh()
 	if #rows > Card.MAX_ROWS then
 		local cut = {}
 		for k = 1, Card.MAX_ROWS - 1 do cut[k] = rows[k] end
-		cut[#cut + 1] = { kind = "note", lead = ("+%d more in the hub"):format(#rows - (Card.MAX_ROWS - 1)), info = true }
+		cut[#cut + 1] = { kind = "note", lead = (ns.L("+%d more in the hub")):format(#rows - (Card.MAX_ROWS - 1)), info = true }
 		rows = cut
 	end
 	for i, line in ipairs(rows) do
@@ -323,7 +323,7 @@ function Card.Refresh()
 	if d then
 		local card = W.card
 		place(card, y)
-		card.label:SetText((d.label or "Optional"):upper())
+		card.label:SetText(ns.U(ns.L(d.label or "Optional")))
 		card.text:SetText(d.text or "")
 		card.sub:SetText(d.sub or "")
 		card.go.pwText:SetText(d.aimed and "Stop" or "Go")
@@ -355,7 +355,7 @@ function Card.Refresh()
 	W.coords:SetShown(xy and true or false)
 	if xy then
 		place(W.coords, y)
-		W.coords:SetText("You  " .. xy)
+		W.coords:SetText(ns.L("You  ") .. xy)
 		y = y + height(W.coords) + 8
 	end
 
@@ -399,7 +399,7 @@ ns.On("PLAYER_COORDS", function()
 	if not Card.Shown() then return end
 	local xy = not ns.Get("guide.compact") and ns.Coords and ns.Coords.Text()
 	if (xy ~= nil) ~= (W.coords:IsShown() and true or false) then Card.Refresh()
-	elseif xy then W.coords:SetText("You  " .. xy) end
+	elseif xy then W.coords:SetText(ns.L("You  ") .. xy) end
 end)
 ns.On("SETTING_CHANGED", function(path)
 	if path == "guide.shown" or path == "guide.style" then Card.Show()

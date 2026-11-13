@@ -20,6 +20,7 @@ local function ok(v, msg) if not v then error(msg or "expected true", 2) end end
 local function fresh()
 	for k in pairs(package.loaded) do if k:match("^tests") then package.loaded[k] = nil end end
 	PathwiseSettings, PathwiseCharSettings, Pathwise, SLASH_PATHWISE1 = nil, nil, nil, nil
+	GetLocale = nil -- English, unless a test says otherwise
 	-- Pathwise Gear stands alone: its own settings, table and frames.
 	local drop = {}
 	for k in pairs(_G) do if type(k) == "string" and k:find("^PathwiseGear") then drop[#drop + 1] = k end end
@@ -380,6 +381,7 @@ assert(loadfile(ROOT .. "/tests/gathering.lua"))({ test = test, eq = eq, near = 
 assert(loadfile(ROOT .. "/tests/recipebook.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
 assert(loadfile(ROOT .. "/tests/v2.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
 assert(loadfile(ROOT .. "/tests/insights.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
+assert(loadfile(ROOT .. "/tests/locale.lua"))({ test = test, eq = eq, near = near, ok = ok, fresh = fresh, lastPrint = lastPrint })
 
 ---------------------------------------------------------------------------
 

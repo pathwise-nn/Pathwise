@@ -269,6 +269,9 @@ def run_scene(name):
     if theme:
         rt.execute('PathwiseSettings = { schema = 1, ui = { theme = "%s" } }' % theme)
     g.PATHWISE_PREVIEW = True  # no game art here: Pathwise's own drawings
+    # PREVIEW_LOCALE=ruRU: the game in another language (Locales/).
+    if os.environ.get("PREVIEW_LOCALE"):
+        rt.execute('GetLocale = function() return "%s" end' % os.environ["PREVIEW_LOCALE"])
     ns = stub.load(".")
     if scenes.addons is not None and scenes.addons[name] is not None:
         for addon in lua_list(scenes.addons[name]):
