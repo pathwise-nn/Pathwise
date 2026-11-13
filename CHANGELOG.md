@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.4 (2026-11-13)
+
 ### Pathwise Insights
 - No more "Pathwise_Insights has been blocked from an action only available
   to the Blizzard UI" at login: it no longer listens to the combat log,
