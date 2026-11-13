@@ -625,6 +625,11 @@ local T = {
 	["your coordinates on."] = "내 좌표 켬.",
 	["your professions: skill, best craft, materials"] = "내 전문 기술: 숙련도, 최고의 제작, 재료",
 	["your quests are on %s: following that route."] = "내 퀘스트는 %s 경로에 있습니다: 그 경로를 따라갑니다.",
+	["Text size"] = "글자 크기",
+	["Normal"] = "보통",
+	["Large"] = "크게",
+	["Largest"] = "가장 크게",
+	["How large Settings and the other panels draw. Scroll past a slider to scroll the list; hold Shift to move it with the wheel."] = "설정과 다른 창이 그려지는 크기. 슬라이더 위에서 스크롤하면 목록이 스크롤됩니다. Shift를 누른 채 휠을 돌리면 슬라이더가 움직입니다.",
 }
 
 if ns.AddLocale({ "koKR" }, T) then

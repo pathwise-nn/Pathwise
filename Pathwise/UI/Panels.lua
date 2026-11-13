@@ -31,7 +31,12 @@ local WIDTH, PAD = 300, 16
 -- not beside the guide, dragged anywhere, its place kept (settings.point),
 -- a pin to keep it there, over the hub. The other panels (Skip,
 -- Professions, Dungeons ...) still open beside the guide.
-ns.Defaults("settings", { point = nil, locked = false })
+-- text: how large the panels draw (Settings > Text size), on top of the
+-- window size: 1 Normal, 1.15 Large, 1.3 Largest.
+ns.Defaults("settings", { point = nil, locked = false, text = 1.15 })
+Panels.TEXT_SIZES = { { "Normal", 1 }, { "Large", 1.15 }, { "Largest", 1.3 } }
+local function panelScale() return (ns.Get("ui.scale") or 1) * (ns.Get("settings.text") or 1) end
+Panels.Scale = panelScale
 local WINDOW_KINDS = { settings = true, about = true, tools = true, leveling = true }
 function Panels.IsWindow(kind)
 	return kind ~= nil and (WINDOW_KINDS[kind] or (Panels.IsSuiteKind and Panels.IsSuiteKind(kind))) or false
@@ -620,7 +625,7 @@ function Panels.Open(kind)
 	local window = Panels.IsWindow(kind)
 	panel.pin:SetShown(window)
 	panel:SetFrameStrata(window and "HIGH" or "MEDIUM")
-	panel:SetScale(ns.Get("ui.scale") or 1)
+	panel:SetScale(panelScale())
 	scroll:SetVerticalScroll(0)
 	render(rows)
 	anchor()
@@ -642,6 +647,7 @@ end
 
 function Panels.Refresh()
 	if panel and panel:IsShown() and openKind and builders[openKind] then
+		if not pinned then panel:SetScale(panelScale()) end
 		render(builders[openKind]())
 		if not pinned then anchor() end
 	end
@@ -1278,6 +1284,16 @@ function builders.settings()
 	local function pickStyle(v) return function() ns.Set("guide.style", v) ns.Set("guide.shown", true) Panels.Refresh() end end
 	local rows = {
 		{ "heading", "Settings" },
+		{ "heading", "Text size" },
+		{ "setting", "", "", (function()
+			local list, now = {}, ns.Get("settings.text") or 1
+			for _, t in ipairs(Panels.TEXT_SIZES) do
+				list[#list + 1] = { t[1], function() ns.Set("settings.text", t[2]) Panels.Refresh() end,
+					math.abs(now - t[2]) < 0.01 and "accent" or "default" }
+			end
+			return list
+		end)() },
+		{ "text", "How large Settings and the other panels draw. Scroll past a slider to scroll the list; hold Shift to move it with the wheel.", "muted" },
 		{ "heading", "Guide on screen" },
 		{ "setting", "Style", "", {
 			{ "Tracker", pickStyle("tracker"), style == "tracker" and "accent" or "default" },

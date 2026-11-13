@@ -616,3 +616,8 @@ your coordinates on this map
 your coordinates on.
 your professions: skill, best craft, materials
 your quests are on %s: following that route.
+Text size
+Normal
+Large
+Largest
+How large Settings and the other panels draw. Scroll past a slider to scroll the list; hold Shift to move it with the wheel.

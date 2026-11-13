@@ -616,3 +616,8 @@
 616	coordinate attivate.
 617	le tue professioni: abilità, migliore creazione, materiali
 618	le tue missioni sono su %s: seguo quel percorso.
+619	Dimensione del testo
+620	Normale
+621	Grande
+622	Grandissima
+623	Quanto sono grandi le Impostazioni e gli altri pannelli. Scorrere sopra un cursore scorre l’elenco; tieni premuto Maiusc per spostarlo con la rotella.

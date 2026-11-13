@@ -625,6 +625,11 @@ local T = {
 	["your coordinates on."] = "coordinate attivate.",
 	["your professions: skill, best craft, materials"] = "le tue professioni: abilità, migliore creazione, materiali",
 	["your quests are on %s: following that route."] = "le tue missioni sono su %s: seguo quel percorso.",
+	["Text size"] = "Dimensione del testo",
+	["Normal"] = "Normale",
+	["Large"] = "Grande",
+	["Largest"] = "Grandissima",
+	["How large Settings and the other panels draw. Scroll past a slider to scroll the list; hold Shift to move it with the wheel."] = "Quanto sono grandi le Impostazioni e gli altri pannelli. Scorrere sopra un cursore scorre l’elenco; tieni premuto Maiusc per spostarlo con la rotella.",
 }
 
 if ns.AddLocale({ "itIT" }, T) then
