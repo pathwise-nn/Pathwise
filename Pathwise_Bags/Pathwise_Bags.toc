@@ -2,7 +2,7 @@
 ## Title: Pathwise Bags
 ## Notes: One bag window in the Pathwise look, keep and sell markers, junk selling and bag space help. Works on its own; with Pathwise it also marks what quests and your profession routes need, and with Pathwise Gear your upgrades.
 ## Author: leight_nn & florp
-## Version: 0.3.4
+## Version: 0.3.5
 ## SavedVariables: PathwiseBagsSettings
 ## SavedVariablesPerCharacter: PathwiseBagsCharSettings
 ## OptionalDeps: Pathwise, PathwiseUI, Pathwise_Gear

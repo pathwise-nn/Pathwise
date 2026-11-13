@@ -25,6 +25,8 @@ that version's section.
   goes through one lookup (Core/Locale.lua); a language is a table of
   English text and its translation in Locales/ (CONTRIBUTING.md).
 
+## 0.3.5 (2026-11-13)
+
 ### Pathwise Gear: works on its own
 - No longer needs Pathwise: Leveling & Professions. Upgrade marks, the
   tooltip line, the gold arrow on bag upgrades, the best quest reward, your
