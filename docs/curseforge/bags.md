@@ -2,9 +2,10 @@
 
 **One bag window that knows what you need.**
 
-A bag window for World of Warcraft: Forever, in the Pathwise look. An add-on
-for [Pathwise](https://github.com/pathwise-nn/pathwise): install Pathwise too.
-Works best with Pathwise Gear installed, for upgrade markers.
+A bag window for World of Warcraft: Forever, in the Pathwise look. Works on
+its own. With [Pathwise](https://github.com/pathwise-nn/pathwise) installed it
+also marks items quests later on your path will ask for and your profession
+routes' materials; with Pathwise Gear, your upgrades.
 
 **Beta.** First release on its own page.
 
@@ -15,9 +16,9 @@ Works best with Pathwise Gear installed, for upgrade markers.
   one grid, or bag by bag. Search by name, quest, upgrade or junk; the game's
   own sort; free slots and money. Uses the game's own item buttons, so using,
   selling and dragging work as usual. Can be turned off.
-- **Markers on items**: needed for a quest (in your log or later), material
-  for your Pathwise profession route, a Pathwise Gear upgrade or best in
-  slot, kept by you, can be sold.
+- **Markers on items**: needed for a quest (in your log; later ones with
+  Pathwise), material for your Pathwise profession route, a Pathwise Gear
+  upgrade or best in slot, kept by you, can be sold.
 - **Sell junk**: a button on the vendor window with the count and the gold,
   or selling on its own. Greys and items you mark as junk; optionally bound
   gear you can't use or that is worse. Never what you keep, quest items you
@@ -25,6 +26,8 @@ Works best with Pathwise Gear installed, for upgrade markers.
 - **Bag space**: a warning when your bags are nearly full, with what to let
   go first.
 - **Keep or junk**: mark items from the bag window.
+- **Its own options** (`/pwbags options`, or right-click its minimap button),
+  in the theme and accent of the other Pathwise addons you have.
 
 ## Credits
 
