@@ -346,7 +346,8 @@ end
 ---------------------------------------------------------------------------
 -- Wings: an instance whose parts are entered apart. Forever's client has
 -- one map and one dungeon-finder entry (LFGDungeons 17) for Scarlet
--- Monastery, so the wings are Classic's, by boss name: NOT VERIFIED for
+-- Monastery. Players report Forever keeps its four wings (2026-11-13);
+-- which boss is in which is Classic's, by boss name, not yet checked in
 -- Forever. Every boss of the instance must be in a wing.
 ---------------------------------------------------------------------------
 
@@ -447,8 +448,8 @@ f:write("--   ENCOUNTERS[id]   = { name, map, players (0: the instance's own siz
 f:write("--   ITEMS[id]        = { name, quality, itemLevel, requiredLevel, inventoryType, class, subClass, classMask | nil }\n")
 f:write("--   PORTRAITS[id]    = file id of the boss's Encounter Journal art (UI-EJ-BOSS-<name>), by its name; from\n")
 f:write("--                      the game's file list, which may hold files Forever lacks (the addon checks)\n")
-f:write("--   WINGS[map]      = { { name, { encounter ids } }, ... }: the parts entered apart (Classic's; not\n")
-f:write("--                      verified for Forever)\n")
+f:write("--   WINGS[map]      = { { name, { encounter ids } }, ... }: the parts entered apart (players report\n")
+f:write("--                      Forever's wings; the bosses in each are Classic's)\n")
 f:write("--   SAME[id]         = the boss this id is another row of (the client keeps a row per version;\n")
 f:write("--                      the game may report any of them at a kill)\n")
 f:write("\nlocal ADDON, ns = ...\nlocal D = {}\nns.LootData = D\n\n")

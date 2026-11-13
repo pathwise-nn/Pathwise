@@ -14,8 +14,8 @@ that version's section.
   checked in game.
 - Scarlet Monastery has wing buttons above its boss tabs: All, Graveyard,
   Library, Armory and Cathedral. A wing shows only its bosses, and the
-  arrows stay inside it. Forever's own data doesn't split the monastery into
-  wings, so the split is Classic's and not yet checked for Forever.
+  arrows stay inside it. Players report Forever still has the four wings;
+  which boss is in which follows Classic and isn't checked in game yet.
 
 ## 0.3.6 (2026-11-13)
 

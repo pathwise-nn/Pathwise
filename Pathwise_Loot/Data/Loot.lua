@@ -12,8 +12,8 @@
 --   ITEMS[id]        = { name, quality, itemLevel, requiredLevel, inventoryType, class, subClass, classMask | nil }
 --   PORTRAITS[id]    = file id of the boss's Encounter Journal art (UI-EJ-BOSS-<name>), by its name; from
 --                      the game's file list, which may hold files Forever lacks (the addon checks)
---   WINGS[map]      = { { name, { encounter ids } }, ... }: the parts entered apart (Classic's; not
---                      verified for Forever)
+--   WINGS[map]      = { { name, { encounter ids } }, ... }: the parts entered apart (players report
+--                      Forever's wings; the bosses in each are Classic's)
 --   SAME[id]         = the boss this id is another row of (the client keeps a row per version;
 --                      the game may report any of them at a kill)
 
