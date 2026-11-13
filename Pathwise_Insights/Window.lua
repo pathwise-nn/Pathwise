@@ -760,15 +760,21 @@ local function card(parent, x, y, w, h)
 end
 
 -- A box to copy from: click it, Ctrl+A, Ctrl+C. Typing in it changes nothing.
+-- A long value (a share code) scrolls inside the box rather than spilling out
+-- of it; the wheel scrolls the box, then the page once the box is at its end.
 local function copyBox(parent, x, y, w, lines, value)
 	local f = pool("copy" .. tostring(parent), function()
 		local f = CreateFrame("Frame", nil, parent)
 		T.Round(f, "bg", "border", 6)
-		local e = CreateFrame("EditBox", nil, f)
+		local sf = CreateFrame("ScrollFrame", nil, f)
+		sf:SetPoint("TOPLEFT", 8, -6)
+		sf:SetPoint("BOTTOMRIGHT", -8, 6)
+		if sf.SetClipsChildren then sf:SetClipsChildren(true) end
+		local e = CreateFrame("EditBox", nil, sf)
 		e:SetMultiLine(true)
 		e:SetAutoFocus(false)
-		e:SetPoint("TOPLEFT", 8, -6)
-		e:SetPoint("BOTTOMRIGHT", -8, 6)
+		e:SetPoint("TOPLEFT")
+		sf:SetScrollChild(e)
 		if not e:SetFont(T.FONTS.regular, 11, "") then e:SetFont("Fonts\\FRIZQT__.TTF", 11, "") end
 		e:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
 		e:SetScript("OnMouseUp", function(self) self:SetFocus() self:HighlightText() end)
@@ -776,16 +782,33 @@ local function copyBox(parent, x, y, w, lines, value)
 		e:SetScript("OnTextChanged", function(self, user)
 			if user and f.value and self:GetText() ~= f.value then self:SetText(f.value) self:HighlightText() end
 		end)
-		f.box = e
+		-- Clicks anywhere in the box reach the text.
+		sf:EnableMouse(true)
+		sf:SetScript("OnMouseUp", function() e:SetFocus() e:HighlightText() end)
+		sf:EnableMouseWheel(true)
+		sf:SetScript("OnMouseWheel", function(self, delta)
+			local range = (self.GetVerticalScrollRange and self:GetVerticalScrollRange()) or 0
+			local now = self:GetVerticalScroll() or 0
+			local to = max(0, min(range, now - delta * 28))
+			if to == now and W.scroll then
+				local page = W.scroll:GetScript("OnMouseWheel")
+				if page then page(W.scroll, delta) end
+				return
+			end
+			self:SetVerticalScroll(to)
+		end)
+		f.scroll, f.box = sf, e
 		return f
 	end)
 	f:ClearAllPoints()
 	f:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -y)
 	f:SetSize(w, 12 + lines * 14)
+	f.box:SetWidth(max(1, w - 16))
 	f.value = value
 	local col = T.Color("text2")
 	f.box:SetTextColor(col[1], col[2], col[3])
 	f.box:SetText(value)
+	f.scroll:SetVerticalScroll(0)
 	return y + 12 + lines * 14
 end
 
