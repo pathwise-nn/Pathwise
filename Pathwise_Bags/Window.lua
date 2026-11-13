@@ -27,8 +27,8 @@
 -- ToggleBackpack, OpenBackpack, ToggleBag; nothing of the game's is replaced).
 
 local ADDON, ns = ...
-local S, Items = Pathwise.Suite, ns.Items
-local T = S.Theme
+local S, Items = ns.S, ns.Items
+local T = ns.Look
 local W = {}
 ns.Window = W
 
@@ -38,6 +38,7 @@ S.Defaults("bags", {
 	folded = nil, -- by bag: { [bagID] = true } for bags folded away
 	columns = 12,
 	bagBar = false, -- show the bag bar under the title
+	openAtMerchant = true, -- open with a vendor
 	point = nil, -- { point, relPoint, x, y }
 })
 
@@ -46,7 +47,7 @@ local SECTION_GAP = 14
 local TOP = 40 -- title row
 local BAGBAR = 46
 local FOOT = 28
-local readable = S.Compat.Readable
+local readable = S.Readable
 
 local frame, body, holders, buttons, search, catchers, bagbar
 local markMode = false
@@ -103,9 +104,9 @@ end
 
 local GLYPH = {
 	quest = { "glyph-quest", "warning" },
-	upgrade = { "glyph-upgrade", "gear" },
-	best = { "glyph-best", "gear" },
-	profession = { "glyph-prof", "bags" },
+	upgrade = { "glyph-upgrade", "gold" },
+	best = { "glyph-best", "gold" },
+	profession = { "glyph-prof", "success" },
 	keep = { "glyph-lock", "text2" },
 	sell = { "glyph-coin", "warning" },
 }
@@ -468,14 +469,14 @@ function W.RefreshCatchers()
 				c:SetFrameLevel((b:GetFrameLevel() or 1) + 5)
 				local edge = c:CreateTexture(nil, "OVERLAY")
 				edge:SetAllPoints()
-				T.SetColor(edge, "bags", 0.18)
+				T.Paint(edge, "accent", 0.18)
 				c:SetScript("OnClick", function(self)
 					local e = self.pwEntry
 					if not e then return end
 					local now = Items.MarkOf(e.id) or ""
 					local nxt = NEXT[now]
 					Items.Mark(e.id, nxt ~= "" and nxt or nil)
-					S.Print(("Pathwise Bags: %s %s."):format(e.link or e.name or "item",
+					S.Print(("%s %s."):format(e.link or e.name or "item",
 						nxt == "keep" and "will be kept (never sold)" or nxt == "junk" and "is marked as junk" or "is no longer marked"))
 				end)
 				catchers[i] = c
@@ -528,7 +529,7 @@ local function build()
 	accent:SetPoint("TOPLEFT", 1, -1)
 	accent:SetPoint("TOPRIGHT", -1, -1)
 	accent:SetHeight(2)
-	T.SetColor(accent, "bags")
+	T.Paint(accent, "accent")
 	local p = S.Get("bags.point")
 	if type(p) == "table" then frame:SetPoint(p[1], UIParent, p[2], p[3], p[4])
 	else frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -60, 120) end
@@ -542,7 +543,7 @@ local function build()
 
 	local close = T.IconButton(frame, "close", "Close", function() W.Hide() end)
 	close:SetPoint("TOPRIGHT", -8, -9)
-	local settings = T.IconButton(frame, "settings", "Pathwise Bags settings", function() S.Open("bags") end)
+	local settings = T.IconButton(frame, "settings", "Pathwise Bags settings", function() ns.Fire("SHOW_CONFIG") end)
 	settings:SetPoint("RIGHT", close, "LEFT", -2, 0)
 	local mark = T.IconButton(frame, "coin", "Mark items: click one to keep it, again for junk, again to clear", function()
 		W.SetMarkMode(not markMode)
@@ -615,7 +616,7 @@ function W.NextView()
 	local now = S.Get("bags.view") or "categories"
 	local nxt = VIEWS[now] or "categories"
 	S.Set("bags.view", nxt)
-	S.Print("Pathwise Bags: items shown " .. VIEW_NAMES[nxt] .. ".")
+	S.Print("Items shown " .. VIEW_NAMES[nxt] .. ".")
 	return nxt
 end
 

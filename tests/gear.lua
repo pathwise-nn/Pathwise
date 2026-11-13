@@ -458,3 +458,26 @@ test("gear: settings kept in Pathwise's before are moved over once", function()
 	ok(not g.MoveSettings(), "only once")
 	eq(g.Get("gear.tooltip"), true, "what you set since stays")
 end)
+
+---------------------------------------------------------------------------
+-- Pathwise's settings panel
+---------------------------------------------------------------------------
+
+test("panels: a setting's label never runs under its value or buttons", function()
+	local stub, ns = gear()
+	ns.Fire("SHOW_SETTINGS")
+	stub.clickLabelText("Pathwise Gear")
+	local checked = 0
+	for _, f in ipairs(stub.frames) do
+		local label, buttons = rawget(f, "label"), rawget(f, "buttons")
+		if label and type(buttons) == "table" and f.shown and type(rawget(f, "value")) == "table" then
+			local used = 0
+			for _, bt in ipairs(buttons) do if bt.shown then used = used + bt.w + 4 end end
+			local value = f.value.text ~= "" and (#f.value.text * 6 + 8) or 0
+			ok(label.w + used + value <= f.w + 1, ("%q fits: %d + %d + %d <= %d"):format(label.text, label.w, used, value, f.w))
+			checked = checked + 1
+		end
+	end
+	ok(checked >= 5, "checked the setting rows: " .. checked)
+end)
+

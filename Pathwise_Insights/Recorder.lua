@@ -507,16 +507,61 @@ local function describe(log)
 	log.level = level()
 end
 
--- A kill of yours (or your pet's): the combat log's PARTY_KILL.
-function R.OnCombatLog()
-	if not (recording() and CombatLogGetCurrentEventInfo) then return end
-	local _, sub, _, source = CombatLogGetCurrentEventInfo()
-	if sub ~= "PARTY_KILL" then return end
-	if source == (UnitGUID and UnitGUID("player")) or source == (UnitGUID and UnitGUID("pet")) then
-		local log = R.Log()
-		log.kills = log.kills + 1
-		if log.cur then log.cur.k = (log.cur.k or 0) + 1 end
+-- A kill of yours (or your pet's): the game's "Kobold Vermin dies, you gain
+-- 45 experience." Forever keeps the combat log from addons (registering
+-- COMBAT_LOG_EVENT_UNFILTERED is blocked), so kills that give no XP (grey
+-- monsters) are not counted. The patterns are the client's own strings, so
+-- every language reads; a text the game keeps secret is skipped.
+local KILL_STRINGS = {
+	"COMBATLOG_XPGAIN_FIRSTPERSON", "COMBATLOG_XPGAIN_FIRSTPERSON_GROUP", "COMBATLOG_XPGAIN_FIRSTPERSON_RAID",
+	"COMBATLOG_XPGAIN_EXHAUSTION1", "COMBATLOG_XPGAIN_EXHAUSTION1_GROUP", "COMBATLOG_XPGAIN_EXHAUSTION1_RAID",
+	"COMBATLOG_XPGAIN_EXHAUSTION2", "COMBATLOG_XPGAIN_EXHAUSTION2_GROUP", "COMBATLOG_XPGAIN_EXHAUSTION2_RAID",
+	"COMBATLOG_XPGAIN_EXHAUSTION4", "COMBATLOG_XPGAIN_EXHAUSTION4_GROUP", "COMBATLOG_XPGAIN_EXHAUSTION4_RAID",
+	"COMBATLOG_XPGAIN_EXHAUSTION5", "COMBATLOG_XPGAIN_EXHAUSTION5_GROUP", "COMBATLOG_XPGAIN_EXHAUSTION5_RAID",
+}
+local killPatterns
+-- "%s dies, you gain %d experience." -> "^.+ dies, you gain %d+ experience%."
+local function toPattern(fmt)
+	local out = fmt:gsub("%%%d%$", "%%") -- "%1$s" -> "%s"
+	out = out:gsub("[%^%$%(%)%.%[%]%*%+%-%?]", "%%%0")
+	out = out:gsub("%%s", ".+"):gsub("%%d", "%%d+")
+	return "^" .. out
+end
+local function patterns()
+	if killPatterns then return killPatterns end
+	killPatterns = {}
+	for _, key in ipairs(KILL_STRINGS) do
+		local fmt = _G[key]
+		-- Only the ones that name what died (not "You gain 45 experience.").
+		if type(fmt) == "string" and fmt:find("%%%d?%$?s") then
+			-- The text up to the first number tells a kill; bonuses vary after it.
+			local head = fmt:match("^(.-)%%%d?%$?d")
+			if not (head and head:find("%%%d?%$?s")) then head = fmt end
+			local p = toPattern(head)
+			local seen = false
+			for _, q in ipairs(killPatterns) do if q == p then seen = true end end
+			if not seen then killPatterns[#killPatterns + 1] = p end
+		end
 	end
+	if #killPatterns == 0 then killPatterns[1] = "^.+ dies, you gain %d+ experience" end
+	return killPatterns
+end
+function R.IsKill(text)
+	if type(text) ~= "string" then return false end
+	if issecretvalue then
+		local okCheck, secret = pcall(issecretvalue, text)
+		if not okCheck or secret then return false end
+	end
+	for _, p in ipairs(patterns()) do
+		if text:find(p) then return true end
+	end
+	return false
+end
+function R.OnXPGain(text)
+	if not (recording() and R.IsKill(text)) then return end
+	local log = R.Log()
+	log.kills = log.kills + 1
+	if log.cur then log.cur.k = (log.cur.k or 0) + 1 end
 end
 
 -- Starts (or, after a clear, restarts) the recorder: a new session.
@@ -562,5 +607,5 @@ S.RegisterEvent("SKILL_LINES_CHANGED", function() R.OnSkills() end)
 S.RegisterEvent("QUEST_ACCEPTED", function(_, q) R.OnAccepted(q) end)
 S.RegisterEvent("QUEST_TURNED_IN", function(_, q, xp) R.OnTurnedIn(q, xp) end)
 S.RegisterEvent("QUEST_REMOVED", function(_, q) R.OnRemoved(q) end)
-S.RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function() R.OnCombatLog() end)
+S.RegisterEvent("CHAT_MSG_COMBAT_XP_GAIN", function(_, text) R.OnXPGain(text) end)
 S.On("READY", function() R.Start() end)

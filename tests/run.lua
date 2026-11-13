@@ -385,6 +385,10 @@ assert(loadfile(ROOT .. "/tests/insights.lua"))({ test = test, eq = eq, near = n
 
 for _, t in ipairs(tests) do
 	local good, err = pcall(t.fn)
+	if good and BLOCKED_EVENTS then
+		good, err = false, "registers an event Forever blocks for addons: " .. table.concat(BLOCKED_EVENTS, ", ")
+	end
+	BLOCKED_EVENTS = nil
 	if good then
 		results.pass = results.pass + 1
 		print("ok    " .. t.name)

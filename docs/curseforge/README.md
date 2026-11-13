@@ -16,11 +16,11 @@ Pathwise is eight CurseForge projects, built from this one repository:
 | Pathwise Loot | `Pathwise_Loot/` | `dist/Pathwise_Loot-<x.y.z>.zip` | [loot.md](loot.md) |
 | Pathwise Insights | `Pathwise_Insights/` | `dist/Pathwise_Insights-<x.y.z>.zip` | [insights.md](insights.md) |
 
-Bags needs Pathwise (`## Dependencies: Pathwise` in its TOC). Pathwise
-Gear, Pathwise UI, Pathwise Heal, Pathwise Encounters, Pathwise Loot and
-Pathwise Insights work on their own (`## OptionalDeps`). All eight share one version; the
+Pathwise Gear, Pathwise Bags, Pathwise UI, Pathwise Heal, Pathwise
+Encounters, Pathwise Loot and Pathwise Insights work on their own
+(`## OptionalDeps`). All eight share one version; the
 tests check that the TOCs agree. Pathwise Heal, Pathwise Encounters, Pathwise
-Loot and Pathwise Insights carry copies of Pathwise UI's shared files
+Loot, Pathwise Insights and Pathwise Bags carry copies of Pathwise UI's shared files
 (`npm run kit`); the build refuses stale copies. Pathwise Insights also carries
 the leveling routes' quest steps (`npm run insights:routes`; the tests refuse
 a stale copy).

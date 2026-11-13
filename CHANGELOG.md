@@ -26,6 +26,35 @@ that version's section.
 - Pathwise Loot's upgrade marks work with Pathwise Gear alone.
 - Not yet checked in game.
 
+### Pathwise Bags: works on its own
+- No longer needs Pathwise: Leveling & Professions. It stands alone like
+  Pathwise Loot and Pathwise Insights, with its own options window (Bags,
+  Selling junk, Bag space, Your marks, Look and accent, Colors, Help,
+  Profile), `/pwbags` (`/pwbags options`, `/pwbags sell`), and keeps one
+  theme and accent with the other Pathwise addons and with Pathwise when
+  they are installed. Its minimap button keeps Pathwise Bags' green mark.
+- Without Pathwise, quest items are the ones the game marks (a quest in your
+  log, or the Quest item class); with Pathwise, items a quest later on your
+  path asks for and your profession routes' materials are marked too, as
+  before. Upgrades and best in slot still need Pathwise Gear (which works on
+  its own now too); without it, gear is never sold as "can't use" or "worse".
+- Your settings and your keep and junk marks are copied over from Pathwise
+  once, on the first login with this version.
+- Not yet checked in game.
+
+## 0.3.4 (2026-11-13)
+
+### Pathwise Insights
+- No more "Pathwise_Insights has been blocked from an action only available
+  to the Blizzard UI" at login: it no longer listens to the combat log,
+  which Forever keeps from addons. Kills are counted from the game's "...dies,
+  you gain N experience" message instead, so monsters that give no XP (grey
+  ones) are not counted.
+
+### For the addons (in the repository)
+- The tests fail any addon that registers an event Forever blocks for addons
+  (`tests/fixtures/forever-restricted-events.txt`, from Blizzard's API docs).
+
 ## 0.3.3 (2026-11-12)
 
 ### Pathwise Insights: works on its own

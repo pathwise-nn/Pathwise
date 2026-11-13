@@ -1,7 +1,7 @@
 -- COPIED from PathwiseUI/Core.lua by tools/kit.js: do not edit here.
 -- Edit PathwiseUI/Core.lua, then run npm run kit.
 -- Settings, messages and game events for a Pathwise addon (Pathwise UI,
--- Pathwise Heal, Pathwise Encounters, Pathwise Loot, Pathwise Insights, Pathwise Gear: this file is shared; who it serves is ns.ID, from the
+-- Pathwise Heal, Pathwise Encounters, Pathwise Loot, Pathwise Insights, Pathwise Bags, Pathwise Gear: this file is shared; who it serves is ns.ID, from the
 -- addon's Identity.lua). Works on its own; with Pathwise installed too it
 -- shares the accent color and is listed in Pathwise's suite.
 --
@@ -208,7 +208,7 @@ function ns.Suite() return _G.Pathwise and _G.Pathwise.Suite or nil end
 
 -- The other Pathwise addons built on these shared files (they keep one
 -- accent between them), in the order whose accent wins at login.
-ns.PEERS = { "PathwiseUI", "PathwiseHeal", "PathwiseEncounters", "PathwiseLoot", "PathwiseInsights", "PathwiseGear" }
+ns.PEERS = { "PathwiseUI", "PathwiseHeal", "PathwiseEncounters", "PathwiseLoot", "PathwiseInsights", "PathwiseBags", "PathwiseGear" }
 function ns.Peers()
 	local out = {}
 	for _, g in ipairs(ns.PEERS) do

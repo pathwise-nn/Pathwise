@@ -1,15 +1,26 @@
 ## Interface: 16001
 ## Title: Pathwise Bags
-## Notes: One bag window in the Pathwise look, keep and sell markers, junk selling and bag space help. Part of Pathwise.
+## Notes: One bag window in the Pathwise look, keep and sell markers, junk selling and bag space help. Works on its own; with Pathwise it also marks what quests and your profession routes need, and with Pathwise Gear your upgrades.
 ## Author: leight_nn & florp
-## Version: 0.3.3
-## Dependencies: Pathwise
-## OptionalDeps: Pathwise_Gear
-## IconTexture: Interface\AddOns\Pathwise\Media\icon
+## Version: 0.3.4
+## SavedVariables: PathwiseBagsSettings
+## SavedVariablesPerCharacter: PathwiseBagsCharSettings
+## OptionalDeps: Pathwise, PathwiseUI, Pathwise_Gear
+## IconTexture: Interface\AddOns\Pathwise_Bags\Media\icon
 ## X-License: GPL-3.0-only
 
+Identity.lua
+Kit\Core.lua
+Kit\Theme.lua
+Kit\Anim.lua
+Kit\Widgets.lua
+Kit\Movers.lua
+Base.lua
 Items.lua
 Sell.lua
 Space.lua
 Window.lua
-Panel.lua
+Kit\Options.lua
+Pages.lua
+Kit\Minimap.lua
+Entry.lua

@@ -1,6 +1,7 @@
 -- Tests for Pathwise_Bags: what each item is (keep, quest, profession,
 -- upgrade, junk, sellable), selling junk at a vendor, bag space, the bag
--- window and its panel. Loaded by tests/run.lua.
+-- window and its options, with Pathwise and Pathwise Gear installed and on its
+-- own. Loaded by tests/run.lua.
 local h = ...
 local test, eq, ok, fresh, lastPrint = h.test, h.eq, h.ok, h.fresh, h.lastPrint
 
@@ -20,9 +21,8 @@ local ITEMS = {
 }
 local QUEST = 990100
 
-local function bags(setup)
-	local stub, ns = fresh()
-	stub.player.level = 20
+-- The bags the tests start with.
+local function fill(stub)
 	for id, d in pairs(ITEMS) do stub.itemInfo[id], stub.itemStats[id] = d[1], d[2] end
 	stub.equipped[1] = 101
 	stub.bags[0] = {
@@ -35,14 +35,45 @@ local function bags(setup)
 		{ itemID = 102, quality = 2 }, -- an upgrade
 		{ itemID = 103, quality = 2, isBound = true }, -- plate on a mage, bound
 	}
-	if setup then setup(stub) end
+end
+
+-- No Pathwise Bags settings or marks from an earlier test (a fresh install).
+local function clean()
+	PathwiseBagsSettings, PathwiseBagsCharSettings, PathwiseBags = nil, nil, nil
+	PathwiseBagsFrame, PathwiseBagsMinimapButton, PathwiseBagsMinimapMenu, PathwiseBagsConfig = nil, nil, nil, nil
+end
+
+-- Pathwise, Pathwise Gear and Pathwise Bags, logged in. `setup(stub, ns)`
+-- runs before Pathwise Bags loads.
+local function bags(setup)
+	clean()
+	local stub, ns = fresh()
+	stub.player.level = 20
+	fill(stub)
+	if setup then setup(stub, ns) end
 	local gear = stub.loadAddon(".", "Pathwise_Gear")
 	local b = stub.loadAddon(".", "Pathwise_Bags")
 	-- A quest that asks for the Ghoul Rib.
 	Pathwise.Suite.Data.quests[QUEST] = { "Ribs for the Ghoul", 20, 15, 0, 0, nil, nil, nil, nil, nil, nil, { { "i", 203, "Ghoul Rib" } } }
 	stub.moveTo(1420, 60, 52)
+	stub.fire("ADDON_LOADED", "Pathwise_Bags")
 	stub.login()
 	return stub, ns, b, gear
+end
+
+-- Pathwise Bags on its own: no Pathwise, no Pathwise Gear.
+local function alone(setup)
+	clean()
+	PathwiseSettings, PathwiseCharSettings, Pathwise = nil, nil, nil
+	for k in pairs(_G) do if type(k) == "string" and k:find("^PathwiseGear") then _G[k] = nil end end
+	local stub = dofile("./tests/stub.lua")
+	stub.player.level = 20
+	fill(stub)
+	if setup then setup(stub) end
+	local b = stub.loadAddon(".", "Pathwise_Bags")
+	stub.fire("ADDON_LOADED", "Pathwise_Bags")
+	stub.fire("PLAYER_LOGIN")
+	return stub, b
 end
 
 local function contains(list, text)
@@ -95,15 +126,15 @@ test("bags: selling junk at a vendor, by a click", function()
 	btn.scripts.OnClick(btn)
 	eq(stub.money, 3 * 12 + 7, "the two greys sold")
 	ok(slotOf(b, 205) and slotOf(b, 206) and slotOf(b, 103), "no price, kept and bound gear stay")
-	ok(lastPrint(stub):find("sold 2 items for 43c"), lastPrint(stub))
+	ok(lastPrint(stub):find("Sold 2 items for 43c"), lastPrint(stub))
 	stub.fire("MERCHANT_CLOSED")
 	ok(not btn.shown, "gone with the vendor")
 end)
 
 test("bags: selling on its own, and bound gear you can't use", function()
 	local stub, ns, b = bags()
-	ns.Set("bags.sellAuto", true)
-	ns.Set("bags.sellBound", true)
+	b.Set("bags.sellAuto", true)
+	b.Set("bags.sellBound", true)
 	stub.merchant = true
 	stub.fire("MERCHANT_SHOW")
 	ok(not slotOf(b, 201) and not slotOf(b, 202), "greys sold as the window opened")
@@ -175,28 +206,35 @@ test("bags window: opens with the bag key, by kind, with search and marking", fu
 	eq(b.Items.MarkOf(204), "junk")
 	catcher.scripts.OnClick(catcher)
 	eq(b.Items.MarkOf(204), nil)
-	ns.Set("bags.window", false)
+	b.Set("bags.window", false)
 	W.Hide()
 	OpenAllBags()
 	ok(not W.IsShown(), "off: the game's bags again")
 end)
 
-test("bags panel: in Settings, with selling, space and marks", function()
+test("bags options: its own window, listed in the Pathwise suite, with selling, space and marks", function()
 	local stub, ns, b = bags()
 	b.Items.Mark(206, "keep")
 	ns.Fire("SHOW_SETTINGS")
 	ok(stub.clickLabelText("Pathwise Bags"), "listed in the Pathwise suite")
+	ok(_G.PathwiseBagsConfig and _G.PathwiseBagsConfig.shown, "it opens Pathwise Bags' own options")
 	local texts = stub.texts()
 	ok(contains(texts, "Use the Pathwise bag window"), table.concat(texts, " | "))
-	ok(contains(texts, "Sell on its own at vendors"))
-	ok(contains(texts, "First to go when you need room"))
-	ok(contains(texts, "Keep: Lucky Charm"))
+	ok(contains(texts, "Pathwise: Leveling & Professions is installed"), "says what Pathwise adds")
+	ok(contains(texts, "Pathwise Gear is installed"))
+	b.Config.Show("sell")
+	ok(contains(stub.texts(), "Sell on its own at vendors"))
+	b.Config.Show("space")
+	ok(contains(stub.texts(), "FIRST TO GO") or contains(stub.texts(), "First to go"), table.concat(stub.texts(), " | "))
+	b.Config.Show("marks")
+	ok(stub.clickLabel("Keep: Lucky Charm  (clear)"), "a kept item, a click clears it")
+	eq(b.Items.MarkOf(206), nil)
 end)
 
 test("bags window: by bag, each bag its own section, foldable", function()
 	local stub, ns, b = bags(function(s) s.bags[1] = { { itemID = 204, quality = 1 } } end)
 	local W = b.Window
-	ns.Set("bags.view", "bags")
+	b.Set("bags.view", "bags")
 	local groups = W.Groups("bags")
 	eq(#groups, 2, "the backpack and one bag")
 	ok(groups[1].name:find("^Backpack  ·  8 free"), groups[1].name)
@@ -211,16 +249,15 @@ test("bags window: by bag, each bag its own section, foldable", function()
 	for _, l in pairs(W.Headers()) do if l.pwBag == 1 and l.shown then header = l end end
 	ok(header, "a clickable header for the bag")
 	header.scripts.OnClick(header)
-	ok(not (ns.Get("bags.folded") or {})[1], "a click shows it again")
+	ok(not (b.Get("bags.folded") or {})[1], "a click shows it again")
 	-- The layout button: by kind -> grid -> by bag -> by kind.
-	ns.Set("bags.view", "categories")
+	b.Set("bags.view", "categories")
 	eq(W.NextView(), "grid")
 	eq(W.NextView(), "bags")
 	eq(W.NextView(), "categories")
-	ns.Set("bags.view", "bags")
-	ns.Fire("SHOW_SETTINGS")
-	stub.clickLabelText("Pathwise Bags")
-	ok(stub.clickLabel("By bag"), "the setting offers By bag")
+	b.Set("bags.view", "bags")
+	b.Config.Show("bags")
+	ok(contains(stub.texts(), "By bag"), "the setting offers By bag")
 end)
 
 test("bags window: the bag key opens it and the next press closes it", function()
@@ -257,7 +294,7 @@ test("bags window: the bag bar's tiles open it, not the game's bags", function()
 	ToggleBag(5)
 	ToggleBag(-2)
 	ok(not W.IsShown(), "no reagent bag in this client (no Enum.BagIndex), and the keyring stay the game's")
-	ns.Set("bags.window", false)
+	b.Set("bags.window", false)
 	stub.now = stub.now + 1
 	ToggleBag(0)
 	ok(not W.IsShown(), "window off: the game's bags")
@@ -286,7 +323,7 @@ test("bags: the reagent bag, where the client has one", function()
 	ok(groups[2].name:find("^Reagent bag  ·  15 free"), groups[2].name)
 	eq(groups[2].bag, 5)
 	eq(#W.Groups("grid")[1].entries, 32, "the grid has its slots")
-	ns.Set("bags.bagBar", true)
+	b.Set("bags.bagBar", true)
 	W.Show()
 	local bar = W.BagBar()
 	local tile = bar.slots[#I.BAGS]
@@ -305,7 +342,7 @@ test("bags: no reagent bag in the client, nothing read for one", function()
 	eq(b.Items.REAGENT_BAG, nil)
 	eq(#b.Items.BAGS, 5, "bags 0-4 only")
 	for _, x in ipairs(b.Items.Scan()) do ok(x.bag ~= 5, "bag 5 not read") end
-	ns.Set("bags.bagBar", true)
+	b.Set("bags.bagBar", true)
 	b.Window.Show()
 	eq(#b.Window.BagBar().slots, 5, "five tiles")
 end)
@@ -362,150 +399,157 @@ test("bags window: each item button is the game's for its own bag and slot (sell
 	ok(seen >= 8, "every item has its button: " .. seen)
 end)
 
-test("panels: Back returns to the panel a suite addon was opened from", function()
+
+---------------------------------------------------------------------------
+-- Its own minimap button, settings and slash command
+---------------------------------------------------------------------------
+
+test("bags: its own minimap button, in its own green, and /pwbags", function()
 	local stub, ns, b = bags()
-	ns.Fire("SHOW_SETTINGS")
-	local P = _G.PathwisePanel
-	ok(not P.back.shown, "no Back on the first panel")
-	ok(stub.clickLabelText("Pathwise Bags"), "into Pathwise Bags")
-	ok(P.back.shown, "a Back button at the top")
-	ok(contains(stub.texts(), "Use the Pathwise bag window"))
-	-- The Back beside Close (not the guide window's own Back, a step back).
-	local function inPanel(f) while f do if f == P then return true end f = rawget(f, "parent") end return false end
-	local bottom
-	for _, f in ipairs(stub.frames) do
-		local t = rawget(f, "pwText")
-		if t and t.text == "Back" and f.shown and inPanel(f) then bottom = f end
-	end
-	ok(bottom, "and one beside Close")
-	bottom.scripts.OnClick(bottom)
-	ok(contains(stub.texts(), "PATHWISE SUITE"), "back in Pathwise's settings")
-	ok(not P.back.shown, "nothing further back")
-	-- Closing forgets the way back.
-	stub.clickLabelText("Pathwise Bags")
-	ns.Suite.Close()
-	ns.Fire("SHOW_SETTINGS")
-	ok(not P.back.shown, "a fresh start after closing")
+	local btn = _G.PathwiseBagsMinimapButton
+	ok(btn and btn.shown, "a minimap button")
+	btn.scripts.OnClick(btn, "LeftButton")
+	ok(b.Window.IsShown(), "click: the bag window")
+	btn.scripts.OnClick(btn, "LeftButton")
+	ok(not b.Window.IsShown(), "and closes it")
+	btn.scripts.OnClick(btn, "RightButton")
+	ok(contains(stub.texts(), "Use the Pathwise bag window"), "right-click: the options")
+	b.Set("minimap.shown", false)
+	ok(not btn.shown, "its own switch")
+	SlashCmdList.PATHWISEBAGS("")
+	ok(b.Window.IsShown(), "/pwbags opens the bag window")
+	eq(PathwiseBagsSettings.bags, nil, "nothing stored that is a default")
+	b.Set("bags.columns", 14)
+	eq(PathwiseBagsSettings.bags.columns, 14, "kept in its own saved variables")
+	eq(type(PathwiseSettings.bags), "nil", "not in Pathwise's")
 end)
 
-test("panels: a setting's label never runs under its value or buttons", function()
-	local stub, ns, b = bags()
-	ns.Fire("SHOW_SETTINGS")
-	stub.clickLabelText("Pathwise Bags")
-	local P = _G.PathwisePanel
-	local checked = 0
-	for _, f in ipairs(stub.frames) do
-		local label, buttons = rawget(f, "label"), rawget(f, "buttons")
-		if label and type(buttons) == "table" and f.shown and rawget(f, "value") then
-			local used = 0
-			for _, bt in ipairs(buttons) do if bt.shown then used = used + bt.w + 4 end end
-			local value = f.value.text ~= "" and (#f.value.text * 6 + 8) or 0
-			ok(label.w + used + value <= f.w + 1, ("%q fits: %d + %d + %d <= %d"):format(label.text, label.w, used, value, f.w))
-			checked = checked + 1
+test("bags: settings and marks kept in Pathwise from before are carried over once", function()
+	local stub, ns, b = bags(function(_, pw)
+		pw.Set("bags.sellAuto", true)
+		pw.Set("bags.columns", 16)
+		pw.Set("bags.minimap", false)
+		pw.CharState().bags = { marks = { [206] = "keep", [204] = "junk" } }
+	end)
+	eq(b.Get("bags.sellAuto"), true, "a setting")
+	eq(b.Get("bags.columns"), 16)
+	eq(b.Get("minimap.shown"), false, "the minimap switch, by its new name")
+	eq(b.Items.MarkOf(206), "keep", "a mark")
+	eq(b.Items.MarkOf(204), "junk")
+	-- Changed after: the copy is not made again.
+	b.Items.Mark(206, nil)
+	b.Set("bags.columns", 12)
+	b.S.ImportFromPathwise()
+	eq(b.Items.MarkOf(206), nil, "a mark cleared stays cleared")
+	eq(b.Get("bags.columns"), 12)
+end)
+
+---------------------------------------------------------------------------
+-- On its own: no Pathwise installed
+---------------------------------------------------------------------------
+
+test("bags alone: loads without Pathwise; junk, the game's quest items, selling, the window and its options", function()
+	local stub, b = alone(function(s)
+		-- The game says the Ghoul Rib is for a quest in your log.
+		function C_Container.GetContainerItemQuestInfo(bag, slot)
+			local i = s.bags[bag] and s.bags[bag][slot]
+			if i and i.itemID == 203 then return { isQuestItem = true, questID = 777, isActive = true } end
+			return { isQuestItem = false, isActive = false }
+		end
+		function C_QuestLog.GetTitleForQuestID(q) return q == 777 and "Rib Hunt" or nil end
+	end)
+	eq(rawget(_G, "Pathwise"), nil, "no Pathwise")
+	local junk = slotOf(b, 201)
+	ok(junk.facts.tags.junk and junk.facts.sell, "grey with a price: junk")
+	local rib = slotOf(b, 203)
+	eq(rib.facts.category, "quest")
+	ok(rib.facts.tags.quest and not rib.facts.sell, "a quest in your log needs it")
+	eq(rib.facts.why, "Needed for Rib Hunt", "named by the game")
+	eq(slotOf(b, 204).facts.category, "profession", "trade goods, by the game's item class")
+	ok(not slotOf(b, 204).facts.tags.profession, "no profession routes without Pathwise")
+	local hood = slotOf(b, 102)
+	eq(hood.facts.category, "equipment", "no upgrades without Pathwise Gear")
+	ok(not hood.facts.sell and not slotOf(b, 103).facts.sell, "gear is never sold without Pathwise Gear to judge it")
+	b.Items.Mark(206, "keep")
+	stub.merchant = true
+	stub.fire("MERCHANT_SHOW")
+	local btn = b.Sell.Button
+	ok(btn and btn.shown and btn.pwText.text:find("^Sell junk: 2"), btn and btn.pwText.text)
+	btn.scripts.OnClick(btn)
+	eq(stub.money, 3 * 12 + 7, "the two greys sold")
+	ok(lastPrint(stub):find("Sold 2 items for 43c"), lastPrint(stub))
+	stub.fire("MERCHANT_CLOSED")
+	b.Window.Hide()
+	stub.now = stub.now + 1
+	OpenAllBags()
+	ok(b.Window.IsShown(), "the bag key opens the Pathwise window")
+	local list = {}
+	for _, g in ipairs(b.Window.Groups("categories")) do list[#list + 1] = g.name end
+	-- The greys are sold; the no-price grey and the kept one are not junk.
+	eq(table.concat(list, ","), "Quest,Equipment,Professions,Other,Empty")
+	SlashCmdList.PATHWISEBAGS("options")
+	ok(contains(stub.texts(), "Install Pathwise: Leveling & Professions to mark items"), "the options say what Pathwise adds")
+	ok(contains(stub.texts(), "With Pathwise Gear installed, upgrades"))
+end)
+
+test("bags alone: no quest data, no gear and no errors when the game says nothing either", function()
+	local stub, b = alone()
+	for _, e in ipairs(b.Items.Scan()) do ok(e.facts and e.facts.category, "facts for every item") end
+	eq(slotOf(b, 203).facts.category, "quest", "the game's Quest item class")
+	ok(not slotOf(b, 203).facts.sell, "and not sold")
+	eq(b.S.QuestName(42), "Quest 42", "no name anywhere: a number")
+	local room = b.Space.MakeRoom()
+	eq(room[1].facts.tags.junk, true, "junk first to go")
+	b.Window.Show()
+	b.Set("bags.view", "bags")
+	b.Set("bags.bagBar", true)
+	b.Window.Refresh()
+	ok(b.Window.IsShown())
+end)
+
+local function read(path)
+	local f = assert(io.open(path, "rb"), "missing " .. path)
+	local s = f:read("*a")
+	f:close()
+	return s
+end
+
+test("bags alone: its shared files are Pathwise UI's, copied unchanged (npm run kit); every file in its TOC", function()
+	for _, name in ipairs({ "Core.lua", "Theme.lua", "Anim.lua", "Widgets.lua", "Movers.lua", "Options.lua", "Minimap.lua" }) do
+		local copy = read("Pathwise_Bags/Kit/" .. name)
+		local body = copy:gsub("^%-%- COPIED from [^\n]*\n%-%- Edit [^\n]*\n", "", 1)
+		ok(body ~= copy, name .. ": has the COPIED header")
+		ok(body == read("PathwiseUI/" .. name), name .. " differs from PathwiseUI/" .. name .. ": run npm run kit")
+	end
+	local toc = read("Pathwise_Bags/Pathwise_Bags.toc")
+	ok(toc:find("## OptionalDeps: Pathwise, PathwiseUI, Pathwise_Gear", 1, true), "works on its own")
+	ok(not toc:find("## Dependencies", 1, true), "needs nothing")
+	local listed = {}
+	for line in toc:gmatch("[^\r\n]+") do
+		if not line:match("^##") and line ~= "" then
+			ok(io.open("Pathwise_Bags/" .. line:gsub("\\", "/")), "Pathwise_Bags.toc lists a missing file: " .. line)
+			listed[line:gsub("\\", "/")] = true
 		end
 	end
-	ok(checked >= 6, "checked the setting rows")
-	-- A choice of three shows which is picked by its highlight, not words too.
-	for _, f in ipairs(stub.frames) do
-		if rawget(f, "label") and f.label.text == "Show items" and f.shown then eq(f.value.text, "") end
+	local cmd = package.config:sub(1, 1) == "\\" and 'dir /s /b "Pathwise_Bags\\*.lua" 2>nul' or 'find Pathwise_Bags -name "*.lua"'
+	local p = io.popen(cmd)
+	local n = 0
+	for line in p:lines() do
+		local rel = line:gsub("\\", "/"):match("Pathwise_Bags/(.+%.lua)$")
+		if rel then n = n + 1 ok(listed[rel], "not in the TOC: " .. rel) end
+	end
+	p:close()
+	ok(n > 0, "found its files")
+	-- Every glyph the bag window draws is in its own Media.
+	for _, g in ipairs({ "best", "lock", "search", "sort", "zones", "bag", "coin", "quest", "upgrade", "prof", "settings", "close" }) do
+		ok(io.open("Pathwise_Bags/Media/glyph-" .. g .. ".tga"), "Media/glyph-" .. g .. ".tga")
 	end
 end)
 
-test("panels: the panel holds still while a slider in it is dragged", function()
-	local stub, ns = fresh()
-	stub.login()
-	ns.Fire("SHOW_SETTINGS")
-	local P = _G.PathwisePanel
-	P.GetLeft = function() return 300 end
-	P.GetTop = function() return 700 end
-	local s = stub.slider("ui.scale")
-	ok(s, "the window size slider")
-	s.GetLeft, s.GetWidth, s.GetEffectiveScale = function() return 310 end, function() return 200 end, function() return 1 end
-	stub.cursor[1] = 330
-	s.scripts.OnMouseDown(s, "LeftButton")
-	ok(ns.Panels.IsPinned(), "pinned while dragging")
-	local pt = P.points[#P.points]
-	eq(pt[2], UIParent, "held where it is on the screen, not beside the guide")
-	eq(pt[4], 300)
-	eq(pt[5], 700)
-	s.scripts.OnMouseUp(s)
-	ok(not ns.Panels.IsPinned(), "let go: back beside the guide")
-end)
-
-test("panels: a suite panel opened on its own still has Back, to Pathwise's settings", function()
-	local stub, ns, b = bags()
-	ns.Suite.Open("bags") -- as the bag window's settings button does
-	local P = _G.PathwisePanel
-	ok(P.back.shown, "the back arrow at the top")
-	local function inPanel(f) while f do if f == P then return true end f = rawget(f, "parent") end return false end
-	local bottom
-	for _, f in ipairs(stub.frames) do
-		local t = rawget(f, "pwText")
-		if t and t.text == "Back" and f.shown and inPanel(f) then bottom = f end
-	end
-	ok(bottom, "and Back beside Close at the bottom")
-	bottom.scripts.OnClick(bottom)
-	ok(contains(stub.texts(), "PATHWISE SUITE"), "it leads to Pathwise's settings")
-	ok(not P.back.shown, "no Back from the settings themselves")
-end)
-
-test("minimap buttons: one for each suite addon, in its colour, each with its own place and switch", function()
-	local stub, ns, b = bags()
-	local main, gear, bagsBtn = _G.PathwiseMinimapButton, _G.PathwiseGearMinimapButton, _G.PathwiseBagsMinimapButton
-	ok(main and gear and bagsBtn, "Pathwise, Pathwise Gear and Pathwise Bags each have one")
-	ok(gear.shown and bagsBtn.shown)
-	ok(gear.icon.texture:find("Pathwise_Gear") and bagsBtn.icon.texture:find("glyph%-bag"), "their own marks")
-	ok(gear.points[1][4] ~= bagsBtn.points[1][4] or gear.points[1][5] ~= bagsBtn.points[1][5], "not on top of each other")
-	-- Clicks.
-	bagsBtn.scripts.OnClick(bagsBtn, "LeftButton")
-	ok(b.Window.IsShown(), "Bags: click opens the bag window")
-	bagsBtn.scripts.OnClick(bagsBtn, "LeftButton")
-	ok(not b.Window.IsShown(), "and closes it")
-	bagsBtn.scripts.OnClick(bagsBtn, "RightButton")
-	ok(contains(stub.texts(), "Use the Pathwise bag window"), "right-click: Bags settings")
-	gear.scripts.OnClick(gear, "LeftButton")
-	ok(_G.PathwiseGearConfig and _G.PathwiseGearConfig.shown, "Gear: click opens Pathwise Gear's own window")
-	gear.scripts.OnClick(gear, "RightButton")
-	ok(_G.PathwiseGear.Minimap.Menu() and _G.PathwiseGear.Minimap.Menu().shown, "right-click: its pages")
-	-- Hidden from its own settings; the others stay.
-	ns.Set("bags.minimap", false)
-	ok(not bagsBtn.shown and gear.shown and main.shown, "each has its own switch")
-	-- Dragged: it remembers its own place.
-	_G.PathwiseGear.Set("minimap.angle", 90)
-	ok(gear.points[#gear.points][5] > 0, "moved to the top")
-	eq(ns.Get("bags.minimapAngle"), 165, "the others stay put")
-end)
-
-test("suite panels open by their own minimap button, Pathwise's by the guide", function()
-	local stub, ns, b = bags()
-	ns.Fire("SHOW_SETTINGS") -- builds this run's panel
-	ns.Suite.Close()
-	local P = _G.PathwisePanel
-	local btn = _G.PathwiseBagsMinimapButton
-	-- A 1920 x 1080 screen at scale 1; the Bags button near the top right.
-	UIParent.GetWidth, UIParent.GetHeight, UIParent.GetEffectiveScale = function() return 1920 end, function() return 1080 end, function() return 1 end
-	P.GetEffectiveScale = function() return 1 end
-	btn.GetCenter, btn.GetEffectiveScale = function() return 1700, 900 end, function() return 1 end
-	btn.scripts.OnClick(btn, "RightButton")
-	local pt = P.points[#P.points]
-	eq(pt[2], UIParent, "placed on the screen, not attached to anything")
-	ok(pt[4] < 1700 - 24, "to the left of the button (the right half of the screen)")
-	ok(pt[5] <= 1080 - 8 and pt[5] >= 900, "hanging down from the button's height")
-	-- Pathwise's own settings: beside the guide window as before.
-	ns.Fire("SHOW_SETTINGS")
-	pt = P.points[#P.points]
-	ok(pt[2] ~= UIParent or pt[1] == "CENTER", "Pathwise's settings are not by the Bags button")
-	-- The button hidden: the Bags settings fall back to the guide window.
-	ns.Set("bags.minimap", false)
-	ns.Suite.Close()
-	ns.Suite.Open("bags")
-	pt = P.points[#P.points]
-	ok(pt[2] ~= UIParent or pt[1] == "CENTER", "no button: by the guide")
-	-- A button on the left, low down: the panel to its right, standing up from it.
-	ns.Set("bags.minimap", true)
-	btn.GetCenter = function() return 200, 150 end
-	ns.Suite.Close()
-	ns.Suite.Open("bags")
-	pt = P.points[#P.points]
-	eq(pt[4], 224, "to the right of the button")
+test("bags alone with Pathwise Gear alone: it finds Gear's upgrades and best in slot", function()
+	local stub, b = alone(function(stub) stub.loadAddon(".", "Pathwise_Gear") end)
+	eq(rawget(_G, "Pathwise"), nil, "no Pathwise")
+	ok(_G.PathwiseGear and _G.PathwiseGear.Gear, "Pathwise Gear loaded")
+	eq(b.S.Gear(), _G.PathwiseGear.Gear, "Bags reads Gear's own")
+	eq(b.S.GearBest(), _G.PathwiseGear.Best, "and its best in slot")
 end)

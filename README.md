@@ -45,7 +45,7 @@ This repository holds eight addons, each its own download:
 |---|---|---|
 | Pathwise | `Pathwise/` | The leveling and profession guide |
 | Pathwise Gear | `Pathwise_Gear/` | Upgrade advice; needs Pathwise |
-| Pathwise Bags | `Pathwise_Bags/` | One bag window that knows what you need; needs Pathwise |
+| Pathwise Bags | `Pathwise_Bags/` | One bag window that knows what you need; works on its own, quest and profession markers with Pathwise, upgrade markers with Pathwise Gear |
 | Pathwise UI | `PathwiseUI/` | Unit frames, action bars, tooltips, fonts, the game's windows; works on its own ([docs/UI.md](docs/UI.md)) |
 | Pathwise Heal | `Pathwise_Heal/` | Click-to-heal party and raid frames with a preset for every healing spec; works on its own ([docs/HEAL.md](docs/HEAL.md)) |
 | Pathwise Encounters | `Pathwise_Encounters/` | A boss mod: boss timers and warnings, pull and break timers; works on its own ([docs/ENCOUNTERS.md](docs/ENCOUNTERS.md)) |
