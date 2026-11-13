@@ -202,16 +202,16 @@ test("insights: quests (time taken in play, XP paid), kills and skill-ups", func
 	eq(L.records.slowQuest.t, 130)
 	eq(L.records.bestQuest.xp, 900)
 	eq(L.sessions[1].q, 2)
-	-- Kills: yours and your pet's, not someone else's.
-	local ev
-	function CombatLogGetCurrentEventInfo() return unpack(ev) end
-	function UnitGUID(u) return u == "player" and "P-1" or (u == "pet" and "P-2" or nil) end
-	for _, src in ipairs({ "P-1", "P-2", "P-9" }) do
-		ev = { 0, "PARTY_KILL", false, src }
-		stub.fire("COMBAT_LOG_EVENT_UNFILTERED")
-	end
-	ev = { 0, "SWING_DAMAGE", false, "P-1" }
-	stub.fire("COMBAT_LOG_EVENT_UNFILTERED")
+	-- Kills: from the game's XP message (Forever keeps the combat log from
+	-- addons), not from quest XP or a text the game keeps secret.
+	ok(not stub.events["COMBAT_LOG_EVENT_UNFILTERED"], "the combat log is not registered")
+	stub.fire("CHAT_MSG_COMBAT_XP_GAIN", "Kobold Vermin dies, you gain 45 experience.")
+	stub.fire("CHAT_MSG_COMBAT_XP_GAIN", "Kobold Worker dies, you gain 60 experience. (+30 exp Rested bonus)")
+	stub.fire("CHAT_MSG_COMBAT_XP_GAIN", "You gain 900 experience.")
+	stub.fire("CHAT_MSG_COMBAT_XP_GAIN", "Experience gained: 900.")
+	issecretvalue = function() return true end
+	stub.fire("CHAT_MSG_COMBAT_XP_GAIN", "Kobold Vermin dies, you gain 45 experience.")
+	issecretvalue = nil
 	eq(L.kills, 2)
 	stub.skills[186] = { 12, 75 } -- Mining
 	stub.fire("SKILL_LINES_CHANGED")
@@ -219,6 +219,20 @@ test("insights: quests (time taken in play, XP paid), kills and skill-ups", func
 	stub.fire("SKILL_LINES_CHANGED")
 	eq(L.skills[186].from, 12)
 	eq(L.skills[186].to, 20)
+end)
+
+test("insights: kills are read with the client's own strings, in any language", function()
+	COMBATLOG_XPGAIN_FIRSTPERSON = "%1$s stirbt, Ihr bekommt %2$d Erfahrung."
+	COMBATLOG_XPGAIN_FIRSTPERSON_GROUP = "%s stirbt, Ihr bekommt %d Erfahrung. (+%d Gruppenbonus)"
+	COMBATLOG_XPGAIN_FIRSTPERSON_UNNAMED = "Ihr bekommt %d Erfahrung."
+	local _, _, ins = setup()
+	local R = ins.Recorder
+	ok(R.IsKill("Koboldungeziefer stirbt, Ihr bekommt 45 Erfahrung."))
+	ok(R.IsKill("Koboldarbeiter stirbt, Ihr bekommt 60 Erfahrung. (+12 Gruppenbonus)"))
+	ok(not R.IsKill("Ihr bekommt 900 Erfahrung."), "quest XP is not a kill")
+	ok(not R.IsKill("Kobold Vermin dies, you gain 45 experience."), "another language's text is not read")
+	ok(not R.IsKill(nil))
+	COMBATLOG_XPGAIN_FIRSTPERSON, COMBATLOG_XPGAIN_FIRSTPERSON_GROUP, COMBATLOG_XPGAIN_FIRSTPERSON_UNNAMED = nil, nil, nil
 end)
 
 -- Tirisfal Glades inside a continent (1415, as Eastern Kingdoms), where the
@@ -489,12 +503,8 @@ test("insights: for the guides: each step's version, kills, yards, flying, group
 	local L = log()
 	eq(L.cur.v, "0.1.0-test", "the step is timed on this Pathwise version")
 	-- Kills, yards, a group, a flight, a death, on step 1.
-	local ev
-	function CombatLogGetCurrentEventInfo() return unpack(ev) end
-	function UnitGUID(u) return u == "player" and "P-1" or nil end
-	ev = { 0, "PARTY_KILL", false, "P-1" }
-	stub.fire("COMBAT_LOG_EVENT_UNFILTERED")
-	stub.fire("COMBAT_LOG_EVENT_UNFILTERED")
+	stub.fire("CHAT_MSG_COMBAT_XP_GAIN", "Kobold Vermin dies, you gain 45 experience.")
+	stub.fire("CHAT_MSG_COMBAT_XP_GAIN", "Kobold Vermin dies, you gain 45 experience.")
 	stub.moveTo(1420, 50, 50)
 	R.Tick(1)
 	stub.moveTo(1420, 51, 50) -- 30 yards west
