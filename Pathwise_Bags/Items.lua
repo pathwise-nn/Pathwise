@@ -14,17 +14,16 @@
 -- Inspired by what Bagnon and Baganator offer (categories, junk, search);
 -- none of their code is used (Bagnon is All Rights Reserved; Baganator's
 -- source is not public).
+--
+-- Quests later in your path and profession route materials come from
+-- Pathwise when it is installed (Base.lua); without it, only what the game
+-- says about an item.
 
 local ADDON, ns = ...
-local S = Pathwise.Suite
+local S = ns.S
 local Items = {}
 ns.Items = Items
-Pathwise.Bags = Items
-local readable = S.Compat.Readable
-
-S.Defaults("bags", {
-	marks = nil, -- per character: { [itemID] = "keep" | "junk" } (kept in CharState)
-})
+local readable = S.Readable
 
 Items.BAGS = { 0, 1, 2, 3, 4 }
 
@@ -59,12 +58,8 @@ end
 -- The player's marks (per character)
 ---------------------------------------------------------------------------
 
-local function marks()
-	local c = S.CharState()
-	c.bags = type(c.bags) == "table" and c.bags or {}
-	c.bags.marks = type(c.bags.marks) == "table" and c.bags.marks or {}
-	return c.bags.marks
-end
+-- { [itemID] = "keep" | "junk" }, per character, never reset with the settings.
+local function marks() return ns.CharData("marks") end
 
 function Items.Mark(id, what)
 	if not id then return end
@@ -78,12 +73,13 @@ function Items.Marks() return marks() end
 -- What quests and professions need
 ---------------------------------------------------------------------------
 
--- itemID -> { questID, ... } that ask for it (objectives) or start with it.
+-- itemID -> { questID, ... } that ask for it (objectives) or start with it
+-- (Pathwise's quest data; empty without Pathwise).
 local needs
 local function questNeeds()
 	if needs then return needs end
 	needs = {}
-	local D = S.Data
+	local D = S.QuestData()
 	for qid, q in pairs(D and D.quests or {}) do
 		for _, o in ipairs(q[12] or {}) do
 			if o[1] == "i" and o[2] then
@@ -105,7 +101,8 @@ end
 local function questUse(id)
 	local list = questNeeds()[id]
 	if not list then return nil end
-	local Q = S.Quests
+	local _, Q = S.QuestData()
+	if not Q then return nil end
 	local p = Q.Player()
 	local later, any = nil, false
 	for _, q in ipairs(list) do
@@ -122,13 +119,13 @@ end
 Items.QuestUse = questUse
 
 -- itemID -> profession name, for materials your profession routes still ask
--- for (Pathwise's Shopping list per profession you have).
+-- for (Pathwise's Shopping list per profession you have; none without Pathwise).
 local profNeeds, profAt
 local function professionNeeds()
 	local now = GetTime and GetTime() or 0
 	if profNeeds and profAt and now - profAt < 5 then return profNeeds end
 	profNeeds, profAt = {}, now
-	local P = S.Professions
+	local P = S.Professions()
 	for _, k in ipairs(P and P.Known and P.Known() or {}) do
 		if k.prof.kind == "craft" and P.Shopping then
 			local ok, rows = pcall(P.Shopping, k.prof)
@@ -199,7 +196,7 @@ end
 -- Facts
 ---------------------------------------------------------------------------
 
-local Gear = function() return Pathwise.Gear end
+local Gear = S.Gear
 
 -- -> { category, tags = { ... }, why = "text", sell = true when it can go to a vendor }
 function Items.Facts(e)
@@ -218,11 +215,11 @@ function Items.Facts(e)
 	if e.quest and e.quest.questID and e.quest.isActive then use, q = "log", e.quest.questID end
 	if use == "log" then
 		tags.quest = true
-		why = "Needed for " .. S.Quests.Name(q)
+		why = "Needed for " .. S.QuestName(q)
 		category = "quest"
 	elseif use == "later" then
 		tags.quest = true
-		why = "For a quest later: " .. S.Quests.Name(q)
+		why = "For a quest later: " .. S.QuestName(q)
 		category = "quest"
 	elseif use == "done" and category == "quest" then
 		tags.questDone = true
@@ -237,7 +234,8 @@ function Items.Facts(e)
 	if isEquip and Gear() then
 		local G = Gear()
 		local ok, up, pct = pcall(G.IsUpgrade, e.link)
-		local best = Pathwise.GearBest and Pathwise.GearBest.IsBest and Pathwise.GearBest.IsBest(e.id)
+		local GB = S.GearBest()
+		local best = GB and GB.IsBest and GB.IsBest(e.id)
 		if best then
 			tags.best = true
 			why = why or "Best in slot for your level"

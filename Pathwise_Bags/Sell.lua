@@ -13,10 +13,10 @@
 -- your route needs, upgrades, items with no price.
 
 local ADDON, ns = ...
-local S, Items = Pathwise.Suite, ns.Items
+local S, Items = ns.S, ns.Items
 local Sell = {}
 ns.Sell = Sell
-local T = S.Theme
+local T = ns.Look
 
 S.Defaults("bags", {
 	sellAuto = false,
@@ -47,8 +47,8 @@ local function step()
 	if not e then
 		queue = nil
 		if sold > 0 then
-			S.Print(("Pathwise Bags: sold %d item%s for %s."):format(sold, sold == 1 and "" or "s", Items.Money(earned)))
-			if sold > 12 then S.Print("Pathwise Bags: the vendor's buyback only keeps the last 12.") end
+			S.Print(("Sold %d item%s for %s."):format(sold, sold == 1 and "" or "s", Items.Money(earned)))
+			if sold > 12 then S.Print("The vendor's buyback only keeps the last 12.") end
 		end
 		S.Fire("BAGS_CHANGED")
 		return
@@ -100,7 +100,7 @@ local function ensureButton()
 	button:SetParent(MerchantFrame)
 	button:SetFrameStrata("HIGH")
 	button:SetPoint("BOTTOMLEFT", MerchantFrame, "TOPLEFT", 4, 4)
-	local c = T.Color("bags")
+	local c = T.Color("accent")
 	if button.pwText then button.pwText:SetTextColor(c[1], c[2], c[3], 1) end
 	button:Hide()
 	Sell.Button = button

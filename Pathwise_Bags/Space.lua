@@ -6,10 +6,10 @@
 --       what you cannot use or no longer need, cheapest first
 
 local ADDON, ns = ...
-local S, Items = Pathwise.Suite, ns.Items
+local S, Items = ns.S, ns.Items
 local Space = {}
 ns.Space = Space
-local readable = S.Compat.Readable
+local readable = S.Readable
 
 S.Defaults("bags", { warnAt = 2, warn = true })
 
@@ -64,9 +64,9 @@ function Space.Check()
 		warned = true
 		local first = Space.MakeRoom(1)[1]
 		local text = free == 0 and "Your bags are full" or ("Bags nearly full: %d slot%s left"):format(free, free == 1 and "" or "s")
-		local c = S.Theme.Color("warning")
+		local c = ns.Theme.Color("warning")
 		if UIErrorsFrame and UIErrorsFrame.AddMessage then pcall(UIErrorsFrame.AddMessage, UIErrorsFrame, text, c[1], c[2], c[3]) end
-		S.Print("Pathwise Bags: " .. text .. (first and (". First to go: %s (%s)."):format(first.link or first.name or "?", first.facts.why or "") or "."))
+		S.Print(text .. (first and (". First to go: %s (%s)."):format(first.link or first.name or "?", first.facts.why or "") or "."))
 		S.Fire("BAGS_SPACE_WARNING", free)
 	elseif free > limit then
 		warned = false

@@ -413,3 +413,126 @@ test("gear panel: in Settings, with spec, stat priority, Pawn import and bag upg
 	ok(stub.clickLabel("Fire"))
 	eq(ns.Get("gear.spec").MAGE, "fire")
 end)
+
+---------------------------------------------------------------------------
+-- Pathwise's side panels, as a suite addon uses them (Pathwise Gear)
+---------------------------------------------------------------------------
+
+local function inPanel(f, P) while f do if f == P then return true end f = rawget(f, "parent") end return false end
+local function bottomBack(stub, P)
+	for _, f in ipairs(stub.frames) do
+		local t = rawget(f, "pwText")
+		if t and t.text == "Back" and f.shown and inPanel(f, P) then return f end
+	end
+end
+
+test("panels: Back returns to the panel a suite addon was opened from", function()
+	local stub, ns = gear()
+	ns.Fire("SHOW_SETTINGS")
+	local P = _G.PathwisePanel
+	ok(not P.back.shown, "no Back on the first panel")
+	ok(stub.clickLabelText("Pathwise Gear"), "into Pathwise Gear")
+	ok(P.back.shown, "a Back button at the top")
+	ok(contains(stub.texts(), "Scoring with"))
+	-- The Back beside Close (not the guide window's own Back, a step back).
+	local bottom = bottomBack(stub, P)
+	ok(bottom, "and one beside Close")
+	bottom.scripts.OnClick(bottom)
+	ok(contains(stub.texts(), "PATHWISE SUITE"), "back in Pathwise's settings")
+	ok(not P.back.shown, "nothing further back")
+	-- Two steps: Settings > Pathwise Gear > Best in Slot (Level), then back twice.
+	ok(stub.clickLabelText("Pathwise Gear"))
+	ok(stub.clickLabelText("Best in Slot (Level)"))
+	P.back.scripts.OnClick(P.back)
+	ok(contains(stub.texts(), "Scoring with"), "back in Pathwise Gear")
+	P.back.scripts.OnClick(P.back)
+	ok(contains(stub.texts(), "PATHWISE SUITE"), "back in Settings")
+	-- Closing forgets the way back.
+	stub.clickLabelText("Pathwise Gear")
+	ns.Suite.Close()
+	ns.Fire("SHOW_SETTINGS")
+	ok(not P.back.shown, "a fresh start after closing")
+end)
+
+test("panels: a setting's label never runs under its value or buttons", function()
+	local stub, ns = gear()
+	ns.Fire("SHOW_SETTINGS")
+	stub.clickLabelText("Pathwise Gear")
+	local checked = 0
+	for _, f in ipairs(stub.frames) do
+		local label, buttons = rawget(f, "label"), rawget(f, "buttons")
+		if label and type(buttons) == "table" and f.shown and type(rawget(f, "value")) == "table" then
+			local used = 0
+			for _, bt in ipairs(buttons) do if bt.shown then used = used + bt.w + 4 end end
+			local value = f.value.text ~= "" and (#f.value.text * 6 + 8) or 0
+			ok(label.w + used + value <= f.w + 1, ("%q fits: %d + %d + %d <= %d"):format(label.text, label.w, used, value, f.w))
+			checked = checked + 1
+		end
+	end
+	ok(checked >= 5, "checked the setting rows: " .. checked)
+end)
+
+test("panels: a suite panel opened on its own still has Back, to Pathwise's settings", function()
+	local stub, ns = gear()
+	ns.Suite.Open("gear") -- as Pathwise Gear's minimap button does
+	local P = _G.PathwisePanel
+	ok(P.back.shown, "the back arrow at the top")
+	local bottom = bottomBack(stub, P)
+	ok(bottom, "and Back beside Close at the bottom")
+	bottom.scripts.OnClick(bottom)
+	ok(contains(stub.texts(), "PATHWISE SUITE"), "it leads to Pathwise's settings")
+	ok(not P.back.shown, "no Back from the settings themselves")
+end)
+
+test("minimap buttons: a suite addon's own, in its colour, with its own place and switch", function()
+	local stub, ns = gear()
+	local main, btn = _G.PathwiseMinimapButton, _G.PathwiseGearMinimapButton
+	ok(main and btn, "Pathwise and Pathwise Gear each have one")
+	ok(btn.shown and main.shown)
+	ok(btn.icon.texture:find("glyph%-upgrade"), "its own mark")
+	btn.scripts.OnClick(btn, "LeftButton")
+	ok(contains(stub.texts(), "Scoring with"), "click opens Pathwise Gear")
+	btn.scripts.OnClick(btn, "RightButton")
+	ok(contains(stub.texts(), "BEST IN SLOT (LEVEL)"), "right-click: Best in Slot (Level)")
+	-- Hidden from its own settings; Pathwise's stays.
+	ns.Set("gear.minimap", false)
+	ok(not btn.shown and main.shown, "each has its own switch")
+	ns.Set("gear.minimap", true)
+	-- Dragged: it remembers its own place.
+	ns.Set("gear.minimapAngle", 90)
+	ok(btn.points[#btn.points][5] > 0, "moved to the top")
+end)
+
+test("suite panels open by their own minimap button, Pathwise's by the guide", function()
+	local stub, ns = gear()
+	ns.Fire("SHOW_SETTINGS") -- builds this run's panel
+	ns.Suite.Close()
+	local P = _G.PathwisePanel
+	local btn = _G.PathwiseGearMinimapButton
+	-- A 1920 x 1080 screen at scale 1; the Gear button near the top right.
+	UIParent.GetWidth, UIParent.GetHeight, UIParent.GetEffectiveScale = function() return 1920 end, function() return 1080 end, function() return 1 end
+	P.GetEffectiveScale = function() return 1 end
+	btn.GetCenter, btn.GetEffectiveScale = function() return 1700, 900 end, function() return 1 end
+	btn.scripts.OnClick(btn, "LeftButton")
+	local pt = P.points[#P.points]
+	eq(pt[2], UIParent, "placed on the screen, not attached to anything")
+	ok(pt[4] < 1700 - 24, "to the left of the button (the right half of the screen)")
+	ok(pt[5] <= 1080 - 8 and pt[5] >= 900, "hanging down from the button's height")
+	-- Pathwise's own settings: beside the guide window as before.
+	ns.Fire("SHOW_SETTINGS")
+	pt = P.points[#P.points]
+	ok(pt[2] ~= UIParent or pt[1] == "CENTER", "Pathwise's settings are not by the Gear button")
+	-- The button hidden: the Gear panel falls back to the guide window.
+	ns.Set("gear.minimap", false)
+	ns.Suite.Close()
+	ns.Suite.Open("gear")
+	pt = P.points[#P.points]
+	ok(pt[2] ~= UIParent or pt[1] == "CENTER", "no button: by the guide")
+	-- A button on the left, low down: the panel to its right, standing up from it.
+	ns.Set("gear.minimap", true)
+	btn.GetCenter = function() return 200, 150 end
+	ns.Suite.Close()
+	ns.Suite.Open("gear")
+	pt = P.points[#P.points]
+	eq(pt[4], 224, "to the right of the button")
+end)
