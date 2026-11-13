@@ -616,3 +616,8 @@
 616	vos coordonnées activées.
 617	vos métiers : compétence, meilleure fabrication, matériaux
 618	vos quêtes sont sur %s : on suit cette route.
+619	Taille du texte
+620	Normale
+621	Grande
+622	La plus grande
+623	Taille d’affichage des Paramètres et des autres panneaux. Faire défiler sur un curseur fait défiler la liste ; maintenez Maj pour le déplacer avec la molette.

@@ -6,6 +6,14 @@ that version's section.
 
 ## Unreleased
 
+### Settings easier to read and scroll
+- Settings > Text size: Normal, Large or Largest, for Settings and the
+  other panels (on top of the window size). Large is the new usual: the
+  panels draw 15% bigger than before.
+- Scrolling past a slider scrolls the list instead of moving the slider;
+  hold Shift to move a slider with the wheel. Thanks to a player for both.
+- Not yet checked in game.
+
 ### Pathwise in ten languages
 - Pathwise speaks Russian on Russian clients (ruRU): the hub, the guide,
   the tracker, Settings, tooltips, chat messages and /pw help, route titles

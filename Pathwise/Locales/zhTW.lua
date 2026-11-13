@@ -625,6 +625,11 @@ local T = {
 	["your coordinates on."] = "你的座標已開啟。",
 	["your professions: skill, best craft, materials"] = "你的專業：技能、最佳製作、材料",
 	["your quests are on %s: following that route."] = "你的任務在 %s 上：跟隨該路線。",
+	["Text size"] = "文字大小",
+	["Normal"] = "正常",
+	["Large"] = "大",
+	["Largest"] = "最大",
+	["How large Settings and the other panels draw. Scroll past a slider to scroll the list; hold Shift to move it with the wheel."] = "設定和其他面板的顯示大小。在滑桿上捲動會捲動列表；按住 Shift 用滾輪可移動滑桿。",
 }
 
 if ns.AddLocale({ "zhTW" }, T) then

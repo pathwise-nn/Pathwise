@@ -616,3 +616,8 @@
 616	suas coordenadas ligadas.
 617	suas profissões: perícia, melhor criação, materiais
 618	suas missões estão em %s: seguindo essa rota.
+619	Tamanho do texto
+620	Normal
+621	Grande
+622	Maior
+623	O tamanho das Configurações e dos outros painéis. Rolar sobre um controle deslizante rola a lista; segure Shift para movê-lo com a roda.

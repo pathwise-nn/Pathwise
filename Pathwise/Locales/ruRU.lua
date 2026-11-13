@@ -1063,6 +1063,12 @@ local T = {
 	-- "Train Apprentice Tailoring": in Russian the profession comes first.
 	["Train %s %s"] = { "Учиться: %s (%s)", 2, 1 },
 	["%dx %s"] = "%d× %s",
+	-- Added with Settings > Text size.
+	["Text size"] = "Размер текста",
+	["Normal"] = "Обычный",
+	["Large"] = "Крупный",
+	["Largest"] = "Самый крупный",
+	["How large Settings and the other panels draw. Scroll past a slider to scroll the list; hold Shift to move it with the wheel."] = "Насколько крупно отображаются Настройки и другие панели. Прокрутка над ползунком прокручивает список; удерживайте Shift, чтобы двигать его колёсиком.",
 }
 
 -- Zone names, for route titles that are lists of zones

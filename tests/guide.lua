@@ -1450,12 +1450,41 @@ test("typing a size into the box beside the slider", function()
 	eq(box.text, "150", "Escape puts the value back")
 end)
 
-test("/pw scale sets the window size; the panel opens at that size", function()
+test("/pw scale sets the window size; the panel opens at that size, times its text size", function()
 	local stub, ns = login()
 	SlashCmdList.PATHWISE("scale 80")
 	near(_G.PathwiseGuide.scale, 0.8, 1e-9)
 	ns.Fire("SHOW_SETTINGS")
-	near(_G.PathwisePanel.scale, 0.8, 1e-9)
+	near(_G.PathwisePanel.scale, 0.8 * 1.15, 1e-9, "Large text, the usual")
+	ok(stub.clickLabel("Normal"), "Text size: Normal")
+	near(_G.PathwisePanel.scale, 0.8, 1e-9, "Normal: the window size alone")
+	ok(stub.clickLabel("Largest"), "Text size: Largest")
+	near(_G.PathwisePanel.scale, 0.8 * 1.3, 1e-9)
+end)
+
+test("a slider takes no wheel: scrolling past it scrolls the panel; Shift + wheel moves it", function()
+	local stub, ns = login()
+	ns.Set("ui.opacity", 0.8)
+	ns.Fire("SHOW_SETTINGS")
+	local slider
+	for _, f in ipairs(stub.frames) do
+		if f.kind == "Slider" and f.shown and math.abs((f:GetValue() or 0) - 0.8) < 1e-9 then slider = f end
+	end
+	ok(slider, "the background opacity slider")
+	local scrolled
+	local parent = slider:GetParent()
+	while parent and not (parent.GetScript and parent:GetScript("OnMouseWheel")) do parent = parent:GetParent() end
+	ok(parent, "a scrolling list holds it")
+	local wheel = parent:GetScript("OnMouseWheel")
+	parent:SetScript("OnMouseWheel", function(self, d) scrolled = d return wheel(self, d) end)
+	slider.scripts.OnMouseWheel(slider, -1)
+	eq(scrolled, -1, "the list scrolled")
+	near(ns.Get("ui.opacity"), 0.8, 1e-9, "the value did not move")
+	local shift = IsShiftKeyDown
+	IsShiftKeyDown = function() return true end
+	slider.scripts.OnMouseWheel(slider, 1)
+	IsShiftKeyDown = shift
+	ok(ns.Get("ui.opacity") > 0.8, "Shift + wheel moved it")
 end)
 
 test("skip panel lists the step's quest and nearby alternatives", function()

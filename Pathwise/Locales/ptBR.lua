@@ -625,6 +625,11 @@ local T = {
 	["your coordinates on."] = "suas coordenadas ligadas.",
 	["your professions: skill, best craft, materials"] = "suas profissões: perícia, melhor criação, materiais",
 	["your quests are on %s: following that route."] = "suas missões estão em %s: seguindo essa rota.",
+	["Text size"] = "Tamanho do texto",
+	["Normal"] = "Normal",
+	["Large"] = "Grande",
+	["Largest"] = "Maior",
+	["How large Settings and the other panels draw. Scroll past a slider to scroll the list; hold Shift to move it with the wheel."] = "O tamanho das Configurações e dos outros painéis. Rolar sobre um controle deslizante rola a lista; segure Shift para movê-lo com a roda.",
 }
 
 if ns.AddLocale({ "ptBR" }, T) then

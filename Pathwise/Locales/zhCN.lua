@@ -625,6 +625,11 @@ local T = {
 	["your coordinates on."] = "你的坐标已开启。",
 	["your professions: skill, best craft, materials"] = "你的专业：技能、最佳制作、材料",
 	["your quests are on %s: following that route."] = "你的任务在 %s 上：跟随该路线。",
+	["Text size"] = "文字大小",
+	["Normal"] = "正常",
+	["Large"] = "大",
+	["Largest"] = "最大",
+	["How large Settings and the other panels draw. Scroll past a slider to scroll the list; hold Shift to move it with the wheel."] = "设置和其他面板的显示大小。在滑块上滚动会滚动列表；按住 Shift 用滚轮可移动滑块。",
 }
 
 if ns.AddLocale({ "zhCN" }, T) then

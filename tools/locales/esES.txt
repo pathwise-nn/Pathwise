@@ -616,3 +616,8 @@
 616	tus coordenadas activadas.
 617	tus profesiones: habilidad, mejor creación, materiales
 618	tus misiones están en %s: se sigue esa ruta.
+619	Tamaño del texto
+620	Normal
+621	Grande
+622	Muy grande
+623	Lo grandes que se ven las Opciones y los demás paneles. Desplazarte sobre un control deslizante desplaza la lista; mantén Mayús para moverlo con la rueda.

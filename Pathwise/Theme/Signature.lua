@@ -1004,8 +1004,19 @@ function T.Slider(parent, width, min, max, step, onChange)
 	end
 	s:SetScript("OnMouseUp", stop)
 	s:SetScript("OnHide", stop)
+	-- The wheel scrolls the list the slider sits in (scrolling past a slider
+	-- must not move it); Shift + wheel steps the value.
 	s:SetScript("OnMouseWheel", function(self, delta)
-		self:SetValue(math.max(min, math.min(max, (self:GetValue() or min) + delta * step)))
+		if IsShiftKeyDown and IsShiftKeyDown() then
+			self:SetValue(math.max(min, math.min(max, (self:GetValue() or min) + delta * step)))
+			return
+		end
+		local p = self:GetParent()
+		while p do
+			local wheel = p.GetScript and p:GetScript("OnMouseWheel")
+			if type(wheel) == "function" then return wheel(p, delta) end
+			p = p.GetParent and p:GetParent() or nil
+		end
 	end)
 	s:SetScript("OnEnter", function() thumb:SetVertexColor(T.Color("accentHover")[1], T.Color("accentHover")[2], T.Color("accentHover")[3]) end)
 	s:SetScript("OnLeave", function() thumb:SetVertexColor(c[1], c[2], c[3]) end)
