@@ -381,13 +381,6 @@ test("panels: Back returns to the panel a suite addon was opened from", function
 	bottom.scripts.OnClick(bottom)
 	ok(contains(stub.texts(), "PATHWISE SUITE"), "back in Pathwise's settings")
 	ok(not P.back.shown, "nothing further back")
-	-- Two steps: Settings > Pathwise Gear > Best in Slot (Level), then back twice.
-	ok(stub.clickLabelText("Pathwise Gear"))
-	ok(stub.clickLabelText("Best in Slot (Level)"))
-	P.back.scripts.OnClick(P.back)
-	ok(contains(stub.texts(), "Scoring with"), "back in Pathwise Gear")
-	P.back.scripts.OnClick(P.back)
-	ok(contains(stub.texts(), "PATHWISE SUITE"), "back in Settings")
 	-- Closing forgets the way back.
 	stub.clickLabelText("Pathwise Bags")
 	ns.Suite.Close()
@@ -461,7 +454,7 @@ test("minimap buttons: one for each suite addon, in its colour, each with its ow
 	local main, gear, bagsBtn = _G.PathwiseMinimapButton, _G.PathwiseGearMinimapButton, _G.PathwiseBagsMinimapButton
 	ok(main and gear and bagsBtn, "Pathwise, Pathwise Gear and Pathwise Bags each have one")
 	ok(gear.shown and bagsBtn.shown)
-	ok(gear.icon.texture:find("glyph%-upgrade") and bagsBtn.icon.texture:find("glyph%-bag"), "their own marks")
+	ok(gear.icon.texture:find("Pathwise_Gear") and bagsBtn.icon.texture:find("glyph%-bag"), "their own marks")
 	ok(gear.points[1][4] ~= bagsBtn.points[1][4] or gear.points[1][5] ~= bagsBtn.points[1][5], "not on top of each other")
 	-- Clicks.
 	bagsBtn.scripts.OnClick(bagsBtn, "LeftButton")
@@ -471,14 +464,14 @@ test("minimap buttons: one for each suite addon, in its colour, each with its ow
 	bagsBtn.scripts.OnClick(bagsBtn, "RightButton")
 	ok(contains(stub.texts(), "Use the Pathwise bag window"), "right-click: Bags settings")
 	gear.scripts.OnClick(gear, "LeftButton")
-	ok(contains(stub.texts(), "Scoring with"), "Gear: click opens Pathwise Gear")
+	ok(_G.PathwiseGearConfig and _G.PathwiseGearConfig.shown, "Gear: click opens Pathwise Gear's own window")
 	gear.scripts.OnClick(gear, "RightButton")
-	ok(contains(stub.texts(), "BEST IN SLOT (LEVEL)"), "right-click: Best in Slot (Level)")
+	ok(_G.PathwiseGear.Minimap.Menu() and _G.PathwiseGear.Minimap.Menu().shown, "right-click: its pages")
 	-- Hidden from its own settings; the others stay.
 	ns.Set("bags.minimap", false)
 	ok(not bagsBtn.shown and gear.shown and main.shown, "each has its own switch")
 	-- Dragged: it remembers its own place.
-	ns.Set("gear.minimapAngle", 90)
+	_G.PathwiseGear.Set("minimap.angle", 90)
 	ok(gear.points[#gear.points][5] > 0, "moved to the top")
 	eq(ns.Get("bags.minimapAngle"), 165, "the others stay put")
 end)

@@ -6,6 +6,23 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Gear: works on its own
+- No longer needs Pathwise: Leveling & Professions. Upgrade marks, the
+  tooltip line, the gold arrow on bag upgrades, the best quest reward, your
+  spec's stat priority and custom weights all work without it.
+- Its own options window, like Pathwise Loot and Pathwise Insights:
+  Upgrades, Best in Slot, Look and accent, Colors, Help, Profile. `/pwgear`
+  opens it (`/pwgear best` opens Best in Slot), as do its minimap button and
+  Pathwise's suite list. It keeps one theme and accent with the other
+  Pathwise addons.
+- Best in Slot (Level) still needs Pathwise: it is worked out from
+  Pathwise's quest, monster and dungeon data, and Pathwise's arrow leads
+  you there. Without Pathwise the page says so.
+- Your Gear settings (spec, custom weights, options, the minimap button) are
+  copied over from Pathwise's settings the first time.
+- Pathwise Loot's upgrade marks work with Pathwise Gear alone.
+- Not yet checked in game.
+
 ## 0.3.3 (2026-11-12)
 
 ### Pathwise Insights: works on its own
