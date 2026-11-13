@@ -13,6 +13,14 @@ Core\Init.lua
 Core\Locale.lua
 Locales\ruRU.lua
 Locales\ruRU-routes.lua
+Locales\deDE.lua
+Locales\frFR.lua
+Locales\esES.lua
+Locales\ptBR.lua
+Locales\itIT.lua
+Locales\koKR.lua
+Locales\zhCN.lua
+Locales\zhTW.lua
 Data\Data.lua
 Core\Compat.lua
 Theme\Signature.lua

@@ -1,0 +1,618 @@
+1	(optional)
+2	·  erledigt
+3	·  Eingang in Forever noch nicht geprüft
+4	·  in Forever nicht geprüft
+5	·  in Forever noch nicht geprüft
+6	·  du
+7	(aus seinen Quests)
+8	EP/h
+9	neben deiner Route.
+10	in
+11	Routen
+12	zu deinem Zuhause
+13	%.1fk
+14	%d aus deinen Taschen
+15	%d erlernt
+16	%d m
+17	%d Materialien zu besorgen
+18	%d Quests für dich
+19	noch %d zu besorgen
+20	%d yd
+21	%d h %02d min
+22	%d min
+23	%d s
+24	%dx %s
+25	%s  ·  klicken zum Wechseln
+26	%s  ·  Stufe %d-%d
+27	%s  ·  Fertigkeit %s  ·  Gegenstandsstufe %d
+28	%s (bis %d)
+29	%s hinzugefügt; danach geht die Route weiter.
+30	%s ist eine Stadt: Die Routen halten dort unterwegs.
+31	%s passt nicht zu diesem Charakter: Es wird eine passende gewählt.
+32	%s km
+33	%s bis %d
+34	Die Route von %s ist für %s-Charaktere.
+35	%s, Stufen %d-%d%s
+36	%s: %d-%d%s, also %d%s.
+37	+%d weitere
+38	+%d weitere im Hub
+39	, vergeben von
+40	, dort nicht getestet ab %d
+41	, verkauft von
+42	. Rezepte, Farben und Materialien: die eigenen Daten des Forever-Clients; Grün ist geschätzt.
+43	1 Route
+44	: annehmen
+45	Eine kompakte Karte: der Schritt, seine Ziele als Kästchen, die Berufsaufgabe und deine Stufe.
+46	Ein Fenster mit Reitern: der Schritt, die Schritte danach und was in deinem Questlog in der Nähe ist.
+47	Über Pathwise
+48	Akzent
+49	Annehmen:
+50	Annehmen: %s
+51	Quests annehmen und abgeben
+52	Oben am Bildschirm: wohin du schaust, wo der Schritt ist und wie weit. Ziehen zum Verschieben.
+53	Alchemie
+54	Alle Dungeons
+55	Alle Routen
+56	Alle Routen in diesem Bereich
+57	Allianz
+58	Immer: Berufe zuerst.
+59	Amethyst
+60	Übernehmen
+61	Lehrling
+62	Angekommen
+63	Pfeilgröße
+64	Pfeil: keiner
+65	Fachmann
+66	Auf dieser Stufe
+67	Automatik
+68	Zurück
+69	Hintergrund-Deckkraft
+70	Ausgewogen
+71	Neben deiner Route
+72	Jetzt am besten:
+73	Schmiedekunst
+74	Blüte
+75	Zurückholen
+76	Berufsleitfäden durchsuchen
+77	Mitnehmen:
+78	Wähle eine Route
+79	Stadt: Die Routen halten hier für Lehrer und Abgaben
+80	Klasse
+81	Klassenquests
+82	Klassenroute
+83	Löschen
+84	Klicke auf einen Beruf für die nächste Herstellung, Materialien und Leitfaden.
+85	Klicke auf eine Route für ihre Schritte: folge ihr, starte bei einem beliebigen Schritt oder wähle die Route danach.
+86	Klicke auf ein Gebiet für den Pfeil. Jedes Vorkommen, das dir noch Fertigkeit gibt, ist auf Karte und Minikarte in seiner Farbe: Orange immer, Gelb oft, Grün selten (Einstellungen > Kartenmarkierungen).
+87	Klicken öffnet den Hub, Rechtsklick die Einstellungen, Ziehen verschiebt ihn.
+88	Klicken, damit er nicht versehentlich verschoben wird.
+89	Klicke in das Feld, drücke Strg+C und füge es in einen Fehlerbericht ein, mit einer Zeile, was schiefging. Aus dem Spiel wird nichts gesendet.
+90	Klicken zum Beenden
+91	Klicken zum Lösen und wieder Verschieben.
+92	Klick: Hub öffnen
+93	Schließen
+94	Einklappen
+95	Sammlerstücke
+96	Kompaktmodus
+97	Kompass
+98	Kompass an oder aus
+99	Kompassgröße
+100	Abschließen: %s
+101	Kochkunst
+102	Koordinaten
+103	Kopiere den Link und öffne ihn im Browser. Melde dich mit Discord an und füge den Bericht ins Formular ein.
+104	Gezählt, während du mit Pathwise spielst; /played stellt die aktuelle Stufe richtig.
+105	Gilt als abgegeben: Die Quests danach erscheinen
+106	Herstellen:
+107	Herstellen: %d %s
+108	%s herstellen bis %d
+109	Herstellung
+110	Erstellt von leight_nn & florp
+111	Karmesin
+112	Eigene
+113	Dunkel
+114	Daten: %s
+115	Discord
+116	Entzaubere, was du herstellst, für Punkte, statt es zu verkaufen: %s.
+117	Entzaubern
+118	Entfernungen
+119	Erledigt
+120	Ziehe an einer Kante oder Ecke, um die Größe zu ändern.
+121	Ziehe den Pfeil, um ihn zu verschieben.
+122	Ziehe die untere rechte Ecke des Leitfadenfensters, um Breite und Höhe zu ändern; ein höherer Schritt scrollt.
+123	Ziehen ändert Breite und Höhe.
+124	Ziehen ändert die Breite.
+125	Ziehen zum Verschieben. In den Einstellungen sperren.
+126	Ziehen zum Verschieben. In den Einstellungen ausschalten oder mit /pw compass.
+127	Ziehen: diese Schaltfläche verschieben
+128	Beute, Ruf und Händlerrezepte, die der Leitfaden für die späten Bereiche nennt.
+129	Dungeon
+130	Dungeoneingänge
+131	Dungeons
+132	Dungeons für Stufe %d
+133	Dungeons für deine Stufe
+134	Die Zeit jeder Stufe erscheint hier, sobald du mit Pathwise die nächste erreichst.
+135	Smaragd
+136	Verzauberkunst
+137	Ingenieurskunst
+138	Jeder Dungeon und Schlachtzug
+139	Der Plan jedes Berufs nach Fertigkeitsbereich, erlernt oder nicht
+140	Jede Quest. Jede Herstellung. Jede Stufe.
+141	Jeder Schritt des Leitfadens ist erledigt
+142	Jeder Schritt des Leitfadens ist erledigt.
+143	Alles darauf, auch Gegenstände und Orte: weiter zum nächsten
+144	Experte
+145	Erkundung
+146	Zusatzquest
+147	Weit entfernt
+148	Erste Hilfe
+149	Angeln
+150	An Schritt anpassen
+151	Passt sich jedem Schritt an
+152	Dorthin fliegen, wo der Schritt es sagt
+153	Neben deiner Route folgen
+154	Dieser Route folgen
+155	Folgt  ·  klicken zum Beenden
+156	Folgt neben deiner Route
+157	Folgt jetzt
+158	Für Kräuterkunde und Bergbau: die Vorkommen, die dir noch Fertigkeit geben, in ihrer Farbe.
+159	Für Fehlerberichte
+160	Für deine Stufe
+161	Die neuen Kräuter und Erze von Forever (Bauxit, Pyrit, Dämonensalbei...) sind noch nicht in den Daten.
+162	Freie und quelloffene Software unter der GNU General Public License, Version 3.
+163	Von
+164	Ab Stufe
+165	Ab Stufe %d
+166	Aus dem Buch
+167	Aus der Quest
+168	Aus dem Forever-Leitfaden von wow-professions.com, geschrieben in der Beta
+169	Aus deinem Questlog
+170	Voller Leitfaden
+171	Voller oder kompakter Leitfaden
+172	Besorgen:
+173	Besorgen: %d %s (%d)
+174	Los
+175	Gehe zu
+176	Zum Eingang gehen
+177	Zur markierten Stelle gehen
+178	Gold
+179	Graphit
+180	Leitfaden
+181	Leitfaden auf dem Bildschirm
+182	Leitfadenfenster
+183	Abgeben:
+184	Kräuterkunde
+185	Kräuter und Erz auf der Karte
+186	Kräuter und Erz auf der Minikarte
+187	Versteckt
+188	Ausblenden
+189	Hoher Kontrast
+190	Horde
+191	Habe ich schon erledigt
+192	Insgesamt
+193	Insgesamt:
+194	In Metern und Kilometern.
+195	In Yards, wie das Spiel sie zählt.
+196	In deinem Questlog
+197	Gastwirt,
+198	Stattdessen in der Nähe
+199	Ihre Folgequests bleiben in der Route
+200	Ihr nächster Schritt erscheint im Leitfadenfenster
+201	Geselle
+202	Bekannte Probleme, Vorschläge und Fehlerberichte. Kopiere den Link und öffne ihn im Browser.
+203	LEVELN · BERUFE
+204	Lavendel
+205	Erlernen:
+206	Lederverarbeitung
+207	Lässt grüne und graue Quests hinter deinem Fortschritt weg, auch auf einer Route, über die du hinaus bist, außer eine spätere Quest braucht sie.
+208	Stufe %d
+209	Stufe %d
+210	Stufe %d  ·  %s%s
+211	Stufenbereiche sind aus den Quests jedes Gebiets geschätzt (QuestieDB-Daten).
+212	Leveln
+213	Levelroute
+214	Levelfortschritt
+215	Stufen %d-%d
+216	Stufen %d-%d  ·  %d Schritte  ·  %s
+217	Stufen %d-%d%s
+218	Die Stufen sind die der Monster darin, aus den Daten von QuestieDB: eine Schätzung.
+219	Lizenz
+220	Hell
+221	Helle Themen halten den Kompass und den minimalen Leitfaden hell, damit sie über dem Spiel lesbar sind.
+222	Sperren
+223	Pfeil sperren
+224	Gesperrt: Er bleibt stehen, Klicks darauf gehen an die Welt.
+225	St. %d
+226	Haupt
+227	Mache
+228	Mache %s zu deinem Zuhause
+229	Karte
+230	Kartenmarkierungen
+231	Von dir als erledigt markiert
+232	Materialien für diesen Rang
+233	Meter
+234	Mitternacht
+235	Minimal
+236	Minikarten-Schaltfläche
+237	Bergbau
+238	Minze
+239	Verschiedenes
+240	Modus
+241	Weitere Leitfäden
+242	Reittiere
+243	JETZT
+244	Braucht zuerst eine andere Quest
+245	Weiter
+246	Nächster Leitfadenstil (Tracker, Fenster, Minimal)
+247	Nächste Route
+248	Keine %s-Routen für diesen Charakter.
+249	Noch kein Leitfaden für diesen Beruf
+250	Noch kein Leitfaden für diesen Beruf.
+251	Keine Levelroute
+252	Noch keine Levelroute für diesen Charakter.
+253	Noch keine Levelroute für deinen Charakter in diesem Bereich.
+254	Keine Levelroute in der Nähe deiner Stufe.
+255	Hier keine Kartenposition (in einer Instanz?).
+256	Auf dieser Karte sind gerade keine anderen Quests deiner Stufe offen.
+257	Noch keine Berufe. Lerne einen bei einem Lehrer: Pathwise folgt ihm neben deiner Route.
+258	Noch keine Berufe. Besuche einen Berufslehrer, um einen zu lernen: Pathwise folgt ihm ab dort.
+259	Hier keine Quests für deinen Charakter.
+260	Keine Route
+261	Noch keine Route für diesen Charakter.\n\nÖffne „Gebiete für deine Stufe“ (die Kartenschaltfläche oben), um eine zu wählen.
+262	Noch keine Route für diesen Charakter.\n\nWähle eine unter „Routen“ links oder im Routenbuch.
+263	Noch keine Route für diesen Charakter. Öffne den Hub, um eine zu wählen.
+264	Noch keine Route geladen
+265	Noch keine Route
+266	Noch keine Route: Öffne den Hub, um eine zu wählen.
+267	In diesem Rang beginnen keine Schritte.
+268	Kein Wegpunkt gesetzt.
+269	Kein Fenster: der Schritt und seine Ziele als Text über dem Spiel.
+270	Keine Gebietsdaten für deine Stufe und Seite.
+271	Keine
+272	Noch keine für deine Stufe: Die ersten Dungeons beginnen bei etwa Stufe 13.
+273	Nicht erlernt
+274	Nichts in deinem Verzauberkunst-Rang braucht diese jetzt: Vergleiche den Händlerpreis mit dem, was sie einbringen.
+275	Nichts mehr, das dir Fertigkeit gibt: Jedes Vorkommen ist für dich grau.
+276	Bei diesem Schritt gibt es nichts zu überspringen.
+277	Jetzt:
+278	AUF DEM BILDSCHIRM
+279	EINES VON
+280	ODER STATTDESSEN
+281	ANDERE REZEPTE
+282	Ziele
+283	Ozean
+284	Aus
+285	An
+286	Auf der Minikarte
+287	Auf der Website
+288	Auf der Weltkarte
+289	Auf deinem Weg
+290	Auf deinem Weg · etwa 1 Min.
+291	An: Pathwise Gear, Bags und die übrigen nutzen sie statt ihrer eigenen Farben.
+292	Nur für das, was die Route verlangt. Halte Umschalt, wenn du mit jemandem sprichst, um es selbst zu tun.
+293	Nur wenn ein Berufsschritt direkt auf deinem Weg liegt (etwa 150 yd).
+294	Öffne „Routen“ in den Einstellungen oder „Gebiete für deine Stufe“.
+295	Hub öffnen oder schließen
+296	Hub öffnen
+297	Rezeptbuch öffnen
+298	Öffne dein %s-Fenster einmal, damit Pathwise deine Rezepte lesen kann.
+299	Optional
+300	Optional ·
+301	Optional · Schneiderei
+302	Oder auf Discord
+303	PATHWISE
+304	Seite %d / %d
+305	Füge es in #report-a-bug ein. Noch nicht auf dem Server? Kopiere die Einladung.
+306	Pathwise %s  ·  Jede Quest. Jede Herstellung. Jede Stufe.  ·  erstellt von leight_nn & florp  _nn
+307	Pathwise-Blau
+308	Pathwise-Pfeil
+309	Pathwise-Kompass
+310	Pathwise-Suite
+311	Pathwise: der Gegenstand des Schritts. Umschalt-Ziehen zum Verschieben.
+312	Haustiere
+313	Belohnungen wählen
+314	Wähle deine nächste Route unter „Gebiete für deine Stufe“ oder „Routen“ in den Einstellungen.
+315	Fixieren
+316	Fixieren
+317	Fixieren (oder lösen)
+318	Kompass fixieren
+319	Fixiert
+320	Fixiert: Er bleibt stehen, Klicks darauf gehen an die Welt.
+321	Fixiert: Löse ihn, um die Größe zu ändern.
+322	Position: keine
+323	Berufsumwege
+324	Berufsleitfäden
+325	Berufsroute
+326	Berufe
+327	Berufe neben deiner Route
+328	Quest
+329	Questdaten von QuestieDB vom Questie-Team und Mitwirkenden.
+330	Questgegenstand-Schaltfläche
+331	Questmarkierungen auf der Karte
+332	Questmarkierungen auf der Minikarte
+333	Quests (%d)
+334	Quests zum Annehmen:
+335	ROUTENBUCH
+336	Schlachtzug
+337	%s %d erreichen
+338	Stufe %d erreichen
+339	Bereit zur Abgabe
+340	Rezeptbuch
+341	Rezeptbücher
+342	Jetzt neu laden
+343	Diesen Schritt melden
+344	Ruf
+345	Zurücksetzen
+346	Größe ändern
+347	Erholungs-EP
+348	Rechtsklick: zurück zur Größe beim Öffnen.
+349	Rechtsklick: zurück zur üblichen Größe.
+350	Rechtsklick: Höhe an jeden Schritt anpassen.
+351	Rechtsklick: Einstellungen
+352	Rose
+353	Route
+354	Route %d / %d
+355	Route folgt
+356	Route abgeschlossen
+357	Route: keine
+358	Routen
+359	Routen nach Polestar (GPL-3.0); Questdaten von QuestieDB.
+360	Routen nach Polestar von den Polestar-Autoren (GPL-3.0).
+361	SCHRITTE  ·  KLICKE EINEN AN, UM DORT ZU STARTEN
+362	Beispiel · Tirisfal
+363	Sand
+364	Setzen
+365	Einen Wegpunkt per Koordinaten setzen; was der Pfeil sieht
+366	Einen Wegpunkt auf dieser Karte setzen
+367	Ruhestein binden
+368	Einstellungen
+369	Anzeigen
+370	Dungeons für meine Stufe anzeigen
+371	Jeden Dungeon und Schlachtzug anzeigen
+372	Jede Levelroute anzeigen
+373	Jeden Beruf anzeigen
+374	Anzeigen
+375	Nur meine Berufe anzeigen
+376	Leitfaden ein- oder ausblenden
+377	Routen nahe meiner Stufe anzeigen
+378	Pfeil anzeigen
+379	Nebenleitfaden
+380	Fertigkeit
+381	Die nötige Fertigkeit stammt aus der Classic-Tabelle, in Forever noch nicht geprüft: Dein Tooltip hat das letzte Wort.
+382	Kürschnerei
+383	Überspringen
+384	Sie und ihre Folgequests überspringen
+385	Nur diese Quest überspringen
+386	Quest überspringen
+387	Quests überspringen, an denen du vorbei bist
+388	Diesen Umweg überspringen
+389	Übersprungene Quests
+390	Himmel
+391	Schnee
+392	Tempo
+393	Neu beginnen
+394	Startgebiet: die %s-Route
+395	Schritt %d
+396	Schritt %d / %d
+397	Schritt %d von %d
+398	Schritt %d · %s
+399	Schrittnummern auf der Karte
+400	Aufgelistete Schritte
+401	Nummerierte Schritte voraus
+402	Stopp
+403	Stil
+404	Abendrot
+405	Mit deinem Questlog abgleichen
+406	DANN  ·  DIE ROUTE NACH DIESER
+407	WERKZEUGE UND EXTRAS
+408	Schneiderei
+409	Schneiderei + Verzauberkunst
+410	Jetzt annehmen
+411	Sprich mit
+412	Danke
+413	Der Pfeil führt jetzt hierher
+414	Der Pfeil führt zu %s.
+415	Der Pfeil erscheint, solange der Kompass aus ist.
+416	Der Hub, der Tracker und das Leitfadenfenster haben ebenfalls eine Nadel in ihrer Ecke.
+417	Der Gegenstand, den der Schritt benutzen will, neben dem Leitfaden. Umschalt-Ziehen zum Verschieben; eine Taste dafür gibt es unter Tastaturbelegung > Pathwise.
+418	Das Routenbuch: jede Route nach Stufe
+419	Die ganze Kette verlässt die Route
+420	Thema
+421	Dann
+422	Dann zurück zur Route:
+423	Diese Sitzung
+424	Dieser Schritt ist erledigt
+425	Zeit pro Stufe
+426	Zeiten
+427	Zu
+428	Bis zur nächsten Stufe
+429	Tracker
+430	Erlernen:
+431	%s %s erlernen
+432	Lehrling Schneiderei erlernen
+433	Bei Lehrern lernen
+434	Abgeben:
+435	Abgeben: %s
+436	Ausschalten
+437	Einschalten
+438	Schrift: Inter von Rasmus Andersson (SIL Open Font License).
+439	Unbekannter Befehl '%s'. Gib /pw help ein.
+440	Entsperren
+441	Lösen
+442	Benutze
+443	%s benutzen: %s annehmen
+444	Den Questgegenstand des Schritts benutzen
+445	Version
+446	Version %s
+447	Version %s  ·  erstellt von leight_nn & florp   _nn
+448	Wegpunkt
+449	Wegpunkt
+450	Wegpunkt & Werkzeuge
+451	Wegpunktpfeil
+452	Website
+453	Was der Pfeil sieht. Klicken, Strg+C und mit einem Bericht einfügen.
+454	Was für jeden Fertigkeitsbereich herzustellen ist, wo Rezepte und Lehrer sind
+455	Wenn ein Berufsschritt in der Nähe ist (etwa 600 yd).
+456	Wenn der Schritt Training ist: lernt alles beim Lehrer, was du dir leisten kannst.
+457	Wo du jetzt sammeln kannst
+458	Wo du auf der Karte stehst, unter dem Kompass und im Leitfaden.
+459	Wo:
+460	Wo du auch bist
+461	Ganze Suite in dieser Farbe
+462	Fenster
+463	Fensterhöhe
+464	Fensterpositionen
+465	Fenstergröße
+466	Bereits offene Fenster übernehmen die neue Farbe nach einem Neuladen
+467	Bei einer Auswahl an Belohnungen die von Pathwise Gear empfohlene nehmen (Gear nötig). Eine einzelne Belohnung wird immer genommen.
+468	Ohne sie öffnest du Pathwise mit einer Taste: Spielmenü > Tastaturbelegung > Pathwise.
+469	Erhaltene EP
+470	EP pro Stunde
+471	EP pro Stunde nach einer Minute
+472	Yards
+473	Du
+474	Du bist bei %.1f, %.1f  ·  %s
+475	Du folgst dieser Route
+476	Du bist hier
+477	Du hast %s nicht. Lerne es bei einem Lehrer.
+478	Du hast noch keine Berufe.
+479	Dein Verzauberkunst-Rang braucht noch %s: Diese lohnen sich zum Entzaubern.
+480	Deine Klassenfarbe, für jeden Charakter seine eigene.
+481	Deine Farbe: %s. Gib eine andere als #RRGGBB ein, dann Übernehmen.
+482	Deine Koordinaten
+483	Deine Route
+484	Deine Routen, Berufe und der ganze Schritt in einem Fenster
+485	GEBIETE  ·  GEH IN EINES UND DER LEITFADEN FÜHRT DICH JETZT DORTHIN
+486	Gebiete
+487	Gebiete für Stufe %d
+488	Eine Farbe sind sechs Hex-Ziffern, wie #66D7FF.
+489	ein Bericht über diesen Schritt zum Einfügen in Discord
+490	einem Wegpunkt
+491	ein Weltdrop (Auktionshaus)
+492	nach einer Minute
+493	Pfeil aus.
+494	Pfeil an (ziehen zum Verschieben).
+495	Pfeilgröße %d%%.
+496	Pfeil zum nächsten
+497	unter deiner Stufe
+498	den Leitfaden mit deinem Questlog abgleichen (und der richtigen Route)
+499	noch nicht erlernbar
+500	klicken für den Pfeil
+501	Befehle:
+502	Kompass aus: Stattdessen erscheint der Pfeil.
+503	Kompass an (ziehen zum Verschieben).
+504	Kompass an oder aus; /pw compass coords: deine Koordinaten; /pw compass pin: fixieren
+505	Kompass fixiert.
+506	Kompass gelöst: ziehen zum Verschieben.
+507	erledigt
+508	Beute von
+509	Dungeons und Schlachtzüge für deine Stufe, ihre Quests und Eingänge
+510	jede Route für dich: Leveln, Klassenquests, Berufe
+511	Erkundungsleitfäden
+512	Flug nach %s. Halte Umschalt beim Gespräch mit dem Flugmeister, um selbst zu wählen.
+513	folge
+514	für deine Stufe
+515	ab Stufe
+516	ab Stufe %d
+517	ab Schritt
+518	als Nächstes hierher
+519	grau %d
+520	Leitfadenstil:
+521	Größe des Leitfadenfensters, 50-150 (auch in den Einstellungen)
+522	erlernen %d
+523	zuerst erlernen
+524	Stufe %d
+525	hergestellt oder gefunden
+526	Karte
+527	%s als erledigt markiert.
+528	Reittierleitfäden
+529	hier keine Kartenposition (in einer Instanz?).
+530	keine Position für %s in den Daten.
+531	keine Route namens '
+532	kein Thema namens '
+533	kein Wegpunkt gesetzt
+534	nicht im Log
+535	hier nichts mehr
+536	nichts mehr zu tun in %s auf %s.
+537	jetzt
+538	jetzt auf
+539	auf Quest
+540	weiter zur nächsten Route: %s.
+541	den Signature-Hub öffnen oder schließen
+542	das Einstellungsfenster öffnen
+543	andere Leitfäden
+544	Haustierleitfäden
+545	das Leitfadenfenster mit einem Beispielschritt ansehen
+546	Quest
+547	Rufleitfäden
+548	Fensterpositionen zurücksetzen
+549	Belohnung von
+550	Route:
+551	Route: %s, ab Schritt %d. Einstellungen, Von dir als erledigt markiert, Zurückholen macht die Schritte davor rückgängig.
+552	Route: %s, zuerst in %s.
+553	Route: %s, in %s.
+554	Route: %s.
+555	wie /pw prof
+556	Beispiel entfernt.
+557	einen Wegpunkt auf dieser Karte setzen: /pw way <x> <y> [Titel]; /pw way clear
+558	die Route anzeigen oder wählen: /pw route <ID oder Titel>
+559	den Pfeil ein- oder ausblenden; /pw arrow scale <50-200> setzt seine Größe
+560	zeige einen Beispielschritt (/pw demo nochmal zum Entfernen).
+561	Fertigkeit %d
+562	die aktuelle Quest überspringen oder stattdessen eine in der Nähe wählen
+563	%s und %d Folgequests übersprungen.
+564	%s übersprungen.
+565	verkauft von
+566	nur an die andere Fraktion verkauft (Auktionshaus)
+567	Quelle nicht in den Daten
+568	hier starten
+569	Schritt
+570	Schritt %d / %d
+571	Schritt als erledigt markiert.
+572	nicht mehr gefolgt:
+573	den Leitfaden zwischen voll und kompakt umschalten
+574	zu ihr wechseln
+575	mit deinem Questlog abgeglichen: %s ist erledigt.
+576	mit deinem Questlog abgeglichen: %s%s, Schritt %d von %d.
+577	abgeglichen: keine Levelroute für diesen Charakter.
+578	der Pfeil führt zu %s für %s.
+579	der Pfeil führt zu %s in %s.
+580	der Pfeil führt zu %s%s.
+581	der Pfeil führt zu %s.
+582	das Farbthema: /pw theme <Name> (ohne: alle auflisten)
+583	der Leitfaden ist ausgeblendet: Hol ihn mit deiner Taste zurück (Tastaturbelegung > Pathwise) oder zeige die Minikarten-Schaltfläche in den Einstellungen.
+584	der Leitfaden ist ausgeblendet: Klicke Pathwises Minikarten-Schaltfläche für den Hub und wähle einen Stil unter „Auf dem Bildschirm“.
+585	der Leitfaden auf dem Bildschirm: /pw style tracker | window | minimal (ohne: der nächste)
+586	der nächste Schritt
+587	das Rezept
+588	das Routenbuch: jede Levelroute nach Stufe, ihre Schritte und Wechseln
+589	Thema jetzt: %s. Themen: %s.
+590	Thema: %s. /reload, um es in jedem Fenster zu sehen.
+591	Thema: %s. Bereits offene Fenster übernehmen es nach einem Neuladen (Einstellungen > Jetzt neu laden oder /reload).
+592	für %s gibt es noch keine Pathwise-Route.
+593	dieses Gasthaus
+594	diese Liste
+595	gib zwei Zahlen von 0 bis 100 ein, wie 45.2 und 61.8.
+596	bis %d
+597	Verwendung: /pw arrow scale <50-200>   (jetzt %d%%)
+598	Verwendung: /pw opacity <40-100>   (jetzt
+599	Verwendung: /pw scale <50-150>   (jetzt %d%%)
+600	Verwendung: /pw style tracker | window | minimal   (jetzt
+601	Verwendung: /pw way <x> <y> [Titel]   z. B. /pw way 45.2 61.8 Gasthaus
+602	Version und Mitwirkende
+603	Wegpunkt entfernt.
+604	Wegpunkt gesetzt: %s auf %s.
+605	was der Pfeil sieht (auch in Einstellungen > Wegpunkt & Werkzeuge)
+606	Hintergrund-Deckkraft der Fenster, 40-100
+607	Fensterpositionen zurückgesetzt; /reload zum Anwenden.
+608	Fenstergröße %d%%.
+609	gelb %d
+610	du  ·
+611	du bist bei %.1f, %.1f auf %s (Karte %d).
+612	du gehst hierhin
+613	du bist hier
+614	deine Koordinaten aus.
+615	deine Koordinaten auf dieser Karte
+616	deine Koordinaten an.
+617	deine Berufe: Fertigkeit, beste Herstellung, Materialien
+618	deine Quests gehören zu %s: Dieser Route wird gefolgt.

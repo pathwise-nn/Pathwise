@@ -77,3 +77,73 @@ test("locale: every Russian text takes the values its English text gives, no mor
 	ok(#bad == 0, "more values than the English gives: " .. table.concat(bad, " | "))
 	GetLocale = nil
 end)
+
+-- A fresh client in any language.
+local function client(code)
+	local stub = dofile("./tests/stub.lua")
+	PathwiseSettings, PathwiseCharSettings, Pathwise, SLASH_PATHWISE1 = nil, nil, nil, nil
+	GetLocale = function() return code end
+	local ns = stub.load(".")
+	stub.login()
+	return stub, ns
+end
+
+local function specs(s)
+	local out = {}
+	for spec in s:gsub("%%%%", ""):gmatch("%%[%-%+ #0]*%d*%.?%d*([sdif])") do out[#out + 1] = spec end
+	return out
+end
+
+-- What each language says for a few texts, as its translation has it.
+local SAMPLE = {
+	deDE = { "Settings", "Einstellungen" }, frFR = { "Settings", "Paramètres" }, esES = { "Settings", "Opciones" },
+	esMX = { "Settings", "Opciones" }, ptBR = { "Settings", "Configurações" }, itIT = { "Settings", "Impostazioni" },
+	koKR = { "Settings", "설정" }, zhCN = { "Settings", "设置" }, zhTW = { "Settings", "設定" },
+}
+
+test("locale: every language: in use only in its own game, every text safe to fill, headings in capitals", function()
+	for _, code in ipairs({ "deDE", "frFR", "esES", "esMX", "ptBR", "itIT", "koKR", "zhCN", "zhTW" }) do
+		local stub, ns = client(code)
+		ok(ns.Translated(), code .. ": translated")
+		eq(ns.L(SAMPLE[code][1]), SAMPLE[code][2], code)
+		ok(ns.L("Step %d of %d") ~= "Step %d of %d", code .. ": a template")
+		eq(ns.L("Text Pathwise does not know"), "Text Pathwise does not know", code .. ": unknown text stays")
+		-- Every translation fills safely: no more values than the English gives,
+		-- in the same order unless it says another.
+		for en, tr in pairs(ns.LocaleEntries()) do
+			local want, have = specs(en), specs(type(tr) == "table" and tr[1] or tr)
+			ok(#have <= #want, code .. ": too many values in: " .. en)
+			if type(tr) ~= "table" then
+				for i = 1, #have do ok(have[i] == want[i], code .. ": values out of order in: " .. en) end
+			end
+		end
+		-- Capitals are made for the headings, accents and all.
+		eq(ns.L("OBJECTIVES"), ns.U(ns.L("Objectives")), code .. ": capitals")
+		ns.Panels.Open("settings")
+		ok(#stub.texts() > 10, code .. ": the settings draw")
+		GetLocale = nil
+	end
+end)
+
+test("locale: capitals for accented letters, and Korean and Chinese in the game's own font", function()
+	local _, ns = client("frFR")
+	eq(ns.U("élève à côté"), "ÉLÈVE À CÔTÉ")
+	eq(ns.U("übernehmen"), "ÜBERNEHMEN")
+	eq(ns.Nav.FormatYards(2000), "1,8 km", "metres with a decimal comma")
+	ok(ns.Theme.FONTS.regular:find("Inter"), "Inter has French letters")
+	STANDARD_TEXT_FONT = "Fonts\\2002.TTF"
+	local _, ko = client("koKR")
+	eq(ko.Theme.FONTS.regular, "Fonts\\2002.TTF", "Korean: the game's font")
+	eq(ko.Theme.FONTS.semibold, "Fonts\\2002.TTF")
+	STANDARD_TEXT_FONT = nil
+	local _, zh = client("zhCN")
+	eq(zh.Theme.FONTS.regular, "Fonts\\ARKai_T.ttf", "no game font known: the Chinese client's own")
+	GetLocale = nil
+end)
+
+test("locale: the language files are up to date with their lists", function()
+	local p = io.popen("lua5.1 tools/locales/build.lua --check 2>&1")
+	local out = p:read("*a")
+	p:close()
+	ok(out:find("every language is up to date"), out)
+end)

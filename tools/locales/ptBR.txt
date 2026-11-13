@@ -1,0 +1,618 @@
+1	(opcional)
+2	·  concluído
+3	·  entrada ainda não verificada no Forever
+4	·  não verificado no Forever
+5	·  ainda não verificado no Forever
+6	·  você
+7	(pelas missões)
+8	XP/h
+9	ao lado da sua rota.
+10	em
+11	rotas
+12	seu lar
+13	%.1fk
+14	%d das suas bolsas
+15	%d aprendidas
+16	%d m
+17	%d materiais para conseguir
+18	%d missões para você
+19	faltam %d
+20	%d yd
+21	%d h %02d min
+22	%d min
+23	%d s
+24	%dx %s
+25	%s  ·  clique para trocar
+26	%s  ·  nível %d-%d
+27	%s  ·  perícia %s  ·  nível do item %d
+28	%s (até %d)
+29	%s adicionada; depois a rota continua.
+30	%s é uma cidade: as rotas param lá no caminho.
+31	%s não é para este personagem: escolhendo uma que seja.
+32	%s km
+33	%s até %d
+34	A rota de %s é para personagens %s.
+35	%s, níveis %d-%d%s
+36	%s: %d-%d%s, então %d%s.
+37	+%d a mais
+38	+%d a mais no hub
+39	, dada por
+40	, não testado lá a partir de %d
+41	, vendida por
+42	. Receitas, cores e materiais: dados do próprio cliente do Forever; o verde é uma estimativa.
+43	1 rota
+44	: aceitar
+45	Um cartão compacto: a etapa, seus objetivos como caixas de seleção, a tarefa de profissão e seu nível.
+46	Uma janela com abas: a etapa, as etapas seguintes e o que está perto no seu registro de missões.
+47	Sobre o Pathwise
+48	Destaque
+49	Aceitar:
+50	Aceitar: %s
+51	Aceitar e entregar missões
+52	No topo da tela: para onde você olha, onde está a etapa e a que distância. Arraste para mover.
+53	Alquimia
+54	Todas as masmorras
+55	Todas as rotas
+56	Todas as rotas desta faixa
+57	Aliança
+58	Sempre: profissões primeiro.
+59	Ametista
+60	Aplicar
+61	Aprendiz
+62	Chegou
+63	Tamanho da seta
+64	Seta: nenhuma
+65	Artesão
+66	Neste nível
+67	Automação
+68	Voltar
+69	Opacidade do fundo
+70	Equilibrado
+71	Ao lado da sua rota
+72	Melhor agora:
+73	Ferraria
+74	Flor
+75	Trazer de volta
+76	Ver os guias de profissões
+77	Levar:
+78	Escolha uma rota
+79	Cidade: as rotas param aqui para instrutores e entregas
+80	Classe
+81	Missões de classe
+82	Rota de classe
+83	Limpar
+84	Clique numa profissão para a próxima criação, materiais e guia.
+85	Clique numa rota para ver as etapas: siga-a, comece em qualquer etapa ou escolha a rota seguinte.
+86	Clique numa zona para a seta. Cada nó que ainda dá perícia está no mapa e no minimapa com sua cor: laranja sempre, amarelo muitas vezes, verde raramente (Configurações > Marcadores do mapa).
+87	Clique para abrir o hub, clique direito para configurações, arraste para mover.
+88	Clique para que não seja movido sem querer.
+89	Clique na caixa, pressione Ctrl+C e cole num relatório de bug com uma linha sobre o que deu errado. Nada é enviado do jogo.
+90	Clique para parar
+91	Clique para soltar e arrastar de novo.
+92	Clique: abrir o hub
+93	Fechar
+94	Recolher
+95	Colecionáveis
+96	Modo compacto
+97	Bússola
+98	Bússola ligada ou desligada
+99	Tamanho da bússola
+100	Concluir: %s
+101	Culinária
+102	Coordenadas
+103	Copie o link e abra no navegador. Entre com o Discord e cole o relatório no formulário.
+104	Contado enquanto você joga com o Pathwise; /played acerta o nível atual.
+105	Conta como entregue: as missões seguintes aparecem
+106	Criar:
+107	Criar: %d %s
+108	Criar %s até %d
+109	Criação
+110	Criado por leight_nn & florp
+111	Carmesim
+112	Personalizado
+113	Escuro
+114	Dados: %s
+115	Discord
+116	Desencante o que você cria para ganhar pontos em vez de vender: %s.
+117	Desencantar
+118	Distâncias
+119	Concluído
+120	Arraste qualquer borda ou canto para mudar o tamanho.
+121	Arraste a seta para movê-la.
+122	Arraste o canto inferior direito da janela do guia para mudar largura e altura; uma etapa mais alta que a janela rola.
+123	Arraste para mudar largura e altura.
+124	Arraste para mudar a largura.
+125	Arraste para mover. Trave nas Configurações.
+126	Arraste para mover. Desligue nas Configurações ou com /pw compass.
+127	Arrastar: mover este botão
+128	Saques, reputação e receitas de vendedor que o guia lista para as faixas finais.
+129	Masmorra
+130	Entradas de masmorras
+131	Masmorras
+132	Masmorras para o nível %d
+133	Masmorras para o seu nível
+134	O tempo de cada nível aparece aqui quando você chega ao próximo com o Pathwise.
+135	Esmeralda
+136	Encantamento
+137	Engenharia
+138	Todas as masmorras e raides
+139	O plano de cada profissão por faixa de perícia, aprendida ou não
+140	Cada missão. Cada criação. Cada nível.
+141	Todas as etapas do guia estão concluídas
+142	Todas as etapas do guia estão concluídas.
+143	Tudo nela, itens e lugares também: para a próxima
+144	Especialista
+145	Exploração
+146	Missão extra
+147	Muito longe
+148	Primeiros Socorros
+149	Pesca
+150	Ajustar à etapa
+151	Ajusta-se a cada etapa
+152	Voar para onde a etapa diz
+153	Seguir ao lado da sua rota
+154	Seguir esta rota
+155	Seguindo  ·  clique para parar
+156	Seguindo ao lado da sua rota
+157	Seguindo agora
+158	Para Herborismo e Mineração: os nós que ainda dão perícia, na sua cor.
+159	Para relatórios de bug
+160	Para o seu nível
+161	As novas ervas e minérios do Forever (bauxita, pirita, sálvia demoníaca...) ainda não estão nos dados.
+162	Livre e de código aberto sob a Licença Pública Geral GNU, versão 3.
+163	De
+164	A partir do nível
+165	A partir do nível %d
+166	Do livro
+167	Da missão
+168	Do guia de Forever do wow-professions.com, escrito no beta
+169	Do seu registro de missões
+170	Guia completo
+171	Guia completo ou compacto
+172	Conseguir:
+173	Conseguir: %d %s (%d)
+174	Ir
+175	Ir para
+176	Ir para a entrada
+177	Ir ao local marcado
+178	Ouro
+179	Grafite
+180	Guia
+181	Guia na tela
+182	Janela do guia
+183	Entregar:
+184	Herborismo
+185	Ervas e minérios no mapa
+186	Ervas e minérios no minimapa
+187	Oculto
+188	Ocultar
+189	Alto contraste
+190	Horda
+191	Já fiz isso
+192	No total
+193	No total:
+194	Em metros e quilômetros.
+195	Em jardas, como o jogo conta.
+196	No seu registro de missões
+197	Taverneiro,
+198	Em vez disso, por perto
+199	As continuações ficam na rota
+200	A próxima etapa aparece na janela do guia
+201	Artífice
+202	Problemas conhecidos, sugestões e relatórios de bug. Copie o link e abra no navegador.
+203	EVOLUÇÃO · PROFISSÕES
+204	Lavanda
+205	Aprender:
+206	Couraria
+207	Deixa de fora missões verdes e cinzas que ficaram para trás, e numa rota que você já ultrapassou, a menos que uma missão posterior precise delas.
+208	Nível %d
+209	Nível %d
+210	Nível %d  ·  %s%s
+211	As faixas de nível são estimadas pelas missões de cada zona (dados do QuestieDB).
+212	Evolução
+213	Rota de evolução
+214	Acompanhamento de nível
+215	Níveis %d-%d
+216	Níveis %d-%d  ·  %d etapas  ·  %s
+217	Níveis %d-%d%s
+218	Os níveis são dos monstros lá dentro, pelos dados do QuestieDB: uma estimativa.
+219	Licença
+220	Claro
+221	Temas claros mantêm a bússola e o guia mínimo claros, para serem lidos sobre o jogo.
+222	Travar
+223	Travar a seta
+224	Travada: fica parada, e os cliques vão para o mundo.
+225	Nv %d
+226	Principal
+227	Faça de
+228	Faça de %s o seu lar
+229	Mapa
+230	Marcadores do mapa
+231	Marcadas como concluídas por você
+232	Materiais para este nível
+233	Metros
+234	Meia-noite
+235	Mínimo
+236	Botão do minimapa
+237	Mineração
+238	Menta
+239	Diversos
+240	Modo
+241	Mais guias
+242	Montarias
+243	AGORA
+244	Precisa de outra missão antes
+245	Próximo
+246	Próximo estilo de guia (Acompanhamento, Janela, Mínimo)
+247	Próxima rota
+248	Nenhuma rota de %s para este personagem.
+249	Ainda não há guia para esta profissão
+250	Ainda não há guia para esta profissão.
+251	Nenhuma rota de evolução
+252	Ainda não há rota de evolução para este personagem.
+253	Ainda não há rota de evolução para seu personagem nesta faixa.
+254	Nenhuma rota de evolução perto do seu nível.
+255	Sem posição no mapa aqui (dentro de uma instância?).
+256	Nenhuma outra missão do seu nível está aberta neste mapa agora.
+257	Ainda sem profissões. Aprenda uma com um instrutor: o Pathwise a segue ao lado da sua rota.
+258	Ainda sem profissões. Visite um instrutor de profissão para aprender uma: o Pathwise a segue a partir daí.
+259	Nenhuma missão para seu personagem aqui.
+260	Nenhuma rota
+261	Ainda não há rota para este personagem.\n\nAbra "Zonas para o seu nível" (o botão de mapa acima) para escolher uma.
+262	Ainda não há rota para este personagem.\n\nEscolha uma em Rotas à esquerda, ou no livro de rotas.
+263	Ainda não há rota para este personagem. Abra o hub para escolher uma.
+264	Nenhuma rota carregada ainda
+265	Nenhuma rota ainda
+266	Nenhuma rota ainda: abra o hub para escolher uma.
+267	Nenhuma etapa começa neste nível.
+268	Nenhum ponto de referência definido.
+269	Sem janela: a etapa e seus objetivos como texto sobre o jogo.
+270	Sem dados de zona para seu nível e facção.
+271	Nenhum
+272	Nenhuma para o seu nível ainda: as primeiras masmorras começam por volta do nível 13.
+273	Não aprendida
+274	Nada no seu nível de Encantamento precisa disso agora: compare o preço do vendedor com o que rendem.
+275	Nada mais dá perícia: todos os nós estão cinza para você.
+276	Nada para pular nesta etapa.
+277	Agora:
+278	NA TELA
+279	UM DE
+280	OU EM VEZ DISSO
+281	OUTRAS RECEITAS
+282	Objetivos
+283	Oceano
+284	Desligado
+285	Ligado
+286	No minimapa
+287	No site
+288	No mapa-múndi
+289	No seu caminho
+290	No seu caminho · cerca de 1 min
+291	Ligado: Pathwise Gear, Bags e os demais usam esta cor em vez das próprias.
+292	Só para o que a rota pede. Segure Shift ao falar com alguém para fazer você mesmo.
+293	Só quando uma etapa de profissão está bem no seu caminho (cerca de 150 yd).
+294	Abra Rotas nas Configurações, ou Zonas para o seu nível.
+295	Abrir ou fechar o hub
+296	Abrir o hub
+297	Abrir o livro de receitas
+298	Abra sua janela de %s uma vez para o Pathwise ler suas receitas.
+299	Opcional
+300	Opcional ·
+301	Opcional · Alfaiataria
+302	Ou no Discord
+303	PATHWISE
+304	Página %d / %d
+305	Cole em #report-a-bug. Ainda não está no servidor? Copie o convite.
+306	Pathwise %s  ·  Cada missão. Cada criação. Cada nível.  ·  criado por leight_nn & florp  _nn
+307	Azul Pathwise
+308	Seta do Pathwise
+309	Bússola do Pathwise
+310	Suíte Pathwise
+311	Pathwise: o item da etapa. Shift+arrastar para mover.
+312	Mascotes
+313	Escolher recompensas
+314	Escolha sua próxima rota em Zonas para o seu nível, ou Rotas nas Configurações.
+315	Fixar
+316	Fixar no lugar
+317	Fixar no lugar (ou soltar)
+318	Fixar a bússola
+319	Fixado no lugar
+320	Fixada: fica parada, e os cliques vão para o mundo.
+321	Fixada: solte para redimensionar.
+322	Posição: nenhuma
+323	Desvios de profissão
+324	Guias de profissões
+325	Rota de profissão
+326	Profissões
+327	Profissões, ao lado da sua rota
+328	Missão
+329	Dados de missões do QuestieDB, pela equipe do Questie e colaboradores.
+330	Botão do item de missão
+331	Marcadores de missão no mapa
+332	Marcadores de missão no minimapa
+333	Missões (%d)
+334	Missões para pegar:
+335	LIVRO DE ROTAS
+336	Raide
+337	Alcançar %s %d
+338	Alcançar o nível %d
+339	Pronta para entregar
+340	Livro de receitas
+341	Livros de receitas
+342	Recarregar agora
+343	Relatar esta etapa
+344	Reputação
+345	Redefinir
+346	Redimensionar
+347	XP descansado
+348	Clique direito: voltar ao tamanho de abertura.
+349	Clique direito: voltar ao tamanho normal.
+350	Clique direito: ajustar a altura a cada etapa.
+351	Clique direito: configurações
+352	Rosa
+353	Rota
+354	Rota %d / %d
+355	Rota a seguir
+356	Rota concluída
+357	Rota: nenhuma
+358	Rotas
+359	Rotas adaptadas do Polestar (GPL-3.0); dados de missões do QuestieDB.
+360	Rotas adaptadas do Polestar pelos autores do Polestar (GPL-3.0).
+361	ETAPAS  ·  CLIQUE EM UMA PARA COMEÇAR DALI
+362	Exemplo · Clareiras de Tirisfal
+363	Areia
+364	Definir
+365	Definir um ponto de referência por coordenadas; o que a seta vê
+366	Definir um ponto de referência neste mapa
+367	Definir sua pedra de regresso
+368	Configurações
+369	Mostrar
+370	Mostrar masmorras do meu nível
+371	Mostrar todas as masmorras e raides
+372	Mostrar todas as rotas de evolução
+373	Mostrar todas as profissões
+374	Mostrar
+375	Mostrar só minhas profissões
+376	Mostrar ou ocultar o guia
+377	Mostrar rotas perto do meu nível
+378	Mostrar a seta
+379	Guia paralelo
+380	Perícia
+381	A perícia necessária é a tabela do Classic, ainda não verificada no Forever: sua dica tem a palavra final.
+382	Esfolamento
+383	Pular
+384	Pular com as continuações
+385	Pular só esta missão
+386	Pular missão
+387	Pular missões que você já passou
+388	Pular este desvio
+389	Missões puladas
+390	Céu
+391	Neve
+392	Velocidade
+393	Recomeçar
+394	Zona inicial: a rota %s
+395	Etapa %d
+396	Etapa %d / %d
+397	Etapa %d de %d
+398	Etapa %d · %s
+399	Números das etapas no mapa
+400	Etapas listadas
+401	Etapas numeradas à frente
+402	Parar
+403	Estilo
+404	Pôr do sol
+405	Sincronizar com seu registro de missões
+406	DEPOIS  ·  A ROTA APÓS ESTA
+407	FERRAMENTAS E EXTRAS
+408	Alfaiataria
+409	Alfaiataria + Encantamento
+410	Pegar agora
+411	Fale com
+412	Agradecimentos
+413	A seta leva para cá agora
+414	A seta leva a %s.
+415	A seta aparece enquanto a bússola está desligada.
+416	O hub, o acompanhamento e a janela do guia também têm um alfinete no canto.
+417	O item que a etapa quer que você use, ao lado do guia. Shift+arrastar para mover; há uma tecla em Teclas de atalho > Pathwise.
+418	O livro de rotas: cada rota por nível
+419	A cadeia inteira sai da rota
+420	Tema
+421	Depois
+422	Depois, de volta à rota:
+423	Esta sessão
+424	Esta etapa está concluída
+425	Tempo por nível
+426	Tempos
+427	Para
+428	Até o próximo nível
+429	Acompanhamento
+430	Aprender:
+431	Aprender %s %s
+432	Aprender Alfaiataria de Aprendiz
+433	Aprender com instrutores
+434	Entregar:
+435	Entregar: %s
+436	Desligar
+437	Ligar
+438	Fonte: Inter de Rasmus Andersson (SIL Open Font License).
+439	Comando desconhecido '%s'. Digite /pw help.
+440	Destravar
+441	Soltar
+442	Use
+443	Use %s: aceite %s
+444	Usar o item de missão da etapa
+445	Versão
+446	Versão %s
+447	Versão %s  ·  criado por leight_nn & florp   _nn
+448	Ponto de referência
+449	Ponto de referência
+450	Ponto de referência e ferramentas
+451	Seta do ponto de referência
+452	Site
+453	O que a seta vê. Clique, Ctrl+C e cole com um relatório.
+454	O que criar em cada faixa de perícia, onde estão as receitas e os instrutores
+455	Quando uma etapa de profissão está perto (cerca de 600 yd).
+456	Quando a etapa é treinar: aprende tudo do instrutor que você pode pagar.
+457	Onde coletar agora
+458	Onde você está no mapa, sob a bússola e no guia.
+459	Onde:
+460	Onde quer que você esteja
+461	Toda a suíte nesta cor
+462	Janela
+463	Altura da janela
+464	Posições das janelas
+465	Tamanho da janela
+466	Janelas já abertas pegam a nova cor depois de recarregar
+467	Com escolha de recompensas, pegar a que o Pathwise Gear recomenda (precisa do Gear). Uma recompensa única é sempre pega.
+468	Sem ele, abra o Pathwise com uma tecla: Menu do jogo > Teclas de atalho > Pathwise.
+469	XP ganho
+470	XP por hora
+471	XP por hora após um minuto
+472	Jardas
+473	Você
+474	Você está em %.1f, %.1f  ·  %s
+475	Você está seguindo esta rota
+476	Você está aqui
+477	Você não tem %s. Aprenda com um instrutor.
+478	Você ainda não tem profissões.
+479	Seu nível de Encantamento ainda precisa de %s: vale a pena desencantar estes.
+480	A cor da sua classe, própria de cada personagem.
+481	Sua cor: %s. Digite outra como #RRGGBB e depois Aplicar.
+482	Suas coordenadas
+483	Sua rota
+484	Suas rotas, profissões e a etapa inteira, numa janela só
+485	ZONAS  ·  VÁ PARA UMA E O GUIA LEVA VOCÊ PARA LÁ AGORA
+486	Zonas
+487	Zonas para o nível %d
+488	uma cor são seis dígitos hexadecimais, como #66D7FF.
+489	um relatório desta etapa para colar no Discord
+490	um ponto de referência
+491	um saque do mundo (casa de leilões)
+492	após um minuto
+493	seta desligada.
+494	seta ligada (arraste para mover).
+495	tamanho da seta %d%%.
+496	seta para o mais próximo
+497	abaixo do seu nível
+498	alinhar o guia com seu registro de missões (e a rota certa)
+499	ainda não pode aprender
+500	clique para a seta
+501	comandos:
+502	bússola desligada: a seta aparece no lugar.
+503	bússola ligada (arraste para mover).
+504	bússola ligada ou desligada; /pw compass coords: suas coordenadas; /pw compass pin: fixá-la
+505	bússola fixada no lugar.
+506	bússola solta: arraste para movê-la.
+507	concluído
+508	saque de
+509	masmorras e raides para seu nível, suas missões e entradas
+510	cada rota para você: evolução, missões de classe, profissões
+511	guias de exploração
+512	voando para %s. Segure Shift ao falar com o mestre de voo para escolher você mesmo.
+513	seguindo:
+514	para o seu nível
+515	a partir do nível
+516	a partir do nível %d
+517	a partir da etapa
+518	vá aqui depois
+519	cinza %d
+520	estilo do guia:
+521	tamanho da janela do guia, 50-150 (também nas Configurações)
+522	aprender %d
+523	aprenda primeiro
+524	nível %d
+525	criado ou encontrado
+526	mapa
+527	%s marcada como concluída.
+528	guias de montarias
+529	sem posição no mapa aqui (dentro de uma instância?).
+530	nenhuma posição para %s nos dados.
+531	nenhuma rota chamada '
+532	nenhum tema chamado '
+533	nenhum ponto de referência definido
+534	não está no registro
+535	nada mais aqui
+536	nada mais a fazer em %s em %s.
+537	agora
+538	agora em
+539	em andamento
+540	para a próxima rota: %s.
+541	abrir ou fechar o Signature Hub
+542	abrir o painel de configurações
+543	outros guias
+544	guias de mascotes
+545	ver a janela do guia com uma etapa de exemplo
+546	missão
+547	guias de reputação
+548	redefinir posições das janelas
+549	recompensa de
+550	rota:
+551	rota: %s, a partir da etapa %d. Configurações, Marcadas como concluídas por você, Trazer de volta desfaz as etapas anteriores.
+552	rota: %s, primeiro em %s.
+553	rota: %s, em %s.
+554	rota: %s.
+555	o mesmo que /pw prof
+556	exemplo removido.
+557	definir um ponto de referência neste mapa: /pw way <x> <y> [título]; /pw way clear
+558	mostrar ou escolher a rota: /pw route <id ou título>
+559	mostrar ou ocultar a seta; /pw arrow scale <50-200> define o tamanho
+560	mostrando uma etapa de exemplo (/pw demo de novo para remover).
+561	perícia %d
+562	pular a missão atual, ou escolher uma próxima no lugar
+563	%s pulada com %d continuações.
+564	%s pulada.
+565	vendida por
+566	vendida só para a outra facção (casa de leilões)
+567	fonte não está nos dados
+568	começar aqui
+569	etapa
+570	etapa %d / %d
+571	etapa marcada como concluída.
+572	parou de seguir:
+573	alternar o guia entre completo e compacto
+574	trocar para ela
+575	sincronizado com seu registro de missões: %s concluída.
+576	sincronizado com seu registro de missões: %s%s, etapa %d de %d.
+577	sincronizado: nenhuma rota de evolução para este personagem.
+578	a seta leva a %s para %s.
+579	a seta leva a %s em %s.
+580	a seta leva a %s%s.
+581	a seta leva a %s.
+582	o tema de cores: /pw theme <nome> (sem nome: a lista)
+583	o guia está oculto: traga de volta com sua tecla (Teclas de atalho > Pathwise) ou mostre o botão do minimapa nas Configurações.
+584	o guia está oculto: clique no botão do minimapa do Pathwise para o hub e escolha um estilo em Na tela.
+585	o guia na tela: /pw style tracker | window | minimal (sem nada: o próximo)
+586	a próxima etapa
+587	a receita
+588	o livro de rotas: cada rota de evolução por nível, suas etapas e a troca
+589	tema atual: %s. Temas: %s.
+590	tema: %s. /reload para vê-lo em todas as janelas.
+591	tema: %s. Janelas já abertas pegam depois de recarregar (Configurações > Recarregar agora, ou /reload).
+592	ainda não há rota do Pathwise para %s.
+593	esta taverna
+594	esta lista
+595	digite dois números de 0 a 100, como 45.2 e 61.8.
+596	até %d
+597	uso: /pw arrow scale <50-200>   (agora %d%%)
+598	uso: /pw opacity <40-100>   (agora
+599	uso: /pw scale <50-150>   (agora %d%%)
+600	uso: /pw style tracker | window | minimal   (agora
+601	uso: /pw way <x> <y> [título]   ex.: /pw way 45.2 61.8 Taverna
+602	versão e créditos
+603	ponto de referência removido.
+604	ponto de referência definido: %s em %s.
+605	o que a seta vê (também em Configurações > Ponto de referência e ferramentas)
+606	opacidade do fundo das janelas, 40-100
+607	posições das janelas redefinidas; /reload para aplicar.
+608	tamanho da janela %d%%.
+609	amarelo %d
+610	você  ·
+611	você está em %.1f, %.1f em %s (mapa %d).
+612	você vai para cá
+613	você está aqui
+614	suas coordenadas desligadas.
+615	suas coordenadas neste mapa
+616	suas coordenadas ligadas.
+617	suas profissões: perícia, melhor criação, materiais
+618	suas missões estão em %s: seguindo essa rota.

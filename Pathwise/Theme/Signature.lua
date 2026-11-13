@@ -65,6 +65,12 @@ T.FONTS = {
 	medium = MEDIA .. "Fonts\\Inter-Medium.ttf",
 	semibold = MEDIA .. "Fonts\\Inter-SemiBold.ttf",
 }
+-- Korean and Chinese: Inter has none of their letters, so the game's own
+-- font (read now, before any addon changes it), in every weight.
+if ns.GAME_FONT_LOCALES and ns.GAME_FONT_LOCALES[ns.GAME_LOCALE] then
+	local own = STANDARD_TEXT_FONT or ({ koKR = "Fonts\\2002.TTF", zhCN = "Fonts\\ARKai_T.ttf", zhTW = "Fonts\\bLEI00D.ttf" })[ns.GAME_LOCALE]
+	T.FONTS.regular, T.FONTS.medium, T.FONTS.semibold = own, own, own
+end
 
 -- The type ladder: role -> font, size, colour.
 T.TYPE = {

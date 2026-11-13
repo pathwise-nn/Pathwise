@@ -74,6 +74,13 @@ language. In the code:
   when a route's text changes, that line shows in English until it is
   translated again.
 
+German, French, Spanish, Brazilian Portuguese, Italian, Korean and both
+Chinese are built from lists: `tools/locales/en.txt` holds the English, one
+text per line, and `tools/locales/<code>.txt` holds `<line><TAB><translation>`
+(add `<TAB>2,1` when the values go in another order). Edit a list, then
+`npm run locales`; the build refuses a missing line or a misplaced value.
+Russian is the translator's own file (`Locales/ruRU.lua`).
+
 The tests check that English is unchanged and that no translation expects
 more values than its English text gives (`tests/locale.lua`).
 

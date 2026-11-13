@@ -23,13 +23,37 @@ ns.GAME_LOCALE = GetLocale and GetLocale() or "enUS"
 
 local T, fallback -- the translation in use, and its last resort for unknown text
 
+-- code: the game's language code, or a list of them (esES and esMX share
+-- one Spanish). Every entry also gets its ALL CAPS form (headings, labels),
+-- unless the table gives one of its own.
 function ns.AddLocale(code, tbl, fb)
-	if code ~= ns.GAME_LOCALE or type(tbl) ~= "table" then return false end
+	local match = code == ns.GAME_LOCALE
+	if type(code) == "table" then
+		for _, c in ipairs(code) do if c == ns.GAME_LOCALE then match = true end end
+	end
+	if not match or type(tbl) ~= "table" then return false end
 	T = T or {}
 	for k, v in pairs(tbl) do if T[k] == nil then T[k] = v end end
+	for k, v in pairs(tbl) do
+		local K = k:upper()
+		-- Not templates: their %s and %d would turn into %S and %D.
+		if K ~= k and T[K] == nil and not k:find("%", 1, true) then
+			if type(v) == "table" then
+				local up = { ns.U(v[1]) }
+				for i = 2, #v do up[i] = v[i] end
+				T[K] = up
+			else
+				T[K] = ns.U(v)
+			end
+		end
+	end
 	if fb then fallback = fb end
 	return true
 end
+
+-- Languages whose letters Pathwise's typeface (Inter) does not have: there
+-- Pathwise writes in the game's own font (Theme/Signature.lua).
+ns.GAME_FONT_LOCALES = { koKR = true, zhCN = true, zhTW = true }
 
 function ns.Translated() return T ~= nil end
 -- The translation in use (for the tests), or nil.
@@ -66,11 +90,12 @@ function ns.F(template, ...)
 	return (t or template):format(...)
 end
 
--- Upper case for Cyrillic: the letters string.upper leaves alone.
+-- Upper case for the letters string.upper leaves alone: Cyrillic, and the
+-- accented Latin of German, French, Spanish, Portuguese and Italian.
 local UP = {}
 do
-	local lower = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
-	local upper = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+	local lower = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяàáâãäåæçèéêëìíîïñòóôõöøùúûüýœ"
+	local upper = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝŒ"
 	local lo, up = {}, {}
 	for ch in lower:gmatch("[\192-\255][\128-\191]*") do lo[#lo + 1] = ch end
 	for ch in upper:gmatch("[\192-\255][\128-\191]*") do up[#up + 1] = ch end
@@ -80,7 +105,7 @@ function ns.U(s)
 	if type(s) ~= "string" then return s end
 	if not T then return s:upper() end
 	-- Latin by hand too: upper-casing whole bytes can mangle UTF-8 on some systems.
-	return (s:gsub("[a-z]", string.upper):gsub("[\208\209][\128-\191]", UP))
+	return (s:gsub("[a-z]", string.upper):gsub("[\195\197\208\209][\128-\191]", UP))
 end
 
 -- A font string that translates its text (only when a translation is in use).

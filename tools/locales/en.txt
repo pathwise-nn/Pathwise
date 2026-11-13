@@ -1,0 +1,618 @@
+  (optional)
+  ·  done
+  ·  entrance not yet checked on Forever
+  ·  not checked on Forever
+  ·  not yet checked on Forever
+  ·  you
+ (from its quests)
+ XP/h
+ beside your route.
+ in 
+ routes
+ your home
+%.1fk
+%d from your bags
+%d learned
+%d m
+%d material%s to get
+%d quest%s for you
+%d to get
+%d yd
+%dh %02dm
+%dm
+%ds
+%dx %s
+%s  ·  click to switch
+%s  ·  level %d-%d
+%s  ·  skill %s  ·  item level %d
+%s (to %d)
+%s added; the route picks up again after it.
+%s is a city: the routes stop there on the way.
+%s is not for this character: choosing one that is.
+%s km
+%s to %d
+%s's route is for %s characters.
+%s, levels %d-%d%s
+%s: %d-%d%s, so %d%s.
++%d more
++%d more in the hub
+, given by 
+, not tested there from %d
+, sold by 
+. Recipes, colours and materials: the Forever client's own data; green is an estimate.
+1 route
+: accept 
+A compact card: the step, its objectives as checkboxes, the profession task and your level.
+A window with tabs: the step, the steps after it, and what is near you in your quest log.
+About Pathwise
+Accent
+Accept 
+Accept %s
+Accept and hand in quests
+Across the top of the screen: where you face, where the step is and how far. Drag it to move it.
+Alchemy
+All dungeons
+All routes
+All routes in this range
+Alliance
+Always: professions come first.
+Amethyst
+Apply
+Apprentice
+Arrived
+Arrow size
+Arrow: none
+Artisan
+At this level
+Automation
+Back
+Background opacity
+Balanced
+Beside your route
+Best now: 
+Blacksmithing
+Blossom
+Bring back
+Browse the profession guides
+Carry: 
+Choose a route
+City: the routes stop here for trainers and hand-ins
+Class
+Class quests
+Class route
+Clear
+Click a profession for its next craft, materials and guide.
+Click a route for its steps: follow it, start it from any step, or pick the route after it.
+Click a zone for the arrow. Every node that still gives you skill is on your map and minimap in its colour: orange always, yellow often, green seldom (Settings > Map pins).
+Click it to open the hub, right-click for settings, drag to move it.
+Click so it cannot be dragged by accident.
+Click the box, press Ctrl+C, and paste it into a bug report with a line on what went wrong. Nothing is sent from the game.
+Click to stop
+Click to unpin and drag it again.
+Click: open the hub
+Close
+Collapse
+Collectibles
+Compact mode
+Compass
+Compass on or off
+Compass size
+Complete %s
+Cooking
+Coordinates
+Copy the link and open it in your browser. Log in with Discord, then paste the report into the form.
+Counted while you play with Pathwise on; /played sets the current level right.
+Counts as handed in: the quests after it come up
+Craft 
+Craft %d %s
+Craft %s until %d
+Crafting
+Created by leight_nn & florp
+Crimson
+Custom
+Dark
+Data: %s
+Discord
+Disenchant what you craft for points instead of selling it: %s.
+Disenchanting
+Distances
+Done
+Drag any edge or corner to change the size.
+Drag the arrow to move it.
+Drag the guide window's bottom-right corner to change its width and height; a step taller than the window scrolls.
+Drag to change the width and height.
+Drag to change the width.
+Drag to move it. Lock it in Settings.
+Drag to move it. Turn it off in Settings, or with /pw compass.
+Drag: move this button
+Drops, reputation and vendor recipes the guide lists for the late ranges.
+Dungeon
+Dungeon entrances
+Dungeons
+Dungeons for level %d
+Dungeons for your level
+Each level's time shows here once you reach the next one with Pathwise on.
+Emerald
+Enchanting
+Engineering
+Every dungeon and raid
+Every profession's plan by skill range, learned or not
+Every quest. Every craft. Every level.
+Every step of the guide is done
+Every step of the guide is done.
+Everything on it, items and places too: on to the next
+Expert
+Exploration
+Extra quest
+Far away
+First Aid
+Fishing
+Fit to step
+Fits each step
+Fly where the step says
+Follow beside your route
+Follow this route
+Following  ·  click to stop
+Following beside your route
+Following now
+For Herbalism and Mining: the nodes that still give you skill, in their colour.
+For bug reports
+For your level
+Forever's new herbs and ores (Bauxite, Pyrite, Demonsage...) aren't in the data yet.
+Free and open source under the GNU General Public License, version 3.
+From 
+From level 
+From level %d
+From the book 
+From the quest 
+From wow-professions.com's Forever guide, written on the beta
+From your quest log
+Full guide
+Full or compact guide
+Get 
+Get %d %s (%d)
+Go
+Go to 
+Go to the entrance
+Go to the marked spot
+Gold
+Graphite
+Guide
+Guide on screen
+Guide window
+Hand in:
+Herbalism
+Herbs and ore on the map
+Herbs and ore on the minimap
+Hidden
+Hide
+High Contrast
+Horde
+I've already done it
+In all
+In all: 
+In metres and kilometres.
+In yards, as the game counts them.
+In your quest log
+Innkeeper, 
+Instead, nearby
+Its follow-ups stay in the route
+Its next step shows in the guide window
+Journeyman
+Known issues, suggestions and bug reports. Copy the link and open it in your browser.
+LEVELING · PROFESSIONS
+Lavender
+Learn 
+Leatherworking
+Leaves out green and grey quests behind your progress, and on a route you have outlevelled, unless a later quest needs them.
+Level %d
+Level %d  
+Level %d  ·  %s%s
+Level ranges are estimated from the quests in each zone (QuestieDB data).
+Leveling
+Leveling route
+Leveling tracker
+Levels %d-%d
+Levels %d-%d  ·  %d steps  ·  %s
+Levels %d-%d%s
+Levels are those of the monsters inside, from QuestieDB's data: an estimate.
+Licence
+Light
+Light themes keep the compass and the minimal guide light, so they read over the game.
+Lock
+Lock the arrow
+Locked: it stays put, and clicks on it go to the world.
+Lv %d
+Main
+Make 
+Make %s your home
+Map 
+Map pins
+Marked done by you
+Materials for this rank
+Metres
+Midnight
+Minimal
+Minimap button
+Mining
+Mint
+Miscellaneous
+Mode
+More guides
+Mounts
+NOW
+Needs another quest first
+Next
+Next guide style (Tracker, Window, Minimal)
+Next route
+No %s routes for this character.
+No guide for this profession yet
+No guide for this profession yet.
+No leveling route
+No leveling route for this character yet.
+No leveling route for your character in this range yet.
+No leveling route near your level.
+No map position here (inside an instance?).
+No other quests at your level are open on this map right now.
+No professions yet. Learn one at a trainer: Pathwise follows it beside your route.
+No professions yet. Visit a profession trainer to learn one: Pathwise follows it from there.
+No quests for your character here.
+No route
+No route for this character yet.\n\nOpen Zones for your level (the map button above) to pick one.
+No route for this character yet.\n\nPick one from Routes on the left, or the route book.
+No route for this character yet. Open the hub to pick one.
+No route loaded yet
+No route yet
+No route yet: open the hub to pick one.
+No steps start in this rank.
+No waypoint set.
+No window: the step and its objectives as text over the game.
+No zone data for your level and side.
+None
+None for your level yet: the first dungeons start in the low teens.
+Not learned
+Nothing in your Enchanting rank needs these now: compare the vendor price with what they fetch.
+Nothing left that gives you skill: every node is grey to you.
+Nothing to skip on this step.
+Now: 
+ON SCREEN
+ONE OF
+OR INSTEAD
+OTHER RECIPES
+Objectives
+Ocean
+Off
+On
+On the minimap
+On the website
+On the world map
+On your way
+On your way · about 1 min
+On: Pathwise Gear, Bags and the rest use it instead of their own colours.
+Only for what the route asks. Hold Shift when you talk to someone to do it yourself.
+Only when a profession step is right on your way (about 150 yd).
+Open Routes in Settings, or Zones for your level.
+Open or close the hub
+Open the hub
+Open the recipe book
+Open your %s window once so Pathwise can read your recipes.
+Optional
+Optional · 
+Optional · Tailoring
+Or on Discord
+PATHWISE
+Page %d / %d
+Paste it in #report-a-bug. Not in the server yet? Copy the invite.
+Pathwise %s  ·  Every quest. Every craft. Every level.  ·  created by leight_nn & florp  _nn
+Pathwise Blue
+Pathwise arrow
+Pathwise compass
+Pathwise suite
+Pathwise: the step's item. Shift-drag to move.
+Pets
+Pick rewards
+Pick your next route from Zones for your level, or Routes in Settings.
+Pin
+Pin in place
+Pin in place (or unpin)
+Pin the compass
+Pinned in place
+Pinned: it stays put, and clicks on it go to the world.
+Pinned: unpin it to resize.
+Position: none
+Profession detours
+Profession guides
+Profession route
+Professions
+Professions, beside your route
+Quest 
+Quest data from QuestieDB by the Questie team and contributors.
+Quest item button
+Quest markers on the map
+Quest markers on the minimap
+Quests (%d)
+Quests to take:
+ROUTE BOOK
+Raid
+Reach %s %d
+Reach level %d
+Ready to hand in
+Recipe book
+Recipe books
+Reload now
+Report this step
+Reputation
+Reset
+Resize
+Rested XP
+Right-click: back to the size it opens at.
+Right-click: back to the usual size.
+Right-click: fit the height to each step.
+Right-click: settings
+Rose
+Route
+Route %d / %d
+Route coming
+Route complete
+Route: none
+Routes
+Routes adapted from Polestar (GPL-3.0); quest data from QuestieDB.
+Routes adapted from Polestar by the Polestar authors (GPL-3.0).
+STEPS  ·  CLICK ONE TO START FROM IT
+Sample · Tirisfal Glades
+Sand
+Set
+Set a waypoint by coordinates; what the arrow sees
+Set a waypoint on this map
+Set your hearthstone
+Settings
+Show
+Show dungeons for my level
+Show every dungeon and raid
+Show every leveling route
+Show every profession
+Show it
+Show my professions only
+Show or hide the guide
+Show routes near my level
+Show the arrow
+Side guide
+Skill 
+Skill needed is the Classic table, not yet checked on Forever: your tooltip has the last word.
+Skinning
+Skip
+Skip it and its follow-ups
+Skip just this quest
+Skip quest
+Skip quests you have passed
+Skip this detour
+Skipped quests
+Sky
+Snow
+Speed
+Start again
+Starting zone: the %s route
+Step %d
+Step %d / %d
+Step %d of %d
+Step %d · %s
+Step numbers on the map
+Steps listed
+Steps numbered ahead
+Stop
+Style
+Sunset
+Sync with your quest log
+THEN  ·  THE ROUTE AFTER THIS ONE
+TOOLS AND BONUSES
+Tailoring
+Tailoring + Enchanting
+Take it now
+Talk to 
+Thanks
+The arrow leads here now
+The arrow leads to %s.
+The arrow shows while the compass is off.
+The hub, the tracker and the guide window have a pin in their corner too.
+The item the step wants used, beside the guide. Shift-drag it to move; a key for it is in Key Bindings > Pathwise.
+The route book: every route by level
+The whole chain leaves the route
+Theme
+Then
+Then back to the route: 
+This session
+This step is done
+Time per level
+Times
+To 
+To the next level
+Tracker
+Train 
+Train %s %s
+Train Apprentice Tailoring
+Train at trainers
+Turn in 
+Turn in %s
+Turn off
+Turn on
+Typeface: Inter by Rasmus Andersson (SIL Open Font License).
+Unknown command '%s'. Type /pw help.
+Unlock
+Unpin
+Use 
+Use %s: accept %s
+Use the step's quest item
+Version
+Version %s
+Version %s  ·  created by leight_nn & florp   _nn
+Way
+Waypoint
+Waypoint & tools
+Waypoint arrow
+Website
+What the arrow sees. Click, Ctrl+C, and paste it with a report.
+What to craft for every skill range, where the recipes and trainers are
+When a profession step is near (about 600 yd).
+When the step is training: learns everything the trainer has that you can afford.
+Where to gather now
+Where you stand on the map, under the compass and in the guide.
+Where: 
+Wherever you are
+Whole suite in this colour
+Window
+Window height
+Window positions
+Window size
+Windows already open take the new colour after a reload
+With a choice of rewards, take the one Pathwise Gear recommends (Gear needed). A single reward is always taken.
+Without it, open Pathwise with a key: Game Menu > Key Bindings > Pathwise.
+XP gained
+XP per hour
+XP per hour after a minute
+Yards
+You  
+You are at %.1f, %.1f  ·  %s
+You are following this route
+You are here
+You don't have %s. Learn it from a trainer.
+You have no professions yet.
+Your Enchanting rank still needs %s: these are worth disenchanting.
+Your class colour, on every character its own.
+Your colour: %s. Type another as #RRGGBB, then Apply.
+Your coordinates
+Your route
+Your routes, professions and the whole step, in one window
+ZONES  ·  GO TO ONE AND THE GUIDE LEADS YOU THERE NOW
+Zones
+Zones for level %d
+a colour is six hex digits, like #66D7FF.
+a report of this step to paste into Discord
+a waypoint
+a world drop (Auction House)
+after a minute
+arrow off.
+arrow on (drag to move).
+arrow size %d%%.
+arrow to the nearest
+below your level
+bring the guide in line with your quest log (and the right route)
+can't learn yet
+click for the arrow
+commands:
+compass off: the arrow shows instead.
+compass on (drag to move).
+compass on or off; /pw compass coords: your coordinates; /pw compass pin: pin it in place
+compass pinned in place.
+compass unpinned: drag to move it.
+done
+drops from 
+dungeons and raids for your level, their quests and entrances
+every route for you: leveling, class quests, professions
+exploration guides
+flying to %s. Hold Shift when you talk to the flight master to choose yourself.
+following 
+for your level
+from level 
+from level %d
+from step 
+go here next
+grey %d
+guide style: 
+guide window size, 50-150 (also in Settings)
+learn %d
+learn it first
+level %d
+made or found
+map 
+marked %s done.
+mount guides
+no map position here (inside an instance?).
+no position for %s in the data.
+no route called '
+no theme called '
+no waypoint set
+not in log
+nothing left here
+nothing left to do in %s on %s.
+now 
+now on 
+on quest
+on to the next route: %s.
+open or close the Signature Hub
+open the settings panel
+other guides
+pet guides
+preview the guide window with a sample step
+quest 
+reputation guides
+reset window positions
+reward of 
+route: 
+route: %s, from step %d. Settings, Marked done by you, Bring back undoes the steps before it.
+route: %s, in %s first.
+route: %s, in %s.
+route: %s.
+same as /pw prof
+sample cleared.
+set a waypoint on this map: /pw way <x> <y> [title]; /pw way clear
+show or choose the route: /pw route <id or title>
+show or hide the arrow; /pw arrow scale <50-200> sets its size
+showing a sample step (/pw demo again to clear).
+skill %d
+skip the current quest, or pick one nearby instead
+skipped %s and %d follow-up%s.
+skipped %s.
+sold by 
+sold only to the other faction (Auction House)
+source not in the data
+start here
+step 
+step %d / %d
+step marked done.
+stopped following 
+switch the guide between full and compact
+switch to it
+synced with your quest log: %s is done.
+synced with your quest log: %s%s, step %d of %d.
+synced: no leveling route for this character.
+the arrow leads to %s for %s.
+the arrow leads to %s in %s.
+the arrow leads to %s%s.
+the arrow leads to %s.
+the colour theme: /pw theme <name> (none: list them)
+the guide is hidden: bring it back with your key (Key Bindings > Pathwise), or show the minimap button in Settings.
+the guide is hidden: click Pathwise's minimap button for the hub, and pick a style under On screen.
+the guide on screen: /pw style tracker | window | minimal (none: the next one)
+the next step
+the recipe
+the route book: every leveling route by level, its steps, and switching
+theme now: %s. Themes: %s.
+theme: %s. /reload to see it on every window.
+theme: %s. Windows already open take it after a reload (Settings > Reload now, or /reload).
+there is no Pathwise route for %s yet.
+this inn
+this list
+type two numbers from 0 to 100, like 45.2 and 61.8.
+until %d
+usage: /pw arrow scale <50-200>   (now %d%%)
+usage: /pw opacity <40-100>   (now 
+usage: /pw scale <50-150>   (now %d%%)
+usage: /pw style tracker | window | minimal   (now 
+usage: /pw way <x> <y> [title]   e.g. /pw way 45.2 61.8 Inn
+version and credits
+waypoint cleared.
+waypoint set: %s on %s.
+what the arrow sees (also in Settings > Waypoint & tools)
+window background opacity, 40-100
+window positions reset; /reload to apply.
+window size %d%%.
+yellow %d
+you  ·  
+you are at %.1f, %.1f on %s (map %d).
+you are going here
+you are here
+your coordinates off.
+your coordinates on this map
+your coordinates on.
+your professions: skill, best craft, materials
+your quests are on %s: following that route.

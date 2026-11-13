@@ -1,0 +1,618 @@
+1	(opcional)
+2	·  hecho
+3	·  entrada aún no comprobada en Forever
+4	·  no comprobado en Forever
+5	·  aún no comprobado en Forever
+6	·  tú
+7	(según sus misiones)
+8	PX/h
+9	junto a tu ruta.
+10	en
+11	rutas
+12	tu hogar
+13	%.1fk
+14	%d de tus bolsas
+15	%d aprendidas
+16	%d m
+17	%d materiales por conseguir
+18	%d misiones para ti
+19	faltan %d
+20	%d yd
+21	%d h %02d min
+22	%d min
+23	%d s
+24	%dx %s
+25	%s  ·  clic para cambiar
+26	%s  ·  nivel %d-%d
+27	%s  ·  habilidad %s  ·  nivel de objeto %d
+28	%s (hasta %d)
+29	%s añadida; después sigue la ruta.
+30	%s es una ciudad: las rutas paran allí de camino.
+31	%s no es para este personaje: se elige una que sí lo es.
+32	%s km
+33	%s hasta %d
+34	La ruta de %s es para personajes %s.
+35	%s, niveles %d-%d%s
+36	%s: %d-%d%s, así que %d%s.
+37	+%d más
+38	+%d más en el hub
+39	, la da
+40	, no probado allí desde %d
+41	, la vende
+42	. Recetas, colores y materiales: datos del propio cliente de Forever; el verde es una estimación.
+43	1 ruta
+44	: aceptar
+45	Una tarjeta compacta: el paso, sus objetivos como casillas, la tarea de profesión y tu nivel.
+46	Una ventana con pestañas: el paso, los pasos siguientes y lo que hay cerca en tu registro de misiones.
+47	Acerca de Pathwise
+48	Acento
+49	Aceptar:
+50	Aceptar: %s
+51	Aceptar y entregar misiones
+52	Arriba en la pantalla: hacia dónde miras, dónde está el paso y a qué distancia. Arrástrala para moverla.
+53	Alquimia
+54	Todas las mazmorras
+55	Todas las rutas
+56	Todas las rutas de este rango
+57	Alianza
+58	Siempre: primero las profesiones.
+59	Amatista
+60	Aplicar
+61	Aprendiz
+62	Has llegado
+63	Tamaño de la flecha
+64	Flecha: ninguna
+65	Artesano
+66	A este nivel
+67	Automatización
+68	Atrás
+69	Opacidad del fondo
+70	Equilibrado
+71	Junto a tu ruta
+72	Lo mejor ahora:
+73	Herrería
+74	Flor
+75	Recuperar
+76	Ver las guías de profesiones
+77	Llevar:
+78	Elige una ruta
+79	Ciudad: las rutas paran aquí para instructores y entregas
+80	Clase
+81	Misiones de clase
+82	Ruta de clase
+83	Borrar
+84	Haz clic en una profesión para su siguiente creación, materiales y guía.
+85	Haz clic en una ruta para ver sus pasos: síguela, empiézala desde cualquier paso o elige la ruta siguiente.
+86	Haz clic en una zona para la flecha. Cada nodo que aún te da habilidad está en tu mapa y minimapa con su color: naranja siempre, amarillo a menudo, verde rara vez (Opciones > Marcadores del mapa).
+87	Clic: abre el hub; clic derecho: opciones; arrastrar: moverlo.
+88	Haz clic para que no se pueda mover por accidente.
+89	Haz clic en el cuadro, pulsa Ctrl+C y pégalo en un informe de error con una línea sobre lo que falló. No se envía nada desde el juego.
+90	Clic para dejar de seguir
+91	Haz clic para soltarla y volver a moverla.
+92	Clic: abrir el hub
+93	Cerrar
+94	Contraer
+95	Coleccionables
+96	Modo compacto
+97	Brújula
+98	Brújula sí o no
+99	Tamaño de la brújula
+100	Completar: %s
+101	Cocina
+102	Coordenadas
+103	Copia el enlace y ábrelo en tu navegador. Inicia sesión con Discord y pega el informe en el formulario.
+104	Se cuenta mientras juegas con Pathwise; /played corrige el nivel actual.
+105	Cuenta como entregada: aparecen las misiones siguientes
+106	Crear:
+107	Crear: %d %s
+108	Crear %s hasta %d
+109	Fabricación
+110	Creado por leight_nn & florp
+111	Carmesí
+112	Personalizado
+113	Oscuro
+114	Datos: %s
+115	Discord
+116	Desencanta lo que creas para ganar puntos en vez de venderlo: %s.
+117	Desencantar
+118	Distancias
+119	Hecho
+120	Arrastra cualquier borde o esquina para cambiar el tamaño.
+121	Arrastra la flecha para moverla.
+122	Arrastra la esquina inferior derecha de la ventana de la guía para cambiar su ancho y alto; un paso más alto que la ventana se desplaza.
+123	Arrastra para cambiar el ancho y el alto.
+124	Arrastra para cambiar el ancho.
+125	Arrastra para moverla. Bloquéala en Opciones.
+126	Arrastra para moverla. Desactívala en Opciones o con /pw compass.
+127	Arrastrar: mover este botón
+128	Botín, reputación y recetas de vendedor que la guía indica para los rangos finales.
+129	Mazmorra
+130	Entradas de mazmorras
+131	Mazmorras
+132	Mazmorras para el nivel %d
+133	Mazmorras para tu nivel
+134	El tiempo de cada nivel aparece aquí cuando alcanzas el siguiente con Pathwise.
+135	Esmeralda
+136	Encantamiento
+137	Ingeniería
+138	Todas las mazmorras y bandas
+139	El plan de cada profesión por rango de habilidad, aprendida o no
+140	Cada misión. Cada creación. Cada nivel.
+141	Todos los pasos de la guía están hechos
+142	Todos los pasos de la guía están hechos.
+143	Todo lo que tiene, objetos y lugares incluidos: al siguiente
+144	Experto
+145	Exploración
+146	Misión extra
+147	Muy lejos
+148	Primeros auxilios
+149	Pesca
+150	Ajustar al paso
+151	Se ajusta a cada paso
+152	Volar adonde dice el paso
+153	Seguir junto a tu ruta
+154	Seguir esta ruta
+155	Siguiendo  ·  clic para dejar de seguir
+156	Siguiendo junto a tu ruta
+157	Siguiendo ahora
+158	Para Herboristería y Minería: los nodos que aún te dan habilidad, con su color.
+159	Para informes de errores
+160	Para tu nivel
+161	Las nuevas hierbas y menas de Forever (bauxita, pirita, salvia demoníaca...) aún no están en los datos.
+162	Software libre y de código abierto bajo la Licencia Pública General de GNU, versión 3.
+163	De
+164	Desde nivel
+165	Desde nivel %d
+166	Del libro
+167	De la misión
+168	De la guía de Forever de wow-professions.com, escrita en la beta
+169	De tu registro de misiones
+170	Guía completa
+171	Guía completa o compacta
+172	Conseguir:
+173	Conseguir: %d %s (%d)
+174	Ir
+175	Ir a
+176	Ir a la entrada
+177	Ir al lugar marcado
+178	Oro
+179	Grafito
+180	Guía
+181	Guía en pantalla
+182	Ventana de la guía
+183	Entregar:
+184	Herboristería
+185	Hierbas y menas en el mapa
+186	Hierbas y menas en el minimapa
+187	Oculto
+188	Ocultar
+189	Alto contraste
+190	Horda
+191	Ya lo he hecho
+192	En total
+193	En total:
+194	En metros y kilómetros.
+195	En yardas, como las cuenta el juego.
+196	En tu registro de misiones
+197	Tabernero,
+198	En su lugar, cerca
+199	Sus continuaciones siguen en la ruta
+200	Su siguiente paso aparece en la ventana de la guía
+201	Oficial
+202	Problemas conocidos, sugerencias e informes de errores. Copia el enlace y ábrelo en tu navegador.
+203	SUBIR DE NIVEL · PROFESIONES
+204	Lavanda
+205	Aprender:
+206	Peletería
+207	Omite las misiones verdes y grises que quedan atrás, y en una ruta que ya superaste, salvo que una misión posterior las necesite.
+208	Nivel %d
+209	Nivel %d
+210	Nivel %d  ·  %s%s
+211	Los rangos de nivel se estiman con las misiones de cada zona (datos de QuestieDB).
+212	Subir de nivel
+213	Ruta de nivel
+214	Seguimiento de nivel
+215	Niveles %d-%d
+216	Niveles %d-%d  ·  %d pasos  ·  %s
+217	Niveles %d-%d%s
+218	Los niveles son los de los monstruos de dentro, según los datos de QuestieDB: una estimación.
+219	Licencia
+220	Claro
+221	Los temas claros mantienen claras la brújula y la guía mínima, para que se lean sobre el juego.
+222	Bloquear
+223	Bloquear la flecha
+224	Bloqueada: se queda quieta y los clics pasan al mundo.
+225	Nv %d
+226	Principal
+227	Haz de
+228	Haz de %s tu hogar
+229	Mapa
+230	Marcadores del mapa
+231	Marcadas como hechas por ti
+232	Materiales para este rango
+233	Metros
+234	Medianoche
+235	Mínimo
+236	Botón del minimapa
+237	Minería
+238	Menta
+239	Varios
+240	Modo
+241	Más guías
+242	Monturas
+243	AHORA
+244	Antes necesita otra misión
+245	Siguiente
+246	Siguiente estilo de guía (Seguimiento, Ventana, Mínimo)
+247	Siguiente ruta
+248	No hay rutas de %s para este personaje.
+249	Aún no hay guía para esta profesión
+250	Aún no hay guía para esta profesión.
+251	Sin ruta de nivel
+252	Aún no hay ruta de nivel para este personaje.
+253	Aún no hay ruta de nivel para tu personaje en este rango.
+254	No hay ruta de nivel cerca de tu nivel.
+255	Aquí no hay posición en el mapa (¿dentro de una instancia?).
+256	Ahora mismo no hay otras misiones de tu nivel abiertas en este mapa.
+257	Aún no tienes profesiones. Aprende una con un instructor: Pathwise la sigue junto a tu ruta.
+258	Aún no tienes profesiones. Visita a un instructor de profesión para aprender una: Pathwise la sigue desde ahí.
+259	Aquí no hay misiones para tu personaje.
+260	Sin ruta
+261	Aún no hay ruta para este personaje.\n\nAbre «Zonas para tu nivel» (el botón del mapa de arriba) para elegir una.
+262	Aún no hay ruta para este personaje.\n\nElige una en Rutas a la izquierda o en el libro de rutas.
+263	Aún no hay ruta para este personaje. Abre el hub para elegir una.
+264	Aún no hay ruta cargada
+265	Aún no hay ruta
+266	Aún no hay ruta: abre el hub para elegir una.
+267	Ningún paso empieza en este rango.
+268	No hay punto de ruta.
+269	Sin ventana: el paso y sus objetivos como texto sobre el juego.
+270	No hay datos de zona para tu nivel y facción.
+271	Ninguno
+272	Ninguna para tu nivel aún: las primeras mazmorras empiezan hacia el nivel 13.
+273	No aprendida
+274	Nada de tu rango de Encantamiento los necesita ahora: compara el precio del vendedor con lo que valen.
+275	Ya nada te da habilidad: todos los nodos son grises para ti.
+276	Nada que saltar en este paso.
+277	Ahora:
+278	EN PANTALLA
+279	UNO DE
+280	O EN SU LUGAR
+281	OTRAS RECETAS
+282	Objetivos
+283	Océano
+284	No
+285	Sí
+286	En el minimapa
+287	En la web
+288	En el mapa del mundo
+289	De camino
+290	De camino · aprox. 1 min
+291	Sí: Pathwise Gear, Bags y los demás lo usan en lugar de sus propios colores.
+292	Solo para lo que pide la ruta. Mantén Mayús al hablar con alguien para hacerlo tú.
+293	Solo cuando un paso de profesión está justo en tu camino (unos 150 yd).
+294	Abre Rutas en Opciones, o Zonas para tu nivel.
+295	Abrir o cerrar el hub
+296	Abrir el hub
+297	Abrir el libro de recetas
+298	Abre una vez tu ventana de %s para que Pathwise pueda leer tus recetas.
+299	Opcional
+300	Opcional ·
+301	Opcional · Sastrería
+302	O en Discord
+303	PATHWISE
+304	Página %d / %d
+305	Pégalo en #report-a-bug. ¿Aún no estás en el servidor? Copia la invitación.
+306	Pathwise %s  ·  Cada misión. Cada creación. Cada nivel.  ·  creado por leight_nn & florp  _nn
+307	Azul Pathwise
+308	Flecha de Pathwise
+309	Brújula de Pathwise
+310	Suite de Pathwise
+311	Pathwise: el objeto del paso. Mayús+arrastrar para moverlo.
+312	Mascotas
+313	Elegir recompensas
+314	Elige tu siguiente ruta en Zonas para tu nivel, o Rutas en Opciones.
+315	Fijar
+316	Fijar en su sitio
+317	Fijar en su sitio (o soltar)
+318	Fijar la brújula
+319	Fijada en su sitio
+320	Fijada: se queda quieta y los clics pasan al mundo.
+321	Fijada: suéltala para cambiar su tamaño.
+322	Posición: ninguna
+323	Desvíos de profesión
+324	Guías de profesiones
+325	Ruta de profesión
+326	Profesiones
+327	Profesiones, junto a tu ruta
+328	Misión
+329	Datos de misiones de QuestieDB, del equipo de Questie y colaboradores.
+330	Botón de objeto de misión
+331	Marcadores de misión en el mapa
+332	Marcadores de misión en el minimapa
+333	Misiones (%d)
+334	Misiones para aceptar:
+335	LIBRO DE RUTAS
+336	Banda
+337	Alcanza %s %d
+338	Alcanza el nivel %d
+339	Lista para entregar
+340	Libro de recetas
+341	Libros de recetas
+342	Recargar ahora
+343	Informar de este paso
+344	Reputación
+345	Restablecer
+346	Cambiar tamaño
+347	PX de descanso
+348	Clic derecho: vuelve al tamaño con el que se abre.
+349	Clic derecho: vuelve al tamaño habitual.
+350	Clic derecho: ajusta la altura a cada paso.
+351	Clic derecho: opciones
+352	Rosa
+353	Ruta
+354	Ruta %d / %d
+355	Ruta próxima
+356	Ruta completada
+357	Ruta: ninguna
+358	Rutas
+359	Rutas adaptadas de Polestar (GPL-3.0); datos de misiones de QuestieDB.
+360	Rutas adaptadas de Polestar por los autores de Polestar (GPL-3.0).
+361	PASOS  ·  HAZ CLIC EN UNO PARA EMPEZAR AHÍ
+362	Ejemplo · Claros de Tirisfal
+363	Arena
+364	Fijar
+365	Fijar un punto de ruta por coordenadas; lo que ve la flecha
+366	Fijar un punto de ruta en este mapa
+367	Vincular tu piedra de hogar
+368	Opciones
+369	Mostrar
+370	Mostrar mazmorras de mi nivel
+371	Mostrar todas las mazmorras y bandas
+372	Mostrar todas las rutas de nivel
+373	Mostrar todas las profesiones
+374	Mostrarla
+375	Mostrar solo mis profesiones
+376	Mostrar u ocultar la guía
+377	Mostrar rutas cerca de mi nivel
+378	Mostrar la flecha
+379	Guía secundaria
+380	Habilidad
+381	La habilidad necesaria es la tabla de Classic, aún no comprobada en Forever: tu descripción emergente tiene la última palabra.
+382	Desuello
+383	Saltar
+384	Saltarla con sus continuaciones
+385	Saltar solo esta misión
+386	Saltar misión
+387	Saltar misiones que ya dejaste atrás
+388	Saltar este desvío
+389	Misiones saltadas
+390	Cielo
+391	Nieve
+392	Velocidad
+393	Empezar de nuevo
+394	Zona inicial: la ruta de %s
+395	Paso %d
+396	Paso %d / %d
+397	Paso %d de %d
+398	Paso %d · %s
+399	Números de paso en el mapa
+400	Pasos en la lista
+401	Pasos numerados por delante
+402	Detener
+403	Estilo
+404	Atardecer
+405	Sincronizar con tu registro de misiones
+406	DESPUÉS  ·  LA RUTA TRAS ESTA
+407	HERRAMIENTAS Y EXTRAS
+408	Sastrería
+409	Sastrería + Encantamiento
+410	Aceptarla ahora
+411	Habla con
+412	Gracias
+413	La flecha lleva aquí ahora
+414	La flecha lleva a %s.
+415	La flecha aparece mientras la brújula está desactivada.
+416	El hub, el seguimiento y la ventana de la guía también tienen un alfiler en su esquina.
+417	El objeto que el paso quiere que uses, junto a la guía. Mayús+arrastrar para moverlo; hay una tecla en Asignación de teclas > Pathwise.
+418	El libro de rutas: cada ruta por nivel
+419	Toda la cadena sale de la ruta
+420	Tema
+421	Después
+422	Luego, de vuelta a la ruta:
+423	Esta sesión
+424	Este paso está hecho
+425	Tiempo por nivel
+426	Tiempos
+427	A
+428	Hasta el siguiente nivel
+429	Seguimiento
+430	Aprender:
+431	Aprender %s %s
+432	Aprender Sastrería de aprendiz
+433	Aprender con instructores
+434	Entregar:
+435	Entregar: %s
+436	Desactivar
+437	Activar
+438	Tipografía: Inter de Rasmus Andersson (SIL Open Font License).
+439	Comando desconocido '%s'. Escribe /pw help.
+440	Desbloquear
+441	Soltar
+442	Usa
+443	Usa %s: acepta %s
+444	Usar el objeto de misión del paso
+445	Versión
+446	Versión %s
+447	Versión %s  ·  creado por leight_nn & florp   _nn
+448	Punto de ruta
+449	Punto de ruta
+450	Punto de ruta y herramientas
+451	Flecha del punto de ruta
+452	Sitio web
+453	Lo que ve la flecha. Clic, Ctrl+C y pégalo con un informe.
+454	Qué crear en cada rango de habilidad, dónde están las recetas y los instructores
+455	Cuando un paso de profesión está cerca (unas 600 yd).
+456	Cuando el paso es aprender: aprende todo lo que el instructor tiene y puedes pagar.
+457	Dónde recolectar ahora
+458	Dónde estás en el mapa, bajo la brújula y en la guía.
+459	Dónde:
+460	Estés donde estés
+461	Toda la suite en este color
+462	Ventana
+463	Alto de la ventana
+464	Posiciones de las ventanas
+465	Tamaño de la ventana
+466	Las ventanas ya abiertas toman el nuevo color tras recargar
+467	Con varias recompensas, elegir la que recomienda Pathwise Gear (requiere Gear). Una recompensa única siempre se toma.
+468	Sin él, abre Pathwise con una tecla: Menú del juego > Asignación de teclas > Pathwise.
+469	PX ganada
+470	PX por hora
+471	PX por hora tras un minuto
+472	Yardas
+473	Tú
+474	Estás en %.1f, %.1f  ·  %s
+475	Estás siguiendo esta ruta
+476	Estás aquí
+477	No tienes %s. Apréndela con un instructor.
+478	Aún no tienes profesiones.
+479	Tu rango de Encantamiento aún necesita %s: vale la pena desencantar estos.
+480	El color de tu clase, propio de cada personaje.
+481	Tu color: %s. Escribe otro como #RRGGBB y pulsa Aplicar.
+482	Tus coordenadas
+483	Tu ruta
+484	Tus rutas, profesiones y el paso entero, en una ventana
+485	ZONAS  ·  VE A UNA Y LA GUÍA TE LLEVA ALLÍ AHORA
+486	Zonas
+487	Zonas para el nivel %d
+488	un color son seis dígitos hexadecimales, como #66D7FF.
+489	un informe de este paso para pegar en Discord
+490	un punto de ruta
+491	un botín del mundo (casa de subastas)
+492	tras un minuto
+493	flecha desactivada.
+494	flecha activada (arrastra para moverla).
+495	tamaño de la flecha %d%%.
+496	flecha al más cercano
+497	por debajo de tu nivel
+498	poner la guía al día con tu registro de misiones (y la ruta correcta)
+499	aún no se puede aprender
+500	clic para la flecha
+501	comandos:
+502	brújula desactivada: en su lugar aparece la flecha.
+503	brújula activada (arrastra para moverla).
+504	brújula sí o no; /pw compass coords: tus coordenadas; /pw compass pin: fijarla
+505	brújula fijada.
+506	brújula suelta: arrástrala para moverla.
+507	hecho
+508	botín de
+509	mazmorras y bandas para tu nivel, sus misiones y entradas
+510	cada ruta para ti: nivel, misiones de clase, profesiones
+511	guías de exploración
+512	volando a %s. Mantén Mayús al hablar con el maestro de vuelo para elegir tú.
+513	siguiendo:
+514	para tu nivel
+515	desde nivel
+516	desde nivel %d
+517	desde el paso
+518	ve aquí después
+519	gris %d
+520	estilo de guía:
+521	tamaño de la ventana de la guía, 50-150 (también en Opciones)
+522	aprender %d
+523	apréndela primero
+524	nivel %d
+525	fabricado o encontrado
+526	mapa
+527	%s marcada como hecha.
+528	guías de monturas
+529	aquí no hay posición en el mapa (¿dentro de una instancia?).
+530	no hay posición para %s en los datos.
+531	no hay ninguna ruta llamada '
+532	no hay ningún tema llamado '
+533	no hay punto de ruta
+534	no está en el registro
+535	aquí ya no queda nada
+536	no queda nada que hacer en %s en %s.
+537	ahora
+538	ahora en
+539	en curso
+540	a la siguiente ruta: %s.
+541	abrir o cerrar el Signature Hub
+542	abrir el panel de opciones
+543	otras guías
+544	guías de mascotas
+545	ver la ventana de la guía con un paso de ejemplo
+546	misión
+547	guías de reputación
+548	restablecer las posiciones de las ventanas
+549	recompensa de
+550	ruta:
+551	ruta: %s, desde el paso %d. Opciones, Marcadas como hechas por ti, Recuperar deshace los pasos anteriores.
+552	ruta: %s, primero en %s.
+553	ruta: %s, en %s.
+554	ruta: %s.
+555	igual que /pw prof
+556	ejemplo borrado.
+557	fijar un punto de ruta en este mapa: /pw way <x> <y> [título]; /pw way clear
+558	mostrar o elegir la ruta: /pw route <id o título>
+559	mostrar u ocultar la flecha; /pw arrow scale <50-200> fija su tamaño
+560	mostrando un paso de ejemplo (/pw demo otra vez para borrarlo).
+561	habilidad %d
+562	saltar la misión actual, o elegir una cercana en su lugar
+563	%s saltada con %d continuaciones.
+564	%s saltada.
+565	la vende
+566	solo se vende a la otra facción (casa de subastas)
+567	fuente no está en los datos
+568	empezar aquí
+569	paso
+570	paso %d / %d
+571	paso marcado como hecho.
+572	dejaste de seguir:
+573	cambiar la guía entre completa y compacta
+574	cambiar a esta
+575	sincronizado con tu registro de misiones: %s está hecha.
+576	sincronizado con tu registro de misiones: %s%s, paso %d de %d.
+577	sincronizado: no hay ruta de nivel para este personaje.
+578	la flecha lleva a %s para %s.
+579	la flecha lleva a %s en %s.
+580	la flecha lleva a %s%s.
+581	la flecha lleva a %s.
+582	el tema de color: /pw theme <nombre> (sin nombre: la lista)
+583	la guía está oculta: tráela de vuelta con tu tecla (Asignación de teclas > Pathwise) o muestra el botón del minimapa en Opciones.
+584	la guía está oculta: haz clic en el botón del minimapa de Pathwise para el hub y elige un estilo en En pantalla.
+585	la guía en pantalla: /pw style tracker | window | minimal (sin nada: la siguiente)
+586	el siguiente paso
+587	la receta
+588	el libro de rutas: cada ruta de nivel por nivel, sus pasos y cambiar
+589	tema actual: %s. Temas: %s.
+590	tema: %s. /reload para verlo en cada ventana.
+591	tema: %s. Las ventanas ya abiertas lo toman tras recargar (Opciones > Recargar ahora, o /reload).
+592	aún no hay ruta de Pathwise para %s.
+593	esta posada
+594	esta lista
+595	escribe dos números de 0 a 100, como 45.2 y 61.8.
+596	hasta %d
+597	uso: /pw arrow scale <50-200>   (ahora %d%%)
+598	uso: /pw opacity <40-100>   (ahora
+599	uso: /pw scale <50-150>   (ahora %d%%)
+600	uso: /pw style tracker | window | minimal   (ahora
+601	uso: /pw way <x> <y> [título]   p. ej. /pw way 45.2 61.8 Posada
+602	versión y créditos
+603	punto de ruta borrado.
+604	punto de ruta fijado: %s en %s.
+605	lo que ve la flecha (también en Opciones > Punto de ruta y herramientas)
+606	opacidad del fondo de las ventanas, 40-100
+607	posiciones de las ventanas restablecidas; /reload para aplicar.
+608	tamaño de la ventana %d%%.
+609	amarillo %d
+610	tú  ·
+611	estás en %.1f, %.1f en %s (mapa %d).
+612	vas aquí
+613	estás aquí
+614	tus coordenadas desactivadas.
+615	tus coordenadas en este mapa
+616	tus coordenadas activadas.
+617	tus profesiones: habilidad, mejor creación, materiales
+618	tus misiones están en %s: se sigue esa ruta.
