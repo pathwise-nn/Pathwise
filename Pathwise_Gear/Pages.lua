@@ -78,10 +78,8 @@ end
 local function bestRows()
 	local Best = ns.Best
 	local rows = { { "heading", "Best in Slot (Level)" } }
-	if not Best.Available() then
-		rows[#rows + 1] = { "text", "Needs Pathwise: Leveling & Professions: the list is worked out from its quest, monster and dungeon data, and its arrow leads you there. Everything else in Pathwise Gear works without it.", "muted" }
-		return rows
-	end
+	-- With Pathwise, its arrow; without it, the game's own map pin.
+	local arrow = ns.Pathwise() ~= nil
 	local list, pending = Best.List()
 	local _, name = Gear.Weights()
 	local level = Gear.Client.Level()
@@ -90,7 +88,7 @@ local function bestRows()
 	local missing = 0
 	for _, e in ipairs(list) do if not e.have then missing = missing + 1 end end
 	rows[#rows + 1] = { "text", missing == 0 and #list > 0 and "You have the best of everything Pathwise knows for your level."
-		or ("%d of %d slots to chase. Click one: the arrow leads to it."):format(missing, #list) }
+		or ("%d of %d slots to chase. Click one: %s."):format(missing, #list, arrow and "the arrow leads to it" or "a pin on your map shows where") }
 	if pending > 0 then rows[#rows + 1] = { "text", ("Loading %d items from the game..."):format(pending), "muted" } end
 	for _, e in ipairs(list) do
 		local status
@@ -102,9 +100,9 @@ local function bestRows()
 		if e.minLevel and e.minLevel > level then sub = sub .. ("  ·  from level %d"):format(e.minLevel) end
 		rows[#rows + 1] = { "button", ("%s:  %s%s"):format(e.slotName, tostring(e.name), e.have and "  (have)" or ""), function()
 			if Best.Chase(e) then
-				ns.Print(("the arrow leads to %s for %s."):format(Best.SourceText(e.source), tostring(e.name)))
+				ns.Print(("%s %s for %s."):format(arrow and "the arrow leads to" or "a pin on your map shows", Best.SourceText(e.source), tostring(e.name)))
 			else
-				ns.Print(("%s comes from %s; Pathwise has no place to point at."):format(tostring(e.name), Best.SourceText(e.source)))
+				ns.Print(("%s comes from %s; there is no place to point at."):format(tostring(e.name), Best.SourceText(e.source)))
 			end
 		end }
 		rows[#rows + 1] = { "text", sub, "muted" }
@@ -119,6 +117,7 @@ local function bestRows()
 	rows[#rows + 1] = { "toggle", "Season of Discovery recipes", "gear.bisSod", "They are in Forever's game files and some were found in Forever; not all are confirmed." }
 	rows[#rows + 1] = { "toggle", "Raid gear", "gear.bisRaids" }
 	rows[#rows + 1] = { "text", "Worked out in game from Pathwise's weights and the item's stats as the game gives them. Where items come from: QuestieDB's Forever data; recipes: Forever's game files.", "muted" }
+	if not arrow then rows[#rows + 1] = { "text", "With Pathwise: Leveling & Professions installed too, its arrow leads you there instead of a map pin, and recipes you know are marked.", "muted" } end
 	return rows
 end
 

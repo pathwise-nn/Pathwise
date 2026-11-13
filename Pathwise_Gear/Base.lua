@@ -2,14 +2,16 @@
 -- from Pathwise: Leveling & Professions when that is installed too:
 --
 --   ns.S      settings, messages and events (the kit, Kit/Core.lua), plus:
---     S.Compat      Readable, SpellKnown, PlayerMapPosition (Pathwise only)
+--     S.Compat      Readable, SpellKnown, PlayerMapPosition
 --     S.Theme       Color(name): the kit's colours, and "gear" (gold)
 --     S.Open/Refresh/IsOpen   Gear's pages in its own options window
---     S.Data, S.Quests, S.Dungeons, S.Professions, S.SetWaypoint,
---     S.SetRewardChooser      Pathwise's, or nil without it
+--     S.Data, S.Quests, S.Dungeons, S.Professions, S.SetWaypoint
+--                   Pathwise's (its data, its arrow), else Gear's own
+--                   (Facts.lua: Data/Gear.lua and the game's map pin)
+--     S.SetRewardChooser      Pathwise's quest automation, or nil
 --
--- Without Pathwise, everything works but Best in Slot (Level), which needs
--- Pathwise's quest, monster and dungeon data, and the arrow.
+-- Everything works without Pathwise; with it, Best in Slot uses Pathwise's
+-- data and arrow.
 
 local ADDON, ns = ...
 local T = ns.Theme
@@ -17,7 +19,8 @@ local T = ns.Theme
 local function pathwise() return _G.Pathwise and _G.Pathwise.Suite or nil end
 ns.Pathwise = pathwise
 
--- Pathwise's facts and its arrow, read when asked (nil without Pathwise).
+-- Pathwise's facts and its arrow, read when asked; without Pathwise, Gear's
+-- own (Facts.lua), but no quest automation to hand the reward pick to.
 local FROM_PATHWISE = { Data = true, Quests = true, Dungeons = true, Professions = true, SetWaypoint = true, SetRewardChooser = true }
 local S = setmetatable({
 	Get = ns.Get, Set = ns.Set, Defaults = ns.Defaults,
@@ -25,7 +28,8 @@ local S = setmetatable({
 }, { __index = function(_, k)
 	if FROM_PATHWISE[k] then
 		local P = pathwise()
-		return P and P[k] or nil
+		if P and P[k] then return P[k] end
+		return ns.Facts and ns.Facts[k] or nil
 	end
 end })
 ns.S = S
@@ -43,11 +47,20 @@ function S.Compat.SpellKnown(spell)
 	return false
 end
 
--- Where you stand, for the arrow: Pathwise's (the arrow is Pathwise's too).
+-- Where you stand: map, x, y (0-100). Pathwise's, else the game's.
 function S.Compat.PlayerMapPosition()
 	local P = pathwise()
 	if P and P.Compat and P.Compat.PlayerMapPosition then return P.Compat.PlayerMapPosition() end
-	return nil
+	local M = C_Map
+	if not (M and M.GetBestMapForUnit and M.GetPlayerMapPosition) then return nil end
+	local map = readable(M.GetBestMapForUnit("player"))
+	local pos = map and M.GetPlayerMapPosition(map, "player")
+	if not pos then return nil end
+	local x, y
+	if pos.GetXY then x, y = pos:GetXY() else x, y = pos.x, pos.y end
+	x, y = readable(x), readable(y)
+	if not (x and y) then return nil end
+	return map, x * 100, y * 100
 end
 
 ---------------------------------------------------------------------------

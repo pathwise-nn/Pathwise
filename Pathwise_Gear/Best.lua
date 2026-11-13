@@ -39,8 +39,7 @@ Best.ORDER = ORDER
 
 local function data() return (S.Data and S.Data.gear) or {} end
 
--- The list needs Pathwise: Leveling & Professions (its quest, monster and
--- dungeon data, and its arrow). Without it, Best in Slot is empty.
+-- The data: Pathwise's, or Gear's own copy (Data/Gear.lua) without it.
 function Best.Available()
 	return S.Data ~= nil and S.Data.gear ~= nil and S.Quests ~= nil and S.Quests.Player ~= nil
 end

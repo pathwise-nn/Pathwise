@@ -24,6 +24,7 @@
     "test:encounters": "lua5.1 tests/encounters/run.lua",
     "test:loot": "lua5.1 tests/loot/run.lua",
     "test:gear": "lua5.1 tests/gear/run.lua",
+    "gear:data": "lua5.1 tools/gear/data.lua",
     "loot": "node tools/data/loot.js",
     "recipebook": "node tools/data/recipebook.js",
     "efficiency": "lua5.1 tools/routes/efficiency.lua",

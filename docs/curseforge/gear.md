@@ -3,8 +3,9 @@
 **Is this an upgrade for me?**
 
 Upgrade advice for World of Warcraft: Forever, in gold. Works on its own;
-with [Pathwise](https://github.com/pathwise-nn/pathwise) installed too, you
-also get Best in Slot (Level) and Pathwise's arrow.
+with [Pathwise](https://github.com/pathwise-nn/pathwise) installed too,
+Pathwise's arrow leads you to Best in Slot items instead of the game's map
+pin.
 
 **Beta.** First release on its own page. Stat names for Haste and Expertise
 on Forever items are not yet checked in game.
@@ -16,10 +17,10 @@ on Forever items are not yet checked in game.
 - **A gold arrow** on bag items that are upgrades.
 - **The best quest reward**: when a quest offers a choice, Pathwise Gear
   says which to take, in chat and on its tooltip.
-- **Best in Slot (Level)** (needs Pathwise): slot by slot, the best item you can get by now
+- **Best in Slot (Level)**: slot by slot, the best item you can get by now
   (or a few levels ahead), where it comes from (quest, dungeon and boss,
-  monster, vendor, world drop) and whether you have it. Click a slot and the
-  Pathwise arrow leads there. Crafted gear is included: what you can craft,
+  monster, vendor, world drop) and whether you have it. Click a slot and a
+  pin on your map (or Pathwise's arrow) shows where. Crafted gear is included: what you can craft,
   or what to buy from a crafter.
 - A best-in-slot item you pick up is announced on screen, and gets a gold
   star in your bags.

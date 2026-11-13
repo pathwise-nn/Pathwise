@@ -15,9 +15,12 @@ that version's section.
   opens it (`/pwgear best` opens Best in Slot), as do its minimap button and
   Pathwise's suite list. It keeps one theme and accent with the other
   Pathwise addons.
-- Best in Slot (Level) still needs Pathwise: it is worked out from
-  Pathwise's quest, monster and dungeon data, and Pathwise's arrow leads
-  you there. Without Pathwise the page says so.
+- Best in Slot (Level) works without Pathwise too: Pathwise Gear carries its
+  own copy of the quest, monster, vendor, recipe and dungeon facts it needs
+  (from the same QuestieDB Forever data). Click a slot and the game's own
+  map pin marks the quest giver, monster, vendor or dungeon entrance. With
+  Pathwise installed, its data and arrow are used, and recipes you know are
+  marked as before.
 - Your Gear settings (spec, custom weights, options, the minimap button) are
   copied over from Pathwise's settings the first time.
 - Pathwise Loot's upgrade marks work with Pathwise Gear alone.

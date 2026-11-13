@@ -64,19 +64,86 @@ test("split: on its own: upgrades, the tooltip line, bag arrows and the quest re
 	eq(#stub.showTooltip("item:102"), 0, "its own setting")
 end)
 
-test("split: on its own: Best in Slot says it needs Pathwise, and is empty", function()
-	local stub, ns = fresh(items)
-	ok(not ns.Best.Available(), "no Pathwise data")
-	local list, pending = ns.Best.List()
-	eq(#list, 0)
-	eq(pending, 0)
-	eq(ns.Best.IsBest(102), nil)
-	eq(ns.Best.Chase({ source = { kind = "drop", id = 1 } }), false)
+-- Best in Slot on its own: test entries in Gear's own data, as
+-- tools/gear/data.lua writes them (Pathwise's layouts).
+local function bisData(ns)
+	local G = ns.GearData
+	G.npcs[990200] = { "Deathguard Test", nil, nil, "H", { [1420] = { 40, 50 } } }
+	G.npcs[990201] = { "Alliance Giver", nil, nil, "A", { [1420] = { 60, 60 } } }
+	G.npcs[990202] = { "Test Boss", nil, nil, nil, { [1420] = { 10, 10 } } }
+	G.quests[990100] = { "A Hood for You", nil, nil, 0, 0, 1420, { 990200 } }
+	G.quests[990101] = { "Alliance Only", nil, nil, 0, 0, 1420, { 990201 } }
+	G.quests[990102] = { "Done Already", nil, nil, 0, 0, 1420, { 990200 } }
+	G.dungeons[990300] = { name = "Test Keep", levels = { 18, 22 }, entrances = { { 1420, 70.5, 20.25 } } }
+	G.gear[102] = { 13, 18, 4, 1, { 990100 } }
+	G.gear[109] = { 13, 18, 4, 1, { 990101 } }
+	G.gear[110] = { 13, 18, 4, 1, { 990102 } }
+	G.gear[104] = { 14, 20, 2, 15, nil, { 990202 }, nil, nil, 990300 }
+end
+
+test("split: on its own: Best in Slot from Gear's own data, and the game's map pin", function()
+	local pins = {}
+	local stub, ns = fresh(function(s)
+		items(s)
+		s.player.level = 20
+		s.itemInfo[109] = { "Scholar's Cowl", 2, 18, 40, 4, 1, "INVTYPE_HEAD", 13 }
+		s.itemInfo[110] = { "Ironclad Hood", 2, 18, 40, 4, 1, "INVTYPE_HEAD", 13 }
+		s.itemInfo[104] = { "Frost Dagger", 2, 20, 60, 2, 15, "INVTYPE_WEAPON", 14 }
+		s.itemStats[109] = { [INT] = 10 }
+		s.itemStats[110] = { [INT] = 12 }
+		s.itemStats[104] = { [INT] = 3 }
+		s.done[990102] = true
+		UiMapPoint = { CreateFromCoordinates = function(map, x, y) return { uiMapID = map, x = x, y = y } end }
+		C_Map.CanSetUserWaypointOnMap = function(map) return map == 1420 end
+		C_Map.SetUserWaypoint = function(p) pins[#pins + 1] = p return true end
+		C_SuperTrack = { SetSuperTrackedUserWaypoint = function(on) pins.tracked = on end }
+	end)
+	ok(_G.Pathwise == nil, "no Pathwise")
+	ok(ns.Best.Available(), "its own data")
+	ok(next(ns.GearData.gear) and next(ns.GearData.npcs), "shipped with the addon")
+	bisData(ns)
+	ns.Best.Clear()
+	local list = ns.Best.List()
+	local head, hand
+	for _, e in ipairs(list) do
+		if e.slot == 1 then head = e elseif e.slot == 16 then hand = e end
+	end
+	ok(head, "a head piece")
+	eq(head.id, 102, "the other side's quest and a quest done already are left out")
+	eq(ns.Best.SourceText(head.source), "Quest: A Hood for You")
+	eq(ns.Best.SourceText(hand.source), "Dungeon: Test Keep (Test Boss)")
+	eq(ns.Best.IsBest(102), ns.Gear.Client.Level(), "best for your level")
+	-- Chase: the game's own map pin at the giver, then at the dungeon's entrance.
+	ok(ns.Best.Chase(head), "a pin at the quest giver")
+	eq(pins[1].uiMapID, 1420)
+	ok(math.abs(pins[1].x - 0.40) < 1e-9 and math.abs(pins[1].y - 0.50) < 1e-9, "in 0-1 coordinates")
+	eq(pins.tracked, true, "and tracked")
+	ok(ns.Best.Chase(hand), "a pin at the entrance")
+	ok(math.abs(pins[2].x - 0.705) < 1e-9 and math.abs(pins[2].y - 0.2025) < 1e-9)
+	-- The page: the list, and how it points.
 	local rows
 	for _, c in ipairs(ns.Config.CATEGORIES) do if c.key == "best" then rows = c.rows() end end
-	ok(rows[2][2]:find("Needs Pathwise: Leveling & Professions"), rows[2][2])
+	local texts = {}
+	for _, r in ipairs(rows) do texts[#texts + 1] = tostring(r[2]) end
+	local all = table.concat(texts, " | ")
+	ok(all:find("Head:  Glyphed Hood", 1, true), all)
+	ok(all:find("a pin on your map shows where", 1, true), all)
 	ns.Config.Show("best")
-	ns.Config.Show("gear")
+	-- A map the game won't pin: no pin, said so.
+	C_Map.CanSetUserWaypointOnMap = function() return false end
+	eq(ns.Best.Chase(head), false)
+	UiMapPoint, C_SuperTrack, C_Map.SetUserWaypoint, C_Map.CanSetUserWaypointOnMap = nil, nil, nil, nil
+end)
+
+test("split: Gear's own data is Pathwise's, as tools/gear/data.lua writes it (npm run gear:data)", function()
+	local p = io.popen("lua5.1 tools/gear/data.lua --check 2>&1")
+	local out = p:read("*a")
+	local okExit = p:close()
+	ok(out:find("up to date", 1, true), out)
+	local f = assert(io.open("Pathwise_Gear/Data/Gear.lua", "rb"))
+	local size = f:seek("end")
+	f:close()
+	ok(size < 1500000, "small enough to load quickly: " .. size .. " bytes")
 end)
 
 test("split: Pathwise Gear's shared files are Pathwise UI's, copied unchanged (npm run kit)", function()
