@@ -630,9 +630,12 @@ local T = {
 	["Large"] = "Grande",
 	["Largest"] = "Grandissima",
 	["How large Settings and the other panels draw. Scroll past a slider to scroll the list; hold Shift to move it with the wheel."] = "Quanto sono grandi le Impostazioni e gli altri pannelli. Scorrere sopra un cursore scorre l’elenco; tieni premuto Maiusc per spostarlo con la rotella.",
+	["Language"] = "Lingua",
+	["Game language"] = "Lingua del gioco",
+	["after a reload"] = "dopo una ricarica",
+	["The language Pathwise speaks. Quest, NPC, item and zone names come from the game, in its own language."] = "La lingua di Pathwise. I nomi di missioni, PNG, oggetti e zone vengono dal gioco, nella sua lingua.",
+	["Reload to switch: Pathwise picks its language as the game starts."] = "Ricarica per cambiare: Pathwise sceglie la lingua all’avvio del gioco.",
+	["Korean and Chinese are offered on a Korean or Chinese client only: other clients have no fonts for their letters."] = "Coreano e cinese sono disponibili solo su un client coreano o cinese: gli altri client non hanno caratteri per quelle lingue.",
 }
 
-if ns.AddLocale({ "itIT" }, T) then
-	ns.DEFAULT_UNITS = "metres"
-	ns.DECIMAL_COMMA = true
-end
+ns.AddLocale({ "itIT" }, T, nil, { units = "metres", comma = true })

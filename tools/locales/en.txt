@@ -621,3 +621,9 @@ Normal
 Large
 Largest
 How large Settings and the other panels draw. Scroll past a slider to scroll the list; hold Shift to move it with the wheel.
+Language
+Game language
+after a reload
+The language Pathwise speaks. Quest, NPC, item and zone names come from the game, in its own language.
+Reload to switch: Pathwise picks its language as the game starts.
+Korean and Chinese are offered on a Korean or Chinese client only: other clients have no fonts for their letters.

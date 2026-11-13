@@ -621,3 +621,9 @@
 621	Grande
 622	Grandissima
 623	Quanto sono grandi le Impostazioni e gli altri pannelli. Scorrere sopra un cursore scorre l’elenco; tieni premuto Maiusc per spostarlo con la rotella.
+624	Lingua
+625	Lingua del gioco
+626	dopo una ricarica
+627	La lingua di Pathwise. I nomi di missioni, PNG, oggetti e zone vengono dal gioco, nella sua lingua.
+628	Ricarica per cambiare: Pathwise sceglie la lingua all’avvio del gioco.
+629	Coreano e cinese sono disponibili solo su un client coreano o cinese: gli altri client non hanno caratteri per quelle lingue.

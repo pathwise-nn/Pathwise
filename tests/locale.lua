@@ -147,3 +147,46 @@ test("locale: the language files are up to date with their lists", function()
 	p:close()
 	ok(out:find("every language is up to date"), out)
 end)
+
+-- A client in `code` whose saved settings pick `language` (as after a reload).
+local function picked(code, language)
+	local stub = dofile("./tests/stub.lua")
+	PathwiseCharSettings, Pathwise, SLASH_PATHWISE1 = nil, nil, nil
+	PathwiseSettings = { schema = 1, ui = { language = language } }
+	GetLocale = function() return code end
+	local ns = stub.load(".")
+	stub.login()
+	return stub, ns
+end
+
+test("language setting: the game's language unless the player picks another, after a reload", function()
+	local _, de = picked("deDE", "enUS")
+	ok(not de.Translated(), "a German client set to English: English")
+	eq(de.L("Settings"), "Settings")
+	eq(de.Nav.FormatYards(1240), "1,240 yd", "and yards")
+	local _, en = picked("enUS", "deDE")
+	eq(en.L("Settings"), "Einstellungen", "an English client set to German")
+	eq(en.Nav.FormatYards(2000), "1,8 km", "German's metres")
+	local _, ko = picked("enUS", "koKR")
+	ok(not ko.Translated(), "Korean needs a Korean client: English stays")
+	local _, ru = picked("enUS", "ruRU")
+	eq(ru.TRANSLATOR, "Designer", "Russian, with its translator")
+	ok(not ru.UseLocale("frFR"), "the other languages are let go once one is chosen")
+	GetLocale = nil
+end)
+
+test("language setting: Settings > Language lists the languages; a pick asks for a reload", function()
+	local stub, ns = picked("enUS", "auto")
+	ns.Fire("SHOW_SETTINGS")
+	ok(stub.clickLabelText("Language"), "the Language row")
+	ok(ns.Panels.IsOpen("language"), "the language list")
+	local texts = stub.texts()
+	ok(contains(texts, "Game language (English)"), "the game's language first")
+	ok(contains(texts, "Deutsch") and contains(texts, "Русский") and contains(texts, "Português (Brasil)"), "each in its own language")
+	ok(not contains(texts, "한국어"), "Korean only on a Korean client")
+	ok(stub.clickLabelText("Français"), "pick French")
+	eq(ns.Get("ui.language"), "frFR")
+	ok(contains(stub.texts(), "Reload to switch"), "it says to reload")
+	ok(not ns.Translated(), "still English until the reload")
+	GetLocale = nil
+end)

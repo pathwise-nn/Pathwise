@@ -346,7 +346,7 @@ local function drawChapters()
 end
 
 local STANDING = {
-	now = { "for your level", "accent" }, later = { ns.L("from level %d"), "muted" },
+	now = { "for your level", "accent" }, later = { "from level %d", "muted" }, -- translated where used
 	passed = { "below your level", "text2" }, done = { "done", "success" },
 }
 
@@ -379,7 +379,7 @@ local function card(x, y, w, r)
 	b:SetSize(w, CARD_H)
 	b.name:SetWidth(w - 54 - (mine and 80 or 0))
 	b.name:SetText(r.title)
-	local bits = { ("%d-%d"):format(r.levels[1], r.levels[2]), st[1]:format(r.levels[1]) }
+	local bits = { ("%d-%d"):format(r.levels[1], r.levels[2]), ns.L(st[1]):format(r.levels[1]) }
 	if p.done > 0 and p.at then bits[#bits + 1] = (ns.L("step %d / %d")):format(p.at, p.count) end
 	b.sub:SetText(table.concat(bits, "  ·  "))
 	textColor(b.sub, st[2])

@@ -6,6 +6,15 @@ that version's section.
 
 ## Unreleased
 
+### Settings > Language
+- Pathwise speaks the game's language by default; Settings > Language now
+  lets you pick another: English, Deutsch, Français, Español, Português
+  (Brasil), Italiano or Русский on any client, and 한국어, 简体中文 or 繁體中文
+  on a client in that language (other clients have no fonts for them). It
+  takes effect after a reload. Quest, NPC, item and zone names still come
+  from the game in its own language.
+- Not yet checked in game.
+
 ### Settings easier to read and scroll
 - Settings > Text size: Normal, Large or Largest, for Settings and the
   other panels (on top of the window size). Large is the new usual: the

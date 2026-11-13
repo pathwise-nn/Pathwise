@@ -832,14 +832,16 @@ local function startItemOf(goal)
 end
 Engine.StartItem = startItemOf
 
-local RANKS = { [75] = ns.L("Apprentice"), [150] = ns.L("Journeyman"), [225] = ns.L("Expert"), [300] = ns.L("Artisan") }
-local VERB_TEXT = { accept = ns.L("Accept %s"), turnin = ns.L("Turn in %s"), complete = ns.L("Complete %s") }
+-- English here, translated where used (the language is chosen once the
+-- settings have loaded, after these files ran).
+local RANKS = { [75] = "Apprentice", [150] = "Journeyman", [225] = "Expert", [300] = "Artisan" }
+local VERB_TEXT = { accept = "Accept %s", turnin = "Turn in %s", complete = "Complete %s" }
 
 local function goalText(goal)
 	local verb = goal[1]
 	local item = startItemOf(goal)
 	if item then return (ns.L("Use %s: accept %s")):format(item.name, qname(goal)) end
-	if VERB_TEXT[verb] then return VERB_TEXT[verb]:format(qname(goal)) end
+	if VERB_TEXT[verb] then return ns.L(VERB_TEXT[verb]):format(qname(goal)) end
 	if verb == "goto" then return goal[5] or "Go to the marked spot" end
 	if verb == "level" then return (ns.L("Reach level %d")):format(goal[2]) end
 	if verb == "have" then
@@ -849,7 +851,7 @@ local function goalText(goal)
 	end
 	if verb == "bind" then return (ns.L("Make %s your home")):format(goal[2] or ns.L("this inn")) end
 	if verb == "skill" then return (ns.L("Reach %s %d")):format(ns.L(goal.name or "skill"), goal[3]) end
-	if verb == "train" then return ns.F("Train %s %s", RANKS[goal[3]] or "", ns.L(goal.name or "")) end
+	if verb == "train" then return ns.F("Train %s %s", ns.L(RANKS[goal[3]] or ""), ns.L(goal.name or "")) end
 	if verb == "learn" then return ns.L("Learn ") .. (goal.name or "the recipe") end
 	if verb == "craft" then
 		if goal.untilSkill then return (ns.L("Craft %s until %d")):format(goal.name or "it", goal.untilSkill) end
@@ -938,7 +940,7 @@ end
 -- under it while open), "goto", "have", "bind", "note"... lead and tail are
 -- plain, name is the part to pick out (a person, quest or item).
 local LINE = {
-	accept = ns.L("Accept "), turnin = ns.L("Turn in "), complete = "", have = ns.L("Get "), learn = ns.L("Learn "),
+	accept = "Accept ", turnin = "Turn in ", complete = "", have = "Get ", learn = "Learn ", -- translated where used
 }
 local function goalLine(route, s, g, goal, st, withObjectives, out)
 	local verb = goal[1]
@@ -947,7 +949,7 @@ local function goalLine(route, s, g, goal, st, withObjectives, out)
 	if item then
 		line.lead, line.name, line.tail = ns.L("Use "), item.name, ns.L(": accept ") .. qname(goal)
 	elseif QUEST_VERBS[verb] then
-		line.lead, line.name = LINE[verb], qname(goal)
+		line.lead, line.name = ns.L(LINE[verb]), qname(goal)
 	elseif verb == "have" then
 		local name = goal.name or (Q.Data.items[goal[2]] and Q.Data.items[goal[2]][1]) or ("item " .. goal[2])
 		line.lead, line.name = LINE.have, name
@@ -1118,7 +1120,7 @@ local function computeNearby()
 				local verb = ready and "turnin" or "complete"
 				out[#out + 1] = {
 					quest = q, verb = verb, place = p, yards = yards,
-					text = VERB_TEXT[verb]:format(Q.Name(q)),
+					text = ns.L(VERB_TEXT[verb]):format(Q.Name(q)),
 					sub = (p.name and (p.name .. "  ·  ") or "") .. ns.Nav.FormatYards(yards),
 				}
 			end
