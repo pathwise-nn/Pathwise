@@ -31,7 +31,7 @@ do
 	S.VERSION = P and P.VERSION or nil
 end
 
-local function readable(v) return ns.Readable and ns.Readable(v) or v end
+local function readable(v) if ns.Readable then return ns.Readable(v) end return v end
 
 ---------------------------------------------------------------------------
 -- The guide (Pathwise only)
@@ -124,18 +124,25 @@ end
 ---------------------------------------------------------------------------
 
 S.Compat = {}
-function S.Compat.PlayerWorldPosition()
+-- Nil when the game keeps any part of it secret (a boss fight).
+local function worldPosition()
 	if not (C_Map and C_Map.GetBestMapForUnit and C_Map.GetPlayerMapPosition and C_Map.GetWorldPosFromMapPos) then return nil end
 	local map = readable(C_Map.GetBestMapForUnit("player"))
 	if not map then return nil end
-	local pos = C_Map.GetPlayerMapPosition(map, "player")
+	local pos = readable(C_Map.GetPlayerMapPosition(map, "player"))
 	if not pos then return nil end
-	local ok, inst, world = pcall(C_Map.GetWorldPosFromMapPos, map, pos)
-	if not (ok and world) then return nil end
+	local inst, world = C_Map.GetWorldPosFromMapPos(map, pos)
+	inst, world = readable(inst), readable(world)
+	if not world then return nil end
 	local north, west
 	if world.GetXY then north, west = world:GetXY() else north, west = world.x, world.y end
-	inst, north, west = readable(inst), readable(north), readable(west)
-	if not (inst and north and west) then return nil end
+	north, west = readable(north), readable(west)
+	if not (inst and type(north) == "number" and type(west) == "number") then return nil end
+	return inst, north, west
+end
+function S.Compat.PlayerWorldPosition()
+	local ok, inst, north, west = pcall(worldPosition)
+	if not ok then return nil end
 	return inst, north, west
 end
 

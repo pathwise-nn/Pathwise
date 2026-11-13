@@ -26,6 +26,7 @@ end
 local readable = C.Readable
 
 local function xy(v)
+	v = readable(v) -- the position itself may be the secret (a boss fight)
 	if not v then return nil end
 	if v.GetXY then return readable((v:GetXY())), readable((select(2, v:GetXY()))) end
 	return readable(v.x), readable(v.y)

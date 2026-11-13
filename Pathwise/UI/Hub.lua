@@ -852,7 +852,7 @@ local function drawMain(v)
 	local stats = lvl ~= nil
 	for _, w in ipairs({ W.statsLine, W.level, W.levelBar, W.rate }) do w:SetShown(stats) end
 	if stats then
-		W.level:SetText((ns.L("Level %d  ") .. T.Esc("text2") .. "·  %d%%|r"):format(UnitLevel and UnitLevel("player") or 1, floor((frac or 0) * 100)))
+		W.level:SetText((ns.L("Level %d  ") .. T.Esc("text2") .. "·  %d%%|r"):format(ns.Tracker and ns.Tracker.Level() or 1, floor((frac or 0) * 100)))
 		W.rate:SetText(rate ~= "" and rate or "XP per hour after a minute")
 		local bw = max(60, width - (W.rate:GetStringWidth() or 0) - 24)
 		W.levelBar:SetWidth(bw)
