@@ -25,6 +25,11 @@ Blizzard's Forever UI source and the tests' client stub only.
 - **All instances** (top right): a card per dungeon (by level) or raid, with
   its levels and bosses; "you" marks the ones at your level and YOU ARE HERE
   the one you are in. Dungeons, Raids and Your wishlist are its buttons.
+- **Wings**: an instance entered in parts (Scarlet Monastery) has a button
+  per wing above its boss tabs (`B.Wing(i)`, `D.WINGS`). Forever's client
+  has one map and one dungeon-finder entry for the monastery; players
+  report it still has the four wings. Which boss is in which is Classic's,
+  not yet checked in Forever.
 - **Search** every boss's loot by item name (`/pwloot search <words>`, or the
   box at the top).
 - **Filters**: by kind of item (`loot.slot`), and "For my class"
@@ -50,7 +55,7 @@ builds the file). Nothing in it is typed in by hand.
 
 | Fact | Source |
 |---|---|
-| Instances, bosses, encounter ids | Forever's client tables `Map`, `Difficulty`, `DungeonEncounter` (wago.tools, product `wowf`). The client keeps a row per version of some bosses (the dungeon's, twice in places, and a 10- or 20-player raid's); rows of one instance with one name or monster are one boss, and `SAME` maps the others to it |
+| Instances, bosses, encounter ids | Forever's client tables `Map`, `Difficulty`, `DungeonEncounter` (wago.tools, product `wowf`). The client keeps a row per version of some bosses (the dungeon's, twice in places, and a 10- or 20-player raid's); rows of one instance with one name or monster are one boss, and `SAME` maps the others to it. A fight with one row and two bosses who drop loot gets both (`PARTNERS` in the generator: Mograine and Whitemane) |
 | Which monster a boss is | QuestieDB's Forever NPCs: the boss's name inside the instance; a longer or shorter form of it inside the instance ("Kirtonos" / "Kirtonos the Herald"); or the only NPC of that name, when it has no spawn |
 | What a boss drops | QuestieDB's Forever items (`npcDrops`), corrected as `tools/data/build.lua` corrects them; items dropping from more than 12 monsters (world and trash drops) are left out |
 | A boss's portrait | The client's Encounter Journal art (`Interface/EncounterJournal/UI-EJ-BOSS-<name>`), by the boss's exact name in the game's file list (wago.tools' file search). That list covers every WoW client, so whether Forever ships each file is **unverified**: the tab asks the game (`SetTexture` says whether it loaded) and shows the boss's best item when not. 222 of the 338 bosses have one |

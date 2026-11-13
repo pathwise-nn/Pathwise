@@ -6,6 +6,17 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Loot: Scarlet Commander Mograine, and Scarlet Monastery's wings
+- Scarlet Monastery's last boss is now "Mograine and Whitemane", with
+  Mograine's loot (Aegis of the Scarlet Commander, Mograine's Might,
+  Gauntlets of Divinity, Scarlet Leggings) beside Whitemane's. The game has
+  one boss row for that fight, and only Whitemane's loot was listed. Not
+  checked in game.
+- Scarlet Monastery has wing buttons above its boss tabs: All, Graveyard,
+  Library, Armory and Cathedral. A wing shows only its bosses, and the
+  arrows stay inside it. Players report Forever still has the four wings;
+  which boss is in which follows Classic and isn't checked in game yet.
+
 ## 0.3.6 (2026-11-13)
 
 ### No more error floods in boss fights

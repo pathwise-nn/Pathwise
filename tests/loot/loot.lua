@@ -230,6 +230,58 @@ test("data: a boss is listed once, whatever rows the client keeps for it", funct
 	eq(#L.Instance(48).encounters, 8, "no boss added back")
 end)
 
+test("data: the Cathedral's last fight has Mograine's loot as well as Whitemane's", function()
+	local _, ns = fresh()
+	local L = ns.Loot
+	-- Forever's client has one row (450) for the fight; QuestieDB has both bosses.
+	local e = L.Encounter(450)
+	eq(e.name, "Mograine and Whitemane")
+	local npcs, loot = {}, {}
+	for _, n in ipairs(e.npcs) do npcs[n] = true end
+	for _, entry in ipairs(e.loot) do loot[entry.id] = true end
+	ok(npcs[3976] and npcs[3977], "Scarlet Commander Mograine and High Inquisitor Whitemane")
+	ok(loot[7726], "Aegis of the Scarlet Commander")
+	ok(loot[7720], "Whitemane's Chapeau")
+	ok(L.Portrait(450), "a portrait")
+	eq(ns.LootLearn.BossOf(3976), 450, "his corpse counts for the fight")
+end)
+
+test("browser: Scarlet Monastery's wings each show their own bosses", function()
+	local _, ns = fresh()
+	local B, L = ns.LootBrowser, ns.Loot
+	local inst = L.Instance(189)
+	eq(#inst.wings, 4)
+	local names = {}
+	for i, w in ipairs(inst.wings) do names[i] = w.name end
+	eq(table.concat(names, ","), "Graveyard,Library,Armory,Cathedral")
+	local n = 0
+	for _, w in ipairs(inst.wings) do n = n + #w.encounters end
+	eq(n, #inst.encounters, "every boss in one wing")
+	B.Show()
+	B.SelectInstance(189)
+	local function shownTabs()
+		local out = {}
+		for _, t in ipairs(_G.stub.frames) do if rawget(t, "pwBoss") and t.shown then out[#out + 1] = t.pwBoss end end
+		table.sort(out)
+		return table.concat(out, ",")
+	end
+	eq(#shownTabs():gsub("[^,]", "") + 1, #inst.encounters, "All: every boss")
+	ok(B.Wing(4))
+	eq(shownTabs(), "449,450", "Cathedral: Fairbanks, Mograine and Whitemane")
+	ok(B.State().boss == 449 or B.State().boss == 450)
+	B.SelectBoss(450)
+	B.Turn(1)
+	eq(B.State().boss, 450, "the arrows stay in the wing")
+	B.SelectBoss(444)
+	eq(B.State().wing, 1, "a boss of another wing opens its wing")
+	ok(B.Wing(nil))
+	eq(B.State().wing, nil)
+	eq(B.Wing(9), false, "no such wing")
+	B.SelectInstance(36)
+	eq(B.State().wing, nil, "another instance: no wing")
+	eq(L.Instance(36).wings, nil, "Deadmines has none")
+end)
+
 test("data: drops saved under another row of a boss move to the boss", function()
 	local _, ns = fresh({ setup = function()
 		PathwiseLootDB = PathwiseLootDB or {}

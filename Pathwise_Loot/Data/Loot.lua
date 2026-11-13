@@ -12,6 +12,8 @@
 --   ITEMS[id]        = { name, quality, itemLevel, requiredLevel, inventoryType, class, subClass, classMask | nil }
 --   PORTRAITS[id]    = file id of the boss's Encounter Journal art (UI-EJ-BOSS-<name>), by its name; from
 --                      the game's file list, which may hold files Forever lacks (the addon checks)
+--   WINGS[map]      = { { name, { encounter ids } }, ... }: the parts entered apart (players report
+--                      Forever's wings; the bosses in each are Classic's)
 --   SAME[id]         = the boss this id is another row of (the client keeps a row per version;
 --                      the game may report any of them at a kill)
 
@@ -121,7 +123,7 @@ D.ENCOUNTERS = {
 	[447] = { "Arcanist Doan", 189, 0, {6487}, {7711,7712,7713,7714,274293} },
 	[448] = { "Herod", 189, 0, {3975}, {7717,7718,7719} },
 	[449] = { "High Inquisitor Fairbanks", 189, 0, {4542}, {19507,19508,19509} },
-	[450] = { "High Inquisitor Whitemane", 189, 0, {3977}, {7495,7720,7721,7722,8157} },
+	[450] = { "Mograine and Whitemane", 189, 0, {3976,3977}, {7495,7720,7721,7722,7723,7724,7726,8157,10330} },
 	[472] = { "The Unforgiven", 329, 0, {10516}, {13404,13405,13408,13409,16717} },
 	[473] = { "Hearthsinger Forresten", 329, 0, {10558}, {13378,13379,13383,13384,16682} },
 	[474] = { "Timmy the Cruel", 329, 0, {10808}, {13400,13401,13402,13403,16724} },
@@ -611,6 +613,10 @@ D.SAME = {
 	[3589] = 488,
 }
 
+D.WINGS = {
+	[189] = { { "Graveyard", {444,2779} }, { "Library", {446,447} }, { "Armory", {448} }, { "Cathedral", {449,450} } },
+}
+
 D.ITEMS = {
 	[872] = { "Rockslicer", 0, 23, 18, 17, 2, 1 },
 	[888] = { "Naga Battle Gloves", 0, 27, 22, 10, 4, 2 },
@@ -765,6 +771,9 @@ D.ITEMS = {
 	[7720] = { "Whitemane's Chapeau", 0, 44, 39, 1, 4, 1 },
 	[7721] = { "Hand of Righteousness", 0, 44, 39, 21, 2, 4 },
 	[7722] = { "Triune Amulet", 0, 44, 39, 2, 4, 0 },
+	[7723] = { "Mograine's Might", 0, 44, 39, 17, 2, 5 },
+	[7724] = { "Gauntlets of Divinity", 0, 44, 39, 10, 4, 3 },
+	[7726] = { "Aegis of the Scarlet Commander", 0, 44, 39, 14, 4, 6 },
 	[7741] = { "The Shaft of Tsol", 1, 1, 0, 0, 12, 0 },
 	[7742] = { "Schematic: Gnomish Cloaking Device", 1, 40, 0, 0, 9, 3 },
 	[7756] = { "Dog Training Gloves", 0, 36, 31, 10, 4, 2 },
@@ -845,6 +854,7 @@ D.ITEMS = {
 	[10110] = { "Wanderer's Gloves", 0, 55, 50, 10, 4, 2 },
 	[10167] = { "Templar Boots", 0, 55, 50, 8, 4, 4 },
 	[10193] = { "Crusader's Armor", 0, 55, 50, 5, 4, 3 },
+	[10330] = { "Scarlet Leggings", 0, 44, 39, 7, 4, 3 },
 	[10399] = { "Blackened Defias Armor", 0, 22, 17, 5, 4, 2 },
 	[10403] = { "Blackened Defias Belt", 0, 22, 17, 6, 4, 2 },
 	[10408] = { "Banded Helm", 0, 32, 27, 1, 4, 3 },

@@ -2,7 +2,8 @@
 -- items, search and the wishlist.
 --
 --   L.Instances() -> { instance, ... }       dungeons by level, then raids
---       instance = { map, name, raid, size, levels = { lo, hi } | nil, encounters = { id, ... } }
+--       instance = { map, name, raid, size, levels = { lo, hi } | nil, encounters = { id, ... },
+--                    wings = { { name = s, encounters = { id, ... } }, ... } | nil }
 --   L.Encounter(id) -> { id, name, map, players, npcs, kills, loot = { entry, ... } } | nil
 --       entry = { id, data = true | nil, seen = n | nil }   (data: QuestieDB says so; seen: dropped for you)
 --   L.Item(id, quiet) -> { id, name, quality, itemLevel, level, slot, class, subClass, classMask, icon, link, cached }
@@ -105,6 +106,15 @@ local function build()
 	for _, row in ipairs(D.INSTANCES) do
 		local inst = { map = row[1], name = row[2], raid = row[3], size = row[4], levels = row[5], encounters = {} }
 		for i, id in ipairs(row[6]) do inst.encounters[i] = id end
+		local wings = D.WINGS and D.WINGS[inst.map]
+		if wings then
+			inst.wings = {}
+			for i, w in ipairs(wings) do
+				local ids = {}
+				for k, id in ipairs(w[2]) do ids[k] = id end
+				inst.wings[i] = { name = w[1], encounters = ids }
+			end
+		end
 		instances[#instances + 1] = inst
 		byMap[inst.map] = inst
 	end
