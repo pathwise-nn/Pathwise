@@ -24,6 +24,25 @@ that version's section.
 - For translators: Pathwise can now be translated. Everything it shows
   goes through one lookup (Core/Locale.lua); a language is a table of
   English text and its translation in Locales/ (CONTRIBUTING.md).
+
+### Pathwise Gear: works on its own
+- No longer needs Pathwise: Leveling & Professions. Upgrade marks, the
+  tooltip line, the gold arrow on bag upgrades, the best quest reward, your
+  spec's stat priority and custom weights all work without it.
+- Its own options window, like Pathwise Loot and Pathwise Insights:
+  Upgrades, Best in Slot, Look and accent, Colors, Help, Profile. `/pwgear`
+  opens it (`/pwgear best` opens Best in Slot), as do its minimap button and
+  Pathwise's suite list. It keeps one theme and accent with the other
+  Pathwise addons.
+- Best in Slot (Level) works without Pathwise too: Pathwise Gear carries its
+  own copy of the quest, monster, vendor, recipe and dungeon facts it needs
+  (from the same QuestieDB Forever data). Click a slot and the game's own
+  map pin marks the quest giver, monster, vendor or dungeon entrance. With
+  Pathwise installed, its data and arrow are used, and recipes you know are
+  marked as before.
+- Your Gear settings (spec, custom weights, options, the minimap button) are
+  copied over from Pathwise's settings the first time.
+- Pathwise Loot's upgrade marks work with Pathwise Gear alone.
 - Not yet checked in game.
 
 ### Pathwise Bags: works on its own
@@ -36,8 +55,8 @@ that version's section.
 - Without Pathwise, quest items are the ones the game marks (a quest in your
   log, or the Quest item class); with Pathwise, items a quest later on your
   path asks for and your profession routes' materials are marked too, as
-  before. Upgrades and best in slot still need Pathwise Gear (which needs
-  Pathwise); without it, gear is never sold as "can't use" or "worse".
+  before. Upgrades and best in slot still need Pathwise Gear (which works on
+  its own now too); without it, gear is never sold as "can't use" or "worse".
 - Your settings and your keep and junk marks are copied over from Pathwise
   once, on the first login with this version.
 - Not yet checked in game.

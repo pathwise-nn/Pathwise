@@ -14,11 +14,11 @@
 -- Nothing is taken from any BiS site: the list is worked out in game.
 
 local ADDON, ns = ...
-local S, Gear, W = Pathwise.Suite, ns.Gear, ns.Weights
+local S, Gear, W = ns.S, ns.Gear, ns.Weights
 local Client = Gear.Client
 local Best = {}
 ns.Best = Best
-Pathwise.GearBest = Best -- for the suite's other addons (Pathwise Bags)
+if _G.Pathwise then _G.Pathwise.GearBest = Best end -- for the suite's other addons (Pathwise Bags)
 local readable = S.Compat.Readable
 
 S.Defaults("gear", {
@@ -38,6 +38,11 @@ local ORDER = { 1, 2, 3, 15, 5, 9, 10, 6, 7, 8, 11, 12, 13, 14, 16, 17, 18 }
 Best.ORDER = ORDER
 
 local function data() return (S.Data and S.Data.gear) or {} end
+
+-- The data: Pathwise's, or Gear's own copy (Data/Gear.lua) without it.
+function Best.Available()
+	return S.Data ~= nil and S.Data.gear ~= nil and S.Quests ~= nil and S.Quests.Player ~= nil
+end
 
 -- Cheap checks from the data alone, before asking the client: level, and
 -- armour or weapon type this class can never use.
@@ -187,7 +192,7 @@ end
 -- the monster or the vendor (nearest spawn). -> true when it could.
 function Best.Chase(entry)
 	local s = entry and entry.source
-	if not s then return false end
+	if not (s and Best.Available()) then return false end
 	if s.kind == "dungeon" then return S.Dungeons.GuideTo(s.id) end
 	local Q = S.Quests
 	local here
@@ -276,6 +281,7 @@ end
 
 -- The best per slot among the items this character can get up to maxLevel.
 function Best.ListFor(maxLevel)
+	if not Best.Available() then return {}, 0 end
 	local k = key(maxLevel)
 	if lists[k] then return lists[k][1], lists[k][2] end
 	local class, level = Client.Class(), Client.Level()
@@ -423,7 +429,7 @@ function Best.Announce(id, at, slotName)
 		pcall(UIErrorsFrame.AddMessage, UIErrorsFrame, text, r, g, b)
 	end
 	if PlaySound and SOUNDKIT and SOUNDKIT.RAID_WARNING then pcall(PlaySound, SOUNDKIT.RAID_WARNING) end
-	S.Print(("Pathwise Gear: %s is your best in slot%s (%s)."):format(link, when, tostring(slotName)))
+	S.Print(("%s is your best in slot%s (%s)."):format(link, when, tostring(slotName)))
 	S.Fire("GEAR_BEST_PICKED", id, at)
 end
 

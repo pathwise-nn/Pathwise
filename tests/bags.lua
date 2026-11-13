@@ -65,6 +65,7 @@ end
 local function alone(setup)
 	clean()
 	PathwiseSettings, PathwiseCharSettings, Pathwise = nil, nil, nil
+	for k in pairs(_G) do if type(k) == "string" and k:find("^PathwiseGear") then _G[k] = nil end end
 	local stub = dofile("./tests/stub.lua")
 	stub.player.level = 20
 	fill(stub)
@@ -488,7 +489,7 @@ test("bags alone: loads without Pathwise; junk, the game's quest items, selling,
 	eq(table.concat(list, ","), "Quest,Equipment,Professions,Other,Empty")
 	SlashCmdList.PATHWISEBAGS("options")
 	ok(contains(stub.texts(), "Install Pathwise: Leveling & Professions to mark items"), "the options say what Pathwise adds")
-	ok(contains(stub.texts(), "With Pathwise Gear (it needs Pathwise)"))
+	ok(contains(stub.texts(), "With Pathwise Gear installed, upgrades"))
 end)
 
 test("bags alone: no quest data, no gear and no errors when the game says nothing either", function()
@@ -543,4 +544,12 @@ test("bags alone: its shared files are Pathwise UI's, copied unchanged (npm run 
 	for _, g in ipairs({ "best", "lock", "search", "sort", "zones", "bag", "coin", "quest", "upgrade", "prof", "settings", "close" }) do
 		ok(io.open("Pathwise_Bags/Media/glyph-" .. g .. ".tga"), "Media/glyph-" .. g .. ".tga")
 	end
+end)
+
+test("bags alone with Pathwise Gear alone: it finds Gear's upgrades and best in slot", function()
+	local stub, b = alone(function(stub) stub.loadAddon(".", "Pathwise_Gear") end)
+	eq(rawget(_G, "Pathwise"), nil, "no Pathwise")
+	ok(_G.PathwiseGear and _G.PathwiseGear.Gear, "Pathwise Gear loaded")
+	eq(b.S.Gear(), _G.PathwiseGear.Gear, "Bags reads Gear's own")
+	eq(b.S.GearBest(), _G.PathwiseGear.Best, "and its best in slot")
 end)

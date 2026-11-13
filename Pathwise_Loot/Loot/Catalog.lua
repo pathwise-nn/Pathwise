@@ -373,18 +373,24 @@ end
 -- Pathwise Gear
 ---------------------------------------------------------------------------
 
+-- Pathwise Gear: its own table (it stands alone), else Pathwise's.
+local function gear()
+	local own = _G.PathwiseGear
+	return (type(own) == "table" and own.Gear) or (_G.Pathwise and _G.Pathwise.Gear) or nil
+end
+
 -- With Pathwise Gear installed (and the setting on): is it an upgrade for
 -- your spec, and by how much. Needs the client to know the item.
 function L.Upgrade(item)
 	if not ns.Get("loot.gear") then return false end
-	local G = _G.Pathwise and _G.Pathwise.Gear
+	local G = gear()
 	if not (G and G.IsUpgrade and item.cached) then return false end
 	local ok, up, pct = pcall(G.IsUpgrade, item.link)
 	if not ok then return false end
 	return up and true or false, pct
 end
 function L.HasGear()
-	local G = _G.Pathwise and _G.Pathwise.Gear
+	local G = gear()
 	return G ~= nil and G.IsUpgrade ~= nil
 end
 

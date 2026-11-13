@@ -38,7 +38,7 @@ C.CATEGORIES = {
 			{ "text", seenDrops > 0 and ("You have seen %d different drops from %d bosses."):format(seenDrops, seenBosses) or "You have not seen any drops yet.", "muted" },
 			{ "toggle", "Keep the drops you see", "loot.learn", "Loot from a boss you kill (its corpse, the group's loot rolls, what you receive) is added to that boss, on every character." },
 			{ "toggle", "Drops from, on item tooltips", "loot.tooltip", "Which boss drops an item, on the game's item tooltips." },
-			{ "toggle", "Upgrade marks from Pathwise Gear", "loot.gear", L.HasGear() and "Items Pathwise Gear says are an upgrade for your spec show by how much." or "Needs Pathwise Gear (it needs Pathwise); without it, nothing shows." },
+			{ "toggle", "Upgrade marks from Pathwise Gear", "loot.gear", L.HasGear() and "Items Pathwise Gear says are an upgrade for your spec show by how much." or "Needs Pathwise Gear; without it, nothing shows." },
 
 			{ "heading", "Your drops" },
 			{ "button", "Forget the drops you have seen", function()
