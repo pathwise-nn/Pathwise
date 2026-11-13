@@ -25,6 +25,10 @@ Blizzard's Forever UI source and the tests' client stub only.
 - **All instances** (top right): a card per dungeon (by level) or raid, with
   its levels and bosses; "you" marks the ones at your level and YOU ARE HERE
   the one you are in. Dungeons, Raids and Your wishlist are its buttons.
+- **Wings**: an instance entered in parts (Scarlet Monastery) has a button
+  per wing above its boss tabs (`B.Wing(i)`, `D.WINGS`). The split is
+  Classic's: Forever's client has one map and one dungeon-finder entry for
+  the monastery, so it is not verified for Forever.
 - **Search** every boss's loot by item name (`/pwloot search <words>`, or the
   box at the top).
 - **Filters**: by kind of item (`loot.slot`), and "For my class"

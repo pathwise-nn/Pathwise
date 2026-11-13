@@ -344,6 +344,41 @@ for _, inst in pairs(instances) do
 end
 
 ---------------------------------------------------------------------------
+-- Wings: an instance whose parts are entered apart. Forever's client has
+-- one map and one dungeon-finder entry (LFGDungeons 17) for Scarlet
+-- Monastery, so the wings are Classic's, by boss name: NOT VERIFIED for
+-- Forever. Every boss of the instance must be in a wing.
+---------------------------------------------------------------------------
+
+local WINGS_BY_NAME = {
+	[189] = {
+		{ "Graveyard", { "Interrogator Vishas", "Bloodmage Thalnos" } },
+		{ "Library", { "Houndmaster Loksey", "Arcanist Doan" } },
+		{ "Armory", { "Herod" } },
+		{ "Cathedral", { "High Inquisitor Fairbanks", "Mograine and Whitemane" } },
+	},
+}
+local wings = {}
+for map, parts in pairs(WINGS_BY_NAME) do
+	local inst = assert(instances[map], "no instance " .. map)
+	local byName, placed = {}, {}
+	for _, row in ipairs(inst.list) do byName[encounters[row.id].name] = row.id end
+	wings[map] = {}
+	for _, w in ipairs(parts) do
+		local ids = {}
+		for _, name in ipairs(w[2]) do
+			local id = assert(byName[name], "no boss " .. name .. " in " .. inst.name)
+			ids[#ids + 1] = id
+			placed[id] = true
+		end
+		wings[map][#wings[map] + 1] = { name = w[1], ids = ids }
+	end
+	for _, row in ipairs(inst.list) do
+		assert(placed[row.id], encounters[row.id].name .. " of " .. inst.name .. " is in no wing")
+	end
+end
+
+---------------------------------------------------------------------------
 -- Writing
 ---------------------------------------------------------------------------
 
@@ -412,6 +447,8 @@ f:write("--   ENCOUNTERS[id]   = { name, map, players (0: the instance's own siz
 f:write("--   ITEMS[id]        = { name, quality, itemLevel, requiredLevel, inventoryType, class, subClass, classMask | nil }\n")
 f:write("--   PORTRAITS[id]    = file id of the boss's Encounter Journal art (UI-EJ-BOSS-<name>), by its name; from\n")
 f:write("--                      the game's file list, which may hold files Forever lacks (the addon checks)\n")
+f:write("--   WINGS[map]      = { { name, { encounter ids } }, ... }: the parts entered apart (Classic's; not\n")
+f:write("--                      verified for Forever)\n")
 f:write("--   SAME[id]         = the boss this id is another row of (the client keeps a row per version;\n")
 f:write("--                      the game may report any of them at a kill)\n")
 f:write("\nlocal ADDON, ns = ...\nlocal D = {}\nns.LootData = D\n\n")
@@ -439,6 +476,14 @@ f:write("}\n\n")
 
 f:write("D.SAME = {\n")
 for _, id in ipairs(sortedKeys(same)) do f:write(("\t[%d] = %d,\n"):format(id, same[id])) end
+f:write("}\n\n")
+
+f:write("D.WINGS = {\n")
+for _, map in ipairs(sortedKeys(wings)) do
+	local parts = {}
+	for i, w in ipairs(wings[map]) do parts[i] = ("{ %q, %s }"):format(w.name, list(w.ids)) end
+	f:write(("\t[%d] = { %s },\n"):format(map, table.concat(parts, ", ")))
+end
 f:write("}\n\n")
 
 f:write("D.ITEMS = {\n")

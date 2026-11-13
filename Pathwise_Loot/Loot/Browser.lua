@@ -20,7 +20,8 @@
 --
 --   B.Show() / B.Hide() / B.Toggle() / B.Frame() / B.IsShown()
 --   B.SelectInstance(map) / B.SelectBoss(id) / B.Contents(group) / B.Wishlist() / B.Search(text)
---   B.State() -> { mode = "boss" | "contents" | "wishlist" | "search", map, boss, group, text }
+--   B.Wing(i | nil)       an instance with wings (Scarlet Monastery): only that wing's bosses; nil: all
+--   B.State() -> { mode = "boss" | "contents" | "wishlist" | "search", map, boss, wing, group, text }
 --   B.Rows() -> the item cards shown: { { item, encounter, entry, where }, ... }
 
 local ADDON, ns = ...
@@ -660,6 +661,48 @@ function B.PaintThumb()
 end
 
 -- The boss tabs; returns the y below them (y when there are none).
+-- The bosses the tabs show: the chosen wing's, else the instance's.
+local function bossesOf(inst)
+	if not inst then return {} end
+	local w = state.wing and inst.wings and inst.wings[state.wing]
+	return w and w.encounters or inst.encounters
+end
+
+-- The wing of a boss, by its index in inst.wings.
+local function wingOf(inst, eid)
+	for i, w in ipairs(inst and inst.wings or {}) do
+		for _, id in ipairs(w.encounters) do if id == eid then return i end end
+	end
+	return nil
+end
+
+-- A row of wing buttons (All, then each wing) for an instance with wings.
+local function drawWings(y, inst)
+	W.wings = W.wings or {}
+	for _, b in ipairs(W.wings) do b:Hide() end
+	if not (inst and inst.wings) then return y end
+	local list = { { "All", nil } }
+	for i, w in ipairs(inst.wings) do list[#list + 1] = { w.name, i } end
+	local x = PAD
+	for i, c in ipairs(list) do
+		local b = W.wings[i]
+		if not b then
+			b = segment(W.frame, "", nil)
+			W.wings[i] = b
+		end
+		b.pwText:SetText(c[1])
+		b:SetWidth((b.pwText:GetStringWidth() or 40) + 18)
+		b.pwWing = c[2]
+		b:SetScript("OnClick", function() B.Wing(c[2]) end)
+		b:ClearAllPoints()
+		b:SetPoint("TOPLEFT", W.frame, "TOPLEFT", x, -y)
+		b:SetOn(state.wing == c[2])
+		b:Show()
+		x = x + b:GetWidth() + 4
+	end
+	return y + 24 + 10
+end
+
 local function drawTabs(y, bosses)
 	for _, b in ipairs(W.tabs) do b:Hide() end
 	W.tabLine:Hide()
@@ -842,11 +885,14 @@ function draw()
 
 	if state.mode == "boss" then
 		local inst = L.Instance(state.map)
-		local bosses = inst and inst.encounters or {}
+		local bosses = bossesOf(inst)
+		y = drawWings(y, inst)
 		y = drawTabs(y, bosses)
 		local e = state.boss and L.Encounter(state.boss)
 		local bits = {}
 		if inst then bits[#bits + 1] = inst.name .. (levelsText(inst) and ("  ·  level " .. levelsText(inst)) or "") end
+		local wi = wingOf(inst, state.boss)
+		if wi then bits[#bits + 1] = inst.wings[wi].name end
 		if e and e.kills > 0 then bits[#bits + 1] = ("you have seen %d kill%s"):format(e.kills, e.kills == 1 and "" or "s") end
 		local items = allItems()
 		local rows, before = itemRows()
@@ -861,6 +907,7 @@ function draw()
 		local i = indexOf(bosses, state.boss) or 1
 		drawFooter(("Boss %d / %d"):format(i, #bosses), i > 1, i < #bosses, true)
 	elseif state.mode == "contents" or state.mode == "wishlist" then
+		y = drawWings(y, nil)
 		y = drawTabs(y, {})
 		if state.mode == "contents" then
 			local list = instancesOf(state.group)
@@ -893,6 +940,7 @@ function draw()
 			drawFooter(("Page %d / %d"):format(3, #GROUPS), true, false, true)
 		end
 	else -- search
+		y = drawWings(y, nil)
 		y = drawTabs(y, {})
 		local rows, before = itemRows()
 		local sub = #rows > 0 and ("%d found"):format(#rows) or "Nothing found. Items the game has not loaded yet are searched by the data's names."
@@ -935,7 +983,7 @@ local function top() if W.scroll then W.scroll:SetVerticalScroll(0) end end
 local function choose(map)
 	local inst = L.Instance(map)
 	if not inst then return false end
-	state.mode, state.map, state.text = "boss", map, nil
+	state.mode, state.map, state.text, state.wing = "boss", map, nil, nil
 	state.boss = nil
 	-- The first boss with loot, else the first.
 	for _, eid in ipairs(inst.encounters) do
@@ -957,7 +1005,30 @@ end
 function B.SelectBoss(eid)
 	local e = L.Encounter(eid)
 	if not e then return false end
-	state.mode, state.boss, state.map, state.text = "boss", eid, e.map or state.map, nil
+	local map = e.map or state.map
+	if map ~= state.map then state.wing = nil end
+	state.mode, state.boss, state.map, state.text = "boss", eid, map, nil
+	-- A boss outside the chosen wing: its own wing.
+	local inst = L.Instance(map)
+	if state.wing and not indexOf(bossesOf(inst), eid) then state.wing = wingOf(inst, eid) end
+	top()
+	draw()
+	return true
+end
+
+function B.Wing(i)
+	local inst = L.Instance(state.map)
+	if i ~= nil and not (inst and inst.wings and inst.wings[i]) then return false end
+	state.mode, state.wing, state.text = "boss", i, nil
+	local list = bossesOf(inst)
+	if not indexOf(list, state.boss) then
+		state.boss = nil
+		for _, eid in ipairs(list) do
+			local e = L.Encounter(eid)
+			if e and #e.loot > 0 then state.boss = eid break end
+		end
+		state.boss = state.boss or list[1]
+	end
 	top()
 	draw()
 	return true
@@ -989,8 +1060,7 @@ end
 -- The arrows: the boss before or after, or the contents' page.
 function B.Turn(delta)
 	if state.mode == "boss" then
-		local inst = L.Instance(state.map)
-		local list = inst and inst.encounters or {}
+		local list = bossesOf(L.Instance(state.map))
 		local i = (indexOf(list, state.boss) or 1) + delta
 		if list[i] then B.SelectBoss(list[i]) end
 	elseif state.mode == "contents" or state.mode == "wishlist" then
