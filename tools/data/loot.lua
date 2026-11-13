@@ -205,6 +205,33 @@ for id, enc in pairs(encounters) do
 end
 table.sort(unmatched)
 
+-- Fights the client keeps one row for though two bosses drop loot in them:
+-- the row's name -> the shown name and the other boss's QuestieDB name.
+-- Forever's DungeonEncounter has no row for Scarlet Commander Mograine; the
+-- "High Inquisitor Whitemane" row (450) is the Cathedral's last fight,
+-- where he is fought first.
+local PARTNERS = {
+	["High Inquisitor Whitemane"] = { shown = "Mograine and Whitemane", also = "Scarlet Commander Mograine" },
+}
+for _, enc in pairs(encounters) do
+	local p = PARTNERS[enc.name]
+	if p then
+		local inst = instances[enc.map]
+		local areas = {}
+		for a in pairs(inst.dungeon and areasOf[inst.dungeon] or {}) do areas[a] = true end
+		local own = tonumber(maps[enc.map].AreaTableID)
+		if own and own > 0 then areas[own] = true end
+		local found = false
+		for _, nid in ipairs(npcsByName[norm(p.also)] or {}) do
+			if inside(nid, areas) then enc.npcs[#enc.npcs + 1] = nid found = true end
+		end
+		assert(found, "no " .. p.also .. " inside " .. inst.name)
+		table.sort(enc.npcs)
+		enc.portraitName = enc.name
+		enc.name = p.shown
+	end
+end
+
 ---------------------------------------------------------------------------
 -- Drops, and the items as Forever's client knows them
 ---------------------------------------------------------------------------
@@ -366,7 +393,8 @@ do
 		end
 	end
 	for id, e in pairs(encounters) do
-		local fid = byKey[key(e.name)] or byKey[key((e.name:gsub("^[Tt]he ", "")))]
+		local n = e.portraitName or e.name
+		local fid = byKey[key(n)] or byKey[key((n:gsub("^[Tt]he ", "")))]
 		if fid then portraits[id] = fid nPortraits = nPortraits + 1 end
 	end
 end
