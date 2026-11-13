@@ -58,6 +58,10 @@ assert(loadfile(ROOT .. "/tests/loot/split.lua"))(h)
 
 for _, t in ipairs(tests) do
 	local okRun, err = pcall(t.fn)
+	if okRun and BLOCKED_EVENTS then
+		okRun, err = false, "registers an event Forever blocks for addons: " .. table.concat(BLOCKED_EVENTS, ", ")
+	end
+	BLOCKED_EVENTS = nil
 	-- Anything the addon reported as an error fails the test too.
 	if okRun and _G.stub then
 		for _, line in ipairs(_G.stub.printed) do

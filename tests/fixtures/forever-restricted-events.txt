@@ -1,0 +1,11 @@
+# Events the WoW Forever client keeps from addons (HasRestrictions = true in
+# Blizzard_APIDocumentationGenerated, Gethe/wow-ui-source, forever branch, 2026-11-13).
+# Registering one is blocked ("has been blocked from an action only available to
+# the Blizzard UI"), so tests/stub.lua and tests/ui/stub.lua fail any test that does.
+COMBAT_LOG_APPLY_FILTER_SETTINGS
+COMBAT_LOG_EVENT
+COMBAT_LOG_EVENT_UNFILTERED
+COMBAT_LOG_REFILTER_ENTRIES
+MINIMAP_PING
+UNIT_PING_PIN_ADDED
+UNIT_PING_PIN_REMOVED

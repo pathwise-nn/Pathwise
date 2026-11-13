@@ -86,7 +86,25 @@ do
 	end
 end
 stub.knownEvents = knownEvents
+-- Events Forever keeps from addons (tests/fixtures/forever-restricted-events.txt):
+-- the client blocks the call and blames the addon, so the runners fail the test
+-- (BLOCKED_EVENTS), even when the addon wraps the call in pcall.
+local restrictedEvents = {}
+do
+	local here = debug.getinfo(1, "S").source:match("^@(.*)[/\]") or "tests"
+	local f = io.open(here .. "/fixtures/forever-restricted-events.txt", "r")
+	if f then
+		for line in f:lines() do if not line:match("^#") and line ~= "" then restrictedEvents[line] = true end end
+		f:close()
+	end
+end
+stub.restrictedEvents = restrictedEvents
 function Widget:RegisterEvent(e)
+	if restrictedEvents[e] then
+		BLOCKED_EVENTS = BLOCKED_EVENTS or {}
+		table.insert(BLOCKED_EVENTS, e)
+		error(("Frame:RegisterEvent(): %q is blocked for addons"):format(e), 2)
+	end
 	if next(knownEvents) and not knownEvents[e] then
 		error(("Frame:RegisterEvent(): Attempt to register unknown event %q"):format(tostring(e)), 2)
 	end
