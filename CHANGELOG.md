@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.6 (2026-11-13)
+
 ### No more error floods in boss fights
 - In a boss fight the game keeps some values secret from addons (AFK,
   level, XP, map position), and testing one is an error. Pathwise:
