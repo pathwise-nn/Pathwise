@@ -3,7 +3,7 @@
 ## Notes-ruRU: Каждое задание. Каждый рецепт. Каждый уровень. Маршруты прокачки 1-60 и гиды по профессиям 1-300 для WoW: Forever.
 ## Notes: Every quest. Every craft. Every level.
 ## Author: leight_nn & florp
-## Version: 0.3.6
+## Version: 0.3.7
 ## IconTexture: Interface\AddOns\Pathwise\Media\icon
 ## SavedVariables: PathwiseSettings
 ## SavedVariablesPerCharacter: PathwiseCharSettings

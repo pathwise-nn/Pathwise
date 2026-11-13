@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.7 (2026-11-13)
+
 ### Pathwise Loot: Scarlet Commander Mograine, and Scarlet Monastery's wings
 - Scarlet Monastery's last boss is now "Mograine and Whitemane", with
   Mograine's loot (Aegis of the Scarlet Commander, Mograine's Might,
