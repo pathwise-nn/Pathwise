@@ -178,6 +178,34 @@ test("unit frames: dead and offline", function()
 	eq(stub.shown(f.hp), "Dead")
 end)
 
+test("unit frames: the target's level in the game's difficulty color", function()
+	local rating, attackable = 3, true
+	local stub, ns = fresh(function(s)
+		withTarget(s)
+		-- As Forever's target frame asks: a rating for you, then its color.
+		UnitCanAttack = function(a, u) return attackable end
+		C_PlayerInfo = { GetContentDifficultyCreatureForPlayer = function(u) return rating end }
+		GetDifficultyColor = function(d)
+			return ({ [0] = { r = 0.5, g = 0.5, b = 0.5 }, [3] = { r = 1, g = 0.5, b = 0.25 }, [4] = { r = 1, g = 0.1, b = 0.1 } })[d]
+		end
+	end)
+	local U = ns.Units
+	local mark = U.frames.target.mark
+	ok(mark.text:find("|cffff8040LEVEL 20|r", 1, true), mark.text)
+	rating = 4
+	U.UpdateMarks(U.frames.target)
+	ok(mark.text:find("|cffff1a1aLEVEL 20|r", 1, true), mark.text)
+	ok(not U.frames.player.mark.text:find("|cff%x+LEVEL"), "your own level stays quiet: " .. U.frames.player.mark.text)
+	attackable = false
+	U.UpdateMarks(U.frames.target)
+	eq(mark.text, "LEVEL 20", "someone you can't attack: quiet")
+	attackable = true
+	rating = stub.Secret(3)
+	U.UpdateMarks(U.frames.target)
+	eq(mark.text, "LEVEL 20", "a secret rating: quiet")
+	UnitCanAttack, C_PlayerInfo, GetDifficultyColor = nil, nil, nil
+end)
+
 test("unit frames: debuffs on the target, timers only when readable", function()
 	local stub, ns = fresh(function(s)
 		withTarget(s)
