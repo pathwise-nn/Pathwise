@@ -6,6 +6,12 @@ that version's section.
 
 ## Unreleased
 
+### Horde 27-40: a letter on the way
+- At the Mirage Raceway, Kravel Koalbeard's Wharfmaster Dizzywig (optional)
+  rides along to Ratchet, where the guide hands it in before Dustwallow
+  Marsh: about 1,400 XP for no detour. From a player's Insights numbers.
+- Not yet checked in game.
+
 ### Pathwise UI: your target's level shows how hard it is
 - "LEVEL 40" over a monster you can attack is now in the game's own
   difficulty color, as on the game's target frame: grey (trivial), green

@@ -1469,7 +1469,7 @@ ns.Routes = {
 		{ { "c", 1151, opt = true }, { "t", 1151, opt = true } },
 		{ { "a", 1110 }, { "a", 5762 }, { "a", 1104 }, { "a", 1105 }, { "a", 1175 }, { "a", 1176 } },
 		{ { "c", 1110 }, { "c", 1104 }, { "c", 1105 }, { "c", 1176 }, { "c", 1175 } },
-		{ { "t", 1175 }, { "t", 1176 }, { "t", 1110 }, { "t", 1104 }, { "t", 1105 }, { "a", 1106 } },
+		{ { "t", 1175 }, { "t", 1176 }, { "t", 1110 }, { "t", 1104 }, { "t", 1105 }, { "a", 1106 }, { "a", 1111, opt = true } },
 		{  },
 	} },
 	{ id = "forever/horde/30-40/01-desolace", title = "Desolace & Hillsbrad Foothills", faction = "Horde", levels = { 30, 33 }, map = 1443, next = "forever/horde/30-40/02-stranglethorn-vale", steps = {
@@ -1621,7 +1621,7 @@ ns.Routes = {
 		{ only = { classes = { "PALADIN", "DRUID" } } },
 		{  },
 		{ { "t", 1361 }, { "a", 1362 } },
-		{  },
+		{ { "t", 1111, opt = true } },
 		{ { "t", 1718 }, { "a", 1719 }, { "c", 1719 }, { "t", 1719 }, only = { classes = { "WARRIOR" } } },
 	} },
 	{ id = "forever/horde/30-40/04-dustwallow-marsh", title = "Dustwallow Marsh & Desolace", faction = "Horde", levels = { 39, 41 }, map = 1445, next = "forever/horde/40-50/01-stranglethorn-vale", steps = {
