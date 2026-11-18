@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.8 (2026-11-18)
+
 ### All Pathwise addons: one minimap button, one logo
 - With two or more Pathwise addons, their minimap buttons share one Pathwise
   button on the rim: click it for a tray with the others, each working as
