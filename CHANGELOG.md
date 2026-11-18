@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.9 (2026-11-18)
+
 ### Pathwise UI: your target's level shows how hard it is
 - "LEVEL 40" over a monster you can attack is now in the game's own
   difficulty color, as on the game's target frame: grey (trivial), green
