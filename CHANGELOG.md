@@ -16,6 +16,10 @@ that version's section.
   Pathwise's emblem, as the guide does: on their minimap buttons, their
   options windows and in the addon list. Not yet checked in game.
 
+### Pathwise Insights
+- The share code scrolls inside its box on the Share tab instead of
+  spilling over the page; the mouse wheel scrolls the box, then the page.
+
 ## 0.3.7 (2026-11-13)
 
 ### Pathwise Loot: Scarlet Commander Mograine, and Scarlet Monastery's wings
