@@ -429,9 +429,35 @@ local function hexOf(name)
 	local c = T.Color(name)
 	return ("%02x%02x%02x"):format(math.floor(c[1] * 255 + 0.5), math.floor(c[2] * 255 + 0.5), math.floor(c[3] * 255 + 0.5))
 end
+-- The level's color for a unit you can attack, as the game's own target
+-- frame on Forever does it (TargetFrameMixin:CheckLevel): the game rates how
+-- hard it is for you (C_PlayerInfo.GetContentDifficultyCreatureForPlayer)
+-- and GetDifficultyColor gives its quest color: grey trivial, green easy,
+-- yellow fair, orange difficult, red impossible. Nil otherwise (the quiet
+-- label color), or when the game doesn't say.
+function U.LevelColor(u)
+	if u == "player" or readable(call(UnitCanAttack, "player", u)) ~= true then return nil end
+	local color
+	local rate = C_PlayerInfo and C_PlayerInfo.GetContentDifficultyCreatureForPlayer
+	local difficulty = rate and readable(call(rate, u))
+	if difficulty ~= nil and GetDifficultyColor then color = call(GetDifficultyColor, difficulty) end
+	if not color and GetCreatureDifficultyColor then
+		-- Without the rating: by level, as the game's GetCreatureDifficultyColor.
+		local lv = readable(call(UnitEffectiveLevel or UnitLevel, u))
+		if type(lv) == "number" and lv > 0 then color = call(GetCreatureDifficultyColor, lv) end
+	end
+	if type(color) ~= "table" then return nil end
+	local r, g, b = readable(color.r), readable(color.g), readable(color.b)
+	if type(r) ~= "number" or type(g) ~= "number" or type(b) ~= "number" then return nil end
+	return ("%02x%02x%02x"):format(math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
+end
+
 function U.UpdateMarks(f)
 	local bits = {}
-	if f.def.big and f.levelText then bits[#bits + 1] = "LEVEL " .. f.levelText end
+	if f.def.big and f.levelText then
+		local hex = U.LevelColor(f.unit)
+		bits[#bits + 1] = hex and ("|cff%sLEVEL %s|r"):format(hex, f.levelText) or ("LEVEL " .. f.levelText)
+	end
 	local flags = {}
 	if f.unit == "player" then
 		if inCombat() then flags[#flags + 1] = "COMBAT" elseif readable(call(IsResting)) then flags[#flags + 1] = "RESTING" end

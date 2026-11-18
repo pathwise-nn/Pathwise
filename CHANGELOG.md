@@ -6,6 +6,13 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise UI: your target's level shows how hard it is
+- "LEVEL 40" over a monster you can attack is now in the game's own
+  difficulty color, as on the game's target frame: grey (trivial), green
+  (easy), yellow (about your level), orange (a few levels above) and red
+  (far above). Your own level, and anyone you can't attack, stay as they
+  were. Not checked in game.
+
 ## 0.3.8 (2026-11-18)
 
 ### All Pathwise addons: one minimap button, one logo
