@@ -6,6 +6,10 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Insights
+- The share code scrolls inside its box on the Share tab instead of
+  spilling over the page; the mouse wheel scrolls the box, then the page.
+
 ## 0.3.7 (2026-11-13)
 
 ### Pathwise Loot: Scarlet Commander Mograine, and Scarlet Monastery's wings

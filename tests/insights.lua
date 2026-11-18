@@ -443,6 +443,13 @@ test("insights: the Share tab shows the code, what is in it, and where to send i
 	ok(contains(boxes, "github.com/pathwise-nn/Pathwise/issues/new?template=leveling_numbers.yml"), "the GitHub form")
 	ok(contains(boxes, Pathwise.Suite.DISCORD), "the Discord invite")
 	ok(ins.Share.Read(boxes[1]), "a code that reads back")
+	-- Each box scrolls inside its own frame: a long code stays in its box.
+	for _, f in ipairs(stub.frames) do
+		if f.kind == "EditBox" and f.shown and type(rawget(f, "text")) == "string" then
+			eq(f.parent.kind, "ScrollFrame", "the box's text is in a scroll frame")
+			ok((rawget(f, "w") or 0) > 1, "as wide as its box")
+		end
+	end
 	-- Typing in the box changes nothing.
 	for _, f in ipairs(stub.frames) do
 		if f.kind == "EditBox" and f.text == boxes[1] then
