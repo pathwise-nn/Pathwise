@@ -1416,6 +1416,8 @@ function builders.settings()
 		{ "setting", "Minimap button", onOff(ns.Get("minimap.shown")), { { ns.Get("minimap.shown") and "Hide" or "Show", toggle("minimap.shown") } } },
 		{ "text", ns.Get("minimap.shown") and "Click it to open the hub, right-click for settings, drag to move it."
 			or "Without it, open Pathwise with a key: Game Menu > Key Bindings > Pathwise.", "muted" },
+		{ "setting", "With the other Pathwise buttons", onOff(ns.Get("minimap.grouped")), { { ns.Get("minimap.grouped") and "Apart" or "Together", toggle("minimap.grouped") } } },
+		{ "text", "With other Pathwise addons, their buttons share one Pathwise button: click it for the rest.", "muted" },
 		{ "heading", "Map pins" },
 		{ "setting", "On the world map", onOff(ns.Get("pins.map")), { { ns.Get("pins.map") and "Hide" or "Show", toggle("pins.map") } } },
 		{ "setting", "On the minimap", onOff(ns.Get("pins.minimap")), { { ns.Get("pins.minimap") and "Hide" or "Show", toggle("pins.minimap") } } },

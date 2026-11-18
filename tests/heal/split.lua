@@ -103,6 +103,61 @@ test("split: each minimap button's mark is its own logo's colour, not the shared
 	eq(mark(_G.PathwiseHealMinimapButton), heal.ID.color)
 end)
 
+test("split: both installed: one Pathwise button on the minimap, a tray with theirs", function()
+	local stub, ui, heal = both()
+	local G = _G.PathwiseMinimapGroup
+	local gb, tray = _G.PathwiseMinimapGroupButton, _G.PathwiseMinimapTray
+	local uiB, healB = _G.PathwiseUIMinimapButton, _G.PathwiseHealMinimapButton
+	ok(G and gb and tray, "the group, its button and tray")
+	ok(gb.shown and not tray.shown, "the group's button on the rim, the tray closed")
+	eq(uiB.parent, tray, "Pathwise UI's button in the tray")
+	eq(healB.parent, tray, "Pathwise Heal's too")
+	ok(uiB.points[1] ~= healB.points[1] or uiB.points[1][4] ~= healB.points[1][4], "side by side")
+	-- It sits where the first of them (Pathwise UI) sat.
+	local x, y = ui.Minimap.Offset(ui.Get("minimap.angle"), 140)
+	eq(gb.points[1][4], x) eq(gb.points[1][5], y)
+	gb.scripts.OnClick(gb, "LeftButton")
+	ok(tray.shown, "click: the tray opens")
+	healB.scripts.OnClick(healB, "LeftButton")
+	ok(_G.PathwiseHealConfig.shown, "a button in it works as before")
+	ok(not tray.shown, "and the tray closes")
+	-- In the tray, a button is not dragged around the rim.
+	local angle = heal.Get("minimap.angle")
+	stub.cursor = { 1000, 700 }
+	healB.scripts.OnDragStart(healB)
+	eq(healB.scripts.OnUpdate, nil, "no drag in the tray")
+	eq(heal.Get("minimap.angle"), angle)
+	-- Dragging the group's button moves the first one's place.
+	gb.scripts.OnDragStart(gb)
+	gb.scripts.OnUpdate(gb, 0.05)
+	gb.scripts.OnDragStop(gb)
+	eq(ui.Get("minimap.angle"), 90, "straight above")
+	-- Kept apart: Pathwise Heal's button goes back to the rim; one left, so no group.
+	heal.Set("minimap.grouped", false)
+	eq(healB.parent, Minimap, "Pathwise Heal's back on the rim")
+	eq(uiB.parent, Minimap, "one left: Pathwise UI's back too")
+	ok(not gb.shown, "and no group button")
+	heal.Set("minimap.grouped", true)
+	eq(healB.parent, tray, "together again")
+	-- A hidden button stays out of both.
+	ui.Set("minimap.shown", false)
+	ok(not uiB.shown and not gb.shown, "one shown: no group")
+	eq(healB.parent, Minimap)
+end)
+
+test("split: the minimap buttons and the options window wear Pathwise's emblem", function()
+	local stub, ui, heal = both()
+	for _, name in ipairs({ "PathwiseUIMinimapButton", "PathwiseHealMinimapButton", "PathwiseMinimapGroupButton" }) do
+		local logo = _G[name].logo
+		ok(logo and logo.body.texture:find("logo%-body$") and logo.glow.texture:find("logo%-glow$"), name .. ": the emblem")
+	end
+	for _, addon in ipairs({ "PathwiseUI", "Pathwise_Heal", "Pathwise_Insights" }) do
+		local f = assert(io.open(addon .. "/Media/icon.tga", "rb")):read("*a")
+		local want = assert(io.open("Pathwise/Media/icon.tga", "rb")):read("*a")
+		ok(f == want, addon .. ": the addon list's icon is Pathwise's")
+	end
+end)
+
 test("split: both installed: Pathwise UI's party frames stay with the healing frames, unless you hide them", function()
 	local stub, ui, heal = both(priestInParty)
 	local party = ui.Units.frames.party1

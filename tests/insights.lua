@@ -221,6 +221,20 @@ test("insights: quests (time taken in play, XP paid), kills and skill-ups", func
 	eq(L.skills[186].to, 20)
 end)
 
+test("insights: beside Pathwise, the two minimap buttons share one Pathwise button", function()
+	local stub, ns, ins = setup()
+	local gb, tray = _G.PathwiseMinimapGroupButton, _G.PathwiseMinimapTray
+	ok(gb and gb.shown, "the group's button")
+	eq(_G.PathwiseMinimapButton.parent, tray, "Pathwise's own in the tray")
+	eq(_G.PathwiseInsightsMinimapButton.parent, tray, "Pathwise Insights' too")
+	eq(_G.PathwiseMinimapGroup.Grouped()[1].key, "Pathwise", "Pathwise first: the group sits where its button sat")
+	ns.Set("minimap.grouped", false)
+	eq(_G.PathwiseMinimapButton.parent, Minimap, "Pathwise kept apart")
+	ok(not gb.shown, "one left: no group")
+	ns.Set("minimap.grouped", true)
+	eq(_G.PathwiseMinimapButton.parent, tray)
+end)
+
 test("insights: kills are read with the client's own strings, in any language", function()
 	COMBATLOG_XPGAIN_FIRSTPERSON = "%1$s stirbt, Ihr bekommt %2$d Erfahrung."
 	COMBATLOG_XPGAIN_FIRSTPERSON_GROUP = "%s stirbt, Ihr bekommt %d Erfahrung. (+%d Gruppenbonus)"
