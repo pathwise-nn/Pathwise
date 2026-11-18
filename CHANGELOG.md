@@ -6,6 +6,16 @@ that version's section.
 
 ## Unreleased
 
+### All Pathwise addons: one minimap button, one logo
+- With two or more Pathwise addons, their minimap buttons share one Pathwise
+  button on the rim: click it for a tray with the others, each working as
+  before (click, right-click). Drag the Pathwise button to move it. Each
+  addon can keep its own button apart ("With the other Pathwise buttons" in
+  its options; Pathwise: Settings, next to Minimap button). On by default.
+- Pathwise UI, Heal, Encounters, Loot, Insights, Bags and Gear wear
+  Pathwise's emblem, as the guide does: on their minimap buttons, their
+  options windows and in the addon list. Not yet checked in game.
+
 ### Pathwise Insights
 - The share code scrolls inside its box on the Share tab instead of
   spilling over the page; the mouse wheel scrolls the box, then the page.

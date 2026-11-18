@@ -112,6 +112,7 @@ function C.ProfileRows()
 		{ "heading", "Profile" },
 		{ "toggle", "Same settings on every character", "profile.shared", "Off: this character keeps its own (it starts from the shared ones)." },
 		{ "toggle", "Minimap button", "minimap.shown", "Without it, type " .. ns.ID.slash[1] .. "." },
+		{ "toggle", "With the other Pathwise buttons", "minimap.grouped", "With two or more Pathwise addons, their buttons share one Pathwise button: click it for the rest." },
 		{ "button", "Back to the defaults", function() ns.Reset() ns.Print("settings back to the defaults.") end },
 	}
 end
@@ -609,13 +610,9 @@ local function build()
 	T.TrimLine(frame)
 	if UISpecialFrames then table.insert(UISpecialFrames, ns.ID.global .. "Config") end
 
-	local icon = frame:CreateTexture(nil, "ARTWORK")
-	icon:SetTexture(T.MEDIA .. "icon")
-	icon:SetSize(20, 20)
-	icon:SetPoint("TOPLEFT", PAD, -16)
-	local function tint() local a = T.Color("accent") icon:SetVertexColor(a[1], a[2], a[3]) end
-	tint()
-	ns.On("ACCENT_CHANGED", tint)
+	local icon = T.Logo(frame, 22)
+	icon:SetPoint("TOPLEFT", PAD, -15)
+	ns.On("ACCENT_CHANGED", function() icon:Paint() end)
 	local title = T.Text(frame, "wtitle", "flair")
 	title:SetPoint("LEFT", icon, "RIGHT", 8, 0)
 	title:SetJustifyV("MIDDLE")

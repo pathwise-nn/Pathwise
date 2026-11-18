@@ -489,3 +489,28 @@ ns.On("SETTING_CHANGED", function(path)
 		T.ApplyAccent()
 	end
 end)
+
+-- The Pathwise emblem, as Pathwise (the guide) draws it (Media/logo-body and
+-- logo-glow, from tools/media.js): its metal in the theme's silver, its star
+-- and path in a colour (the accent unless one is given). Media/icon is the
+-- same emblem in fixed colours, for the addon list.
+function T.Logo(parent, size, color)
+	local holder = CreateFrame("Frame", nil, parent)
+	holder:SetSize(size or 32, size or 32)
+	holder.body = holder:CreateTexture(nil, "ARTWORK")
+	holder.body:SetTexture(MEDIA .. "logo-body")
+	holder.body:SetAllPoints()
+	holder.glow = holder:CreateTexture(nil, "ARTWORK", nil, 1)
+	holder.glow:SetTexture(MEDIA .. "logo-glow")
+	holder.glow:SetAllPoints()
+	holder.color = color or false
+	function holder:Paint(c)
+		if c then self.color = c end
+		local b = T.Color("silver")
+		local g = type(self.color) == "table" and self.color or T.Color(self.color or "accent")
+		self.body:SetVertexColor(b[1], b[2], b[3], 1)
+		self.glow:SetVertexColor(g[1], g[2], g[3], 1)
+	end
+	holder:Paint()
+	return holder
+end

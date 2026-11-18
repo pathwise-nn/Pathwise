@@ -182,6 +182,7 @@ stub.canvas = canvas
 -- The minimap: 140 px wide, zoom 0, outdoors, not rotating unless stub.cvars says.
 Minimap = new("Frame", "Minimap")
 Minimap.w, Minimap.h = 140, 140
+PathwiseMinimapGroup = nil -- the Pathwise addons' shared minimap group (Minimap.lua) starts over too
 function Minimap:GetZoom() return 0 end
 function Minimap:GetCenter() return 1000, 600 end
 function Minimap:GetEffectiveScale() return 1 end

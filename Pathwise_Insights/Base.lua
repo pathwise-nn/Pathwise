@@ -188,24 +188,8 @@ function L.TrackScale() end
 -- Whether to draw the game's own art (the preview has none).
 function L.GameArt() return not PATHWISE_PREVIEW end
 
--- The Pathwise logo: the compass star, in the theme's colors.
-function L.Logo(parent, size)
-	local holder = CreateFrame("Frame", nil, parent)
-	holder:SetSize(size or 32, size or 32)
-	holder.body = holder:CreateTexture(nil, "ARTWORK")
-	holder.body:SetTexture(T.MEDIA .. "logo-body")
-	holder.body:SetAllPoints()
-	holder.glow = holder:CreateTexture(nil, "ARTWORK", nil, 1)
-	holder.glow:SetTexture(T.MEDIA .. "logo-glow")
-	holder.glow:SetAllPoints()
-	function holder:Paint()
-		local b, g = T.Color("text"), T.Color("accent")
-		self.body:SetVertexColor(b[1], b[2], b[3], 1)
-		self.glow:SetVertexColor(g[1], g[2], g[3], 1)
-	end
-	holder:Paint()
-	return holder
-end
+-- The Pathwise logo: the kit's emblem (Pathwise's own), in the theme's colors.
+function L.Logo(parent, size) return T.Logo(parent, size) end
 
 -- The faction crest: a blue shield in a gold border (Alliance), a red
 -- spiked arch on two blades (Horde), each with the Pathwise star.

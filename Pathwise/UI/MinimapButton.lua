@@ -11,7 +11,15 @@ local T = ns.Theme
 local MB = {}
 ns.MinimapButton = MB
 
-ns.Defaults("minimap", { shown = true, angle = 225 }) -- degrees, 0 = east, counter-clockwise
+ns.Defaults("minimap", { shown = true, grouped = true, angle = 225 }) -- degrees, 0 = east, counter-clockwise
+
+-- The other Pathwise addons' buttons meet in _G.PathwiseMinimapGroup (made by
+-- their shared Minimap.lua): with two or more, one Pathwise button on the rim
+-- opens a tray holding them. Pathwise's own joins it ("minimap.grouped").
+local function group()
+	local G = _G.PathwiseMinimapGroup
+	return type(G) == "table" and type(G.Join) == "function" and G or nil
+end
 
 local SIZE = 32
 
@@ -47,6 +55,7 @@ function MB.Make(def)
 	b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 	b:RegisterForDrag("LeftButton")
 	b.def = def
+	b.pwTrayed, b.pwJoined = false, false -- in the Pathwise group's tray; joined to the group
 
 	-- A dark disc with a thin ring and the mark, in Pathwise's colours.
 	local disc = b:CreateTexture(nil, "BACKGROUND")
@@ -96,6 +105,7 @@ function MB.Make(def)
 		if GameTooltip then GameTooltip:Hide() end
 	end)
 	b:SetScript("OnDragStart", function(self)
+		if self.pwTrayed then return end -- in the group's tray it stays put
 		self:SetScript("OnUpdate", function()
 			local cx, cy = Minimap:GetCenter()
 			if not (cx and GetCursorPosition) then return end
@@ -108,6 +118,8 @@ function MB.Make(def)
 	b:SetScript("OnDragStop", function(self) self:SetScript("OnUpdate", nil) end)
 
 	function b:Refresh()
+		local G = group()
+		if self.pwJoined and G then G.Layout() return end
 		place()
 		self:SetShown(ns.Get(def.shownPath) and true or false)
 	end
@@ -128,6 +140,18 @@ function MB.Refresh()
 				if which == "RightButton" then ns.Fire("SHOW_SETTINGS") else ns.Fire("TOGGLE_HUB") end
 			end,
 		})
+		local G = group()
+		if G then
+			button.pwJoined = true
+			G.Join({
+				key = "Pathwise", name = "Pathwise", order = 0, button = button,
+				shown = function() return ns.Get("minimap.shown") and true or false end,
+				grouped = function() return ns.Get("minimap.grouped") ~= false end,
+				place = button.Place,
+				angle = function() return ns.Get("minimap.angle") or 225 end,
+				setAngle = function(deg) ns.Set("minimap.angle", deg) end,
+			})
+		end
 	end
 	for _, b in pairs(buttons) do b:Refresh() end
 end
@@ -135,7 +159,7 @@ end
 ns.On("READY", MB.Refresh)
 ns.On("SETTING_CHANGED", function(path)
 	for _, b in pairs(buttons) do
-		if path == b.def.shownPath or path == b.def.anglePath then b:Refresh() end
+		if path == b.def.shownPath or path == b.def.anglePath or (b.pwJoined and path == "minimap.grouped") then b:Refresh() end
 	end
 end)
 
