@@ -6,6 +6,31 @@ that version's section.
 
 ## Unreleased
 
+### Leveling routes: fewer stuck steps, more quests on the way
+- Steps no longer wait on things that may never come: quests players
+  report their giver never offers (Betrayed in Azshara, Vimes's Report,
+  Hearts of the Lost, Talk of the Town, My Little Friends), roaming or rare
+  drops (Noboru, the Shadowy Assassin, Gazz'uz's eye), short timers (A Meal
+  Served Cold), reputation (Defiler's Basic Care Package), crafted items
+  (Bartolo's cloak), Morrowgrain, and group fights (Jintha'Alor, Mok'Morokk,
+  Zamael, Uldaman's chest, Gerenzo's Orders). They are still offered, as
+  optional.
+- Order fixes: Old Habits before Nek'rosh's Gambit is handed in; Whuut's the
+  Rush after Yelmak's Medley; Eagan Peltskinner before Wolves Across the
+  Border; Tideress's globe on the Mystral Lake trip, once Stonetalon
+  Standstill is taken.
+- Humans now get Alba Fairmoon's Westfall chain (the quest data opens it
+  to every Alliance race).
+- Quests on the way, optional, with nothing to do but carry a word between
+  stops the route already makes: Wharfmaster Dizzywig and Goblin
+  Sponsorship (Mirage Raceway, Ratchet, Booty Bay), Letter to Jin'Zil, Speak
+  with Sevren, Grove of the Ancients, Crimson Crate Delivery.
+- Krazek's ore: the Arathi note now says it is mined, not dropped.
+- Prompt Potion Runner (a level 16 timed run) is optional at 55-60.
+- Leads from a player's Insights numbers, players' reports collected by
+  Polestar, and a new check of every route against the quest data
+  (tools/routes/audit.lua). Not yet checked in game.
+
 ## 0.3.9 (2026-11-18)
 
 ### Pathwise UI: your target's level shows how hard it is
