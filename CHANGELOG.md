@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.10 (2026-11-20)
+
 ### Leveling routes: fewer stuck steps, more quests on the way
 - Steps no longer wait on things that may never come: quests players
   report their giver never offers (Betrayed in Azshara, Vimes's Report,
