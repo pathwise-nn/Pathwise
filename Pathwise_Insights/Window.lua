@@ -452,12 +452,13 @@ local function drawOverview(log, key)
 		for i, r in ipairs(d.routes) do
 			if i > 8 then break end
 			local bits = { St.Duration(r.t), St.RateText(r.xp, r.t) }
-			if (r.b.steps or 0) > 0 then bits[#bits + 1] = r.b.steps .. " steps" end
+			local function count(n, one, many) bits[#bits + 1] = n .. " " .. (n == 1 and one or many) end
+			if (r.b.steps or 0) > 0 then count(r.b.steps, "step", "steps") end
 			if (r.b.skips or 0) > 0 then bits[#bits + 1] = r.b.skips .. " skipped" end
-			if r.d > 0 then bits[#bits + 1] = r.d .. (r.d == 1 and " death" or " deaths") end
+			if r.d > 0 then count(r.d, "death", "deaths") end
 			if r.b.done then bits[#bits + 1] = "finished" end
-			y = text(c, 0, y, width * 0.4, r.name, "body", "text")
-			y = text(c, 0, y - 2, width, table.concat(bits, "  ·  "), "small", "muted") + 6
+			y = text(c, 0, y, width, r.name, "body", "text") + 3
+			y = text(c, 0, y, width, table.concat(bits, "  ·  "), "small", "muted") + 12
 		end
 	end
 	if #d.zones > 0 then
