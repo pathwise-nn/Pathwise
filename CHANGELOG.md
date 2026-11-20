@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.11 (2026-11-20)
+
 ### Text missing until a /reload
 - Pathwise UI, Insights, Gear, Bags, Heal, Loot and Encounters: some text
   (labels and small print, in Inter Regular) could stay blank after
