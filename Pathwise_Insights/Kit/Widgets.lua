@@ -43,10 +43,46 @@ ns.On("ACCENT_CHANGED", function()
 	for obj, p in pairs(painted) do paint(obj, p[1], p[2]) end
 end)
 
+-- The game reads a font file the first time something uses it. Text set in
+-- a file it has not read yet can stay blank for the whole session (fine
+-- after a /reload, when the file is already in memory). So every font is
+-- used once while the addon loads, and text set before the world is up is
+-- given its font again once it is.
+local fonted = setmetatable({}, { __mode = "k" }) -- font string -> { role, size, flags }
+local worldUp = false
 function T.Font(fs, role, size, flags)
 	local r = T.TYPE[role] or T.TYPE.body
 	if not fs:SetFont(T.FONTS[r[1]], size or r[2], flags or "") then fs:SetFont("Fonts\\FRIZQT__.TTF", size or r[2], flags or "") end
+	if not worldUp then fonted[fs] = { role, size, flags } end
 end
+
+do
+	local holder = CreateFrame("Frame", nil, UIParent)
+	holder:SetSize(1, 1)
+	holder:SetPoint("BOTTOMLEFT", UIParent, "TOPLEFT", -100, 100) -- off screen
+	holder:SetAlpha(0)
+	T.FontPreload = {}
+	for key, file in pairs(T.FONTS) do
+		local fs = holder:CreateFontString(nil, "OVERLAY")
+		fs:SetFont(file, 12, "")
+		fs:SetText("Pathwise 0123456789")
+		T.FontPreload[key] = fs
+	end
+end
+
+function T.RefreshFonts()
+	worldUp = true
+	for fs, f in pairs(fonted) do
+		local text = fs:GetText()
+		T.Font(fs, f[1], f[2], f[3])
+		if text then fs:SetText("") fs:SetText(text) end
+	end
+	for fs in pairs(fonted) do fonted[fs] = nil end
+end
+ns.RegisterEvent("PLAYER_ENTERING_WORLD", function()
+	if worldUp then return end
+	if C_Timer and C_Timer.After then C_Timer.After(1, T.RefreshFonts) else T.RefreshFonts() end
+end)
 
 -- Text over a colored bar (names, health and power numbers, cast names): a
 -- black outline so it reads on any color ("units.outline"), else a shadow.

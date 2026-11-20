@@ -6,6 +6,12 @@ that version's section.
 
 ## Unreleased
 
+### Text missing until a /reload
+- Pathwise UI, Insights, Gear, Bags, Heal, Loot and Encounters: some text
+  (labels and small print, in Inter Regular) could stay blank after
+  logging in until a /reload. Every font is now read while the addon loads,
+  and any text set before you are in the world gets its font again.
+
 ## 0.3.10 (2026-11-20)
 
 ### Leveling routes: fewer stuck steps, more quests on the way
