@@ -565,3 +565,20 @@ test("options window: a resize grip, a pin on its header", function()
 	ns.Reset()
 	eq(f.w, 700)
 end)
+
+test("fonts: every font read while loading, and early text given its font again once in the world", function()
+	local stub, ns = fresh()
+	local T = ns.Theme
+	for key in pairs(T.FONTS) do ok(T.FontPreload[key] and T.FontPreload[key]:GetText(), "used once while loading: " .. key) end
+	local fs = T.Text(CreateFrame("Frame"), "small", "muted")
+	fs:SetText("Time played")
+	local calls = {}
+	function fs:SetFont(file, size) calls[#calls + 1] = { file, size } return true end
+	stub.fire("PLAYER_ENTERING_WORLD", true, false)
+	eq(#calls, 1, "its font set again")
+	eq(calls[1][1], T.FONTS.regular)
+	eq(calls[1][2], 11)
+	eq(fs:GetText(), "Time played", "its text kept")
+	stub.fire("PLAYER_ENTERING_WORLD", false, false)
+	eq(#calls, 1, "only the first time")
+end)
