@@ -689,6 +689,20 @@ test("insights alone: loads and records without Pathwise; the window, its option
 	ok(contains(stub.texts(), "Install Pathwise: Leveling & Professions to time each guide step"), "the options say what Pathwise adds")
 end)
 
+test("insights alone: routes go by their titles, not their ids; one step, not one steps", function()
+	local stub, ins = alone()
+	local St = ins.Stats
+	eq(St.RouteTitle("forever/horde/30-40/03-arathi-highlands"), "Arathi Highlands, Badlands & The Barrens", "the bundled title")
+	eq(St.RouteTitle("forever/horde/99-old-route-name"), "Old Route Name", "an unknown id, made readable")
+	local L = log()
+	L.routes["forever/horde/07-ashenvale"] = { t = 3600, xp = 13000, d = 2, steps = 1 }
+	SlashCmdList.PATHWISEINSIGHTS("")
+	local texts = stub.texts()
+	ok(contains(texts, "Ashenvale & Thousand Needles"), "the title shown")
+	ok(not contains(texts, "forever/horde"), "no id shown")
+	ok(contains(texts, "1 step  ·  2 deaths"), "one step")
+end)
+
 test("insights alone: follows the quest log against its own copy of the routes, with Pathwise's step numbers", function()
 	local stub, ins = alone()
 	local R, K = ins.Recorder, ins.Track

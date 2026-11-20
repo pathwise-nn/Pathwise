@@ -6,6 +6,11 @@ that version's section.
 
 ## Unreleased
 
+### Insights: a tidier Routes list
+- Routes go by their titles ("Arathi Highlands, Badlands & The Barrens"),
+  not their ids, with Pathwise installed or not.
+- More room between routes, and "1 step" rather than "1 steps".
+
 ## 0.3.11 (2026-11-20)
 
 ### Text missing until a /reload

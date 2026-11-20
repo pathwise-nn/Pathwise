@@ -65,9 +65,20 @@ function St.DayText(key)
 	return ("%d %s %s"):format(tonumber(d), MONTHS[tonumber(m)] or "?", y)
 end
 
+-- A route's title: Pathwise's, else the copy Insights carries (Data/Routes.lua),
+-- else made from its id ("forever/horde/30-40/03-arathi-highlands" -> "Arathi Highlands").
+local carried
 local function routeTitle(id)
 	local info = S.Guide.RouteInfo(id)
-	return info and info.title or tostring(id)
+	if info and info.title then return info.title end
+	if not carried then
+		carried = {}
+		for _, r in ipairs(ns.Routes or {}) do carried[r.id] = r.title end
+	end
+	if carried[id] then return carried[id] end
+	local last = tostring(id):match("([^/]+)$") or tostring(id)
+	last = last:gsub("^%d+%-", ""):gsub("%-", " ")
+	return (last:gsub("(%a)(%w*)", function(a, b) return a:upper() .. b end))
 end
 St.RouteTitle = routeTitle
 
