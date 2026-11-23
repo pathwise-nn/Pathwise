@@ -251,13 +251,35 @@ for iid, it in pairs(db.Item) do
 	end
 end
 
+-- Drops players saw in game and sent in (/pwloot export), checked by hand:
+-- tools/data/reported-drops.lua. Each must name a boss of the client's list
+-- and an item of Forever's Item table.
+local reportedOf, nReported = {}, 0
+do
+	local list = assert(dofile("tools/data/reported-drops.lua"), "tools/data/reported-drops.lua returns no list")
+	for _, r in ipairs(list) do
+		local eid, ids, source = r[1], r[2], r[3]
+		assert(encounters[eid], ("reported drops: no boss %s in the client's list"):format(tostring(eid)))
+		assert(type(source) == "string" and source ~= "", ("reported drops for boss %d: say who saw them and when"):format(eid))
+		reportedOf[eid] = reportedOf[eid] or {}
+		for _, iid in ipairs(ids) do
+			assert(itemRows[iid], ("reported drops for boss %d: item %d is not in Forever's Item table"):format(eid, iid))
+			table.insert(reportedOf[eid], iid)
+			nReported = nReported + 1
+		end
+	end
+end
+
 local items, withLoot, drops = {}, 0, 0
-for _, enc in pairs(encounters) do
+for eid, enc in pairs(encounters) do
 	local set, list = {}, {}
 	for _, nid in ipairs(enc.npcs) do
 		for _, iid in ipairs(dropsOf[nid] or {}) do
 			if not set[iid] then set[iid] = true list[#list + 1] = iid end
 		end
+	end
+	for _, iid in ipairs(reportedOf[eid] or {}) do
+		if not set[iid] then set[iid] = true list[#list + 1] = iid end
 	end
 	local function q(iid) return sparse[iid] and tonumber(sparse[iid].OverallQualityID) or 0 end
 	table.sort(list, function(a, b)
@@ -273,7 +295,7 @@ for _, enc in pairs(encounters) do
 			-- from the server in game); Item has them all. Where ItemSparse has
 			-- none: the name and levels are QuestieDB's, the quality unknown (0)
 			-- until the game tells the addon.
-			local s, r, qd = sparse[iid], itemRows[iid], db.Item[iid]
+			local s, r, qd = sparse[iid], itemRows[iid], db.Item[iid] or {}
 			local classes = s and tonumber(s.AllowableClass) or -1
 			items[iid] = {
 				(s and s.Display_lang ~= "" and s.Display_lang) or qd[IK.name] or "",
@@ -441,7 +463,8 @@ f:write("-- change the generator or its sources and rebuild.\n")
 f:write("--\n")
 f:write(("-- Instances, bosses and items: Forever's client tables Map, Difficulty,\n-- DungeonEncounter, ItemSparse and Item (build %s, via wago.tools; (c) Blizzard Entertainment).\n"):format(build))
 f:write(("-- Who drops what: QuestieDB's Forever data (commit %s), by the Questie team\n-- and contributors, used under GPL-3.0 (THIRD_PARTY.md). It has no drop chances.\n"):format(commit))
-f:write("-- Nothing here comes from AtlasLoot.\n")
+f:write(("-- Also: %d drops players saw in game and sent in (tools/data/reported-drops.lua).\n"):format(nReported))
+f:write("-- Nothing here comes from AtlasLoot or Wowhead.\n")
 f:write("--\n")
 f:write("--   INSTANCES[i]     = { map, name, raid, size, { lowLevel, highLevel } | nil, { encounter ids } }\n")
 f:write("--   ENCOUNTERS[id]   = { name, map, players (0: the instance's own size), { npc ids }, { item ids } }\n")
@@ -501,6 +524,7 @@ for _ in pairs(instances) do nInst = nInst + 1 end
 for _ in pairs(encounters) do nEnc = nEnc + 1 end
 log(("wrote %s: %d instances, %d bosses (%d matched to a monster, %d with loot), %d drops of %d items"):format(
 	OUT, nInst, nEnc, matched, withLoot, drops, (function() local n = 0 for _ in pairs(items) do n = n + 1 end return n end)()))
+log(("reported drops added: %d"):format(nReported))
 log(("rows merged into the boss they repeat: %d"):format(nMerged))
 log(("portraits found by name: %d of %d bosses"):format(nPortraits, nEnc))
 log(("bosses matched by name inside: %d, by a longer or shorter name inside: %d, by a unique name with no spawn: %d"):format(byRule[1], byRule[2], byRule[3]))

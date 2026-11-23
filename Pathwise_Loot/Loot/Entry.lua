@@ -13,8 +13,18 @@ ns.Commands["search"] = function(rest)
 	B.Show()
 	B.Search(rest)
 end
+-- The drops you saw that the data lacks: the options page has them to copy.
+ns.Commands["export"] = function()
+	local text, bosses, drops = L.Report()
+	if not text then
+		ns.Print("Every drop you have seen is already in Pathwise's data. Nothing to send.")
+		return
+	end
+	ns.Print(("%d drop%s from %d boss%s to send: copy them from the Your drops box."):format(drops, drops == 1 and "" or "s", bosses, bosses == 1 and "" or "es"))
+	ns.Config.Show("loot")
+end
 ns.Commands["help"] = function()
-	ns.Print(ns.ID.slash[1] .. ": the loot browser.  " .. ns.ID.slash[1] .. " search <words>: find an item.  " .. ns.ID.slash[1] .. " options: settings.  " .. ns.ID.slash[1] .. " move: move mode.")
+	ns.Print(ns.ID.slash[1] .. ": the loot browser.  " .. ns.ID.slash[1] .. " search <words>: find an item.  " .. ns.ID.slash[1] .. " export: the drops you saw that Pathwise lacks, to send in.  " .. ns.ID.slash[1] .. " options: settings.  " .. ns.ID.slash[1] .. " move: move mode.")
 end
 
 ---------------------------------------------------------------------------
