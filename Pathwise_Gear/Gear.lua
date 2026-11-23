@@ -3,8 +3,16 @@
 --   Gear.Score(link) -> score | nil         the item's value under the weights in use
 --   Gear.Compare(link) -> { score, old, delta, pct, slot, empty, usable, reason, minLevel } | nil
 --   Gear.IsUpgrade(link) -> bool, pct, slot  wearable now and at least gear.minUpgrade % better
+--   Gear.Verdict(link) -> { grade, pct, slot, minLevel, changes } | nil   how much better or worse:
+--       grade "big" (Gear.BIG % or more), "up", "empty" (fills an empty slot),
+--       "same" (within gear.minUpgrade either way), "worse", "later" (an
+--       upgrade once you reach its level), "cant", "equipped"
+--   Gear.Changes(link, slot) -> { { key, diff, value }, ... }   the stats that make the difference
 --   Gear.Spec() -> key, label, how ("auto" | "chosen")
+--   Gear.Mix() -> { { spec, points, share }, ... }   your talent trees, most points first
 --   Gear.Weights() -> weights, name, source ("pathwise" | "imported")
+--       Following your talents, the weights are your trees' mixed by their
+--       points (21 Frost / 9 Fire: 70% Frost's, 30% Fire's).
 --   Gear.ImportScale(text) -> scale | nil, err   custom weights, pasted
 --
 -- Stats: the client's own (C_Item.GetItemStats), so Forever's numbers.
@@ -70,15 +78,24 @@ end
 -- The talent tree with the most points (C_SpecializationInfo, as Forever's
 -- character frame reads it), or nil.
 function Client.TalentTree()
-	local Sp = C_SpecializationInfo
-	if not (Sp and Sp.GetSpecializationInfo) then return nil end
 	local best, bestPoints
+	for i, points in pairs(Client.TalentPoints()) do
+		if points > 0 and (not bestPoints or points > bestPoints or (points == bestPoints and i < best)) then best, bestPoints = i, points end
+	end
+	return best
+end
+
+-- Points spent in each tree: { [1] = 21, [3] = 9 } (trees with none left out).
+function Client.TalentPoints()
+	local out = {}
+	local Sp = C_SpecializationInfo
+	if not (Sp and Sp.GetSpecializationInfo) then return out end
 	for i = 1, 3 do
 		local ok, _, _, _, _, _, _, points = pcall(Sp.GetSpecializationInfo, i)
 		points = ok and readable(points)
-		if type(points) == "number" and points > 0 and (not bestPoints or points > bestPoints) then best, bestPoints = i, points end
+		if type(points) == "number" and points > 0 then out[i] = points end
 	end
-	return best
+	return out
 end
 
 ---------------------------------------------------------------------------
@@ -178,12 +195,33 @@ function Gear.UseScale(name)
 	Gear.Clear()
 end
 
+-- Your talent trees, most points first: { { spec, points, share }, ... }
+-- (empty before your first talent point).
+function Gear.Mix()
+	local specs, out, total = W.Specs(Client.Class()), {}, 0
+	for i, points in pairs(Client.TalentPoints()) do
+		if specs[i] then out[#out + 1] = { spec = specs[i], points = points, tree = i } total = total + points end
+	end
+	table.sort(out, function(a, b) if a.points ~= b.points then return a.points > b.points end return a.tree < b.tree end)
+	for _, m in ipairs(out) do m.share = m.points / total end
+	return out
+end
+
+local mixed -- the mixed weights, until the talents or settings change
 function Gear.Weights()
 	local imported = chosenScale()
 	if imported then return imported.weights, imported.name, "imported" end
 	local class = Client.Class()
-	local key, label = Gear.Spec()
-	return W.For(class, key) or {}, label or "?", "pathwise"
+	local key, label, how = Gear.Spec()
+	local mix = how == "auto" and Gear.Mix() or {}
+	if #mix < 2 then return W.For(class, key) or {}, label or "?", "pathwise" end
+	if not mixed then
+		mixed = {}
+		for _, m in ipairs(mix) do
+			for k, v in pairs(W.For(class, m.spec.key) or {}) do mixed[k] = (mixed[k] or 0) + v * m.share end
+		end
+	end
+	return mixed, label or "?", "pathwise"
 end
 
 -- Stat names a player may paste (plain names, and the names the common
@@ -307,7 +345,7 @@ Gear.SLOT_NAMES = { "Head", "Neck", "Shoulder", "Shirt", "Chest", "Waist", "Legs
 
 local cache = {}
 function Gear.Clear()
-	cache = {}
+	cache, mixed = {}, nil
 	S.Fire("GEAR_UPDATED")
 end
 
@@ -335,7 +373,8 @@ function Gear.Compare(link)
 			if equipLoc == "INVTYPE_2HWEAPON" then old = old + (equippedScore(17)) end
 			local r = { score = score, old = old, delta = score - old, slot = slot, empty = oldLink == nil, equipped = oldLink == link }
 			-- Rings and trinkets: compare with the weaker one.
-			if not best or r.old < best.old then best = r end
+			r.oldLink = oldLink
+		if not best or r.old < best.old then best = r end
 		end
 	end
 	if not best then return nil end
@@ -360,8 +399,58 @@ function Gear.IsUpgrade(link)
 	return false, r.pct, slotName, "pathwise"
 end
 
+-- How much better or worse, in steps rather than yes or no.
+Gear.BIG = 10 -- % or more: a big upgrade
+function Gear.Verdict(link)
+	local r = link and Gear.Compare(link)
+	if not r then return nil end
+	local v = { pct = r.pct, slot = Gear.SLOT_NAMES[r.slot], minLevel = r.minLevel, score = r.score }
+	if not r.usable then v.grade, v.reason = "cant", r.reason return v end
+	if r.equipped then v.grade = "equipped" return v end
+	local min = (S.Get("gear.minUpgrade") or 0) * 100
+	local better
+	if r.empty then better = r.score > 0
+	else better = r.delta > 0 and r.pct ~= nil and r.pct >= min end
+	if r.reason == "level" then
+		v.grade = better and "later" or (r.pct and r.delta < 0 and -r.pct >= min and "worse") or "same"
+	elseif r.empty then
+		v.grade = better and "empty" or "same"
+	elseif better then
+		v.grade = r.pct >= Gear.BIG and "big" or "up"
+	elseif r.pct and r.delta < 0 and -r.pct >= min then
+		v.grade = "worse"
+	else
+		v.grade = "same"
+	end
+	v.changes = Gear.Changes(link, r.slot, r.oldLink)
+	return v
+end
+
+-- The stats that make the difference against what you wear in that slot,
+-- the ones worth most to you first: { { key, diff, value }, ... } (value =
+-- diff x its weight; stats your weights give nothing are left out).
+function Gear.Changes(link, slot, oldLink)
+	local new = Gear.Stats(link) or {}
+	oldLink = oldLink or (slot and Client.Equipped(slot))
+	local old = (oldLink and oldLink ~= link and Gear.Stats(oldLink)) or {}
+	local w = Gear.Weights()
+	local out, keys = {}, {}
+	for k in pairs(new) do keys[k] = true end
+	for k in pairs(old) do keys[k] = true end
+	for k in pairs(keys) do
+		local diff = (new[k] or 0) - (old[k] or 0)
+		local value = diff * (w[k] or 0)
+		if diff ~= 0 and value ~= 0 then out[#out + 1] = { key = k, diff = diff, value = value } end
+	end
+	table.sort(out, function(a, b)
+		if math.abs(a.value) ~= math.abs(b.value) then return math.abs(a.value) > math.abs(b.value) end
+		return a.key < b.key
+	end)
+	return out
+end
+
 -- Clear the verdicts when what they depend on changes.
 for _, ev in ipairs({ "PLAYER_EQUIPMENT_CHANGED", "PLAYER_LEVEL_UP", "PLAYER_TALENT_UPDATE", "CHARACTER_POINTS_CHANGED", "GET_ITEM_INFO_RECEIVED" }) do
 	S.RegisterEvent(ev, function() Gear.Clear() end)
 end
-S.On("SETTING_CHANGED", function(path) if type(path) == "string" and path:find("^gear%.") then cache = {} end end)
+S.On("SETTING_CHANGED", function(path) if type(path) == "string" and path:find("^gear%.") then cache, mixed = {}, nil end end)

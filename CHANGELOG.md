@@ -21,6 +21,23 @@ that version's section.
   it opens only after Crocs of the Sky, too late for the road. Not yet
   checked in game.
 
+### Pathwise Gear: upgrades in steps, from your talents and stats
+- Following your talents, the stat weights are your talent trees' mixed by
+  the points you spent (15 Frost and 5 Fire: three quarters Frost's, a
+  quarter Fire's), not only the tree with the most. The Upgrades page shows
+  the mix. A spec you choose by hand is used alone, as before.
+- Upgrades are no longer just yes or no. The tooltip says "big upgrade"
+  (+10% or more), "upgrade", "about the same", "worse", or "upgrade at
+  level N" for one you can't wear yet, and a second line names the stats
+  that make the difference, the ones worth most to you first (Intellect +4,
+  Stamina +2).
+- Bag arrows follow the same steps: bigger for a big upgrade, grey for one
+  you can wear from a later level.
+- Picking up an upgrade says so in chat, with how much better it is and the
+  stats (Upgrades > Say when I pick up an upgrade). Best in slot items keep
+  their own alert.
+- Not yet checked in game.
+
 ## 0.3.11 (2026-11-20)
 
 ### Text missing until a /reload

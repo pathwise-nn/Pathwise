@@ -34,7 +34,14 @@ local function upgradeRows()
 			end
 		end,
 	}, specs, how == "auto" and ("Following your talents (or the usual levelling spec): %s."):format(tostring((select(2, Gear.Spec())))) or "Chosen by you." }
-	local main, pct = P.Priority(from == "imported" and weights or W.For(class, key))
+	-- Following your talents: each tree you put points in counts for its share.
+	local mix = how == "auto" and Gear.Mix() or {}
+	if #mix >= 2 then
+		local parts = {}
+		for _, m in ipairs(mix) do parts[#parts + 1] = ("%s %d (%d%%)"):format((m.spec.label:gsub(" %b()", "")), m.points, math.floor(m.share * 100 + 0.5)) end
+		rows[#rows + 1] = { "text", "Your talents mix the weights: " .. table.concat(parts, ", ") .. ".", "text2" }
+	end
+	local main, pct = P.Priority(from == "imported" and weights or (#mix >= 2 and weights) or W.For(class, key))
 	rows[#rows + 1] = { "heading", "Stat priority" }
 	rows[#rows + 1] = { "text", main ~= "" and main or "No stats", "text" }
 	if pct ~= "" then rows[#rows + 1] = { "text", "Per 1%: " .. pct, "text2" } end
@@ -68,7 +75,8 @@ local function upgradeRows()
 
 	rows[#rows + 1] = { "heading", "Options" }
 	rows[#rows + 1] = { "toggle", "Line on item tooltips", "gear.tooltip", "Whether an item is an upgrade for your spec, and by how much." }
-	rows[#rows + 1] = { "toggle", "Arrow on bag upgrades", "gear.bags", "A gold arrow on items in the game's bags that are upgrades." }
+	rows[#rows + 1] = { "toggle", "Arrow on bag upgrades", "gear.bags", "A gold arrow on items in the game's bags that are upgrades: bigger for a big one (+10% or more), grey for one you can wear from a later level." }
+	rows[#rows + 1] = { "toggle", "Say when I pick up an upgrade", "gear.alert", "A chat line with how much better it is and the stats that make it so." }
 	rows[#rows + 1] = { "toggle", "Best quest reward", "gear.rewards", ns.Pathwise() and "With a choice of rewards, the best one for you is named in chat and on its tooltip; Pathwise's quest automation can take it."
 		or "With a choice of rewards, the best one for you is named in chat and on its tooltip." }
 	rows[#rows + 1] = { "slider", "Smallest upgrade shown", "gear.minUpgrade", 0, 0.1, 0.01, "percent" }

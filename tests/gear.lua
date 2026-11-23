@@ -368,13 +368,100 @@ end)
 test("gear: the tooltip line", function()
 	local stub, ns, g = gear()
 	local lines = stub.showTooltip("item:102")
-	eq(#lines, 1)
+	eq(#lines, 2)
 	ok(lines[1][1]:find("Pathwise Gear · Frost"), lines[1][1])
-	ok(lines[1][2]:find("upgrade · Head"), lines[1][2])
+	ok(lines[1][2]:find("big upgrade · Head"), lines[1][2])
+	eq(lines[2][2], "Intellect +4, Stamina +2", "the stats that make it so, the one worth most first")
 	lines = stub.showTooltip("item:103")
 	eq(lines[1][2], "You can't wear this armour")
 	g.Set("gear.tooltip", false)
 	eq(#stub.showTooltip("item:102"), 0, "switched off")
+end)
+
+-- Two more hoods, beside the Glyphed Hood (6 Intellect, 2 Stamina): the same,
+-- and a little better.
+local function hoods(stub)
+	stub.itemInfo[109], stub.itemStats[109] = { "Twin Hood", 2, 18, 40, 4, 1, "INVTYPE_HEAD", 13 }, { [INT] = 6, [STA] = 2 }
+	stub.itemInfo[111], stub.itemStats[111] = { "Sturdy Hood", 2, 18, 40, 4, 1, "INVTYPE_HEAD", 13 }, { [INT] = 6, [STA] = 3 }
+end
+
+test("gear: verdicts in steps: big, up, about the same, worse, later, can't", function()
+	local stub, ns, g = gear(hoods)
+	local G = g.Gear
+	eq(G.Verdict("item:102").grade, "big", "6 Intellect over 2: a big upgrade")
+	stub.equipped[1] = 102
+	G.Clear()
+	local up = G.Verdict("item:111")
+	eq(up.grade, "up", "one more Stamina")
+	ok(up.pct > 1 and up.pct < G.BIG, tostring(up.pct))
+	eq(up.changes[1].key, "sta")
+	eq(G.Verdict("item:109").grade, "same", "the same stats")
+	eq(G.Verdict("item:108").grade, "worse")
+	eq(G.Verdict("item:107").grade, "later", "better, from level 30")
+	eq(G.Verdict("item:107").minLevel, 30)
+	eq(G.Verdict("item:103").grade, "cant")
+	eq(G.Verdict("item:102").grade, "equipped")
+	ok(not G.IsUpgrade("item:107"), "not an upgrade until you can wear it")
+	-- On the tooltip.
+	eq(stub.showTooltip("item:109")[1][2], "About the same (+0.0%)")
+	ok(stub.showTooltip("item:107")[1][2]:find("^Upgrade at level 30 %(%+"), stub.showTooltip("item:107")[1][2])
+	ok(stub.showTooltip("item:108")[1][2]:find("worse"))
+	ok(stub.showTooltip("item:111")[1][2]:find("^%+%d+%.%d%% upgrade · Head$"), stub.showTooltip("item:111")[1][2])
+	-- A smaller step counts as the same when the smallest upgrade is raised.
+	g.Set("gear.minUpgrade", 0.1)
+	eq(G.Verdict("item:111").grade, "same")
+end)
+
+test("gear: following the talents, the weights mix the trees by their points", function()
+	local points = {}
+	local stub, ns, g = gear(function()
+		C_SpecializationInfo = { GetSpecializationInfo = function(i) return i, "Tree " .. i, "", 0, "", false, points[i] or 0 end }
+	end)
+	local G, W = g.Gear, g.Weights
+	near(G.Weights().sta, W.For("MAGE", "frost").sta, 1e-9, "no talents yet: the levelling spec")
+	points = { 0, 5, 15 }
+	G.Clear()
+	eq(select(2, G.Weights()), "Frost", "named after the tree with most points")
+	local w = G.Weights()
+	near(w.sta, 0.75 * W.For("MAGE", "frost").sta + 0.25 * W.For("MAGE", "fire").sta, 1e-9, "75% Frost, 25% Fire")
+	near(w.mp5, 0.25 * W.For("MAGE", "fire").mp5, 1e-9, "a stat only Fire values counts for its share")
+	local mix = G.Mix()
+	eq(#mix, 2)
+	eq(mix[1].spec.key, "frost")
+	near(mix[2].share, 0.25, 1e-9)
+	local _, rows = nil, g.Config.CATEGORIES[1].rows()
+	local found = false
+	for _, r in ipairs(rows) do if r[1] == "text" and tostring(r[2]):find("Your talents mix the weights: Frost 15 %(75%%%), Fire 5 %(25%%%)") then found = true end end
+	ok(found, "the page says so")
+	-- A spec chosen by hand is used alone.
+	G.SetSpec("fire")
+	near(G.Weights().sta, W.For("MAGE", "fire").sta, 1e-9, "chosen: Fire's alone")
+	C_SpecializationInfo = nil
+end)
+
+test("gear: picking up an upgrade says so in chat, with the stats", function()
+	local stub, ns, g = gear(function(s) s.bags[0] = { { itemID = 108 } } end)
+	local before = #stub.printed
+	stub.bags[0][2] = { itemID = 102 }
+	stub.fire("BAG_UPDATE_DELAYED")
+	ok(#stub.printed > before, "a chat line")
+	ok(lastPrint(stub):find("item:102 is a big upgrade %(%+%d+%.%d%%%) for your head: Intellect %+4, Stamina %+2%."), lastPrint(stub))
+	-- Not for what was there already, nor what you can't wear.
+	before = #stub.printed
+	stub.bags[0][3] = { itemID = 103 }
+	stub.fire("BAG_UPDATE_DELAYED")
+	eq(#stub.printed, before, "the plate helm: nothing")
+	-- Taking off what you wear is not a new item.
+	stub.equipped[1] = nil
+	stub.bags[0][4] = { itemID = 101 }
+	stub.fire("BAG_UPDATE_DELAYED")
+	eq(#stub.printed, before, "the hood taken off: nothing")
+	-- Switched off.
+	g.Set("gear.alert", false)
+	stub.bags[0][5] = { itemID = 111 }
+	hoods(stub)
+	stub.fire("BAG_UPDATE_DELAYED")
+	eq(#stub.printed, before, "off: nothing")
 end)
 
 test("gear: a gold arrow on bag items that are upgrades", function()
