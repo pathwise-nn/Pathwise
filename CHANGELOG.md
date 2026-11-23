@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.13 (2026-11-23)
+
 ### Pathwise Loot: send in the drops it's missing
 - Loot's options have a "Send the drops Pathwise lacks" box (or type
   `/pwloot export`). It holds one line with the boss drops you've seen that
