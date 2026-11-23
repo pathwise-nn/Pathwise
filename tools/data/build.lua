@@ -86,7 +86,7 @@ for _, t in ipairs(ENTITIES) do
 	metaOf[t.name] = run("src/meta/" .. t.meta .. ".lua", env(), "QuestieDB", Lib)
 end
 
-for _, f in ipairs({ "constants", "items", "quests", "professions", "factions", "zones", "phases", "icons", "waypoints", "expansions" }) do
+for _, f in ipairs({ "constants", "items", "npcs", "quests", "professions", "factions", "zones", "phases", "icons", "waypoints", "expansions" }) do
 	run("src/corrections/enum/" .. f .. ".lua", env(), "QuestieDB", Lib)
 end
 local C = assert(Lib.Enum, "constants did not load")
@@ -118,7 +118,7 @@ local QuestieDB = {
 	questKeys = keys.Quest, npcKeys = keys.Npc, itemKeys = keys.Item, objectKeys = keys.Object,
 	raceKeys = pick("raceKeys"), classKeys = pick("classKeys"), sortKeys = pick("sortKeys"),
 	specialFlags = pick("specialFlags"), factionIDs = pick("factionIDs"), questFlags = pick("questFlags"),
-	npcFlags = pick("npcFlags"), itemClasses = pick("itemClasses"), waypointPresets = pick("waypointPresets"),
+	npcFlags = pick("npcFlags"), npcRanks = pick("npcRanks"), itemClasses = pick("itemClasses"), waypointPresets = pick("waypointPresets"),
 	questData = captured.Quest, npcData = captured.Npc, itemData = captured.Item, objectData = captured.Object,
 }
 local hints = { killCreditObjectiveFirst = {}, objectObjectiveFirst = {}, itemObjectiveFirst = {}, eventObjectiveFirst = {}, spellObjectiveFirst = {} }

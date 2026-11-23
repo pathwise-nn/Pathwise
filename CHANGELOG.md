@@ -6,6 +6,21 @@ that version's section.
 
 ## Unreleased
 
+### Newer quest, gear and loot data
+- Quest data from QuestieDB's latest Forever data (commit e3c3bc4,
+  2026-11-22): 397 more quests, 586 more NPCs and 146 more objects, and
+  342 quests with corrected prerequisites, many from players' traces.
+- Pathwise Gear's Best in Slot and Pathwise Loot rebuilt from it. Loot
+  also reads Forever's newest client build (1.60.1.71037): five new
+  dungeons (Alcaz Prison, Blackmaw Hold, Krol'dok Stronghold, The Drowned
+  City, The Shaper's Terrace) and more boss drops.
+- Routes, from the new data: Swelling Forces is taken once Return to Onu is
+  handed in; Rocks to Rests once Favorite Food is; This Land Was Their Land
+  (Menethil) no longer holds its step, since it needs Defeat Nek'rosh,
+  which the route skips. Crimson Crate Delivery, added last time, is gone:
+  it opens only after Crocs of the Sky, too late for the road. Not yet
+  checked in game.
+
 ## 0.3.11 (2026-11-20)
 
 ### Text missing until a /reload

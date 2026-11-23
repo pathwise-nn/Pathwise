@@ -129,19 +129,17 @@ local FIXES = {
 		{ why = "Fandral's message, from Darnassus",
 			add = { { "turnin", 952, at = { 1439, 43.55, 76.29 }, who = "Onu", optional = true } },
 			before = { "turnin", 948 } },
-	},
-	-- Crimson Crate Delivery: James Halloran in Menethil, for Howin
-	-- Kindfeather on the road east, where the Hillsbrad route stops.
-	["forever/alliance/06-ashenvale"] = {
-		{ why = "Crimson Crate Delivery, for the Hillsbrad route's Green Belt stop",
-			add = { { "accept", 98240, at = { 1437, 8.55, 55.74 }, who = "James Halloran", optional = true } },
-			after = { "accept", 279 } },
+		-- Swelling Forces (98013) opens once Return to Onu (950) is handed in
+		-- (QuestieDB e3c3bc4): Arbal sleeps beside Onu.
+		{ why = "Swelling Forces opens after Return to Onu", move = { "accept", 98013 }, after = { "turnin", 950 } },
 	},
 	["forever/alliance/30-40/01-hillsbrad-foothills"] = {
 		{ why = "Old Habits is offered only while Nek'rosh's Gambit is in the log", move = { "accept", 98223 }, before = { "turnin", 465 } },
-		{ why = "James Halloran's crate, from Menethil",
-			add = { { "turnin", 98240, at = { 1437, 49.36, 42.13 }, who = "Howin Kindfeather", optional = true } },
-			before = { "turnin", 98230 } },
+		-- This Land Was Their Land (98230) is offered once Defeat Nek'rosh
+		-- (474, an elite the route skips) and Old Habits are handed in
+		-- (QuestieDB e3c3bc4, from players' traces): it does not hold.
+		{ why = "This Land Was Their Land needs Defeat Nek'rosh, which the route skips", optional = { "accept", 98230 } },
+		{ why = "This Land Was Their Land needs Defeat Nek'rosh, which the route skips", optional = { "turnin", 98230 } },
 	},
 	-- Prompt Potion Runner (97891) is a level 16 quest (the data), a timed
 	-- run across the Undercity; at the route's 55-60 it gives next to no XP.
@@ -155,6 +153,9 @@ local FIXES = {
 	["forever/horde/03-silverpine-forest"] = {
 		{ why = "Whuut's the Rush opens after Yelmak's Medley", move = { "accept", 97275 }, after = { "turnin", 97242 } },
 		{ why = "Whuut's the Rush opens after Yelmak's Medley", move = { "turnin", 97275 }, after = { "accept", 97275 } },
+		-- Rocks to Rests (97326) opens once Favorite Food (97249) is handed in
+		-- (the data): Migi sits beside Thra.
+		{ why = "Rocks to Rests opens after Favorite Food", move = { "turnin", 97249 }, before = { "accept", 97326 } },
 	},
 	-- Eagan Peltskinner (5261) leads to Wolves Across the Border (33, the
 	-- data's breadcrumb): hand it in to Eagan before taking his quest.
