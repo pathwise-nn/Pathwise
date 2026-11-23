@@ -58,14 +58,14 @@ builds the file). Nothing in it is typed in by hand.
 | Instances, bosses, encounter ids | Forever's client tables `Map`, `Difficulty`, `DungeonEncounter` (wago.tools, product `wowf`). The client keeps a row per version of some bosses (the dungeon's, twice in places, and a 10- or 20-player raid's); rows of one instance with one name or monster are one boss, and `SAME` maps the others to it. A fight with one row and two bosses who drop loot gets both (`PARTNERS` in the generator: Mograine and Whitemane) |
 | Which monster a boss is | QuestieDB's Forever NPCs: the boss's name inside the instance; a longer or shorter form of it inside the instance ("Kirtonos" / "Kirtonos the Herald"); or the only NPC of that name, when it has no spawn |
 | What a boss drops | QuestieDB's Forever items (`npcDrops`), corrected as `tools/data/build.lua` corrects them; items dropping from more than 12 monsters (world and trash drops) are left out |
-| A boss's portrait | The client's Encounter Journal art (`Interface/EncounterJournal/UI-EJ-BOSS-<name>`), by the boss's exact name in the game's file list (wago.tools' file search). That list covers every WoW client, so whether Forever ships each file is **unverified**: the tab asks the game (`SetTexture` says whether it loaded) and shows the boss's best item when not. 222 of the 338 bosses have one |
+| A boss's portrait | The client's Encounter Journal art (`Interface/EncounterJournal/UI-EJ-BOSS-<name>`), by the boss's exact name in the game's file list (wago.tools' file search). That list covers every WoW client, so whether Forever ships each file is **unverified**: the tab asks the game (`SetTexture` says whether it loaded) and shows the boss's best item when not. 200 of the 341 bosses have one |
 | The items | Forever's `Item` table (slot, type; items the client lacks are left out) and `ItemSparse` (name, quality, levels, classes). `ItemSparse` holds only some items: for the rest the name and levels are QuestieDB's, and the quality comes from the game client in game |
 
 **No drop chances**: QuestieDB has none, and Blizzard ships no loot tables for
 Forever (the client has no Encounter Journal tables; Forever loads only the
 journal's bootstrap).
 
-**Gaps.** 55 of the 338 bosses have no monster in QuestieDB's data. Some are
+**Gaps.** 59 of the 341 bosses have no monster in QuestieDB's data. Some are
 councils ("The Seven", "The Four Horsemen"); most are in Forever's own and
 Season of Discovery instances (Karazhan Crypts, Scarlet Enclave, Demon Fall
 Canyon). Raids are thin: QuestieDB records few raid drops (Magmadar none). The
