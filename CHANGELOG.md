@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.12 (2026-11-23)
+
 ### Newer quest, gear and loot data
 - Quest data from QuestieDB's latest Forever data (commit e3c3bc4,
   2026-11-22): 397 more quests, 586 more NPCs and 146 more objects, and
