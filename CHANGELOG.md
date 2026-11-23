@@ -6,6 +6,14 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Loot: send in the drops it's missing
+- Loot's options have a "Send the drops Pathwise lacks" box (or type
+  `/pwloot export`). It holds one line with the boss drops you've seen that
+  Pathwise's data doesn't list yet. Copy it and post it in a bug report or
+  on Discord; once checked, those drops go into the loot tables for
+  everyone. It holds boss and item numbers only.
+- Not checked in game.
+
 ## 0.3.12 (2026-11-23)
 
 ### Newer quest, gear and loot data

@@ -57,7 +57,7 @@ builds the file). Nothing in it is typed in by hand.
 |---|---|
 | Instances, bosses, encounter ids | Forever's client tables `Map`, `Difficulty`, `DungeonEncounter` (wago.tools, product `wowf`). The client keeps a row per version of some bosses (the dungeon's, twice in places, and a 10- or 20-player raid's); rows of one instance with one name or monster are one boss, and `SAME` maps the others to it. A fight with one row and two bosses who drop loot gets both (`PARTNERS` in the generator: Mograine and Whitemane) |
 | Which monster a boss is | QuestieDB's Forever NPCs: the boss's name inside the instance; a longer or shorter form of it inside the instance ("Kirtonos" / "Kirtonos the Herald"); or the only NPC of that name, when it has no spawn |
-| What a boss drops | QuestieDB's Forever items (`npcDrops`), corrected as `tools/data/build.lua` corrects them; items dropping from more than 12 monsters (world and trash drops) are left out |
+| What a boss drops | QuestieDB's Forever items (`npcDrops`), corrected as `tools/data/build.lua` corrects them; items dropping from more than 12 monsters (world and trash drops) are left out. Plus drops players saw in game and sent in (`/pwloot export`), checked by hand and kept in `tools/data/reported-drops.lua` with who saw them and when |
 | A boss's portrait | The client's Encounter Journal art (`Interface/EncounterJournal/UI-EJ-BOSS-<name>`), by the boss's exact name in the game's file list (wago.tools' file search). That list covers every WoW client, so whether Forever ships each file is **unverified**: the tab asks the game (`SetTexture` says whether it loaded) and shows the boss's best item when not. 200 of the 341 bosses have one |
 | The items | Forever's `Item` table (slot, type; items the client lacks are left out) and `ItemSparse` (name, quality, levels, classes). `ItemSparse` holds only some items: for the rest the name and levels are QuestieDB's, and the quality comes from the game client in game |
 
@@ -77,7 +77,18 @@ version" grant, which can't be combined with Pathwise's GPL-3.0-only, and its
 data is Classic, TBC and Wrath, not Forever. None of its code, data, art or
 name is in Pathwise Loot. cmangos' loot tables (classic-db) are not used either:
 they describe patch 1.12, and its `COPYRIGHT.md` restricts altering the
-Blizzard-derived content.
+Blizzard-derived content. Wowhead is not used for loot either: its robots.txt
+shuts out AI crawlers, and its database is its own work with no licence for
+reuse here.
+
+**Sending in drops.** The options page's "Send the drops Pathwise lacks" box
+(`/pwloot export`) holds one line: `PWLOOT1 <data build>; <boss id>[=<name>@<map>]
+k<kills>: <item id>[x<times>], ...`. It lists only drops the data doesn't
+have, by boss and item number, and a boss the data doesn't know with the
+name and map the game gave. Each drop is checked (it dropped from that boss,
+not a trash mob, chest or quest) and then added to `tools/data/reported-drops.lua`.
+The generator refuses a boss not in Forever's boss list, an item not in
+Forever's Item table, and an entry that doesn't say who saw it.
 
 ## How drops are learnt (Forever 1.60)
 

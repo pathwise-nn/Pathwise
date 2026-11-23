@@ -5,7 +5,8 @@
 -- DungeonEncounter, ItemSparse and Item (build 1.60.1.71037, via wago.tools; (c) Blizzard Entertainment).
 -- Who drops what: QuestieDB's Forever data (commit e3c3bc4), by the Questie team
 -- and contributors, used under GPL-3.0 (THIRD_PARTY.md). It has no drop chances.
--- Nothing here comes from AtlasLoot.
+-- Also: 0 drops players saw in game and sent in (tools/data/reported-drops.lua).
+-- Nothing here comes from AtlasLoot or Wowhead.
 --
 --   INSTANCES[i]     = { map, name, raid, size, { lowLevel, highLevel } | nil, { encounter ids } }
 --   ENCOUNTERS[id]   = { name, map, players (0: the instance's own size), { npc ids }, { item ids } }

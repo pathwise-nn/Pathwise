@@ -821,7 +821,7 @@ local function drawItems(rows, empty, note)
 	return y
 end
 
-local SOURCE = "Drops: QuestieDB's Forever data, and what you see drop as you play. No drop chances: neither QuestieDB nor the game has them for Forever."
+local SOURCE = "Drops: QuestieDB's Forever data, drops players sent in, and what you see drop as you play. No drop chances: neither QuestieDB nor the game has them for Forever."
 
 -- The kind buttons for these items, with their counts.
 local function kindChapters(items)

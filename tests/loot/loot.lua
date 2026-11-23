@@ -676,6 +676,41 @@ test("options: the Loot page draws, and forgetting your drops clears them", func
 	eq(ns.Loot.Encounter(672).kills, 0)
 end)
 
+test("export: the drops you saw that the data lacks, as one line to send", function()
+	local stub, ns = fresh()
+	local L = ns.Loot
+	eq(L.Report(), nil, "nothing seen: nothing to send")
+	local seen = L.Seen()
+	-- Ragnaros (672): 17076 is in the data, 2589 is not; seen twice.
+	seen[672] = { kills = 2, items = { [17076] = 1, [2589] = 2 }, npcs = {} }
+	-- A boss the data does not know, with the name and map the game gave.
+	seen[99001] = { kills = 1, name = "New: Boss; x", map = 5000, items = { [2592] = 1 }, npcs = {} }
+	local text, bosses, drops = L.Report()
+	eq(bosses, 2)
+	eq(drops, 2)
+	eq(text, ("PWLOOT1 %s; 672 k2: 2589x2; 99001=New  Boss  x@5000 k1: 2592"):format(ns.LootData.BUILD))
+	ok(not text:find("17076"), "a drop the data has is left out")
+	-- The options page has it to copy; /pwloot export opens the page.
+	local rows = ns.Config.CATEGORIES[1].rows()
+	local copy
+	for _, r in ipairs(rows) do if r[1] == "copy" then copy = r end end
+	ok(copy, "the copy box")
+	eq(copy[3], text)
+	ok(copy[4]:find("2 drops from 2 bosses"), copy[4])
+	ns.Commands["export"]("")
+	ok(stub.printed[#stub.printed]:find("2 drops from 2 bosses"), "says how many")
+end)
+
+test("export: nothing to send says so", function()
+	local stub, ns = fresh()
+	kill(stub, 672, "Ragnaros")
+	stub.fire("ENCOUNTER_LOOT_RECEIVED", 672, 17076)
+	eq(ns.Loot.Report(), nil, "only drops the data has")
+	for _, r in ipairs(ns.Config.CATEGORIES[1].rows()) do ok(r[1] ~= "copy", "no copy box") end
+	ns.Commands["export"]("")
+	ok(stub.printed[#stub.printed]:find("already in Pathwise's data"))
+end)
+
 test("catalog: a search loads no items from the server", function()
 	local stub, ns = fresh()
 	ns.Loot.Search("edge")

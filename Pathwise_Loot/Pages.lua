@@ -28,6 +28,7 @@ end
 C.CATEGORIES = {
 	{ key = "loot", name = "Loot", rows = function()
 		local instances, bosses, withLoot, seenBosses, seenDrops = counts()
+		local report, reportBosses, reportDrops = L.Report()
 		return {
 			{ "heading", "The loot browser" },
 			{ "button", "Open the loot browser", function() C.Hide() ns.LootBrowser.Show() end, "accent" },
@@ -41,6 +42,10 @@ C.CATEGORIES = {
 			{ "toggle", "Upgrade marks from Pathwise Gear", "loot.gear", L.HasGear() and "Items Pathwise Gear says are an upgrade for your spec show by how much." or "Needs Pathwise Gear; without it, nothing shows." },
 
 			{ "heading", "Your drops" },
+			report and { "copy", "Send the drops Pathwise lacks", report,
+				("%d drop%s from %d boss%s that the data doesn't list. Click the box, press Ctrl+C, and paste it into a bug report or on Discord. It holds boss and item numbers only."):format(
+					reportDrops, reportDrops == 1 and "" or "s", reportBosses, reportBosses == 1 and "" or "es") }
+				or { "text", seenDrops > 0 and "Every drop you have seen is already in the data." or "Drops you see that the data lacks show here, to send in.", "muted" },
 			{ "button", "Forget the drops you have seen", function()
 				local seen = L.Seen()
 				for k in pairs(seen) do seen[k] = nil end

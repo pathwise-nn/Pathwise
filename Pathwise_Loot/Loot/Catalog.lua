@@ -10,6 +10,7 @@
 --   L.Usable(item) -> bool                   your class may use it (as far as the data says)
 --   L.Search(text) -> { { item = id, encounter = id }, ... }
 --   L.Sources(itemId) -> { encounter id, ... }
+--   L.Report() -> text, bosses, drops        the drops you saw that the data lacks, to send in
 --   L.Wish(id, on) / L.Wished(id) / L.Wishlist() -> { { item = id, encounter = id | nil }, ... }
 --   L.Upgrade(item) -> isUpgrade, pct        from Pathwise Gear, when it is installed
 --   L.Portrait(id) -> file id | nil          the boss's Encounter Journal art
@@ -347,6 +348,49 @@ function L.Search(text, limit)
 		end
 	end
 	return out
+end
+
+---------------------------------------------------------------------------
+-- Your drops, to send in
+---------------------------------------------------------------------------
+
+-- The drops you saw that the data does not list, as one line to copy:
+--   PWLOOT1 <data build>; <boss>[=<name>@<map>] k<kills>: <item>x<times>, ...; ...
+-- A boss the data does not know carries the name and map the game gave.
+-- Bosses by id, items by id; nothing else about you or your character.
+function L.Report()
+	local ids = {}
+	for id, s in pairs(L.Seen()) do
+		if type(id) == "number" and type(s) == "table" and type(s.items) == "table" then ids[#ids + 1] = id end
+	end
+	table.sort(ids)
+	local parts, bosses, drops = {}, 0, 0
+	for _, id in ipairs(ids) do
+		local s, row = L.Seen()[id], D.ENCOUNTERS[id]
+		local known = {}
+		for _, item in ipairs(row and row[5] or {}) do known[item] = true end
+		local items = {}
+		for item, n in pairs(s.items) do
+			if type(item) == "number" and not known[item] then items[#items + 1] = item end
+		end
+		table.sort(items)
+		if #items > 0 then
+			local list = {}
+			for i, item in ipairs(items) do
+				local n = tonumber(s.items[item]) or 1
+				list[i] = n > 1 and ("%dx%d"):format(item, n) or tostring(item)
+			end
+			local head = tostring(id)
+			if not row then
+				local name = tostring(s.name or ""):gsub("[;:=@,]", " ")
+				head = ("%d=%s@%s"):format(id, name, tostring(s.map or "?"))
+			end
+			parts[#parts + 1] = ("%s k%d: %s"):format(head, tonumber(s.kills) or 0, table.concat(list, ", "))
+			bosses, drops = bosses + 1, drops + #items
+		end
+	end
+	if #parts == 0 then return nil, 0, 0 end
+	return ("PWLOOT1 %s; %s"):format(D.BUILD or "?", table.concat(parts, "; ")), bosses, drops
 end
 
 ---------------------------------------------------------------------------
