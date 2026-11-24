@@ -373,6 +373,16 @@ function makers.bind()
 	end
 	e:SetScript("OnReceiveDrag", drop)
 	e:SetScript("OnMouseUp", function(self) if GetCursorInfo and GetCursorInfo() == "spell" then drop(self) end end)
+	-- How to bind a lower rank, on hover (HealClicks.TIP: a title, then lines).
+	e:SetScript("OnEnter", function(self)
+		local tip = ns.HealClicks.TIP
+		if not (GameTooltip and tip) then return end
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText(tip[1], 1, 1, 1)
+		for i = 2, #tip do GameTooltip:AddLine(tip[i], 0.8, 0.8, 0.8, true) end
+		GameTooltip:Show()
+	end)
+	e:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
 	f.box = e
 	return f
 end

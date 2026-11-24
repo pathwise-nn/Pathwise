@@ -141,6 +141,35 @@ test("healing: clicks are the frame's own attributes, and wait for the end of co
 	eq(b:GetAttribute("type1"), nil, "cleared")
 end)
 
+test("healing: a lower spell rank, typed or dragged from the spellbook, stays that rank", function()
+	local stub, ns = fresh(priest)
+	ns.Set("heal.enabled", true)
+	local C = ns.HealClicks
+	for _, typed in ipairs({ "Lesser Heal(Rank 1)", "Lesser Heal (Rank 1)", "lesser heal [rank 1]", "Lesser Heal rank 1",
+		"Lesser Heal r1", "Lesser Heal (1)" }) do
+		eq(C.Parse(typed), (typed:sub(1, 1) == "l" and "lesser heal" or "Lesser Heal") .. "(Rank 1)", typed)
+	end
+	eq(C.Parse("Power Word: Shield"), "Power Word: Shield", "no rank: as typed")
+	-- Lesser Heal: Rank 1 is 2050, Rank 3 (your highest) is 2053.
+	local names, ranks = { [2050] = "Lesser Heal", [2053] = "Lesser Heal" }, { [2050] = "Rank 1", [2053] = "Rank 3" }
+	local cursor
+	_G.GetCursorInfo = function() if cursor then return "spell", 12, "spell", cursor end end
+	_G.ClearCursor = function() cursor = nil end
+	_G.C_Spell = {
+		GetSpellName = function(id) return names[id] end,
+		GetSpellSubtext = function(id) return ranks[id] end,
+		GetSpellInfo = function(n) if n == "Lesser Heal" then return { name = n, spellID = 2053 } end end,
+	}
+	cursor = 2050
+	eq(C.FromCursor(), "Lesser Heal(Rank 1)", "Rank 1 dragged")
+	eq(cursor, nil, "the cursor is cleared")
+	cursor = 2053
+	eq(C.FromCursor(), "Lesser Heal", "the top rank: the bare name, so it keeps up")
+	C.Set("alt-1", "Lesser Heal(Rank 1)")
+	eq(frame(ns, "player"):GetAttribute("alt-spell1"), "Lesser Heal(Rank 1)", "cast at that rank")
+	_G.C_Spell, _G.GetCursorInfo, _G.ClearCursor = nil, nil, nil
+end)
+
 test("healing: its options page, typing a spell, and move mode", function()
 	local stub, ns = fresh(priest)
 	ns.Config.Show("heal")
@@ -157,6 +186,8 @@ test("healing: its options page, typing a spell, and move mode", function()
 	box:SetText("Abolish Disease")
 	box.scripts.OnEnterPressed(box)
 	eq(ns.HealClicks.Get("alt-2"), "Abolish Disease")
+	box.scripts.OnEnter(box)
+	eq(GameTooltip.text, "Spell ranks", "hovering a box explains ranks")
 	SlashCmdList.PATHWISEHEAL("move")
 	ok(ns.Heal.Unlocked(), "/pwheal move: the frames move")
 	ok(stub.clickLabel("Done"))
