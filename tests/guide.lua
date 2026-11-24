@@ -837,6 +837,63 @@ test("quest markers stand out on the map: solid, a readable size, on a dark badg
 	end
 end)
 
+test("quest sparkle: motes under the plates of the monsters a quest needs", function()
+	local stub, ns = login()
+	local S = ns.Sparkle
+	-- Two nameplates: a Mindless Zombie (1501) and a Rattlecage Skeleton (1890).
+	local plates = {}
+	local function plate(unit, npc)
+		local p = CreateFrame("Frame")
+		p.namePlateUnitToken = unit
+		plates[unit] = { frame = p, guid = ("Creature-0-1-2-3-%d-0000ABCDEF"):format(npc) }
+	end
+	plate("nameplate1", 1501)
+	plate("nameplate2", 1890)
+	C_NamePlate = {
+		GetNamePlateForUnit = function(u) return plates[u] and plates[u].frame end,
+		GetNamePlates = function() local l = {} for _, v in pairs(plates) do l[#l + 1] = v.frame end return l end,
+	}
+	UnitGUID = function(u) return plates[u] and plates[u].guid end
+	UnitIsDead = function() return false end
+	eq(S.NpcId("nameplate1"), 1501, "the npc id from the GUID")
+	UnitGUID = function() return "Player-1-0ABC" end
+	eq(S.NpcId("nameplate1"), nil, "a player: none")
+	UnitGUID = function(u) return plates[u] and plates[u].guid end
+	stub.fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+	ok(not S.Shown().nameplate1, "no quest for it yet: no sparkle")
+	-- The Mindless Ones (364): kill Mindless and Wretched Zombies.
+	stub.accept(364, { { text = "Mindless Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false },
+		{ text = "Wretched Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false } })
+	ns.Fire("PINS_CHANGED")
+	local f = S.Shown().nameplate1
+	ok(f, "a quest monster: sparkle")
+	eq(f.parent, plates.nameplate1.frame, "on the game's plate")
+	ok(not S.Shown().nameplate2, "a monster no quest needs: none")
+	eq(#f.motes, 9, "nine motes")
+	eq(f.motes[1].texture, ns.Theme.MEDIA .. "spark")
+	-- They move: a moment later the first mote is somewhere else.
+	local y0 = f.motes[1].points[1][5]
+	stub.advance(0.3)
+	ok(f.motes[1].points[1][5] ~= y0, "the motes rise")
+	for _, m in ipairs(f.motes) do ok(m.alpha >= 0 and m.alpha <= 0.9, "alpha in range") end
+	-- The plate goes: so does the sparkle.
+	stub.fire("NAME_PLATE_UNIT_REMOVED", "nameplate1")
+	ok(not S.Shown().nameplate1, "plate gone: sparkle gone")
+	stub.fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+	ok(S.Shown().nameplate1, "back")
+	-- Its objective done: no more sparkle.
+	stub.progress(364, 1, 8)
+	ns.Fire("PINS_CHANGED")
+	ok(not S.Shown().nameplate1, "objective done: no sparkle")
+	-- Switched off in Settings.
+	stub.progress(364, 1, 0)
+	ns.Fire("PINS_CHANGED")
+	ok(S.Shown().nameplate1, "objective open again")
+	ns.Set("sparkle.enabled", false)
+	ok(not S.Shown().nameplate1, "off: none")
+	C_NamePlate, UnitGUID, UnitIsDead = nil, nil, nil
+end)
+
 test("quest markers: only the step's quests and the tracked ones", function()
 	local stub, ns = login()
 	local M, Q = ns.QuestMarkers, ns.Quests

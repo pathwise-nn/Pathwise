@@ -152,6 +152,17 @@ T['arrow-glow'] = () => {
 	return c;
 };
 
+// Spark: a mote of light for the quest monsters' sparkle (Nav/Sparkle.lua),
+// a soft halo with a small four-point glint at its heart.
+T.spark = () => {
+	const c = canvas(32);
+	paint(c, disc(16, 16, 5), 1);
+	blurAlpha(c, 3, 3, 0.75);
+	paint(c, polygon([[16, 4], [17.2, 14.8], [28, 16], [17.2, 17.2], [16, 28], [14.8, 17.2], [4, 16], [14.8, 14.8]]), 1);
+	paint(c, disc(16, 16, 2.6), 1);
+	return c;
+};
+
 // Arrived: a thin four-point compass star with a centre dot.
 T.arrived = () => {
 	const c = canvas(64);
