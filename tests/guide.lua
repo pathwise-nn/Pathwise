@@ -837,6 +837,61 @@ test("quest markers stand out on the map: solid, a readable size, on a dark badg
 	end
 end)
 
+test("XP bar: off by default; XP, hand-ins, rested, and kills to level", function()
+	local xp, max, rested = 7420, 13700, 4600
+	local stub, ns = login(function()
+		_G.UnitXP = function() return xp end
+		_G.UnitXPMax = function() return max end
+		_G.GetXPExhaustion = function() return rested end
+		_G.GetMaxPlayerLevel = function() return 60 end
+		_G.COMBATLOG_XPGAIN_FIRSTPERSON = "%s dies, you gain %d experience."
+		_G.COMBATLOG_XPGAIN_EXHAUSTION1 = "%s dies, you gain %d experience. (%s exp %s bonus)"
+		_G.GetQuestLogRewardXP = function(id) return ({ [364] = 1500, [376] = 850 })[id] end
+	end)
+	local B = ns.XPTrack
+	ok(not (B.Frame() and B.Frame().shown), "off by default")
+	ns.Set("xpbar.enabled", true)
+	local f = B.Frame()
+	ok(f and f.shown, "on")
+	-- Two quests ready to hand in, one still in progress.
+	stub.accept(364) stub.accept(376)
+	stub.accept(3901, { { text = "Rattlecage Skeleton slain: 0/12", numFulfilled = 0, numRequired = 12, finished = false } })
+	local d = B.Data()
+	eq(d.questXP, 2350, "the XP in quests ready to hand in")
+	eq(d.ready, 2)
+	eq(d.toLevel, 6280)
+	eq(d.afterQuests, 3930)
+	local left, mid, right = B.Text(d)
+	eq(left, "Level 2") eq(mid, "7420 / 13700")
+	eq(right, "54.2% (71.3%)", "with the quests ready handed in")
+	eq(B.Summary(d), "Completed Quests: |cffffa500" .. "17.2%|r - Rested Experience: |cff55a6ff33.6%|r")
+	eq(f.left.text, "Level 2", "on the bar")
+	eq(f.quest.value, 9770, "the gold part ends where hand-ins take you")
+	eq(f.rested.value, 12020)
+	-- Kills: the game's own line, in its words.
+	eq(B.KillXP("Mindless Zombie dies, you gain 120 experience."), 120)
+	eq(B.KillXP("Mindless Zombie dies, you gain 240 experience. (+120 exp Rested bonus)"), 240)
+	eq(B.KillXP("You gain 45 experience."), nil, "not a kill")
+	stub.fire("CHAT_MSG_COMBAT_XP_GAIN", "Mindless Zombie dies, you gain 100 experience.")
+	stub.fire("CHAT_MSG_COMBAT_XP_GAIN", "Wretched Zombie dies, you gain 300 experience.")
+	eq(B.Data().killsToLevel, 32, "6,280 to go at 200 a kill")
+	ok(B.Stats(B.Data()):find("Kills to level ~32", 1, true), B.Stats(B.Data()))
+	ok(B.Stats(B.Data()):find("After hand-ins 3,930", 1, true))
+	-- Without the game's reward API: no gold part, the rest still shows.
+	_G.GetQuestLogRewardXP = nil
+	d = B.Data()
+	eq(d.questXP, nil)
+	ok(not B.Stats(d):find("After hand-ins", 1, true))
+	eq(select(3, B.Text(d)), "54.2%", "no second percent")
+	eq(B.Summary(d), "Rested Experience: |cff55a6ff33.6%|r")
+	-- At the level cap: hidden.
+	stub.player.level = 60
+	B.Update()
+	ok(not f.shown, "hidden at the cap")
+	ns.Set("xpbar.enabled", false)
+	_G.COMBATLOG_XPGAIN_FIRSTPERSON, _G.COMBATLOG_XPGAIN_EXHAUSTION1 = nil, nil
+end)
+
 test("quest tooltips: a monster or item you need names the quest and your count", function()
 	local stub, ns = login()
 	local QT = ns.QuestTips
