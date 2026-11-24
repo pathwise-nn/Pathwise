@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.15 (2026-11-24)
+
 ### Pathwise Gear: hunts, the best for each slot
 - Right-click a slot on your character panel: Pathwise Gear opens on its
   new Hunts page with the best you can get for that slot at your level,
