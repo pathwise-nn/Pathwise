@@ -861,7 +861,11 @@ test("XP bar: off by default; XP, hand-ins, rested, and kills to level", functio
 	eq(d.ready, 2)
 	eq(d.toLevel, 6280)
 	eq(d.afterQuests, 3930)
-	eq(B.Text(d), "Level 2  ·  54%  ·  7,420 / 13,700 XP  ·  +2,350 in quests  ·  Rested 4,600")
+	local left, mid, right = B.Text(d)
+	eq(left, "Level 2") eq(mid, "7420 / 13700")
+	eq(right, "54.2% (71.3%)", "with the quests ready handed in")
+	eq(B.Summary(d), "Completed Quests: |cffffa500" .. "17.2%|r - Rested Experience: |cff55a6ff33.6%|r")
+	eq(f.left.text, "Level 2", "on the bar")
 	eq(f.quest.value, 9770, "the gold part ends where hand-ins take you")
 	eq(f.rested.value, 12020)
 	-- Kills: the game's own line, in its words.
@@ -878,6 +882,8 @@ test("XP bar: off by default; XP, hand-ins, rested, and kills to level", functio
 	d = B.Data()
 	eq(d.questXP, nil)
 	ok(not B.Stats(d):find("After hand-ins", 1, true))
+	eq(select(3, B.Text(d)), "54.2%", "no second percent")
+	eq(B.Summary(d), "Rested Experience: |cff55a6ff33.6%|r")
 	-- At the level cap: hidden.
 	stub.player.level = 60
 	B.Update()

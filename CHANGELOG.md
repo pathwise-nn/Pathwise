@@ -7,13 +7,16 @@ that version's section.
 ## Unreleased
 
 ### XP bar
-- A new XP bar, off by default: Options > Guide > XP bar. Your XP in
-  purple, the XP waiting in quests ready to hand in in gold ahead of it,
-  rested in blue, and a tick every 5%.
-- On the bar: level, percent, XP, the XP in quests and rested. Under it: XP
-  to level, what's left after hand-ins, XP per hour, time to level, kills to
-  level (from your last 10 kills) and quests ready. Either can show only on
-  hover.
+- A new XP bar, off by default: Options > Guide > XP bar. Your XP in a
+  blue-to-purple sweep, the XP waiting in quests ready to hand in in orange
+  ahead of it, rested in light blue, and a tick every 5%.
+- Bold, outlined text to read over the world: "Level 57" on the left, your
+  XP in the middle, and "65.8% (70.6%)" on the right (the second: with the
+  quests ready handed in). Under it: "Completed Quests: 4.8% - Rested
+  Experience: 6.4%".
+- On hover (or always, if set): XP to level, what's left after hand-ins,
+  XP per hour, time to level, kills to level (from your last 10 kills) and
+  quests ready.
 - Drag it to move; it can be locked, and its width set. Hidden at the
   level cap.
 - The quest XP comes from GetQuestLogRewardXP, which Forever's own UI uses

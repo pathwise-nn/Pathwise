@@ -1,8 +1,10 @@
 -- Pathwise's XP bar: your experience, the rested part ahead of it, and the
 -- experience waiting in quests ready to hand in, with how fast you level:
---   [purple XP | gold hand-ins | blue rested           ]  ticks every 5%
---   Level 23 · 54% · 7,420 / 13,700 XP · +2,350 in quests · Rested 4,600
---   To level 6,280 · After hand-ins 3,930 · 18.2k XP/h · Level in 21m · Kills to level ~48 · Quests ready 3
+--   [Level 57 ........ 204931 / 311490 |gold|blue|     65.8% (70.6%)]
+--          Completed Quests: 4.8% - Rested Experience: 6.4%
+--   and on hover (or always, if set): XP to level, after hand-ins, XP/h,
+--   time to level, kills to level, quests ready.
+-- Bold, outlined text, to read over the world.
 --
 -- Off by default (Pathwise UI has its own plain bar); turned on in the
 -- options, moved by dragging unless locked. Hidden at the level cap.
@@ -26,17 +28,19 @@ ns.Defaults("xpbar", {
 	enabled = false,
 	locked = false,
 	width = 520,
-	height = 16,
-	text = true, -- the numbers on the bar (else on hover only)
-	stats = true, -- the line of stats under it
+	height = 22,
+	text = true, -- the numbers on the bar and the line under it (else on hover only)
+	stats = false, -- the pace stats under that (else on hover only)
 	point = nil,
 })
 
 local COLORS = {
-	xp = { 0.64, 0.24, 0.93, 1 },
-	quest = { 0.90, 0.71, 0.13, 0.75 },
-	rested = { 0.18, 0.44, 0.84, 0.55 },
+	xp = { 0.66, 0.33, 0.95, 1 }, -- purple; a blue-to-purple sweep where the game can draw one
+	xpFrom = { 0.36, 0.42, 0.96, 1 },
+	quest = { 1.00, 0.65, 0.00, 1 }, -- orange
+	rested = { 0.33, 0.65, 1.00, 1 }, -- light blue
 }
+local QUEST_HEX, RESTED_HEX = "ffa500", "55a6ff"
 local KILLS_KEPT = 10
 
 local function call(fn, ...)
@@ -148,14 +152,26 @@ local function short(n)
 	return tostring(math.floor(n + 0.5))
 end
 
--- "Level 23 · 54% · 7,420 / 13,700 XP · +2,350 in quests · Rested 4,600"
+local function pct(n) return ("%.1f%%"):format(n) end
+
+-- The bar's three texts: "Level 57", "204931 / 311490", "65.8% (70.6%)"
+-- (the second percent: with the quests ready handed in).
 function B.Text(d)
+	if not d then return "", "", "" end
+	local right = pct(d.cur / d.max * 100)
+	if d.questXP and d.questXP > 0 then right = right .. (" (%s)"):format(pct(math.min(d.max, d.cur + d.questXP) / d.max * 100)) end
+	return (ns.L("Level %d")):format(d.level), ("%d / %d"):format(d.cur, d.max), right
+end
+
+-- "Completed Quests: 4.8% - Rested Experience: 6.4%", the percents in the bar's colours.
+function B.Summary(d)
 	if not d then return "" end
-	local parts = { (ns.L("Level %d")):format(d.level), ("%d%%"):format(math.floor(d.cur / d.max * 100)),
-		("%s / %s XP"):format(grouped(d.cur), grouped(d.max)) }
-	if d.questXP and d.questXP > 0 then parts[#parts + 1] = ("+%s in quests"):format(grouped(d.questXP)) end
-	if d.rested > 0 then parts[#parts + 1] = ("Rested %s"):format(grouped(d.rested)) end
-	return table.concat(parts, "  ·  ")
+	local parts = {}
+	if d.questXP and d.questXP > 0 then
+		parts[#parts + 1] = ("Completed Quests: |cff%s%s|r"):format(QUEST_HEX, pct(d.questXP / d.max * 100))
+	end
+	if d.rested > 0 then parts[#parts + 1] = ("Rested Experience: |cff%s%s|r"):format(RESTED_HEX, pct(d.rested / d.max * 100)) end
+	return table.concat(parts, " - ")
 end
 
 -- "To level 6,280 · After hand-ins 3,930 · 18.2k XP/h · Level in 21m · Kills to level ~48 · Quests ready 3"
@@ -182,6 +198,17 @@ local function savePoint(f)
 	ns.Set("xpbar.point", { p, math.floor(x + 0.5), math.floor(y + 0.5), rel ~= p and rel or nil })
 end
 
+-- Bold, outlined, shadowed: readable over any part of the world.
+local function bold(parent, size, justify)
+	local fs = ns.HookText(parent:CreateFontString(nil, "OVERLAY"))
+	if not fs:SetFont(T.FONTS.semibold, size, "OUTLINE") then fs:SetFont("Fonts\\FRIZQT__.TTF", size, "OUTLINE") end
+	fs:SetTextColor(1, 1, 1, 1)
+	if fs.SetShadowColor then fs:SetShadowColor(0, 0, 0, 1) fs:SetShadowOffset(1, -1) end
+	fs:SetJustifyH(justify or "CENTER")
+	fs:SetWordWrap(false)
+	return fs
+end
+
 local function bar(parent, color, level)
 	local b = CreateFrame("StatusBar", nil, parent)
 	b:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
@@ -204,6 +231,11 @@ local function build()
 	frame.rested = bar(frame, COLORS.rested, 1)
 	frame.quest = bar(frame, COLORS.quest, 2)
 	frame.xp = bar(frame, COLORS.xp, 3)
+	local tex = frame.xp.GetStatusBarTexture and frame.xp:GetStatusBarTexture()
+	if tex and tex.SetGradient and CreateColor then
+		local a, b = COLORS.xpFrom, COLORS.xp
+		pcall(tex.SetGradient, tex, "HORIZONTAL", CreateColor(a[1], a[2], a[3], 1), CreateColor(b[1], b[2], b[3], 1))
+	end
 	-- Ticks every 5%, over the bars.
 	frame.over = CreateFrame("Frame", nil, frame)
 	frame.over:SetAllPoints()
@@ -215,12 +247,17 @@ local function build()
 		t:SetWidth(1)
 		frame.ticks[i] = t
 	end
-	frame.text = T.Text(frame.over, "small", "text", "OVERLAY")
+	frame.left = bold(frame.over, 13, "LEFT")
+	frame.left:SetPoint("LEFT", frame, "LEFT", 8, 0)
+	frame.text = bold(frame.over, 13, "CENTER")
 	frame.text:SetPoint("CENTER", frame, "CENTER", 0, 0)
-	T.Shadow(frame.text)
-	frame.stats = T.Text(frame, "small", "muted", "OVERLAY")
-	frame.stats:SetPoint("TOP", frame, "BOTTOM", 0, -3)
-	T.Shadow(frame.stats)
+	frame.right = bold(frame.over, 13, "RIGHT")
+	frame.right:SetPoint("RIGHT", frame, "RIGHT", -8, 0)
+	frame.summary = bold(frame, 12, "CENTER")
+	frame.summary:SetPoint("TOP", frame, "BOTTOM", 0, -4)
+	frame.stats = bold(frame, 11, "CENTER")
+	frame.stats:SetTextColor(0.85, 0.88, 0.92, 1)
+	frame.stats:SetPoint("TOP", frame.summary, "BOTTOM", 0, -3)
 	frame:SetScript("OnDragStart", function(self) if T.Movable("xpbar.locked") then self:StartMoving() end end)
 	frame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() savePoint(self) end)
 	frame:SetScript("OnEnter", function(self) self.hover = true B.Update() end)
@@ -231,7 +268,7 @@ end
 function B.Layout()
 	if not ns.Get("xpbar.enabled") then if frame then frame:Hide() end return end
 	build()
-	local w, h = ns.Get("xpbar.width") or 520, ns.Get("xpbar.height") or 16
+	local w, h = ns.Get("xpbar.width") or 520, ns.Get("xpbar.height") or 22
 	frame:SetSize(w, h)
 	for i, t in ipairs(frame.ticks) do
 		t:ClearAllPoints()
@@ -254,8 +291,11 @@ function B.Update()
 	frame.xp:SetValue(d.cur)
 	frame.quest:SetValue(math.min(d.max, d.cur + (d.questXP or 0)))
 	frame.rested:SetValue(math.min(d.max, d.cur + d.rested))
-	frame.text:SetText(B.Text(d))
-	frame.text:SetShown(ns.Get("xpbar.text") or frame.hover or false)
+	local left, mid, right = B.Text(d)
+	local on = ns.Get("xpbar.text") or frame.hover or false
+	frame.left:SetText(left) frame.text:SetText(mid) frame.right:SetText(right)
+	frame.summary:SetText(B.Summary(d))
+	for _, fs in ipairs({ frame.left, frame.text, frame.right, frame.summary }) do fs:SetShown(on) end
 	frame.stats:SetText(B.Stats(d))
 	frame.stats:SetShown(ns.Get("xpbar.stats") or frame.hover or false)
 end
