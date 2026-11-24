@@ -68,7 +68,7 @@ C.CATEGORIES = {
 		if #talents > 0 then
 			rows[#rows + 1] = { "text", table.concat(talents, ". ") .. ". Forever's new spells are named from its previews and not yet checked in game: a name the game doesn't know is skipped.", "muted" }
 		end
-		rows[#rows + 1] = { "text", "What each click on a frame does. Type a spell's name (your highest rank is cast), target or menu, then Enter; or drag a spell from your spellbook onto a box. Empty does nothing.", "muted" }
+		rows[#rows + 1] = { "text", "What each click on a frame does. Type a spell's name (your highest rank is cast; add a rank for a lower one, as in Lesser Heal(Rank 1)), target or menu, then Enter; or drag any rank of a spell from your spellbook onto a box. Empty does nothing.", "muted" }
 		for _, c in ipairs(C.COMBOS) do rows[#rows + 1] = { "bind", c[2], c[1] } end
 		rows[#rows + 1] = { "button", ("Use the %s preset (replaces your own clicks)"):format(spec.label), function() C.Defaults(true) end }
 		return rows

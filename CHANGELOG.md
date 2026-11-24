@@ -6,6 +6,16 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Heal: lower spell ranks on a click
+- Dragging a lower rank from your spellbook (Rank 1 of Lesser Heal, say)
+  now binds that rank; before, every drag cast your highest rank. Dragging
+  your top rank still binds the bare name, so it moves up as you learn more.
+- Typing a rank works in any usual form: "Lesser Heal (Rank 1)",
+  "Lesser Heal [Rank 1]", "Lesser Heal rank 1" or "Lesser Heal r1" are all
+  kept as the game's own "Lesser Heal(Rank 1)". A space before the bracket
+  stopped the game finding the spell before.
+- Not yet checked in game.
+
 ## 0.3.15 (2026-11-24)
 
 ### Pathwise Gear: hunts, the best for each slot

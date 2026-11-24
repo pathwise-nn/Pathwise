@@ -195,14 +195,34 @@ end
 
 function C.Get(combo) return C.Store()[combo] end
 
--- Typed text -> a binding: "" / "nothing" clears, "target" / "menu", else a spell.
+-- A spell at one rank, the way the game casts it: "Lesser Heal(Rank 1)"
+-- (no space before the bracket). A bare name casts your highest rank.
+function C.Ranked(name, rank)
+	rank = tonumber(rank)
+	if not rank then return name end
+	return name .. "(Rank " .. rank .. ")"
+end
+
+-- "Heal (Rank 2)", "Heal [rank 2]", "Heal(2)", "Heal rank 2", "Heal r2" ->
+-- "Heal(Rank 2)"; anything else is left as typed.
+local function rankForm(text)
+	local name, n = text:match("^(.-)%s*[%(%[]%s*[Rr][Aa][Nn][Kk]%s*(%d+)%s*[%)%]]$")
+	if not name then name, n = text:match("^(.-)%s*[%(%[]%s*[Rr]?%s*(%d+)%s*[%)%]]$") end
+	if not name then name, n = text:match("^(.-)%s+[Rr][Aa][Nn][Kk]%s*(%d+)$") end
+	if not name then name, n = text:match("^(.-)%s+[Rr](%d+)$") end
+	if name and name ~= "" then return C.Ranked(name, n) end
+	return text
+end
+
+-- Typed text -> a binding: "" / "nothing" clears, "target" / "menu", else a
+-- spell (with a rank if you give one).
 function C.Parse(text)
 	text = (text or ""):gsub("^%s+", ""):gsub("%s+$", "")
 	local low = text:lower()
 	if low == "" or low == "nothing" or low == "none" then return nil end
 	if low == "target" or low == "@target" then return C.TARGET end
 	if low == "menu" or low == "@menu" then return C.MENU end
-	return text
+	return rankForm(text)
 end
 function C.Label(v)
 	if v == nil then return "" end
@@ -241,20 +261,54 @@ function C.ApplyAll()
 	for _, b in ipairs(ns.Heal.buttons) do C.Apply(b) end
 end
 
--- A spell dropped on a binding box from your spellbook: its name.
+local function rankOf(sub)
+	return type(sub) == "string" and tonumber(sub:match("(%d+)")) or nil
+end
+
+-- The id the game casts for a bare name: your highest rank. nil: can't tell.
+local function highestId(name)
+	if C_Spell and C_Spell.GetSpellInfo then
+		local ok, info = pcall(C_Spell.GetSpellInfo, name)
+		if ok and type(info) == "table" then return info.spellID end
+	end
+	if GetSpellInfo then
+		local ok, _, _, _, _, _, _, id = pcall(GetSpellInfo, name)
+		if ok then return id end
+	end
+end
+
+-- A spell dropped on a binding box from your spellbook: its name, with its
+-- rank when it isn't your highest (dragging Rank 1 binds Rank 1; dragging
+-- the top rank binds the bare name, so it keeps up as you learn higher ones).
 function C.FromCursor()
 	if not GetCursorInfo then return nil end
-	local kind, a, b, c = GetCursorInfo()
+	local kind, slot, book, id = GetCursorInfo()
 	if kind ~= "spell" then return nil end
-	local id = c or b or a
-	local name
-	if C_Spell and C_Spell.GetSpellName then
-		local ok, n = pcall(C_Spell.GetSpellName, id)
-		if ok then name = n end
-	end
-	if not name and GetSpellInfo then name = GetSpellInfo(id) end
 	if ClearCursor then ClearCursor() end
-	return type(name) == "string" and name or nil
+	local name, sub
+	if type(id) == "number" then
+		if C_Spell and C_Spell.GetSpellName then
+			local ok, n = pcall(C_Spell.GetSpellName, id)
+			if ok then name = n end
+		end
+		if not name and GetSpellInfo then name = GetSpellInfo(id) end
+		if C_Spell and C_Spell.GetSpellSubtext then
+			local ok, s = pcall(C_Spell.GetSpellSubtext, id)
+			if ok then sub = s end
+		end
+		if not sub and GetSpellSubtext then
+			local ok, s = pcall(GetSpellSubtext, id)
+			if ok then sub = s end
+		end
+	end
+	if not name and type(slot) == "number" and GetSpellBookItemName then
+		local ok, n, s = pcall(GetSpellBookItemName, slot, book)
+		if ok then name, sub = n, sub or s end
+	end
+	if type(name) ~= "string" then return nil end
+	local rank = rankOf(sub)
+	if not rank or (type(id) == "number" and highestId(name) == id) then return name end
+	return C.Ranked(name, rank)
 end
 
 ns.RegisterEvent("PLAYER_REGEN_ENABLED", function() if C.pending then C.pending = false C.Refresh() end end)
