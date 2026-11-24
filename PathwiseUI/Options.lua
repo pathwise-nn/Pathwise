@@ -42,6 +42,14 @@ C.CATEGORIES = {} -- filled by the addon's Pages.lua
 --       { "dropdown", label, path, { { label, value }, ... }, note }
 --                                           (path may be { get = fn, set = fn } for
 --                                           a value kept elsewhere, per character)
+--       { "item", link, card }              an item's card, as in Pathwise's recipe book
+--                                           and loot browser: its icon, its name in its
+--                                           quality color, a dot and a line under it, a
+--                                           note in the corner, a diamond on the right.
+--                                           card = { title, sub, corner, cornerColor,
+--                                           chosen, mark, markTip, dim, onClick(button),
+--                                           onMark() }. Hover: the game's item tooltip;
+--                                           Shift- or Ctrl-click: the game's own.
 
 
 function C.AccentRows()
@@ -229,6 +237,94 @@ function makers.input()
 	return f
 end
 function makers.button() return T.Button(body, "", "default") end
+
+-- An item's card (the loot browser's): ground, ring, icon, name, dot, line,
+-- corner note and the diamond.
+local CHOSEN = { 0x13 / 255, 0x23 / 255, 0x32 / 255, 1 } -- the recipe book's chosen-card ground
+local QUESTION = "Interface\\Icons\\INV_Misc_QuestionMark"
+local function cardLook(b, hover)
+	local chosen = b.pwChosen
+	T.PaintRound(b, chosen and CHOSEN or "bg2", chosen and "accent" or "border", (chosen or hover) and 1 or 0, (chosen or hover) and 1 or 0)
+end
+function makers.item()
+	local b = CreateFrame("Button", nil, body)
+	T.Round(b, "bg2", "border", T.RADIUS.card)
+	b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	local holder = CreateFrame("Frame", nil, b)
+	holder:SetSize(34, 34)
+	holder:SetPoint("LEFT", 6, 0)
+	local rim = holder:CreateTexture(nil, "BACKGROUND")
+	rim:SetAllPoints()
+	rim:SetColorTexture(0, 0, 0, 1)
+	b.icon = holder:CreateTexture(nil, "ARTWORK")
+	b.icon:SetPoint("TOPLEFT", 1, -1)
+	b.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+	b.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+	b.name = T.Text(b, "body", "text")
+	b.name:SetPoint("TOPLEFT", holder, "TOPRIGHT", 10, -2)
+	b.name:SetWordWrap(false)
+	b.dot = b:CreateTexture(nil, "ARTWORK")
+	b.dot:SetTexture(T.MEDIA .. "disc")
+	b.dot:SetSize(8, 8)
+	b.dot:SetPoint("TOPLEFT", b.name, "BOTTOMLEFT", 0, -5)
+	b.sub = T.Text(b, "small", "text2")
+	b.sub:SetPoint("LEFT", b.dot, "RIGHT", 5, 0)
+	b.sub:SetWordWrap(false)
+	b.corner = T.Text(b, "label", "accent")
+	b.corner:SetPoint("TOPRIGHT", -30, -5)
+	b.corner:SetJustifyH("RIGHT")
+	b.corner:SetWordWrap(false)
+	-- The diamond: its own button, so hovering it never repaints the card.
+	b.mark = CreateFrame("Button", nil, b)
+	b.mark:SetSize(22, 22)
+	b.mark:SetPoint("RIGHT", -6, 0)
+	b.mark.pwIcon = b.mark:CreateTexture(nil, "ARTWORK")
+	b.mark.pwIcon:SetTexture(T.MEDIA .. "glyph-diamond")
+	b.mark.pwIcon:SetSize(14, 14)
+	b.mark.pwIcon:SetPoint("CENTER")
+	b.mark:SetScript("OnEnter", function(self)
+		local tip = self:GetParent().pwCard and self:GetParent().pwCard.markTip
+		if GameTooltip and tip then
+			GameTooltip:SetOwner(self, "ANCHOR_TOP")
+			GameTooltip:SetText(tip, 1, 1, 1)
+			GameTooltip:Show()
+		end
+	end)
+	b.mark:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+	b:SetScript("OnEnter", function(self)
+		cardLook(self, true)
+		if GameTooltip and self.pwLink then
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			pcall(GameTooltip.SetHyperlink, GameTooltip, self.pwLink)
+			GameTooltip:Show()
+		end
+	end)
+	b:SetScript("OnLeave", function(self)
+		cardLook(self, false)
+		if GameTooltip then GameTooltip:Hide() end
+	end)
+	return b
+end
+
+local function itemFacts(link)
+	local id = tonumber(tostring(link):match("item:(%d+)"))
+	local I = C_Item
+	local name, full, quality, icon
+	if I and I.GetItemInfo then
+		local ok, n, l, q, _, _, _, _, _, _, tex = pcall(I.GetItemInfo, id or link)
+		if ok then name, full, quality, icon = ns.Readable(n), ns.Readable(l), ns.Readable(q), ns.Readable(tex) end
+	end
+	if not icon and id and I and I.GetItemIconByID then
+		local ok, tex = pcall(I.GetItemIconByID, id)
+		icon = ok and ns.Readable(tex) or nil
+	end
+	return name, full or link, quality, icon
+end
+local function qualityColor(q)
+	local c = q and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[q]
+	if c and c.r then return { c.r, c.g, c.b, 1 } end
+	return T.Color("text")
+end
 -- A link to copy: its label and note, the box under them. A click selects it
 -- all; typing puts the link back, so it can't be changed by accident.
 function makers.copy()
@@ -531,6 +627,35 @@ function C.Render()
 			local h = 28 + nh + 4 + 26 + 12
 			f:SetHeight(h)
 			place(f, h)
+		elseif kind == "item" then
+			local b = take("item", makers.item)
+			local card = r[3] or {}
+			local name, link, quality, icon = itemFacts(r[2])
+			b.pwCard, b.pwLink, b.pwChosen = card, link, card.chosen and true or false
+			b.icon:SetTexture(icon or QUESTION)
+			b.corner:SetText(card.corner or "")
+			T.TextColor(b.corner, card.cornerColor or "accent")
+			local cw = (card.corner and card.corner ~= "") and ((b.corner:GetStringWidth() or 0) + 8) or 0
+			b.name:SetWidth(math.max(40, inner - 80 - cw))
+			b.name:SetText(card.title or name or tostring(r[2]))
+			local qc = qualityColor(quality)
+			T.TextColor(b.name, qc)
+			b.dot:SetVertexColor(qc[1], qc[2], qc[3], 1)
+			b.sub:SetWidth(math.max(40, inner - 80))
+			b.sub:SetText(card.sub or "")
+			b.mark:SetShown(card.mark ~= nil)
+			local mc = card.mark and T.Color("accent") or T.Color("muted")
+			b.mark.pwIcon:SetVertexColor(mc[1], mc[2], mc[3], card.mark and 1 or 0.6)
+			b.mark:SetScript("OnClick", function() if card.onMark then card.onMark() C.Render() end end)
+			b:SetScript("OnClick", function(_, button)
+				local modified = IsModifiedClick and ns.Readable(IsModifiedClick())
+				if modified and button == "LeftButton" and HandleModifiedItemClick and link then pcall(HandleModifiedItemClick, link) return end
+				if card.onClick then card.onClick(button) C.Render() end
+			end)
+			cardLook(b, false)
+			b:SetAlpha(card.dim and 0.55 or 1)
+			b:SetHeight(46)
+			place(b, 46, 6)
 		elseif kind == "button" then
 			local b = take("button", makers.button)
 			b.pwText:SetText(r[2])

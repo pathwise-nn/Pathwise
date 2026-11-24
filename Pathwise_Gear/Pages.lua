@@ -129,7 +129,9 @@ local function bestRows()
 	return rows
 end
 
--- Hunts: the best you can get for one slot, ranked, and the gear you track.
+-- Hunts: the best you can get for one slot, ranked, and the gear you track,
+-- as item cards like Pathwise's recipe book and loot browser.
+local UPGRADE = { 0x7F / 255, 0xD9 / 255, 0x8F / 255, 1 } -- the loot browser's upgrade green
 local function huntRows()
 	local Best, Hunts = ns.Best, ns.Hunts
 	local level = Gear.Client.Level()
@@ -151,40 +153,55 @@ local function huntRows()
 	if #list == 0 and pending == 0 then rows[#rows + 1] = { "text", "Nothing Pathwise knows of for this slot at your level.", "muted" } end
 	for _, e in ipairs(list) do
 		local tracked = Hunts.IsTracked(e.id)
-		local status
-		if e.wearing then status = "Wearing it"
-		elseif e.have then status = "In your bags"
-		elseif e.pct then status = ("%+.0f%% on what you wear"):format(e.pct)
-		else status = "Empty slot" end
-		if e.minLevel and e.minLevel > level then status = status .. ("  ·  from level %d"):format(e.minLevel) end
-		if e.rank == 1 and not e.have then status = status .. "  ·  the best" end
-		local label = ("%d.  %s%s%s"):format(e.rank, tostring(e.name), e.slotName ~= Gear.SLOT_NAMES[slot] and ("  (" .. e.slotName .. ")") or "",
-			tracked and "  ·  tracking" or "")
-		rows[#rows + 1] = { "button", label, function()
-			if e.have then S.Print(("you have %s already."):format(tostring(e.name)))
-			elseif tracked then Hunts.Chase(e.id)
-			else Hunts.Track(e) end
-		end, tracked and "accent" or "default" }
-		rows[#rows + 1] = { "text", Best.SourceText(e.source) .. "  ·  " .. status, "muted" }
+		local corner, color
+		if e.wearing then corner, color = "WEARING", "muted"
+		elseif e.have then corner, color = "IN YOUR BAGS", "muted"
+		elseif tracked then corner, color = "TRACKING", "accent"
+		elseif e.pct then corner, color = ("%+.0f%%"):format(e.pct), e.pct > 0 and UPGRADE or "muted"
+		else corner, color = "EMPTY SLOT", UPGRADE end
+		local bits = { ("#%d"):format(e.rank) }
+		if e.slotName ~= Gear.SLOT_NAMES[slot] then bits[#bits + 1] = e.slotName end
+		if e.minLevel and e.minLevel > level then bits[#bits + 1] = ("from level %d"):format(e.minLevel)
+		elseif e.minLevel and e.minLevel > 0 then bits[#bits + 1] = ("level %d"):format(e.minLevel) end
+		bits[#bits + 1] = Best.SourceText(e.source)
+		local mark -- the diamond: lit when tracked; none for what you have
+		if not e.have then mark = tracked and true or false end
+		rows[#rows + 1] = { "item", e.link, {
+			title = e.name, sub = table.concat(bits, "  ·  "), corner = corner, cornerColor = color,
+			chosen = tracked, mark = mark, dim = e.minLevel and e.minLevel > level,
+			markTip = tracked and "Tracking: click to stop" or "Track it",
+			onMark = function() if tracked then Hunts.Untrack(e.id) else Hunts.Track(e) end end,
+			onClick = function(button)
+				if button == "RightButton" then Hunts.Hide(e.id)
+				elseif e.have then S.Print(("you have %s already."):format(tostring(e.name)))
+				elseif tracked then Hunts.Chase(e.id)
+				else Hunts.Track(e) end
+			end,
+		} }
 	end
-	if #list > 0 then rows[#rows + 1] = { "text", "Click one to track it. Ranked by Pathwise's weights for your spec; Look ahead (Best in Slot) shows levels to come too.", "muted" } end
+	if #list > 0 then rows[#rows + 1] = { "text", "Click a card or its diamond to track it; once tracked, a click shows the way. Right-click: not for me, out of every list. Ranked by Pathwise's weights for your spec.", "muted" } end
 
 	-- What you track.
 	local tracked = Hunts.Tracked()
 	rows[#rows + 1] = { "heading", ("Tracking (%d)"):format(#tracked) }
 	if #tracked == 0 then rows[#rows + 1] = { "text", "Nothing yet: pick one above.", "muted" } end
 	for _, t in ipairs(tracked) do
-		rows[#rows + 1] = { "button", ("Show the way:  %s%s"):format(t.name, t.slot and ("  (" .. Gear.SLOT_NAMES[t.slot] .. ")") or ""), function() Hunts.Chase(t.id) end, "accent" }
-		rows[#rows + 1] = { "text", t.entry and Best.SourceText(t.entry.source) or "No source left that Pathwise knows of.", "muted" }
-		rows[#rows + 1] = { "button", "Stop tracking " .. t.name, function() Hunts.Untrack(t.id) end }
-		rows[#rows + 1] = { "button", "Not for me: hide " .. t.name, function() Hunts.Hide(t.id) end }
+		local bits = {}
+		if t.slot then bits[#bits + 1] = Gear.SLOT_NAMES[t.slot] end
+		bits[#bits + 1] = t.entry and Best.SourceText(t.entry.source) or "no source left that Pathwise knows of"
+		rows[#rows + 1] = { "item", "item:" .. t.id, {
+			title = t.name, sub = table.concat(bits, "  ·  "), corner = "SHOW THE WAY", chosen = true, mark = true,
+			markTip = "Tracking: click to stop",
+			onMark = function() Hunts.Untrack(t.id) end,
+			onClick = function(button) if button == "RightButton" then Hunts.Hide(t.id) else Hunts.Chase(t.id) end end,
+		} }
 	end
 
 	local done = Hunts.Done()
 	if #done > 0 then
 		rows[#rows + 1] = { "heading", ("Done (%d)"):format(#done) }
 		for _, d in ipairs(done) do
-			rows[#rows + 1] = { "text", d.name .. (d.slot and ("  ·  " .. Gear.SLOT_NAMES[d.slot]) or ""), "success" }
+			rows[#rows + 1] = { "item", "item:" .. d.id, { title = d.name, sub = d.slot and Gear.SLOT_NAMES[d.slot] or "", corner = "DONE", cornerColor = "success" } }
 		end
 		rows[#rows + 1] = { "button", "Clear the done list", function() Hunts.ClearDone() end }
 	end
@@ -192,9 +209,10 @@ local function huntRows()
 	local hidden = Hunts.Hidden()
 	if #hidden > 0 then
 		rows[#rows + 1] = { "heading", ("Hidden (%d)"):format(#hidden) }
-		rows[#rows + 1] = { "text", "Left out of every list, Best in Slot too.", "muted" }
+		rows[#rows + 1] = { "text", "Left out of every list, Best in Slot too. Click one to show it again.", "muted" }
 		for _, h in ipairs(hidden) do
-			rows[#rows + 1] = { "button", "Show again: " .. h.name, function() Hunts.Unhide(h.id) end }
+			rows[#rows + 1] = { "item", "item:" .. h.id, { title = h.name, sub = "Hidden", corner = "SHOW AGAIN", cornerColor = "muted", dim = true,
+				onClick = function() Hunts.Unhide(h.id) end } }
 		end
 	end
 

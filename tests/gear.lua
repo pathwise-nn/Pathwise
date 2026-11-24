@@ -281,6 +281,13 @@ test("gear best page: slot by slot, and the options", function()
 	ok(lastPrint(stub):find("World drop"), lastPrint(stub))
 end)
 
+-- An item card on a page: by its name, and (when given) its corner note.
+local function card(rows, title, corner)
+	for _, r in ipairs(rows) do
+		if r[1] == "item" and r[3].title == title and (not corner or r[3].corner == corner) then return r end
+	end
+end
+
 test("gear hunts: one slot's best, ranked, with two-handers in the main hand", function()
 	local stub, ns, g = gear()
 	withGear(stub)
@@ -318,17 +325,25 @@ test("gear hunts: right-click a slot, track the best, and hear when you have it"
 	ok(_G.PathwiseGearConfig and _G.PathwiseGearConfig.shown, "a right-click opens Gear's window")
 	eq(g.Config.Current(), "hunts")
 	eq(H.slot, 1)
+	local drawn
+	for _, f in ipairs(stub.frames) do if rawget(f, "text") == "Glyphed Hood" then drawn = f end end
+	ok(drawn and drawn.shown, "its card is drawn in the window")
 	local rows, texts = page(g, "hunts")
 	ok(contains(texts, "Best for your head"), table.concat(texts, " | "))
-	local first = row(rows, "button", "1.  Glyphed Hood")
-	ok(first and row(rows, "button", "2.  Silk Cowl"), table.concat(texts, " | "))
-	ok(contains(texts, "World drop"), "where it comes from")
-	first[3]()
+	local first = card(rows, "Glyphed Hood")
+	ok(first and card(rows, "Silk Cowl"), "a card each")
+	eq(first[2], "item:102", "the item, for its icon and tooltip")
+	ok(first[3].sub:find("^#1  ·  level 13  ·  World drop"), first[3].sub)
+	ok(card(rows, "Silk Cowl")[3].sub:find("^#2"))
+	ok(first[3].corner:find("^%+%d+%%$"), first[3].corner)
+	eq(first[3].mark, false, "an unlit diamond")
+	first[3].onClick("LeftButton")
 	ok(H.IsTracked(102), "tracked")
 	ok(lastPrint(stub):find("tracking Glyphed Hood"), lastPrint(stub))
 	rows, texts = page(g, "hunts")
-	ok(row(rows, "button", "Show the way:  Glyphed Hood (Head)") or row(rows, "button", "Show the way:  Glyphed Hood"), table.concat(texts, " | "))
-	ok(row(rows, "button", "1.  Glyphed Hood  ·  tracking"))
+	ok(card(rows, "Glyphed Hood", "SHOW THE WAY"), "in Tracking")
+	local ranked = card(rows, "Glyphed Hood", "TRACKING")
+	ok(ranked and ranked[3].chosen and ranked[3].mark == true, "chosen, its diamond lit")
 	-- Picked up: done, on screen and in chat, and no other alert for it.
 	local notices = #stub.notices
 	stub.bags[0][2] = { itemID = 102 }
@@ -357,12 +372,12 @@ test("gear hunts: hide one that is not for you, and show it again", function()
 	local B, H = g.Best, g.Hunts
 	B.Clear()
 	H.Track(B.Ranked(1)[1])
-	H.Hide(102)
+	card(page(g, "hunts"), "Glyphed Hood", "SHOW THE WAY")[3].onClick("RightButton")
 	ok(not H.IsTracked(102), "hidden: no longer tracked")
 	eq(B.Ranked(1)[1].id, 108, "out of the slot's list")
 	for _, e in ipairs(B.List()) do if e.slot == 1 then eq(e.id, 108, "and out of Best in Slot") end end
 	local rows = page(g, "hunts")
-	row(rows, "button", "Show again: Glyphed Hood")[3]()
+	card(rows, "Glyphed Hood", "SHOW AGAIN")[3].onClick("LeftButton")
 	eq(B.Ranked(1)[1].id, 102, "back")
 end)
 

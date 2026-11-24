@@ -12,11 +12,15 @@ that version's section.
   ranked (up to 10), each with where it comes from and how much better it
   is than what you wear. The main hand lists two-handers too. /pwgear hunts
   opens it as well.
-- Click one to track it: the arrow (or the game's map pin, without
+- Each item is a card, as in Pathwise Loot and the recipe book: its icon,
+  its name in its quality color, a diamond to track it, and the game's
+  tooltip on hover (Shift-click links it in chat). Pathwise's options
+  windows can now show item cards.
+- Click a card or its diamond to track it: the arrow (or the game's map pin, without
   Pathwise) leads to where it comes from. Once it is in your bags or on
   you, the hunt is done: on screen, with a sound and in chat. Done hunts are
   listed until you clear them.
-- An item that is not for you can be hidden: it leaves every list, Best in
+- Right-click an item that is not for you to hide it: it leaves every list, Best in
   Slot too, until you show it again.
 - A right-click on a trinket you can use still uses it too. Both the
   right-click and the alert can be turned off on the Hunts page.
