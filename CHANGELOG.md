@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.17 (2026-11-24)
+
 ### XP bar
 - A new XP bar, off by default: Options > Guide > XP bar. Your XP in a
   blue-to-purple sweep, the XP waiting in quests ready to hand in in orange
