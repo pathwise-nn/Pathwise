@@ -142,7 +142,8 @@ local function huntRows()
 
 	-- The slot, and its best, ranked.
 	local slots = {}
-	for _, s in ipairs(Best.ORDER) do slots[#slots + 1] = { Gear.SLOT_NAMES[s], s } end
+	local TWO = { [11] = " 1", [12] = " 2", [13] = " 1", [14] = " 2" }
+	for _, s in ipairs(Best.ORDER) do slots[#slots + 1] = { Gear.SLOT_NAMES[s] .. (TWO[s] or ""), s } end
 	rows[#rows + 1] = { "dropdown", "Slot", { get = function() return Hunts.slot end, set = function(v) Hunts.slot = v S.Refresh() end }, slots }
 	local list, pending = Best.Ranked(slot, 10)
 	rows[#rows + 1] = { "heading", ("Best for your %s  ·  level %d%s"):format(Gear.SLOT_NAMES[slot]:lower(), level + ahead, ahead > 0 and " (looking ahead)" or "") }

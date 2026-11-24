@@ -73,7 +73,7 @@ function Hunts.Track(entry)
 	d.done[id] = nil
 	local arrow = ns.Pathwise() ~= nil
 	if Best.Chase(entry) then
-		S.Print(("tracking %s: %s %s."):format(name, arrow and "the arrow leads to" or "a pin on your map shows", Best.SourceText(entry.source)))
+		S.Print(("tracking %s (%s): %s."):format(name, Best.SourceText(entry.source), arrow and "the arrow leads there" or "a pin on your map shows where"))
 	else
 		S.Print(("tracking %s: %s."):format(name, Best.SourceText(entry.source)))
 	end
