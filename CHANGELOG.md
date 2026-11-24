@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.14 (2026-11-24)
+
 ### Quest monsters sparkle
 - Gold motes rise under the nameplate of a monster you still need: one to
   kill for a quest you're on, or one that drops an item you need. Like the
