@@ -203,6 +203,14 @@ function C.Ranked(name, rank)
 	return name .. "(Rank " .. rank .. ")"
 end
 
+-- The binding boxes' tooltip: a title, then lines.
+C.TIP = {
+	"Spell ranks",
+	"A spell's name alone casts your highest rank, and moves up as you learn new ones.",
+	"For a lower rank, add it: Lesser Heal [Rank 1], Lesser Heal (Rank 1) or Lesser Heal r1.",
+	"Or drag that rank from your spellbook onto the box (tick Show all spell ranks in the spellbook to see them).",
+}
+
 -- "Heal (Rank 2)", "Heal [rank 2]", "Heal(2)", "Heal rank 2", "Heal r2" ->
 -- "Heal(Rank 2)"; anything else is left as typed.
 local function rankForm(text)

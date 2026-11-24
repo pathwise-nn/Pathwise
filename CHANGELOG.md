@@ -14,6 +14,7 @@ that version's section.
   "Lesser Heal [Rank 1]", "Lesser Heal rank 1" or "Lesser Heal r1" are all
   kept as the game's own "Lesser Heal(Rank 1)". A space before the bracket
   stopped the game finding the spell before.
+- Hover a click box for a tooltip that explains spell ranks.
 - Not yet checked in game.
 
 ## 0.3.15 (2026-11-24)
