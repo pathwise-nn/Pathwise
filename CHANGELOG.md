@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.16 (2026-11-24)
+
 ### Pathwise Heal: lower spell ranks on a click
 - Dragging a lower rank from your spellbook (Rank 1 of Lesser Heal, say)
   now binds that rank; before, every drag cast your highest rank. Dragging
