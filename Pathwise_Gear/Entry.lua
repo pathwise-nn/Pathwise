@@ -1,5 +1,5 @@
 -- How you reach Pathwise Gear: /pwgear opens its options on Upgrades
--- (/pwgear best: Best in Slot (Level)), the minimap button opens them
+-- (/pwgear best: Best in Slot (Level); /pwgear hunts: Hunts), the minimap button opens them
 -- (right-click: its pages), and Pathwise's suite list opens them when
 -- Pathwise is installed. Loaded last, after the kit's minimap button.
 
@@ -9,10 +9,11 @@ local C = ns.Config
 ns.Commands[""] = function() C.Toggle() end
 ns.Commands["best"] = function() C.Show("best") end
 ns.Commands["bis"] = ns.Commands["best"]
+ns.Commands["hunts"] = function() C.Show("hunts") end
 ns.Commands["options"] = function() C.Show("gear") end
 ns.Commands["help"] = function()
 	local s = ns.ID.slash[1]
-	ns.Print(s .. ": upgrades, your spec and the options.  " .. s .. " best: Best in Slot (Level).")
+	ns.Print(s .. ": upgrades, your spec and the options.  " .. s .. " best: Best in Slot (Level).  " .. s .. " hunts: the best for each slot, and what you track.")
 end
 
 -- In Pathwise's suite list (Settings > Pathwise suite), in Gear's gold. The

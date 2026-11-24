@@ -6,6 +6,22 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Gear: hunts, the best for each slot
+- Right-click a slot on your character panel: Pathwise Gear opens on its
+  new Hunts page with the best you can get for that slot at your level,
+  ranked (up to 10), each with where it comes from and how much better it
+  is than what you wear. The main hand lists two-handers too. /pwgear hunts
+  opens it as well.
+- Click one to track it: the arrow (or the game's map pin, without
+  Pathwise) leads to where it comes from. Once it is in your bags or on
+  you, the hunt is done: on screen, with a sound and in chat. Done hunts are
+  listed until you clear them.
+- An item that is not for you can be hidden: it leaves every list, Best in
+  Slot too, until you show it again.
+- A right-click on a trinket you can use still uses it too. Both the
+  right-click and the alert can be turned off on the Hunts page.
+- Not yet checked in game.
+
 ## 0.3.14 (2026-11-24)
 
 ### Quest monsters sparkle
@@ -14,6 +30,23 @@ that version's section.
   game's own sparkle on quest objects, which it gives objects only. It
   works over the game's nameplates and Pathwise UI's; enemy nameplates must
   be on. Turn it off in Settings, under Map pins. Not yet checked in game.
+
+### Pathwise Gear: upgrades in steps, from your talents and stats
+- Following your talents, the stat weights are your talent trees' mixed by
+  the points you spent (15 Frost and 5 Fire: three quarters Frost's, a
+  quarter Fire's), not only the tree with the most. The Upgrades page shows
+  the mix. A spec you choose by hand is used alone, as before.
+- Upgrades are no longer just yes or no. The tooltip says "big upgrade"
+  (+10% or more), "upgrade", "about the same", "worse", or "upgrade at
+  level N" for one you can't wear yet, and a second line names the stats
+  that make the difference, the ones worth most to you first (Intellect +4,
+  Stamina +2).
+- Bag arrows follow the same steps: bigger for a big upgrade, grey for one
+  you can wear from a later level.
+- Picking up an upgrade says so in chat, with how much better it is and the
+  stats (Upgrades > Say when I pick up an upgrade). Best in slot items keep
+  their own alert.
+- Not yet checked in game.
 
 ## 0.3.13 (2026-11-23)
 
@@ -41,23 +74,6 @@ that version's section.
   which the route skips. Crimson Crate Delivery, added last time, is gone:
   it opens only after Crocs of the Sky, too late for the road. Not yet
   checked in game.
-
-### Pathwise Gear: upgrades in steps, from your talents and stats
-- Following your talents, the stat weights are your talent trees' mixed by
-  the points you spent (15 Frost and 5 Fire: three quarters Frost's, a
-  quarter Fire's), not only the tree with the most. The Upgrades page shows
-  the mix. A spec you choose by hand is used alone, as before.
-- Upgrades are no longer just yes or no. The tooltip says "big upgrade"
-  (+10% or more), "upgrade", "about the same", "worse", or "upgrade at
-  level N" for one you can't wear yet, and a second line names the stats
-  that make the difference, the ones worth most to you first (Intellect +4,
-  Stamina +2).
-- Bag arrows follow the same steps: bigger for a big upgrade, grey for one
-  you can wear from a later level.
-- Picking up an upgrade says so in chat, with how much better it is and the
-  stats (Upgrades > Say when I pick up an upgrade). Best in slot items keep
-  their own alert.
-- Not yet checked in game.
 
 ## 0.3.11 (2026-11-20)
 

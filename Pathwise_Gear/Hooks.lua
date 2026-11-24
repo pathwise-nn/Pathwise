@@ -253,6 +253,7 @@ end
 -- Best in Slot announces it instead), or nil
 function H.Announce(link)
 	local id = tonumber(tostring(link):match("item:(%d+)"))
+	if ns.Hunts and id and ns.Hunts.Claimed(id) then return "hunt" end
 	if S.Get("gear.bisAlert") ~= false and ns.Best and id and ns.Best.IsBest(id) then return "best" end
 	local v = Gear.Verdict(link)
 	if not v then return nil end

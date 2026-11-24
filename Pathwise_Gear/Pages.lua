@@ -1,7 +1,7 @@
 -- Pathwise Gear's pages in its own options window (Kit/Options.lua draws
 -- them; the row kinds are listed there): Upgrades (who scores items, the
 -- spec and its stat priority, custom weights, the upgrades in your bags),
--- Best in Slot (Level), then the look and profile pages every Pathwise addon
+-- Hunts (one slot's best, ranked, and what you track), Best in Slot (Level), then the look and profile pages every Pathwise addon
 -- has. /pwgear, the minimap button or Pathwise's suite list opens it.
 
 local ADDON, ns = ...
@@ -129,8 +129,83 @@ local function bestRows()
 	return rows
 end
 
+-- Hunts: the best you can get for one slot, ranked, and the gear you track.
+local function huntRows()
+	local Best, Hunts = ns.Best, ns.Hunts
+	local level = Gear.Client.Level()
+	local ahead = S.Get("gear.bisAhead") or 0
+	local slot = Hunts.slot
+	local rows = { { "heading", "Hunts" } }
+	rows[#rows + 1] = { "text", "Right-click a slot on your character panel to see the best you can get for it. Track one: "
+		.. (ns.Pathwise() and "the arrow leads you there" or "a pin on your map shows where")
+		.. ", and you'll know when you have it.", "text2" }
+
+	-- The slot, and its best, ranked.
+	local slots = {}
+	for _, s in ipairs(Best.ORDER) do slots[#slots + 1] = { Gear.SLOT_NAMES[s], s } end
+	rows[#rows + 1] = { "dropdown", "Slot", { get = function() return Hunts.slot end, set = function(v) Hunts.slot = v S.Refresh() end }, slots }
+	local list, pending = Best.Ranked(slot, 10)
+	rows[#rows + 1] = { "heading", ("Best for your %s  ·  level %d%s"):format(Gear.SLOT_NAMES[slot]:lower(), level + ahead, ahead > 0 and " (looking ahead)" or "") }
+	if pending > 0 then rows[#rows + 1] = { "text", ("Loading %d items from the game..."):format(pending), "muted" } end
+	if #list == 0 and pending == 0 then rows[#rows + 1] = { "text", "Nothing Pathwise knows of for this slot at your level.", "muted" } end
+	for _, e in ipairs(list) do
+		local tracked = Hunts.IsTracked(e.id)
+		local status
+		if e.wearing then status = "Wearing it"
+		elseif e.have then status = "In your bags"
+		elseif e.pct then status = ("%+.0f%% on what you wear"):format(e.pct)
+		else status = "Empty slot" end
+		if e.minLevel and e.minLevel > level then status = status .. ("  ·  from level %d"):format(e.minLevel) end
+		if e.rank == 1 and not e.have then status = status .. "  ·  the best" end
+		local label = ("%d.  %s%s%s"):format(e.rank, tostring(e.name), e.slotName ~= Gear.SLOT_NAMES[slot] and ("  (" .. e.slotName .. ")") or "",
+			tracked and "  ·  tracking" or "")
+		rows[#rows + 1] = { "button", label, function()
+			if e.have then S.Print(("you have %s already."):format(tostring(e.name)))
+			elseif tracked then Hunts.Chase(e.id)
+			else Hunts.Track(e) end
+		end, tracked and "accent" or "default" }
+		rows[#rows + 1] = { "text", Best.SourceText(e.source) .. "  ·  " .. status, "muted" }
+	end
+	if #list > 0 then rows[#rows + 1] = { "text", "Click one to track it. Ranked by Pathwise's weights for your spec; Look ahead (Best in Slot) shows levels to come too.", "muted" } end
+
+	-- What you track.
+	local tracked = Hunts.Tracked()
+	rows[#rows + 1] = { "heading", ("Tracking (%d)"):format(#tracked) }
+	if #tracked == 0 then rows[#rows + 1] = { "text", "Nothing yet: pick one above.", "muted" } end
+	for _, t in ipairs(tracked) do
+		rows[#rows + 1] = { "button", ("Show the way:  %s%s"):format(t.name, t.slot and ("  (" .. Gear.SLOT_NAMES[t.slot] .. ")") or ""), function() Hunts.Chase(t.id) end, "accent" }
+		rows[#rows + 1] = { "text", t.entry and Best.SourceText(t.entry.source) or "No source left that Pathwise knows of.", "muted" }
+		rows[#rows + 1] = { "button", "Stop tracking " .. t.name, function() Hunts.Untrack(t.id) end }
+		rows[#rows + 1] = { "button", "Not for me: hide " .. t.name, function() Hunts.Hide(t.id) end }
+	end
+
+	local done = Hunts.Done()
+	if #done > 0 then
+		rows[#rows + 1] = { "heading", ("Done (%d)"):format(#done) }
+		for _, d in ipairs(done) do
+			rows[#rows + 1] = { "text", d.name .. (d.slot and ("  ·  " .. Gear.SLOT_NAMES[d.slot]) or ""), "success" }
+		end
+		rows[#rows + 1] = { "button", "Clear the done list", function() Hunts.ClearDone() end }
+	end
+
+	local hidden = Hunts.Hidden()
+	if #hidden > 0 then
+		rows[#rows + 1] = { "heading", ("Hidden (%d)"):format(#hidden) }
+		rows[#rows + 1] = { "text", "Left out of every list, Best in Slot too.", "muted" }
+		for _, h in ipairs(hidden) do
+			rows[#rows + 1] = { "button", "Show again: " .. h.name, function() Hunts.Unhide(h.id) end }
+		end
+	end
+
+	rows[#rows + 1] = { "heading", "Options" }
+	rows[#rows + 1] = { "toggle", "Right-click a slot opens this", "gear.slotClick", "On the character panel. A right-click on a trinket you can use still uses it too." }
+	rows[#rows + 1] = { "toggle", "Alert when a hunt is done", "gear.huntAlert", "On screen, with a sound and a chat line." }
+	return rows
+end
+
 C.CATEGORIES = {
 	{ key = "gear", name = "Upgrades", rows = upgradeRows },
+	{ key = "hunts", name = "Hunts", rows = huntRows },
 	{ key = "best", name = "Best in Slot", rows = bestRows },
 	{ key = "look", name = "Look and accent", rows = C.AccentRows },
 	{ key = "colors", name = "Colors", rows = C.ColorRows },
@@ -139,5 +214,5 @@ C.CATEGORIES = {
 }
 
 -- Redraw as Best in Slot's items arrive, and when Gear's verdicts change.
-S.On("GEAR_BEST_UPDATED", function() if S.IsOpen("best") then S.Refresh() end end)
+S.On("GEAR_BEST_UPDATED", function() if S.IsOpen("best") or S.IsOpen("hunts") then S.Refresh() end end)
 S.On("GEAR_UPDATED", function() S.Refresh() end)

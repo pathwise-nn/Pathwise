@@ -290,11 +290,12 @@ function Best.ListFor(maxLevel)
 	p.professions = professions()
 	local dual = Client.Knows(DUAL_WIELD)
 	local bySlot = {} -- slot -> { entries }, best first
-	local twoHand
+	local twoHands = {} -- two-handers, best first
 	local pending = 0
+	local hidden = Best.HiddenSet()
 	for id, g in pairs(data()) do
 		local dungeon = g[DUNGEON] and S.Dungeons and S.Dungeons.Get(g[DUNGEON])
-		if mayUse(g, class, maxLevel) and (raids or not (dungeon and dungeon.raid)) then
+		if not hidden[id] and mayUse(g, class, maxLevel) and (raids or not (dungeon and dungeon.raid)) then
 			local src = sources(g, p)
 			if #src > 0 then
 				if not cached(id) then
@@ -310,7 +311,7 @@ function Best.ListFor(maxLevel)
 						local e = { id = id, link = link, name = name, quality = quality, score = score, minLevel = minLevel,
 							source = src[1], sources = src, have = have(id), equipLoc = equipLoc }
 						if equipLoc == "INVTYPE_2HWEAPON" then
-							if not twoHand or score > twoHand.score then twoHand = e end
+							twoHands[#twoHands + 1] = e
 						else
 							for _, slot in ipairs(slots) do
 								if not (slot == 17 and equipLoc == "INVTYPE_WEAPON" and not dual) then
@@ -325,7 +326,10 @@ function Best.ListFor(maxLevel)
 			end
 		end
 	end
-	for _, t in pairs(bySlot) do table.sort(t, function(a, b) return a.score > b.score end) end
+	local function byScore(a, b) if a.score ~= b.score then return a.score > b.score end return a.id < b.id end
+	for _, t in pairs(bySlot) do table.sort(t, byScore) end
+	table.sort(twoHands, byScore)
+	local twoHand = twoHands[1]
 	local out = {}
 	local used = {}
 	local function take(slot)
@@ -367,9 +371,65 @@ function Best.ListFor(maxLevel)
 			}
 		end
 	end
-	lists[k] = { out, pending }
+	lists[k] = { out, pending, bySlot, twoHands }
 	return out, pending
 end
+
+-- Items you said are not for you (Hunts: "Hide it"): left out of every list.
+function Best.HiddenSet()
+	local d = ns.CharData and ns.CharData("hunts")
+	return d and type(d.hidden) == "table" and d.hidden or {}
+end
+
+-- The best you can get for one slot, ranked: up to n (10) at your level
+-- (and the levels ahead you chose to see). The main hand lists two-handers
+-- too, set against your main and off hand together.
+-- -> { { rank, slot, slotName, id, link, name, quality, score, minLevel,
+--        source, sources, pct, have, wearing }, ... }, pending
+function Best.Ranked(slot, n)
+	n = n or 10
+	local maxLevel = Client.Level() + (S.Get("gear.bisAhead") or 0)
+	local _, pending = Best.ListFor(maxLevel)
+	local cache = lists[key(maxLevel)]
+	if not cache then return {}, pending end
+	local pool = {}
+	for _, e in ipairs(cache[3][slot] or {}) do pool[#pool + 1] = e end
+	if slot == 16 then for _, e in ipairs(cache[4]) do pool[#pool + 1] = e end end
+	table.sort(pool, function(a, b) if a.score ~= b.score then return a.score > b.score end return a.id < b.id end)
+	local equipped = Client.Equipped(slot)
+	local wornId = equipped and tonumber(tostring(equipped):match("item:(%d+)"))
+	local worn = equipped and Gear.Score(equipped) or 0
+	local off = slot == 16 and Client.Equipped(17)
+	local wornBoth = worn + (off and Gear.Score(off) or 0)
+	local out = {}
+	for _, e in ipairs(pool) do
+		if #out >= n then break end
+		local two = e.equipLoc == "INVTYPE_2HWEAPON"
+		local against = two and wornBoth or worn
+		out[#out + 1] = {
+			rank = #out + 1, slot = slot, slotName = two and "Two-hand" or Gear.SLOT_NAMES[slot],
+			id = e.id, link = e.link, name = e.name, quality = e.quality, score = e.score, minLevel = e.minLevel,
+			source = e.source, sources = e.sources, wearing = wornId == e.id,
+			have = wornId == e.id or have(e.id),
+			pct = against > 0 and ((e.score - against) / against * 100) or nil,
+		}
+	end
+	return out, pending
+end
+
+-- One item as a list entry, wherever it ranks: its name and where it comes
+-- from now (for a hunt). -> entry or nil when no source is left.
+function Best.Entry(id)
+	local g = id and data()[id]
+	if not (g and Best.Available()) then return nil end
+	local p = S.Quests.Player()
+	p.professions = professions()
+	local src = sources(g, p)
+	local _, _, _, minLevel, quality, name = Client.Info("item:" .. id)
+	return { id = id, link = "item:" .. id, name = name, quality = quality, minLevel = minLevel or g[REQ],
+		source = src[1], sources = src, have = have(id) }
+end
+Best.Have = have
 
 -- Is item `id` the best for its slot, at the player's level or at the level
 -- it needs when that is higher ("for your level and up")?
@@ -438,7 +498,8 @@ function Best.CheckBags()
 	local now = bagCounts()
 	if seen and S.Get("gear.bisAlert") then
 		for id, n in pairs(now) do
-			if n > (seen[id] or 0) and data()[id] then
+			-- A hunt you track has its own alert (Hunts.lua).
+			if n > (seen[id] or 0) and data()[id] and not (ns.Hunts and ns.Hunts.Claimed(id)) then
 				local at, slotName = Best.IsBest(id)
 				if at then Best.Announce(id, at, slotName) end
 			end
