@@ -6,6 +6,15 @@ that version's section.
 
 ## Unreleased
 
+### Quest progress on tooltips
+- Hover a monster you need to kill, or one that drops what a quest needs,
+  and its tooltip names the quest and your count ("Mindless Zombie: 5/8").
+  Items a quest asks for show it too; finished objectives go grey.
+- Every quest in your log that isn't ready to hand in counts. World drops
+  (items more than 30 monsters drop) are left out.
+- On by default; Map pins in the options turns it off.
+- Not yet checked in game.
+
 ## 0.3.16 (2026-11-24)
 
 ### Pathwise Heal: lower spell ranks on a click

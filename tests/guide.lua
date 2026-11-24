@@ -837,6 +837,34 @@ test("quest markers stand out on the map: solid, a readable size, on a dark badg
 	end
 end)
 
+test("quest tooltips: a monster or item you need names the quest and your count", function()
+	local stub, ns = login()
+	local QT = ns.QuestTips
+	local zombie, bat = "Creature-0-1-2-3-1501-0000ABCDEF", "Creature-0-1-2-3-1512-0000ABCDEF"
+	eq(#stub.showUnitTooltip(zombie), 0, "no quest for it yet: nothing added")
+	-- The Mindless Ones (364): kill Mindless (1501) and Wretched Zombies.
+	stub.accept(364, { { text = "Mindless Zombie slain: 5/8", numFulfilled = 5, numRequired = 8, finished = false },
+		{ text = "Wretched Zombie slain: 0/8", numFulfilled = 0, numRequired = 8, finished = false } })
+	-- The Damned (376): Scavenger Paws (3265) and Duskbat Wings (3264, from Duskbats like 1512).
+	stub.accept(376, { { text = "Scavenger Paw: 6/6", numFulfilled = 6, numRequired = 6, finished = true },
+		{ text = "Duskbat Wing: 2/6", numFulfilled = 2, numRequired = 6, finished = false } })
+	local lines = stub.showUnitTooltip(zombie)
+	eq(lines[1][1], "The Mindless Ones")
+	eq(lines[2][1], "  Mindless Zombie: 5/8", "the log's own count")
+	eq(#lines, 2, "only the objective for this monster")
+	lines = stub.showUnitTooltip(bat)
+	eq(lines[1][1], "The Damned", "a monster that drops what a quest needs")
+	eq(lines[2][1], "  Duskbat Wing: 2/6")
+	lines = stub.showTooltip("item:3265")
+	eq(stub.tooltipText[1][1], "The Damned", "the item itself")
+	eq(stub.tooltipText[2][1], "  Scavenger Paw: 6/6")
+	eq(stub.tooltipText[2][2], 0.5, "a finished objective is grey")
+	eq(#stub.showUnitTooltip("Player-1-0ABC"), 0, "a player: nothing")
+	eq(QT.NpcFromGuid("Vehicle-0-1-2-3-1501-00AB"), 1501)
+	ns.Set("questtips.enabled", false)
+	eq(#stub.showUnitTooltip(zombie), 0, "switched off")
+end)
+
 test("quest sparkle: motes under the plates of the monsters a quest needs", function()
 	local stub, ns = login()
 	local S = ns.Sparkle
