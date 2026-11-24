@@ -6,6 +6,13 @@ that version's section.
 
 ## Unreleased
 
+### Quest monsters sparkle
+- Gold motes rise under the nameplate of a monster you still need: one to
+  kill for a quest you're on, or one that drops an item you need. Like the
+  game's own sparkle on quest objects, which it gives objects only. It
+  works over the game's nameplates and Pathwise UI's; enemy nameplates must
+  be on. Turn it off in Settings, under Map pins. Not yet checked in game.
+
 ## 0.3.13 (2026-11-23)
 
 ### Pathwise Loot: send in the drops it's missing

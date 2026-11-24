@@ -1429,6 +1429,8 @@ function builders.settings()
 		{ "slider", "Steps numbered ahead", "pins.stepCount", 1, 20, 1, function(v) return ("%d"):format(v) end, "count" },
 		{ "setting", "Quest markers on the map", onOff(ns.Get("pins.quests")), { { ns.Get("pins.quests") and "Hide" or "Show", toggle("pins.quests") } } },
 		{ "setting", "Quest markers on the minimap", onOff(ns.Get("pins.questsMinimap")), { { ns.Get("pins.questsMinimap") and "Hide" or "Show", toggle("pins.questsMinimap") } } },
+		{ "setting", "Sparkle on quest monsters", onOff(ns.Get("sparkle.enabled")), { { ns.Get("sparkle.enabled") and "Hide" or "Show", toggle("sparkle.enabled") } } },
+		{ "text", "Gold motes under the nameplate of a monster you need to kill, or that drops what you need. Needs the game's enemy nameplates on.", "muted" },
 		{ "heading", "Route" },
 		{ "setting", route and route.title or "No route", "", { { "Routes", function() Panels.Open("routes") end }, { "Zones", function() Panels.Open("zones") end } } },
 		{ "setting", "Skip quests you have passed", onOff(ns.Get("guide.skipPassed")), { { ns.Get("guide.skipPassed") and "Turn off" or "Turn on", function()
