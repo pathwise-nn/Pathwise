@@ -20,7 +20,16 @@ that version's section.
 - Drag it to move; it can be locked, and its width set. Hidden at the
   level cap.
 - The quest XP comes from GetQuestLogRewardXP, which Forever's own UI uses
-  but its API docs don't list; without it the gold part is left out.
+  but its API docs don't list; without it the orange part is left out.
+- Not yet checked in game.
+
+### Quest progress on tooltips
+- Hover a monster you need to kill, or one that drops what a quest needs,
+  and its tooltip names the quest and your count ("Mindless Zombie: 5/8").
+  Items a quest asks for show it too; finished objectives go grey.
+- Every quest in your log that isn't ready to hand in counts. World drops
+  (items more than 30 monsters drop) are left out.
+- On by default; Map pins in the options turns it off.
 - Not yet checked in game.
 
 ## 0.3.16 (2026-11-24)

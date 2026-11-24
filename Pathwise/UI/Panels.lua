@@ -1437,6 +1437,8 @@ function builders.settings()
 		{ "setting", "Quest markers on the minimap", onOff(ns.Get("pins.questsMinimap")), { { ns.Get("pins.questsMinimap") and "Hide" or "Show", toggle("pins.questsMinimap") } } },
 		{ "setting", "Sparkle on quest monsters", onOff(ns.Get("sparkle.enabled")), { { ns.Get("sparkle.enabled") and "Hide" or "Show", toggle("sparkle.enabled") } } },
 		{ "text", "Gold motes under the nameplate of a monster you need to kill, or that drops what you need. Needs the game's enemy nameplates on.", "muted" },
+		{ "setting", "Quest progress on tooltips", onOff(ns.Get("questtips.enabled")), { { ns.Get("questtips.enabled") and "Hide" or "Show", toggle("questtips.enabled") } } },
+		{ "text", "Hover a monster you need, or an item a quest asks for: the tooltip names the quest and your count.", "muted" },
 		{ "heading", "Route" },
 		{ "setting", route and route.title or "No route", "", { { "Routes", function() Panels.Open("routes") end }, { "Zones", function() Panels.Open("zones") end } } },
 		{ "setting", "Skip quests you have passed", onOff(ns.Get("guide.skipPassed")), { { ns.Get("guide.skipPassed") and "Turn off" or "Turn on", function()

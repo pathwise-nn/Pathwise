@@ -35,6 +35,7 @@ Guide\Dungeons.lua
 Nav\QuestMarkers.lua
 Nav\Pins.lua
 Nav\Sparkle.lua
+Nav\QuestTips.lua
 UI\GuideWindow.lua
 UI\TrackerCard.lua
 UI\Hud.lua

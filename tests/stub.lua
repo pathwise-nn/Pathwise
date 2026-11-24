@@ -336,11 +336,21 @@ stub.now = 0
 function GetTime() return stub.now end
 
 -- Tooltips: TooltipDataProcessor keeps the post-calls; GameTooltip shows stub.tooltipLink.
-stub.postCalls, stub.tooltipLines = {}, {}
-Enum = { TooltipDataType = { Item = 0 } }
-TooltipDataProcessor = { AddTooltipPostCall = function(kind, fn) stub.postCalls[#stub.postCalls + 1] = fn end }
+-- Unit post-calls get { guid = ... } (stub.showUnitTooltip); AddLine is kept in stub.tooltipText.
+stub.postCalls, stub.unitPostCalls, stub.tooltipLines, stub.tooltipText = {}, {}, {}, {}
+Enum = { TooltipDataType = { Item = 0, Unit = 2 } }
+TooltipDataProcessor = { AddTooltipPostCall = function(kind, fn)
+	local list = kind == Enum.TooltipDataType.Unit and stub.unitPostCalls or stub.postCalls
+	list[#list + 1] = fn
+end }
+function GameTooltip:AddLine(text, r, g, b) stub.tooltipText[#stub.tooltipText + 1] = { text, r, g, b } end
+function stub.showUnitTooltip(guid)
+	stub.tooltipText = {}
+	for _, fn in ipairs(stub.unitPostCalls) do fn(GameTooltip, { guid = guid }) end
+	return stub.tooltipText
+end
 function stub.showTooltip(link)
-	stub.tooltipLink, stub.tooltipLines = link, {}
+	stub.tooltipLink, stub.tooltipLines, stub.tooltipText = link, {}, {}
 	for _, fn in ipairs(stub.postCalls) do fn(GameTooltip) end
 	return stub.tooltipLines
 end
