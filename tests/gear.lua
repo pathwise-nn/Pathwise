@@ -281,6 +281,106 @@ test("gear best page: slot by slot, and the options", function()
 	ok(lastPrint(stub):find("World drop"), lastPrint(stub))
 end)
 
+-- An item card on a page: by its name, and (when given) its corner note.
+local function card(rows, title, corner)
+	for _, r in ipairs(rows) do
+		if r[1] == "item" and r[3].title == title and (not corner or r[3].corner == corner) then return r end
+	end
+end
+
+test("gear hunts: one slot's best, ranked, with two-handers in the main hand", function()
+	local stub, ns, g = gear()
+	withGear(stub)
+	Pathwise.Suite.Data.gear[105] = { 15, 22, 2, 10, nil, nil, nil, true }
+	local B = g.Best
+	B.Clear()
+	local head = B.Ranked(1)
+	eq(#head, 2, "Glyphed Hood and Silk Cowl: plate left out, Hood of Ages needs 30")
+	eq(head[1].id, 102)
+	eq(head[1].rank, 1)
+	eq(head[2].id, 108)
+	ok(head[1].pct > head[2].pct, "the best gains most on the worn hood")
+	local main = B.Ranked(16)
+	local two
+	for _, e in ipairs(main) do if e.id == 105 then two = e end end
+	ok(two and two.slotName == "Two-hand", "the staff, in the main hand's list")
+	-- Looking ahead.
+	g.Set("gear.bisAhead", 10)
+	B.Clear()
+	eq(B.Ranked(1)[1].id, 107, "at 30 the Hood of Ages first")
+end)
+
+test("gear hunts: right-click a slot, track the best, and hear when you have it", function()
+	local stub, ns, g = gear(function(s)
+		CharacterHeadSlot = CreateFrame("Button", "CharacterHeadSlot")
+		CharacterHeadSlot:SetScript("OnClick", function() end)
+		s.bags[0] = { { itemID = 101 } }
+	end)
+	withGear(stub)
+	g.Best.Clear()
+	local H = g.Hunts
+	CharacterHeadSlot.scripts.OnClick(CharacterHeadSlot, "LeftButton")
+	ok(not (_G.PathwiseGearConfig and _G.PathwiseGearConfig.shown), "a left-click is the game's")
+	CharacterHeadSlot.scripts.OnClick(CharacterHeadSlot, "RightButton")
+	ok(_G.PathwiseGearConfig and _G.PathwiseGearConfig.shown, "a right-click opens Gear's window")
+	eq(g.Config.Current(), "hunts")
+	eq(H.slot, 1)
+	local drawn
+	for _, f in ipairs(stub.frames) do if rawget(f, "text") == "Glyphed Hood" then drawn = f end end
+	ok(drawn and drawn.shown, "its card is drawn in the window")
+	local rows, texts = page(g, "hunts")
+	ok(contains(texts, "Best for your head"), table.concat(texts, " | "))
+	local first = card(rows, "Glyphed Hood")
+	ok(first and card(rows, "Silk Cowl"), "a card each")
+	eq(first[2], "item:102", "the item, for its icon and tooltip")
+	ok(first[3].sub:find("^#1  ·  level 13  ·  World drop"), first[3].sub)
+	ok(card(rows, "Silk Cowl")[3].sub:find("^#2"))
+	ok(first[3].corner:find("^%+%d+%%$"), first[3].corner)
+	eq(first[3].mark, false, "an unlit diamond")
+	first[3].onClick("LeftButton")
+	ok(H.IsTracked(102), "tracked")
+	ok(lastPrint(stub):find("tracking Glyphed Hood"), lastPrint(stub))
+	rows, texts = page(g, "hunts")
+	ok(card(rows, "Glyphed Hood", "SHOW THE WAY"), "in Tracking")
+	local ranked = card(rows, "Glyphed Hood", "TRACKING")
+	ok(ranked and ranked[3].chosen and ranked[3].mark == true, "chosen, its diamond lit")
+	-- Picked up: done, on screen and in chat, and no other alert for it.
+	local notices = #stub.notices
+	stub.bags[0][2] = { itemID = 102 }
+	stub.items[102] = 1
+	stub.fire("BAG_UPDATE_DELAYED")
+	eq(stub.notices[notices + 1], "Hunt done: Glyphed Hood (Head)")
+	eq(#stub.notices, notices + 1, "not best in slot too")
+	ok(lastPrint(stub):find("hunt done"), lastPrint(stub))
+	ok(not H.IsTracked(102))
+	eq(#H.Done(), 1)
+	rows, texts = page(g, "hunts")
+	ok(contains(texts, "Done (1)"))
+	-- Already yours: nothing to track.
+	eq(H.Track(g.Best.Ranked(1)[1]), false)
+	-- Switched off: the right-click is the game's alone.
+	g.Set("gear.slotClick", false)
+	g.Config.Show("gear")
+	CharacterHeadSlot.scripts.OnClick(CharacterHeadSlot, "RightButton")
+	eq(g.Config.Current(), "gear")
+	CharacterHeadSlot = nil
+end)
+
+test("gear hunts: hide one that is not for you, and show it again", function()
+	local stub, ns, g = gear()
+	withGear(stub)
+	local B, H = g.Best, g.Hunts
+	B.Clear()
+	H.Track(B.Ranked(1)[1])
+	card(page(g, "hunts"), "Glyphed Hood", "SHOW THE WAY")[3].onClick("RightButton")
+	ok(not H.IsTracked(102), "hidden: no longer tracked")
+	eq(B.Ranked(1)[1].id, 108, "out of the slot's list")
+	for _, e in ipairs(B.List()) do if e.slot == 1 then eq(e.id, 108, "and out of Best in Slot") end end
+	local rows = page(g, "hunts")
+	card(rows, "Glyphed Hood", "SHOW AGAIN")[3].onClick("LeftButton")
+	eq(B.Ranked(1)[1].id, 102, "back")
+end)
+
 test("gear: an item better than what is worn is an upgrade, by how much and where", function()
 	local stub, ns, g = gear()
 	local G = g.Gear

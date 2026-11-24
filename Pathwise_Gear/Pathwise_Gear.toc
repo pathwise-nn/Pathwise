@@ -21,6 +21,7 @@ Facts.lua
 Weights.lua
 Gear.lua
 Best.lua
+Hunts.lua
 Hooks.lua
 Panel.lua
 Kit\Options.lua

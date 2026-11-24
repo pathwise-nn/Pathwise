@@ -1,7 +1,7 @@
 -- Pathwise Gear's pages in its own options window (Kit/Options.lua draws
 -- them; the row kinds are listed there): Upgrades (who scores items, the
 -- spec and its stat priority, custom weights, the upgrades in your bags),
--- Best in Slot (Level), then the look and profile pages every Pathwise addon
+-- Hunts (one slot's best, ranked, and what you track), Best in Slot (Level), then the look and profile pages every Pathwise addon
 -- has. /pwgear, the minimap button or Pathwise's suite list opens it.
 
 local ADDON, ns = ...
@@ -129,8 +129,102 @@ local function bestRows()
 	return rows
 end
 
+-- Hunts: the best you can get for one slot, ranked, and the gear you track,
+-- as item cards like Pathwise's recipe book and loot browser.
+local UPGRADE = { 0x7F / 255, 0xD9 / 255, 0x8F / 255, 1 } -- the loot browser's upgrade green
+local function huntRows()
+	local Best, Hunts = ns.Best, ns.Hunts
+	local level = Gear.Client.Level()
+	local ahead = S.Get("gear.bisAhead") or 0
+	local slot = Hunts.slot
+	local rows = { { "heading", "Hunts" } }
+	rows[#rows + 1] = { "text", "Right-click a slot on your character panel to see the best you can get for it. Track one: "
+		.. (ns.Pathwise() and "the arrow leads you there" or "a pin on your map shows where")
+		.. ", and you'll know when you have it.", "text2" }
+
+	-- The slot, and its best, ranked.
+	local slots = {}
+	local TWO = { [11] = " 1", [12] = " 2", [13] = " 1", [14] = " 2" }
+	for _, s in ipairs(Best.ORDER) do slots[#slots + 1] = { Gear.SLOT_NAMES[s] .. (TWO[s] or ""), s } end
+	rows[#rows + 1] = { "dropdown", "Slot", { get = function() return Hunts.slot end, set = function(v) Hunts.slot = v S.Refresh() end }, slots }
+	local list, pending = Best.Ranked(slot, 10)
+	rows[#rows + 1] = { "heading", ("Best for your %s  ·  level %d%s"):format(Gear.SLOT_NAMES[slot]:lower(), level + ahead, ahead > 0 and " (looking ahead)" or "") }
+	if pending > 0 then rows[#rows + 1] = { "text", ("Loading %d items from the game..."):format(pending), "muted" } end
+	if #list == 0 and pending == 0 then rows[#rows + 1] = { "text", "Nothing Pathwise knows of for this slot at your level.", "muted" } end
+	for _, e in ipairs(list) do
+		local tracked = Hunts.IsTracked(e.id)
+		local corner, color
+		if e.wearing then corner, color = "WEARING", "muted"
+		elseif e.have then corner, color = "IN YOUR BAGS", "muted"
+		elseif tracked then corner, color = "TRACKING", "accent"
+		elseif e.pct then corner, color = ("%+.0f%%"):format(e.pct), e.pct > 0 and UPGRADE or "muted"
+		else corner, color = "EMPTY SLOT", UPGRADE end
+		local bits = { ("#%d"):format(e.rank) }
+		if e.slotName ~= Gear.SLOT_NAMES[slot] then bits[#bits + 1] = e.slotName end
+		if e.minLevel and e.minLevel > level then bits[#bits + 1] = ("from level %d"):format(e.minLevel)
+		elseif e.minLevel and e.minLevel > 0 then bits[#bits + 1] = ("level %d"):format(e.minLevel) end
+		bits[#bits + 1] = Best.SourceText(e.source)
+		local mark -- the diamond: lit when tracked; none for what you have
+		if not e.have then mark = tracked and true or false end
+		rows[#rows + 1] = { "item", e.link, {
+			title = e.name, sub = table.concat(bits, "  ·  "), corner = corner, cornerColor = color,
+			chosen = tracked, mark = mark, dim = e.minLevel and e.minLevel > level,
+			markTip = tracked and "Tracking: click to stop" or "Track it",
+			onMark = function() if tracked then Hunts.Untrack(e.id) else Hunts.Track(e) end end,
+			onClick = function(button)
+				if button == "RightButton" then Hunts.Hide(e.id)
+				elseif e.have then S.Print(("you have %s already."):format(tostring(e.name)))
+				elseif tracked then Hunts.Chase(e.id)
+				else Hunts.Track(e) end
+			end,
+		} }
+	end
+	if #list > 0 then rows[#rows + 1] = { "text", "Click a card or its diamond to track it; once tracked, a click shows the way. Right-click: not for me, out of every list. Ranked by Pathwise's weights for your spec.", "muted" } end
+
+	-- What you track.
+	local tracked = Hunts.Tracked()
+	rows[#rows + 1] = { "heading", ("Tracking (%d)"):format(#tracked) }
+	if #tracked == 0 then rows[#rows + 1] = { "text", "Nothing yet: pick one above.", "muted" } end
+	for _, t in ipairs(tracked) do
+		local bits = {}
+		if t.slot then bits[#bits + 1] = Gear.SLOT_NAMES[t.slot] end
+		bits[#bits + 1] = t.entry and Best.SourceText(t.entry.source) or "no source left that Pathwise knows of"
+		rows[#rows + 1] = { "item", "item:" .. t.id, {
+			title = t.name, sub = table.concat(bits, "  ·  "), corner = "SHOW THE WAY", chosen = true, mark = true,
+			markTip = "Tracking: click to stop",
+			onMark = function() Hunts.Untrack(t.id) end,
+			onClick = function(button) if button == "RightButton" then Hunts.Hide(t.id) else Hunts.Chase(t.id) end end,
+		} }
+	end
+
+	local done = Hunts.Done()
+	if #done > 0 then
+		rows[#rows + 1] = { "heading", ("Done (%d)"):format(#done) }
+		for _, d in ipairs(done) do
+			rows[#rows + 1] = { "item", "item:" .. d.id, { title = d.name, sub = d.slot and Gear.SLOT_NAMES[d.slot] or "", corner = "DONE", cornerColor = "success" } }
+		end
+		rows[#rows + 1] = { "button", "Clear the done list", function() Hunts.ClearDone() end }
+	end
+
+	local hidden = Hunts.Hidden()
+	if #hidden > 0 then
+		rows[#rows + 1] = { "heading", ("Hidden (%d)"):format(#hidden) }
+		rows[#rows + 1] = { "text", "Left out of every list, Best in Slot too. Click one to show it again.", "muted" }
+		for _, h in ipairs(hidden) do
+			rows[#rows + 1] = { "item", "item:" .. h.id, { title = h.name, sub = "Hidden", corner = "SHOW AGAIN", cornerColor = "muted", dim = true,
+				onClick = function() Hunts.Unhide(h.id) end } }
+		end
+	end
+
+	rows[#rows + 1] = { "heading", "Options" }
+	rows[#rows + 1] = { "toggle", "Right-click a slot opens this", "gear.slotClick", "On the character panel. A right-click on a trinket you can use still uses it too." }
+	rows[#rows + 1] = { "toggle", "Alert when a hunt is done", "gear.huntAlert", "On screen, with a sound and a chat line." }
+	return rows
+end
+
 C.CATEGORIES = {
 	{ key = "gear", name = "Upgrades", rows = upgradeRows },
+	{ key = "hunts", name = "Hunts", rows = huntRows },
 	{ key = "best", name = "Best in Slot", rows = bestRows },
 	{ key = "look", name = "Look and accent", rows = C.AccentRows },
 	{ key = "colors", name = "Colors", rows = C.ColorRows },
@@ -139,5 +233,5 @@ C.CATEGORIES = {
 }
 
 -- Redraw as Best in Slot's items arrive, and when Gear's verdicts change.
-S.On("GEAR_BEST_UPDATED", function() if S.IsOpen("best") then S.Refresh() end end)
+S.On("GEAR_BEST_UPDATED", function() if S.IsOpen("best") or S.IsOpen("hunts") then S.Refresh() end end)
 S.On("GEAR_UPDATED", function() S.Refresh() end)

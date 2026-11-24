@@ -26,6 +26,11 @@ end
 function Widget:CreateTexture() return new("Texture", nil, self) end
 function Widget:CreateFontString() local f = new("FontString", nil, self) f.text = "" return f end
 function Widget:SetScript(k, fn) self.scripts[k] = fn end
+-- HookScript: after the frame's own script.
+function Widget:HookScript(k, fn)
+	local old = self.scripts[k]
+	self.scripts[k] = old and function(...) old(...) fn(...) end or fn
+end
 function Widget:GetScript(k) return self.scripts[k] end
 function Widget:Show() self.shown = true end
 function Widget:Hide() self.shown = false end

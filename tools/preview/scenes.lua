@@ -178,11 +178,53 @@ local function bagItems()
 	}
 end
 
+-- Pathwise Gear's Hunts: a warrior's head pieces, from Pathwise's places
+-- (a quest, a vendor, a monster; the items are stand-ins), one tracked, one
+-- hidden, a done hunt.
+local function huntItems()
+	local STR, AGI, STA, DPS = "ITEM_MOD_STRENGTH_SHORT", "ITEM_MOD_AGILITY_SHORT", "ITEM_MOD_STAMINA_SHORT", "ITEM_MOD_DAMAGE_PER_SECOND_SHORT"
+	local items = {
+		[301] = { { "Worn Leather Cap", 1, 8, 5, 4, 2, "INVTYPE_HEAD", 5 }, { [STR] = 1 } },
+		[302] = { { "Ridge Helm", 2, 18, 60, 4, 3, "INVTYPE_HEAD", 12 }, { [STR] = 5, [STA] = 3 } },
+		[303] = { { "Scouting Hood", 2, 16, 40, 4, 2, "INVTYPE_HEAD", 11 }, { [AGI] = 4, [STA] = 2 } },
+		[304] = { { "Militia Coif", 1, 12, 20, 4, 3, "INVTYPE_HEAD", 10 }, { [STR] = 2, [STA] = 2 } },
+		[305] = { { "Raider's Cap", 2, 17, 50, 4, 2, "INVTYPE_HEAD", 13 }, { [STR] = 3, [AGI] = 2, [STA] = 2 } },
+		[306] = { { "Sentry's Helm", 2, 20, 70, 4, 3, "INVTYPE_HEAD", 16 }, { [STR] = 6, [STA] = 5 } },
+		[310] = { { "Militia Shortsword", 2, 14, 30, 2, 7, "INVTYPE_WEAPON", 10 }, { [STR] = 2, [DPS] = 7 } },
+	}
+	for id, d in pairs(items) do stub.itemInfo[id], stub.itemStats[id] = d[1], d[2] end
+	stub.equipped[1] = 301
+end
+local function huntData(ns)
+	local G = ns.Data.gear
+	for k in pairs(G) do G[k] = nil end
+	local Q = ns.Quests
+	local quest, vendor, monster
+	for id in pairs(ns.Data.quests) do if Q.ForPlayer(id, Q.Player()) and not Q.Closed(id) then quest = id break end end
+	for id, n in pairs(ns.Data.npcs) do
+		if n[5] and (n[4] == "A" or not n[4]) then if not vendor then vendor = id elseif not monster then monster = id break end end
+	end
+	G[302] = { 12, 18, 4, 3, quest and { quest } or nil }
+	G[303] = { 11, 16, 4, 2, nil, nil, { vendor } }
+	G[304] = { 10, 12, 4, 3, nil, nil, { vendor } }
+	G[305] = { 13, 17, 4, 2, nil, { monster } }
+	G[306] = { 16, 20, 4, 3, nil, nil, nil, true }
+	G[310] = { 10, 14, 2, 7, nil, { monster } }
+	local Gear = PathwiseGear
+	Gear.Best.Clear()
+	Gear.Hunts.Track({ id = 310, slot = 16, name = "Militia Shortsword" })
+	stub.items[310] = 1 -- picked up: done
+	Gear.Hunts.Check()
+	Gear.Hunts.Track(Gear.Best.Ranked(1)[1])
+	Gear.Hunts.Hide(303)
+	Gear.Hunts.slot = 1
+end
+
 return {
 	setup = setup,
 	-- Other Pathwise addons a scene loads with Pathwise.
-	addons = { bags = { "Pathwise_Gear", "Pathwise_Bags" }, gear = { "Pathwise_Gear" }, insights = { "Pathwise_Insights" }, ["insights-map"] = { "Pathwise_Insights" }, ["insights-zone"] = { "Pathwise_Insights" }, ["insights-share"] = { "Pathwise_Insights" }, ["insights-full"] = { "Pathwise_Insights" } },
-	before = { ["hub-horde"] = horde, ["tracker-horde"] = horde, bags = bagItems, insights = insightsLog, ["insights-map"] = insightsLog, ["insights-zone"] = insightsLog, ["insights-share"] = insightsLog, ["insights-full"] = insightsLog },
+	addons = { bags = { "Pathwise_Gear", "Pathwise_Bags" }, gear = { "Pathwise_Gear" }, ["gear-hunts"] = { "Pathwise_Gear" }, insights = { "Pathwise_Insights" }, ["insights-map"] = { "Pathwise_Insights" }, ["insights-zone"] = { "Pathwise_Insights" }, ["insights-share"] = { "Pathwise_Insights" }, ["insights-full"] = { "Pathwise_Insights" } },
+	before = { ["hub-horde"] = horde, ["tracker-horde"] = horde, bags = bagItems, ["gear-hunts"] = huntItems, insights = insightsLog, ["insights-map"] = insightsLog, ["insights-zone"] = insightsLog, ["insights-share"] = insightsLog, ["insights-full"] = insightsLog },
 	scenes = {
 		hub = function(ns)
 			onRoute(ns)
@@ -270,6 +312,12 @@ return {
 			onRoute(ns)
 			ns.Panels.Open("gear")
 		end,
+		["gear-hunts"] = function(ns)
+			onRoute(ns)
+			huntData(ns)
+			SlashCmdList.PATHWISEGEAR("hunts")
+			stub.advance(1)
+		end,
 		insights = function(ns)
 			onRoute(ns)
 			SlashCmdList.PATHWISEINSIGHTS("")
@@ -304,5 +352,5 @@ return {
 		end,
 	},
 	order = { "hub", "hub-horde", "hub-class", "hub-prof", "hub-wide", "hub-narrow", "tracker", "tracker-horde", "window", "minimal",
-		"settings", "settings-themes", "routebook", "routebook-page", "recipebook", "professions", "profession", "dungeons", "skip", "bags", "gear", "insights", "insights-map", "insights-zone", "insights-share", "insights-full" },
+		"settings", "settings-themes", "routebook", "routebook-page", "recipebook", "professions", "profession", "dungeons", "skip", "bags", "gear", "gear-hunts", "insights", "insights-map", "insights-zone", "insights-share", "insights-full" },
 }
