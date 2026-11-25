@@ -75,18 +75,40 @@ end)
 -- The converted routes
 ---------------------------------------------------------------------------
 
-test("routes: every converted route loads (57 leveling, 66 class, 12 professions)", function()
+test("routes: every route loads (57 converted leveling and our Riverglades, 66 class, 12 professions)", function()
 	local stub, ns = fresh()
 	for _, m in ipairs(stub.printed) do ok(not m:find("error"), m) end
 	local count = {}
 	for _, r in ipairs(ns.Engine.Routes()) do count[r.category] = (count[r.category] or 0) + 1 end
-	eq(count.Leveling, 57)
+	eq(count.Leveling, 58)
 	eq(count.Class, 66)
 	eq(count.Professions, 12)
 	for _, r in ipairs(ns.Engine.Routes()) do
 		local problems = ns.Engine.Check(r)
 		eq(#problems, 0, r.id .. ": " .. table.concat(problems, "; "))
 	end
+end)
+
+test("Riverglades: our own Horde route, every quest in the data, every place on the map", function()
+	local _, ns = fresh()
+	local route = ns.Engine.routes["pathwise/horde/riverglades"]
+	ok(route, "registered")
+	eq(route.faction, "Horde")
+	eq(route.map, 2548)
+	local quests = 0
+	for _, step in ipairs(route.steps) do
+		ok(step.title, "every step has a title")
+		for _, goal in ipairs(step) do
+			if goal[1] == "accept" or goal[1] == "complete" or goal[1] == "turnin" then
+				quests = quests + 1
+				local q = ns.Quests.Get(goal[2])
+				ok(q, "in the data: " .. goal[2])
+				ok(q and (q[4] == 0 or q[4] == 8589934770), "for the Horde: " .. goal[2])
+			end
+			if goal.at then eq(goal.at[1], 2548, "in the Riverglades: " .. goal[2]) end
+		end
+	end
+	ok(quests > 100, "goals: " .. quests)
 end)
 
 -- Pathwise's own route fixes (tools/port/fixes.lua), as written into the routes.

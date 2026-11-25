@@ -1,5 +1,5 @@
 -- Writes Pathwise_Insights/Data/Routes.lua: the leveling routes' quest steps,
--- taken from Pathwise/Routes/Leveling.lua, so Pathwise Insights can time the
+-- taken from Pathwise/Routes/Leveling.lua and Riverglades.lua, so Pathwise Insights can time the
 -- same steps (same routes, same step numbers) for players who do not have
 -- Pathwise installed. Only what tells a step is done goes in: each step's
 -- quest goals (take, do, hand in) with who they are for and whether they are
@@ -14,6 +14,7 @@ local routes = {}
 local saved = rawget(_G, "Pathwise")
 Pathwise = { RegisterRoute = function(r) routes[#routes + 1] = r end }
 assert(loadfile("Pathwise/Routes/Leveling.lua"))("Pathwise", {})
+assert(loadfile("Pathwise/Routes/Riverglades.lua"))("Pathwise", {})
 Pathwise = saved
 
 local VERB = { accept = "a", complete = "c", turnin = "t" }
