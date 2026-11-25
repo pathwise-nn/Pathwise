@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.18 (2026-11-25)
+
 ### A Riverglades route for the Horde
 - New leveling route, Riverglades (Horde, levels 38-46), in the Routes
   list: Rog'mar's loops through the plains, Turner's Logging Camp,
