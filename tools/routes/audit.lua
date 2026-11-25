@@ -34,6 +34,7 @@ local Q, N = D.quests, D.npcs
 local routes, byId, isNext = {}, {}, {}
 Pathwise = { RegisterRoute = function(r) routes[#routes + 1] = r byId[r.id] = r end }
 assert(loadfile("Pathwise/Routes/Leveling.lua"))("Pathwise", {})
+assert(loadfile("Pathwise/Routes/Riverglades.lua"))("Pathwise", {})
 for _, r in ipairs(routes) do if r.next then isNext[r.next] = true end end
 
 local HORDE, ALLIANCE = 178, 77 -- the classic race bits (low byte of the mask)

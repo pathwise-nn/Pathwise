@@ -47,6 +47,7 @@ UI\RouteBook.lua
 UI\MinimapButton.lua
 UI\XPBar.lua
 Routes\Leveling.lua
+Routes\Riverglades.lua
 Routes\Class.lua
 Routes\Professions.lua
 Routes\Other.lua

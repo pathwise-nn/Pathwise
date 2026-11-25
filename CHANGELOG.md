@@ -6,6 +6,19 @@ that version's section.
 
 ## Unreleased
 
+### A Riverglades route for the Horde
+- New leveling route, Riverglades (Horde, levels 38-46), in the Routes
+  list: Rog'mar's loops through the plains, Turner's Logging Camp,
+  Meadowsbrook, Farholde and Sunnyglade; Bolder'ok and the Bloodmaster's
+  Ring; Powderfuse Port and the Eastsea pirates; then Da'grosh and the
+  Twilight's Shroud. About 60 quests the routes had none of.
+- Pathwise's own route, not Polestar's: every quest, giver and place is
+  from the quest data, and the order was checked against a player's Pathwise
+  Insights log (thank you for sharing it). It isn't in the 1-60 chain yet:
+  pick it from Routes.
+- Pathwise Insights times it too, for players without Pathwise.
+- Not yet walked in game from start to end.
+
 ## 0.3.17 (2026-11-24)
 
 ### XP bar

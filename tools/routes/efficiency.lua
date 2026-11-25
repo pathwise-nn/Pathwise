@@ -92,6 +92,7 @@ local routes, byId = {}, {}
 local savedPathwise = rawget(_G, "Pathwise")
 Pathwise = { RegisterRoute = function(r) routes[#routes + 1] = r byId[r.id] = r end }
 assert(loadfile("Pathwise/Routes/Leveling.lua"))("Pathwise", {})
+assert(loadfile("Pathwise/Routes/Riverglades.lua"))("Pathwise", {})
 Pathwise = savedPathwise
 
 local prev = {}
