@@ -56,6 +56,7 @@ local h = { test = test, eq = eq, near = near, ok = ok, fresh = fresh, both = bo
 assert(loadfile(ROOT .. "/tests/heal/heal.lua"))(h)
 assert(loadfile(ROOT .. "/tests/heal/split.lua"))(h)
 assert(loadfile(ROOT .. "/tests/heal/auras.lua"))(h)
+assert(loadfile(ROOT .. "/tests/heal/keys.lua"))(h)
 
 for _, t in ipairs(tests) do
 	local okRun, err = pcall(t.fn)

@@ -71,6 +71,15 @@ C.CATEGORIES = {
 		rows[#rows + 1] = { "text", "What each click on a frame does. Type a spell's name (your highest rank is cast; add a rank for a lower one, as in Lesser Heal(Rank 1)), target or menu, then Enter; or drag any rank of a spell from your spellbook onto a box. Empty does nothing.", "muted" }
 		for _, c in ipairs(C.COMBOS) do rows[#rows + 1] = { "bind", c[2], c[1] } end
 		rows[#rows + 1] = { "button", ("Use the %s preset (replaces your own clicks)"):format(spec.label), function() C.Defaults(true) end }
+		-- Hover keys: the ones you set, then one empty slot to add another.
+		rows[#rows + 1] = { "heading", "Hover keys" }
+		rows[#rows + 1] = { "text", ("Keys that cast on whoever your mouse is over, in a fight too. Click a key box and press a key (Shift, Ctrl or Alt with it if you like), then type or drag the spell. Over a healing frame these keys take the place of what they do elsewhere, such as an action bar. Kept for %s: each spec has its own."):format(spec.label), "muted" }
+		local last = 0
+		for i = 1, C.MAX_KEYS do
+			local key, v = C.Key(i)
+			if key or v then last = i end
+		end
+		for i = 1, math.min(C.MAX_KEYS, last + 1) do rows[#rows + 1] = { "hotkey", ("Key %d"):format(i), i } end
 		return rows
 	end },
 

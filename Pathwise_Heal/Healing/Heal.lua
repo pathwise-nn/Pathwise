@@ -244,6 +244,11 @@ function H.NewButton(b)
 		A.Hover(self, false, function(p) self.hover:SetColorTexture(1, 1, 1, 0.08 * p) end)
 		if GameTooltip then GameTooltip:Hide() end
 	end)
+	-- Hidden under the mouse, a frame skips _onleave: drop its hover keys
+	-- (Clicks.lua) ourselves, out of combat.
+	b:HookScript("OnHide", function(self)
+		if not inCombat() and ClearOverrideBindings then pcall(ClearOverrideBindings, self) end
+	end)
 	if ClickCastFrames then ClickCastFrames[b] = true end -- Clique and friends
 	buttons[#buttons + 1] = b
 	H.Size(b)

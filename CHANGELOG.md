@@ -6,6 +6,15 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Heal: hover keys
+- Set your own keyboard keys to heal: hover over a healing frame and press
+  the key to cast on that person, in a fight too, like Clique or HealBot.
+  /pwheal > Healing > Hover keys: click a key box, press a key (with Shift,
+  Ctrl or Alt if you like), then type or drag the spell. Up to 10, and
+  every class and spec keeps its own (Holy and Discipline each have theirs).
+  Over a healing frame these keys replace what they do elsewhere, such as an
+  action bar key. Not yet checked in game.
+
 ## 0.3.18 (2026-11-25)
 
 ### A Riverglades route for the Horde

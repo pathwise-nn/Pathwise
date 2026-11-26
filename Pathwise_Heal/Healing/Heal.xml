@@ -13,8 +13,17 @@
 			<Attribute name="useparent*" type="boolean" value="true"/>
 		</Attributes>
 	</Button>
-	<Button name="PathwiseHeal_ButtonTemplate" virtual="true" inherits="SecureUnitButtonTemplate">
+	<!-- Hover keys (Clicks.lua): SecureHandlerEnterLeaveTemplate
+	     (Blizzard_RestrictedAddOnEnvironment/SecureHandlerTemplates.xml) runs
+	     _onenter and _onleave as secure snippets, in a fight too. Entering
+	     binds each key you set ("pw-key1".."pw-key10") to a click of
+	     "pwkeyN" on this frame; leaving clears them. -->
+	<Button name="PathwiseHeal_ButtonTemplate" virtual="true" inherits="SecureUnitButtonTemplate, SecureHandlerEnterLeaveTemplate">
 		<Size x="84" y="40"/>
+		<Attributes>
+			<Attribute name="_onenter" type="string" value="self:ClearBindings() for i = 1, 10 do local key = self:GetAttribute('pw-key' .. i) if key then self:SetBindingClick(true, key, self, 'pwkey' .. i) end end"/>
+			<Attribute name="_onleave" type="string" value="self:ClearBindings()"/>
+		</Attributes>
 		<Frames>
 			<Button parentKey="Debuff1" inherits="PathwiseHeal_DebuffTemplate"/>
 			<Button parentKey="Debuff2" inherits="PathwiseHeal_DebuffTemplate"/>
