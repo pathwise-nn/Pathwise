@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.19 (2026-11-26)
+
 ### Pathwise Heal: hover keys
 - Set your own keyboard keys to heal: hover over a healing frame and press
   the key to cast on that person, in a fight too, like Clique or HealBot.
