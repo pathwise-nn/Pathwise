@@ -39,6 +39,8 @@ C.CATEGORIES = {} -- filled by the addon's Pages.lua
 --       { "accent" }                        your accent, on the wheel
 --       { "schemes" }                       the themes (color schemes), to pick one
 --       { "bind", label, combo }            a click-casting box for one mouse combo
+--       { "hotkey", label, slot }           a hover key: a box that takes the key you
+--                                           press, and a spell box beside it (HealClicks)
 --       { "dropdown", label, path, { { label, value }, ... }, note }
 --                                           (path may be { get = fn, set = fn } for
 --                                           a value kept elsewhere, per character)
@@ -349,6 +351,16 @@ function makers.copy()
 	f.box = e
 	return f
 end
+-- The spell a bind row (a mouse combo) or a hotkey row (a key slot) holds.
+local function bindGet(f)
+	local Cl = ns.HealClicks
+	if f.pwSlot then return select(2, Cl.Key(f.pwSlot)) end
+	return Cl.Get(f.pwCombo)
+end
+local function bindSet(f, v)
+	local Cl = ns.HealClicks
+	if f.pwSlot then Cl.SetKeySpell(f.pwSlot, v) elseif f.pwCombo then Cl.Set(f.pwCombo, v) end
+end
 function makers.bind()
 	local f = makeRow()
 	local e = CreateFrame("EditBox", nil, f)
@@ -359,17 +371,17 @@ function makers.bind()
 	T.Font(e, "body")
 	e:SetTextInsets(8, 8, 0, 0)
 	local function commit(self)
-		if f.pwCombo then ns.HealClicks.Set(f.pwCombo, ns.HealClicks.Parse(self:GetText())) end
+		bindSet(f, ns.HealClicks.Parse(self:GetText()))
 		self:ClearFocus()
 	end
 	e:SetScript("OnEnterPressed", commit)
-	e:SetScript("OnEscapePressed", function(self) self:SetText(ns.HealClicks.Label(ns.HealClicks.Get(f.pwCombo))) self:ClearFocus() end)
+	e:SetScript("OnEscapePressed", function(self) self:SetText(ns.HealClicks.Label(bindGet(f))) self:ClearFocus() end)
 	e:SetScript("OnEditFocusGained", function(self) T.SetBorder(self, "accent") if self.HighlightText then self:HighlightText() end end)
 	e:SetScript("OnEditFocusLost", function(self) T.SetBorder(self, "border") end)
 	-- A spell dragged from the spellbook and dropped on the box.
 	local function drop(self)
 		local name = ns.HealClicks.FromCursor()
-		if name and f.pwCombo then ns.HealClicks.Set(f.pwCombo, name) end
+		if name then bindSet(f, name) end
 	end
 	e:SetScript("OnReceiveDrag", drop)
 	e:SetScript("OnMouseUp", function(self) if GetCursorInfo and GetCursorInfo() == "spell" then drop(self) end end)
@@ -384,6 +396,57 @@ function makers.bind()
 	end)
 	e:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
 	f.box = e
+	return f
+end
+-- A hover key: the spell box, and left of it a box that takes the next key
+-- you press (with Shift, Ctrl or Alt). Escape stops listening; right click
+-- clears the key.
+function makers.hotkey()
+	local f = makers.bind()
+	local k = CreateFrame("Button", nil, f)
+	k:SetSize(120, 24)
+	k:SetPoint("RIGHT", f.box, "LEFT", -8, 0)
+	T.Panel(k, "bg2", nil, nil, T.RADIUS.card)
+	k.text = T.Text(k, "body", "text")
+	k.text:SetPoint("CENTER")
+	k:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	local function stop(self)
+		self.pwListening = false
+		self:EnableKeyboard(false)
+		T.SetBorder(self, "border")
+		C.Render()
+	end
+	k:SetScript("OnClick", function(self, button)
+		if button == "RightButton" then
+			if self.pwListening then stop(self) end
+			ns.HealClicks.SetKey(f.pwSlot, nil)
+			return
+		end
+		self.pwListening = true
+		self.text:SetText("Press a key")
+		T.Paint(self.text, "accent")
+		T.SetBorder(self, "accent")
+		self:EnableKeyboard(true)
+		if self.SetPropagateKeyboardInput then pcall(self.SetPropagateKeyboardInput, self, false) end
+	end)
+	k:SetScript("OnKeyDown", function(self, key)
+		if not self.pwListening then return end
+		if key == "ESCAPE" then stop(self) return end
+		local chord = ns.HealClicks.Chord(key)
+		if not chord then return end -- Shift on its own: wait for the key
+		ns.HealClicks.SetKey(f.pwSlot, chord)
+		stop(self)
+	end)
+	k:SetScript("OnHide", function(self) if self.pwListening then self.pwListening = false self:EnableKeyboard(false) end end)
+	k:SetScript("OnEnter", function(self)
+		if not GameTooltip then return end
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText("Hover key", 1, 1, 1)
+		GameTooltip:AddLine("Click, then press a key (with Shift, Ctrl or Alt if you like). Right click clears it.", 0.8, 0.8, 0.8, true)
+		GameTooltip:Show()
+	end)
+	k:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+	f.key = k
 	return f
 end
 function makers.schemes()
@@ -623,6 +686,19 @@ function C.Render()
 			local v = ns.HealClicks.Get(r[3])
 			if not (f.box.HasFocus and f.box:HasFocus()) then f.box:SetText(ns.HealClicks.Label(v)) end
 			T.Paint(f.box, (v == nil) and "muted" or "text")
+			f:SetHeight(38)
+			place(f, 38)
+		elseif kind == "hotkey" then
+			local f = take("hotkey", makers.hotkey)
+			f.label:SetText(r[2])
+			f.pwSlot = r[3]
+			local key, v = ns.HealClicks.Key(r[3])
+			if not (f.box.HasFocus and f.box:HasFocus()) then f.box:SetText(ns.HealClicks.Label(v)) end
+			T.Paint(f.box, (v == nil) and "muted" or "text")
+			if not f.key.pwListening then
+				f.key.text:SetText(key and ns.HealClicks.KeyLabel(key) or "Set a key")
+				T.Paint(f.key.text, key and "text" or "muted")
+			end
 			f:SetHeight(38)
 			place(f, 38)
 		elseif kind == "copy" then

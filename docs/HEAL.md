@@ -14,6 +14,10 @@ or its minimap button.
   shaman is asked once, and anyone can turn it on: type /pwheal.
 - Click-casting: each click (with Shift, Ctrl or Alt) casts a spell you pick
   on the person you click; type the name or drag it from your spellbook.
+- Hover keys: your own keyboard keys (with Shift, Ctrl or Alt if you like),
+  each casting a spell on whoever your mouse is over, in a fight too. Up to
+  10, kept per spec. Over a healing frame they replace what the key does
+  elsewhere.
 - A preset for every healing spec: Holy or Discipline Priest, Restoration
   Druid, Restoration Shaman, Holy Paladin. Pathwise Heal picks it from your
   talents, or choose it under /pwheal > Healing > Spec. The same layout for

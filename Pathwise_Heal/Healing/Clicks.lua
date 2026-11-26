@@ -2,7 +2,9 @@
 -- Shift, Ctrl or Alt) casts a spell you pick on the person you click, or
 -- targets them, or opens their menu. Spells are kept by NAME, so the highest
 -- rank you know is cast as you level, and whatever Forever's classes have
--- comes from your own spellbook. Bindings belong to the character.
+-- comes from your own spellbook. Bindings belong to the character. Hover keys
+-- (keyboard keys that cast on the frame under your mouse) are further down,
+-- kept per spec.
 --
 -- They are the secure unit button's own attributes ("shift-type1" = "spell",
 -- "shift-spell1" = "Flash Heal"), set out of combat; they then work in combat.
@@ -248,10 +250,111 @@ function C.Set(combo, value)
 	ns.Fire("SETTING_CHANGED", "heal.binds")
 end
 
+---------------------------------------------------------------------------
+-- Hover keys: a keyboard key (with Shift, Ctrl or Alt if you like) that
+-- casts a spell on whoever your mouse is over, like Clique or HealBot. Your
+-- own, empty until you set them, and kept per spec (Holy and Discipline each
+-- have their own). While your mouse is over a healing frame they take the
+-- place of what the key does elsewhere (an action bar key, say).
+--
+-- How: each frame carries "pw-key1".."pw-key10" (the keys) and
+-- "*type-pwkey1" / "*spell-pwkey1" (what they cast; "*" whatever modifiers
+-- are down, the key itself names them). Heal.xml's secure _onenter snippet
+-- binds each key to a click of "pwkeyN" on that frame (SetBindingClick,
+-- Blizzard_RestrictedAddOnEnvironment/RestrictedFrames.lua) and _onleave
+-- clears them, so it works in a fight too. A secure unit button acts on both
+-- the press and the release (SecureUnitButton_OnClick), so the press is sent
+-- to a button that does nothing ("*downbutton-pwkeyN"): one cast per key.
+---------------------------------------------------------------------------
+
+C.MAX_KEYS = 10
+C.KEY_NONE = "pwnone"
+
+-- This spec's keys: slot -> { key = "SHIFT-Q", spell = "Flash Heal" }.
+function C.KeyStore(specKey)
+	local d = C.Data()
+	d.keys = type(d.keys) == "table" and d.keys or {}
+	specKey = specKey or C.Spec().key
+	d.keys[specKey] = type(d.keys[specKey]) == "table" and d.keys[specKey] or {}
+	return d.keys[specKey]
+end
+-- -> key, spell (either may be nil)
+function C.Key(slot)
+	local k = C.KeyStore()[slot]
+	if type(k) ~= "table" then return nil, nil end
+	return k.key, k.spell
+end
+local function slotOf(slot)
+	local store = C.KeyStore()
+	store[slot] = type(store[slot]) == "table" and store[slot] or {}
+	return store[slot], store
+end
+local function keysChanged() C.ApplyAll() ns.Fire("SETTING_CHANGED", "heal.keys") end
+-- A key for a slot (nil clears it); a key another slot had moves here.
+function C.SetKey(slot, key)
+	local s, store = slotOf(slot)
+	if key then
+		for i, other in pairs(store) do if i ~= slot and type(other) == "table" and other.key == key then other.key = nil end end
+	end
+	s.key = key
+	keysChanged()
+end
+-- What a slot's key casts: a spell, C.TARGET, C.MENU or nil.
+function C.SetKeySpell(slot, value)
+	slotOf(slot).spell = value
+	keysChanged()
+end
+
+-- "SHIFT-Q" -> "Shift + Q", in the game's words when it has them.
+function C.KeyLabel(key)
+	if type(key) ~= "string" or key == "" then return "" end
+	if GetBindingText then
+		local ok, t = pcall(GetBindingText, key)
+		if ok and type(t) == "string" and t ~= "" and t ~= key then return t end
+	end
+	local out = key:gsub("ALT%-", "Alt + "):gsub("CTRL%-", "Ctrl + "):gsub("SHIFT%-", "Shift + "):gsub("META%-", "Cmd + ")
+	return out
+end
+
+-- A key pressed while a key box listens -> the binding the game wants
+-- ("ALT-CTRL-SHIFT-Q"), or nil for a modifier on its own (wait for the rest).
+local MODIFIER = { LSHIFT = true, RSHIFT = true, LCTRL = true, RCTRL = true, LALT = true, RALT = true, LMETA = true, RMETA = true }
+function C.Chord(key)
+	if type(key) ~= "string" or key == "" or MODIFIER[key] then return nil end
+	if CreateKeyChordStringUsingMetaKeyState then
+		local ok, chord = pcall(CreateKeyChordStringUsingMetaKeyState, key)
+		if ok and type(chord) == "string" then return chord end
+	end
+	local p = ""
+	if IsAltKeyDown and IsAltKeyDown() then p = p .. "ALT-" end
+	if IsControlKeyDown and IsControlKeyDown() then p = p .. "CTRL-" end
+	if IsShiftKeyDown and IsShiftKeyDown() then p = p .. "SHIFT-" end
+	return p .. key
+end
+
+-- One frame's hover-key attributes.
+local function applyKeys(b)
+	for i = 1, C.MAX_KEYS do
+		local key, v = C.Key(i)
+		local btn = "pwkey" .. i
+		local typeKey, spellKey = "*type-" .. btn, "*spell-" .. btn
+		b:SetAttribute("*downbutton-" .. btn, C.KEY_NONE)
+		if v == C.TARGET then b:SetAttribute(typeKey, "target") b:SetAttribute(spellKey, nil)
+		elseif v == C.MENU then b:SetAttribute(typeKey, "togglemenu") b:SetAttribute(spellKey, nil)
+		elseif type(v) == "string" then b:SetAttribute(typeKey, "spell") b:SetAttribute(spellKey, v)
+		else b:SetAttribute(typeKey, nil) b:SetAttribute(spellKey, nil) end
+		b:SetAttribute("pw-key" .. i, (key and v ~= nil) and key or nil)
+	end
+	-- Keys left from a frame the mouse is no longer over (one hidden under
+	-- it skips _onleave): out of combat we may clear them ourselves.
+	if ClearOverrideBindings and not (b.IsMouseOver and b:IsMouseOver()) then pcall(ClearOverrideBindings, b) end
+end
+
 -- The attributes on one frame (out of combat; else once combat ends).
 function C.Apply(b)
 	if inCombat() then C.pending = true return end
 	if not b.SetAttribute then return end
+	applyKeys(b)
 	local store = C.Store()
 	for _, c in ipairs(C.COMBOS) do
 		local combo = c[1]
