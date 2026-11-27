@@ -21,6 +21,14 @@ C.COMBOS = {
 	{ "4", "Mouse button 4" }, { "5", "Mouse button 5" },
 }
 C.TARGET, C.MENU = "@target", "@menu"
+-- Your worn trinkets, by slot (13 the top one, 14 the bottom one in the
+-- character pane): used on whoever you click, as a secure "item" action
+-- with item = "13" (SecureTemplates.lua -> SecureCmdItemParse ->
+-- UseInventoryItem(13, unit)). Whatever trinket is in the slot is used, so
+-- swapping trinkets needs no change. An empty slot or a trinket with no use
+-- does nothing useful (not checked in game).
+C.TRINKET1, C.TRINKET2 = "@trinket1", "@trinket2"
+C.TRINKET_SLOT = { [C.TRINKET1] = 13, [C.TRINKET2] = 14 }
 
 -- Presets by spec: what each click casts, as lists tried in order (the first
 -- spell your spellbook knows is used). One layout for every spec:
@@ -211,6 +219,7 @@ C.TIP = {
 	"A spell's name alone casts your highest rank, and moves up as you learn new ones.",
 	"For a lower rank, add it: Lesser Heal [Rank 1], Lesser Heal (Rank 1) or Lesser Heal r1.",
 	"Or drag that rank from your spellbook onto the box (tick Show all spell ranks in the spellbook to see them).",
+	"Trinket 1 or Trinket 2 uses your top or bottom trinket on them; or drag a worn trinket from your character pane.",
 }
 
 -- "Heal (Rank 2)", "Heal [rank 2]", "Heal(2)", "Heal rank 2", "Heal r2" ->
@@ -224,21 +233,44 @@ local function rankForm(text)
 	return text
 end
 
--- Typed text -> a binding: "" / "nothing" clears, "target" / "menu", else a
+-- Typed text -> a binding: "" / "nothing" clears, "target" / "menu",
+-- "trinket 1" / "trinket 2" (or "top trinket", "bottom trinket"), else a
 -- spell (with a rank if you give one).
+local TRINKET_WORDS = {
+	["trinket1"] = C.TRINKET1, ["trinket 1"] = C.TRINKET1, ["@trinket1"] = C.TRINKET1, ["top trinket"] = C.TRINKET1, ["trinket top"] = C.TRINKET1,
+	["trinket2"] = C.TRINKET2, ["trinket 2"] = C.TRINKET2, ["@trinket2"] = C.TRINKET2, ["bottom trinket"] = C.TRINKET2, ["trinket bottom"] = C.TRINKET2,
+}
 function C.Parse(text)
 	text = (text or ""):gsub("^%s+", ""):gsub("%s+$", "")
 	local low = text:lower()
 	if low == "" or low == "nothing" or low == "none" then return nil end
 	if low == "target" or low == "@target" then return C.TARGET end
 	if low == "menu" or low == "@menu" then return C.MENU end
+	local trinket = TRINKET_WORDS[low:gsub("%s+", " ")]
+	if trinket then return trinket end
 	return rankForm(text)
 end
 function C.Label(v)
 	if v == nil then return "" end
 	if v == C.TARGET then return "Target" end
 	if v == C.MENU then return "Menu" end
+	if v == C.TRINKET1 then return "Trinket 1" end
+	if v == C.TRINKET2 then return "Trinket 2" end
 	return v
+end
+
+-- One binding as a secure button's attributes: type, spell and item for
+-- one button ("shift-" .. "1", or "*" .. "pwkey3").
+local function setAction(b, prefix, button, v)
+	local typeKey, spellKey, itemKey = prefix .. "type" .. button, prefix .. "spell" .. button, prefix .. "item" .. button
+	local tType, tSpell, tItem
+	if v == C.TARGET then tType = "target"
+	elseif v == C.MENU then tType = "togglemenu"
+	elseif C.TRINKET_SLOT[v] then tType, tItem = "item", tostring(C.TRINKET_SLOT[v])
+	elseif type(v) == "string" then tType, tSpell = "spell", v end
+	b:SetAttribute(typeKey, tType)
+	b:SetAttribute(spellKey, tSpell)
+	b:SetAttribute(itemKey, tItem)
 end
 
 function C.Set(combo, value)
@@ -299,7 +331,7 @@ function C.SetKey(slot, key)
 	s.key = key
 	keysChanged()
 end
--- What a slot's key casts: a spell, C.TARGET, C.MENU or nil.
+-- What a slot's key casts: a spell, C.TARGET, C.MENU, C.TRINKET1/2 or nil.
 function C.SetKeySpell(slot, value)
 	slotOf(slot).spell = value
 	keysChanged()
@@ -337,12 +369,8 @@ local function applyKeys(b)
 	for i = 1, C.MAX_KEYS do
 		local key, v = C.Key(i)
 		local btn = "pwkey" .. i
-		local typeKey, spellKey = "*type-" .. btn, "*spell-" .. btn
 		b:SetAttribute("*downbutton-" .. btn, C.KEY_NONE)
-		if v == C.TARGET then b:SetAttribute(typeKey, "target") b:SetAttribute(spellKey, nil)
-		elseif v == C.MENU then b:SetAttribute(typeKey, "togglemenu") b:SetAttribute(spellKey, nil)
-		elseif type(v) == "string" then b:SetAttribute(typeKey, "spell") b:SetAttribute(spellKey, v)
-		else b:SetAttribute(typeKey, nil) b:SetAttribute(spellKey, nil) end
+		setAction(b, "*", "-" .. btn, v)
 		b:SetAttribute("pw-key" .. i, (key and v ~= nil) and key or nil)
 	end
 	-- Keys left from a frame the mouse is no longer over (one hidden under
@@ -359,12 +387,7 @@ function C.Apply(b)
 	for _, c in ipairs(C.COMBOS) do
 		local combo = c[1]
 		local prefix, button = combo:match("^(.-)(%d)$")
-		local v = store[combo]
-		local typeKey, spellKey = prefix .. "type" .. button, prefix .. "spell" .. button
-		if v == C.TARGET then b:SetAttribute(typeKey, "target") b:SetAttribute(spellKey, nil)
-		elseif v == C.MENU then b:SetAttribute(typeKey, "togglemenu") b:SetAttribute(spellKey, nil)
-		elseif type(v) == "string" then b:SetAttribute(typeKey, "spell") b:SetAttribute(spellKey, v)
-		else b:SetAttribute(typeKey, nil) b:SetAttribute(spellKey, nil) end
+		setAction(b, prefix, button, store[combo])
 	end
 end
 function C.ApplyAll()
@@ -391,9 +414,23 @@ end
 -- A spell dropped on a binding box from your spellbook: its name, with its
 -- rank when it isn't your highest (dragging Rank 1 binds Rank 1; dragging
 -- the top rank binds the bare name, so it keeps up as you learn higher ones).
+-- A trinket you wear, dropped there from your character pane (or the same
+-- one from your bags): that trinket slot. Any other item: nothing.
 function C.FromCursor()
 	if not GetCursorInfo then return nil end
 	local kind, slot, book, id = GetCursorInfo()
+	if kind == "item" then
+		local itemID = tonumber(slot)
+		local found
+		if itemID and GetInventoryItemID then
+			for v, inv in pairs(C.TRINKET_SLOT) do
+				local ok, worn = pcall(GetInventoryItemID, "player", inv)
+				if ok and worn == itemID then found = v end
+			end
+		end
+		if found and ClearCursor then ClearCursor() end
+		return found
+	end
 	if kind ~= "spell" then return nil end
 	if ClearCursor then ClearCursor() end
 	local name, sub

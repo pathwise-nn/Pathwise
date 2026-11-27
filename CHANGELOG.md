@@ -6,6 +6,13 @@ that version's section.
 
 ## Unreleased
 
+### Pathwise Heal: trinkets on clicks and hover keys
+- A click or a hover key can now use a trinket on the person: type
+  trinket 1 (your top trinket) or trinket 2 (your bottom one) in the box, or
+  drag a trinket you wear from your character pane onto it. Whatever trinket
+  is in that slot is used, so swapping trinkets needs no change. Not yet
+  checked in game.
+
 ## 0.3.19 (2026-11-26)
 
 ### Pathwise Heal: hover keys

@@ -378,13 +378,13 @@ function makers.bind()
 	e:SetScript("OnEscapePressed", function(self) self:SetText(ns.HealClicks.Label(bindGet(f))) self:ClearFocus() end)
 	e:SetScript("OnEditFocusGained", function(self) T.SetBorder(self, "accent") if self.HighlightText then self:HighlightText() end end)
 	e:SetScript("OnEditFocusLost", function(self) T.SetBorder(self, "border") end)
-	-- A spell dragged from the spellbook and dropped on the box.
+	-- A spell dragged from the spellbook (or a worn trinket from your character pane) and dropped on the box.
 	local function drop(self)
 		local name = ns.HealClicks.FromCursor()
 		if name then bindSet(f, name) end
 	end
 	e:SetScript("OnReceiveDrag", drop)
-	e:SetScript("OnMouseUp", function(self) if GetCursorInfo and GetCursorInfo() == "spell" then drop(self) end end)
+	e:SetScript("OnMouseUp", function(self) if GetCursorInfo and (GetCursorInfo() == "spell" or GetCursorInfo() == "item") then drop(self) end end)
 	-- How to bind a lower rank, on hover (HealClicks.TIP: a title, then lines).
 	e:SetScript("OnEnter", function(self)
 		local tip = ns.HealClicks.TIP
