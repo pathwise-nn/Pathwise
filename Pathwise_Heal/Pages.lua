@@ -68,12 +68,12 @@ C.CATEGORIES = {
 		if #talents > 0 then
 			rows[#rows + 1] = { "text", table.concat(talents, ". ") .. ". Forever's new spells are named from its previews and not yet checked in game: a name the game doesn't know is skipped.", "muted" }
 		end
-		rows[#rows + 1] = { "text", "What each click on a frame does. Type a spell's name (your highest rank is cast; add a rank for a lower one, as in Lesser Heal(Rank 1)), target or menu, then Enter; or drag any rank of a spell from your spellbook onto a box. Empty does nothing.", "muted" }
+		rows[#rows + 1] = { "text", "What each click on a frame does. Type a spell's name (your highest rank is cast; add a rank for a lower one, as in Lesser Heal(Rank 1)), target, menu, trinket 1 or trinket 2 (your top or bottom trinket, used on them), then Enter; or drag any rank of a spell from your spellbook, or a trinket you wear from your character pane, onto a box. Empty does nothing.", "muted" }
 		for _, c in ipairs(C.COMBOS) do rows[#rows + 1] = { "bind", c[2], c[1] } end
 		rows[#rows + 1] = { "button", ("Use the %s preset (replaces your own clicks)"):format(spec.label), function() C.Defaults(true) end }
 		-- Hover keys: the ones you set, then one empty slot to add another.
 		rows[#rows + 1] = { "heading", "Hover keys" }
-		rows[#rows + 1] = { "text", ("Keys that cast on whoever your mouse is over, in a fight too. Click a key box and press a key (Shift, Ctrl or Alt with it if you like), then type or drag the spell. Over a healing frame these keys take the place of what they do elsewhere, such as an action bar. Kept for %s: each spec has its own."):format(spec.label), "muted" }
+		rows[#rows + 1] = { "text", ("Keys that cast on whoever your mouse is over, in a fight too. Click a key box and press a key (Shift, Ctrl or Alt with it if you like), then type or drag the spell (or trinket 1 or trinket 2). Over a healing frame these keys take the place of what they do elsewhere, such as an action bar. Kept for %s: each spec has its own."):format(spec.label), "muted" }
 		local last = 0
 		for i = 1, C.MAX_KEYS do
 			local key, v = C.Key(i)

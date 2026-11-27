@@ -193,3 +193,54 @@ test("hover keys: the options page sets a key by pressing it, then its spell", f
 	ok(not k1.pwListening)
 	eq(ns.HealClicks.Key(1), nil)
 end)
+
+test("trinkets: a click or a hover key uses your top or bottom trinket on them", function()
+	local stub, ns = fresh(priest)
+	ns.Set("heal.enabled", true)
+	local C = ns.HealClicks
+	local b = frame(ns, "party1")
+	for _, typed in ipairs({ "trinket 1", "Trinket1", " top trinket ", "@trinket1", "TRINKET  1" }) do
+		eq(C.Parse(typed), C.TRINKET1, typed)
+	end
+	eq(C.Parse("trinket 2"), C.TRINKET2)
+	eq(C.Parse("bottom trinket"), C.TRINKET2)
+	eq(C.Label(C.TRINKET1), "Trinket 1")
+	eq(C.Label(C.TRINKET2), "Trinket 2")
+	-- A click: the game's item action, by inventory slot (13 top, 14 bottom).
+	C.Set("alt-2", C.Parse("trinket 1"))
+	eq(b:GetAttribute("alt-type2"), "item")
+	eq(b:GetAttribute("alt-item2"), "13")
+	eq(b:GetAttribute("alt-spell2"), nil)
+	-- Back to a spell: the item goes.
+	C.Set("alt-2", "Renew")
+	eq(b:GetAttribute("alt-type2"), "spell")
+	eq(b:GetAttribute("alt-item2"), nil)
+	-- A hover key.
+	C.SetKey(1, "T")
+	C.SetKeySpell(1, C.TRINKET2)
+	eq(b:GetAttribute("pw-key1"), "T")
+	eq(b:GetAttribute("*type-pwkey1"), "item")
+	eq(b:GetAttribute("*item-pwkey1"), "14")
+	eq(b:GetAttribute("*downbutton-pwkey1"), C.KEY_NONE, "one use per press")
+	C.SetKeySpell(1, "Flash Heal")
+	eq(b:GetAttribute("*item-pwkey1"), nil)
+end)
+
+test("trinkets: a worn trinket dropped on a box binds its slot; anything else is ignored", function()
+	local stub, ns = fresh(priest)
+	local C = ns.HealClicks
+	stub.equipped[13], stub.equipped[14] = 111, 222
+	local cursor
+	_G.GetCursorInfo = function() if cursor then return "item", cursor, "item:" .. cursor end end
+	_G.ClearCursor = function() cursor = nil end
+	_G.GetInventoryItemID = function(_, slot) return stub.equipped[slot] end
+	cursor = 222
+	eq(C.FromCursor(), C.TRINKET2)
+	eq(cursor, nil, "put back")
+	cursor = 111
+	eq(C.FromCursor(), C.TRINKET1)
+	cursor = 999
+	eq(C.FromCursor(), nil, "not a worn trinket")
+	eq(cursor, 999, "left on the cursor")
+	_G.GetCursorInfo, _G.ClearCursor, _G.GetInventoryItemID = nil, nil, nil
+end)

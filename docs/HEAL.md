@@ -18,6 +18,9 @@ or its minimap button.
   each casting a spell on whoever your mouse is over, in a fight too. Up to
   10, kept per spec. Over a healing frame they replace what the key does
   elsewhere.
+- Trinkets: a click or a hover key can use your top or bottom trinket on
+  the person (type trinket 1 or trinket 2, or drag a worn trinket from your
+  character pane onto the box). Whatever trinket is in that slot is used.
 - A preset for every healing spec: Holy or Discipline Priest, Restoration
   Druid, Restoration Shaman, Holy Paladin. Pathwise Heal picks it from your
   talents, or choose it under /pwheal > Healing > Spec. The same layout for
