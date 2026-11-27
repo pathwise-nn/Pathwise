@@ -6,6 +6,8 @@ that version's section.
 
 ## Unreleased
 
+## 0.3.20 (2026-11-27)
+
 ### Pathwise Heal: trinkets on clicks and hover keys
 - A click or a hover key can now use a trinket on the person: type
   trinket 1 (your top trinket) or trinket 2 (your bottom one) in the box, or
